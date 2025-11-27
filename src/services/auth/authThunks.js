@@ -4,6 +4,7 @@ import {
   registerRequest,
   refreshTokenRequest,
   getProfileRequest,
+  loginGoogleRequest
 } from './authAPI';
 
 // LOGIN
@@ -12,6 +13,20 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const data = await loginRequest(credentials);
+      localStorage.setItem('access_token', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+
+export const loginGoogleUser = createAsyncThunk(
+  'auth/loginGoogleUser',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const data = await loginGoogleRequest(credentials);
       localStorage.setItem('access_token', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       return data;

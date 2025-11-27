@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5000/api/auth';
 
 export default function SignUp() {
   const navigate = useNavigate()
@@ -81,7 +81,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     
     window.open(
-      `${API_URL}/auth/google/login`,
+      `${API_URL}/google/login`,
       'Google Sign Up',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -124,7 +124,7 @@ export default function SignUp() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/api/auth/register`, {
+      const response = await fetch(`${API_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -152,7 +152,7 @@ export default function SignUp() {
         localStorage.setItem('refreshToken', result.refreshToken);
         localStorage.setItem('user', JSON.stringify(result.user));
         
-        navigate('/dashboard', { replace: true });
+        navigate('/dashboard');
       } else {
         setErrors(prev => ({
           ...prev,

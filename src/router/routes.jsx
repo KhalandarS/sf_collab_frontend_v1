@@ -63,12 +63,12 @@ export const router = createBrowserRouter([
   // Routes are now public for development
   {
     path: "/",
-    // element: (
-    //   <ProtectedRoute>
-    //     <Layout />
-    //   </ProtectedRoute>
-    // ),
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
+    // element: <Layout />,
     children: [
     
       {
@@ -86,24 +86,24 @@ export const router = createBrowserRouter([
         element: <VideoTutorials />,
       },
       
-      // {
-      //   path: "/profile",
-      //   element: <Profile />,
-      // },
+      {
+        path: "/Test",
+        element: <Test />,
+      },
       
-      //!fixed
+      //todo: need to be fixed it's working but slow
       {
         path: "/business-plan",
         element: <BusinessIdeaGenerator />,
       },
       
-      //!fixed
+      //todo: need to be fixed
       {
         path: "/data-scraper",
         element: <ScraperForm />,
       },
       
-      //!fixed
+      //? FIXED
       {
         path: "/chat",
         element: <ChatComponent />,
@@ -116,29 +116,30 @@ export const router = createBrowserRouter([
       },
       
       //!fixed
-      {
-        path: "/startup",
-        element: <StartUp />,
-      },
+      // {
+      //   path: "/startup",
+      //   element: <StartUp />,
+      // },
       
-      //!fixed
+      //? FIXED
       {
         path: "/register-startup",
         element: <RegisterStartUp />,
       },
       
-      //!fixed
+      //? FIXED
       {
         path: "/discover-startups",
         element: <DiscoverStartups />,
       },
       
-      //! 
+      //? FIXED 
       {
         path: "/startup-details/:id",
         element: <StartupDetailPage />,
       },
       
+      //todo: need to be fixed
       {
         path: "/user-profile",
         element: <Profile />,

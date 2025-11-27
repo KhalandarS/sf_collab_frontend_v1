@@ -13,6 +13,17 @@ export async function loginRequest(credentials) {
   return data;
 }
 
+export async function loginGoogleRequest(credentials) {
+  const res = await fetch(`${API_URL_AUTH}/google/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(credentials),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Login failed');
+  return data;
+}
+
 export async function registerRequest(userData) {
   const res = await fetch(`${API_URL_AUTH}/register`, {
     method: 'POST',
@@ -38,7 +49,7 @@ export async function refreshTokenRequest(refreshToken) {
 }
 
 export async function getProfileRequest(token) {
-  const res = await fetch(`${API_URL_AUTH}/profile`, {
+  const res = await fetch(`${API_URL_AUTH}/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const data = await res.json();
