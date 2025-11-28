@@ -7,7 +7,7 @@ import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
 import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/auth/authThunks";
-import { useDispatch } from "react-redux";
+import { useDispatch ,useSelector} from "react-redux";
 
 // Simple icon components
 const BellIcon = () => (
@@ -46,6 +46,7 @@ const NavBar = ({ isHidden = false }) => {
   const profileRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const {user,access_token,refreshToken,loading,error} = useSelector((state) => state.auth);
   
   const handleLogout = async () => {
     try {
@@ -131,7 +132,10 @@ const NavBar = ({ isHidden = false }) => {
             <SettingsIcon />
           </button>
         </div>
-
+      
+      {
+        user&&(
+        <>
         {/* Notification dropdown */}
         <div className="relative max-sm:hidden" ref={notificationRef}>
           
@@ -293,6 +297,9 @@ const NavBar = ({ isHidden = false }) => {
           </Tippy>
 
         </div>
+        </>
+        )
+      }
       </div>
     </nav>
   );
