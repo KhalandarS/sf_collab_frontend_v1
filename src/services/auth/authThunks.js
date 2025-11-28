@@ -90,7 +90,8 @@ export const refreshAccessToken = createAsyncThunk(
 
 // LOGOUT
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('refreshToken');
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
   return true;
 });

@@ -32,41 +32,50 @@ export default function Login() {
     topReveal: 10,
   });
   // Get the intended destination or default to dashboard
-  const from = location.state?.from?.pathname || '/dashboard'
+  // const from = location.state?.from?.pathname || '/dashboard'
 
   // Listen for OAuth popup messages
   useEffect(() => {
     const handleOAuthMessage = (event) => {
-      // Security: verify origin
-      if (event.origin !== API_URL) return;
-      
+      const allowedOrigins = [
+        new URL(API_URL).origin,
+        "http://localhost:5000",
+        "null",
+      ];
+  
+      if (!allowedOrigins.includes(event.origin)) {
+        console.warn("Blocked message from:", event.origin);
+        return;
+      }
+  
       const { type, provider, access_token, refreshToken, user, error } = event.data;
-      
-      if (type === 'oauth_success') {
-        console.log(`${provider} OAuth successful`);
-        
-        // Store token and user data
-        localStorage.setItem('access_token', access_token);
-        localStorage.setItem('refreshToken', refreshToken);
-        localStorage.setItem('user', JSON.stringify(user));
-        
+  
+      if (type === "oauth_success") {
+        console.log("OAuth SUCCESS");
+  
+        localStorage.setItem("access_token", access_token);
+        localStorage.setItem("refreshToken", refreshToken);
+        localStorage.setItem("user", JSON.stringify(user));
+  
         setLoaderState(false);
-        
-        // Navigate to intended destination or dashboard
+  
         navigate("/dashboard");
-      } else if (type === 'oauth_error') {
-        console.error(`${provider} OAuth error:`, error);
+      }
+  
+      if (type === "oauth_error") {
+        console.error("OAuth ERROR:", error);
         setLoaderState(false);
         setErrors(prev => ({
           ...prev,
-          submit: `${provider} authentication failed: ${error}`
+          submit: `${provider} authentication failed: ${error}`,
         }));
       }
     };
-
-    window.addEventListener('message', handleOAuthMessage);
-    return () => window.removeEventListener('message', handleOAuthMessage);
-  }, [navigate, from]);
+  
+    window.addEventListener("message", handleOAuthMessage);
+    return () => window.removeEventListener("message", handleOAuthMessage);
+  }, [navigate]);
+  
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -108,10 +117,10 @@ export default function Login() {
       const result = await loginUser(formData)
       
       if (result.success) {
-        alert(JSON.stringify(result));
+        // alert(JSON.stringify(result));
         navigate('/dashboard')
       } else {
-        alert(JSON.stringify(result));
+        // alert(JSON.stringify(result));
         
         setErrors(prev => ({
           ...prev,

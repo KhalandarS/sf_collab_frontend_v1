@@ -5,7 +5,9 @@ import { ProfilePeek } from "../../../components/gsap/profile-peek";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../../services/auth/authThunks";
+import { useDispatch } from "react-redux";
 
 // Simple icon components
 const BellIcon = () => (
@@ -42,10 +44,19 @@ const NavBar = ({ isHidden = false }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const handleLogout = async () => {
+    try {
 
-  const handleLogout = () => {
-    console.log("Logging out...");
-    // Add your logout logic here
+      await dispatch(logoutUser());
+  
+      navigate("/login", { replace: true });
+  
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
   };
 
   // Close dropdown when clicking outside

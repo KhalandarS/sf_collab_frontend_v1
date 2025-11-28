@@ -69,7 +69,11 @@ const actions = [
         onClick: () => handleShare(),
     },
   ];
-
+  
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+  
 const ChatComponent = ({ userId = 11 }) => {
     const [conversations, setConversations] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
@@ -111,7 +115,8 @@ const ChatComponent = ({ userId = 11 }) => {
     
     const wsClient = useRef(null);
     const messagesEndRef = useRef(null);
-    const API_BASE_URL = 'http://localhost:5000/api';
+
+
 
   // API Helper with proper headers
   const apiRequest = async (url, options = {}) => {
@@ -153,7 +158,7 @@ const ChatComponent = ({ userId = 11 }) => {
   useEffect(() => {
     if (!userId) return;
 
-    wsClient.current = new ChatWebSocketClient('http://localhost:5000', userId);
+    wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
     
     wsClient.current.on('connected', () => {
         console.log('WebSocket connected');
@@ -1127,7 +1132,7 @@ const ChatComponent = ({ userId = 11 }) => {
                                                                             <img 
                                                                                 src={message.file_url.startsWith("http")
                                                                                     ? message.file_url
-                                                                                    : `http://localhost:5000${message.file_url}`} 
+                                                                                    : `${SOCKET_API_URL}${message.file_url}`} 
                                                                                 alt={message.file_name}
                                                                                 className="max-w-full rounded-lg mb-2"
                                                                             />
@@ -1309,7 +1314,7 @@ const ChatComponent = ({ userId = 11 }) => {
                                         .map((file, idx) => {
                                             const imageUrl = file.file_url.startsWith('http') 
                                                 ? file.file_url 
-                                                : `http://localhost:5000${file.file_url}`;
+                                                : `${SOCKET_API_URL}${file.file_url}`;
                                             
                                             return (
                                                 <div 
