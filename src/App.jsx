@@ -32,6 +32,12 @@ import ChatComponent from "./components/ChatComponent.jsx";
 import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/Profile.jsx";
+import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
+import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
+// import QwenChat from './components/pages/QwenChat/QwenChat';
+import BackgroundRemover from './components/pages/Background_remover/BackgroundRemover.jsx';
+import GeminiChat from './components/pages/Chat_bot/GeminiChat.jsx';
+import AnimeConverter from "./components/pages/Background_remover/AnimeConverter.jsx";
 
 function App() {
   return (
@@ -75,8 +81,15 @@ function App() {
         
         {/* Tools */}
         <Route path="business-plan" element={<BusinessIdeaGenerator />} />
+        <Route path="multimodal-images" element={<ImageGenerator />} />
+        <Route path="logo-generator" element={<StartupLogoGenerator />} />
         <Route path="data-scraper" element={<ScraperForm />} />
         <Route path="chat" element={<ChatComponent />} />
+        {/* <Route path="qwen-chat" element={<QwenChat />} /> */}
+        
+        <Route path="background-remover" element={<BackgroundRemover />} />
+        <Route path="chat-ai" element={<GeminiChat />} />
+        <Route path="anime-converter" element={<AnimeConverter />} />
         
         {/* User */}
         <Route path="user-profile" element={<Profile />} />

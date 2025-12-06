@@ -14,7 +14,7 @@ const Options = ({ isHidden = false }) => {
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
             location.pathname === "/dashboard"
-              ? "bg-gray-900 text-white shadow-sm"
+              ? "bg-white text-gray-950 shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
           to="/dashboard"
@@ -24,7 +24,7 @@ const Options = ({ isHidden = false }) => {
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
             location.pathname === "/ideation"
-              ? "bg-gray-900 text-white shadow-sm"
+              ? "bg-white text-gray-950 shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
           to="/ideation"
@@ -34,7 +34,7 @@ const Options = ({ isHidden = false }) => {
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
             location.pathname === "/discover-startups"
-              ? "bg-gray-900 text-white shadow-sm"
+              ? "bg-white text-gray-950 shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
           to="/discover-startups"
@@ -44,7 +44,7 @@ const Options = ({ isHidden = false }) => {
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
             location.pathname === "/register-startup"
-              ? "bg-gray-900 text-white shadow-sm"
+              ? "bg-white text-gray-950 shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
           to="/register-startup"
@@ -54,7 +54,7 @@ const Options = ({ isHidden = false }) => {
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
             location.pathname === "/chat"
-              ? "bg-gray-900 text-white shadow-sm"
+              ? "bg-white text-gray-950 shadow-sm"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
           }`}
           to="/chat"

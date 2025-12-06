@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatWebSocketClient from '../services/websocket/ChatWebSocketClient';
 import TimeAwareMessageInput from './TimeAwareMessageInput';
-import Alert from './sections/Alert';
+// import Alert from './sections/Alert';
 import ScrollToTop from './sections/ScrollToTop';
 import { RiDeleteBin6Line } from "react-icons/ri";
 import '../components/style/ChatComponent.css';
+import { Input } from './ui/input';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { ShineButton } from './lightswind/shine-button'
 
 import {
     Avatar,
@@ -16,26 +19,31 @@ import { Action, Actions } from '../components/ui/shadcn-io/ai/actions';
 import {
     CopyIcon,
     RefreshCcwIcon,
-    
+    ChevronLeft, ChevronRight,
     ShareIcon,
     ThumbsDownIcon,
     ThumbsUpIcon,
+    Eye
   } from 'lucide-react';
 import { MessageCircle, Plus, Send, Edit2, Check, X, Users, Circle, Phone, Video, Star, Search, Settings, Bell, Image, FileText, File, Download, ChevronDown, ChevronUp } from 'lucide-react';
-import { ChevronRight, Eye } from 'lucide-react';
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css'; // Core CSS
 import 'tippy.js/animations/scale.css'; // Animation CSS
 import 'tippy.js/themes/light.css'; // Theme CSS
 
+import { useSelector } from 'react-redux';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from './ui/button';
+import { Alert, AlertDescription } from './ui/alert'
+import AnimatedNotification  from '../components/lightswind/animated-notification'
 // Mock users data
-const MOCK_USERS = [
-  { id: 11, firstName: 'John', lastName: 'Doe', email: 'john@example.com', profilePicture: null, timezone: 'America/New_York' },
-  { id: 12, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', profilePicture: null, timezone: 'Europe/London' },
-  { id: 13, firstName: 'Mike', lastName: 'Johnson', email: 'mike@example.com', profilePicture: null, timezone: 'Asia/Tokyo' },
-  { id: 14, firstName: 'Sarah', lastName: 'Wilson', email: 'sarah@example.com', profilePicture: null, timezone: 'Australia/Sydney' },
-  { id: 15, firstName: 'David', lastName: 'Brown', email: 'david@example.com', profilePicture: null, timezone: 'Europe/Paris' },
-];
+// const MOCK_USERS = [
+//   { id: 11, firstName: 'John', lastName: 'Doe', email: 'john@example.com', profilePicture: null, timezone: 'America/New_York' },
+//   { id: 12, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', profilePicture: null, timezone: 'Europe/London' },
+//   { id: 13, firstName: 'Mike', lastName: 'Johnson', email: 'mike@example.com', profilePicture: null, timezone: 'Asia/Tokyo' },
+//   { id: 14, firstName: 'Sarah', lastName: 'Wilson', email: 'sarah@example.com', profilePicture: null, timezone: 'Australia/Sydney' },
+//   { id: 15, firstName: 'David', lastName: 'Brown', email: 'david@example.com', profilePicture: null, timezone: 'Europe/Paris' },
+// ];
 
 const actions = [
     {
@@ -69,12 +77,122 @@ const actions = [
         onClick: () => handleShare(),
     },
   ];
+
+  const ConversationsCardSkeleton = () => (
+    <div className="animate-pulse  w-full">
+        <div className="bg-gray-500/5 flex items-center flex-col gap-4 p-4">
+            <div className='flex items-center justify-between gap-4 w-full'>
+                <div className="h-10 w-10 rounded-full bg-gray-700"></div>
+                <div className="h-3 w-16 rounded bg-gray-700"></div>
+            </div>
+            
+            <div className="flex-1  w-full space-y-2">
+                <div className="h-4 w-40 rounded bg-gray-700"></div>
+                <div className="h-3 w-32 rounded bg-gray-700"></div>
+            </div>
+        </div>
+    </div>
+);
+
+const MessagesSkeleton = () => {
+    return (
+      <div className="space-y-6 p-4">
+        {/* Incoming message skeleton */}
+        <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse"></div>
+          
+          <div className="flex-1">
+            {/* Sender name */}
+            <div className="h-3 w-24 rounded-full bg-gray-700 animate-pulse mb-2"></div>
+            
+            {/* Message bubble */}
+            <div className="bg-gray-800 rounded-2xl p-4 max-w-[70%]">
+              <div className="space-y-2">
+                <div className="h-3 w-full rounded-full bg-gray-700 animate-pulse"></div>
+                <div className="h-3 w-3/4 rounded-full bg-gray-700 animate-pulse"></div>
+                <div className="h-3 w-1/2 rounded-full bg-gray-700 animate-pulse"></div>
+              </div>
+            </div>
+            
+            {/* Timestamp */}
+            <div className="h-2 w-16 rounded-full bg-gray-700 animate-pulse mt-2 ml-2"></div>
+          </div>
+        </div>
   
+        {/* Outgoing message skeleton */}
+        <div className="flex items-start gap-3 justify-end">
+          <div className="flex-1 flex flex-col items-end">
+            {/* Sender name */}
+            <div className="h-3 w-24 rounded-full bg-gray-700 animate-pulse mb-2"></div>
+            
+            {/* Message bubble */}
+            <div className="bg-gray-800 rounded-2xl p-4 max-w-[70%]">
+              <div className="space-y-2">
+                <div className="h-3 w-full rounded-full bg-gray-700 animate-pulse"></div>
+                <div className="h-3 w-4/5 rounded-full bg-gray-700 animate-pulse"></div>
+              </div>
+            </div>
+            
+            {/* Timestamp */}
+            <div className="h-2 w-16 rounded-full bg-gray-700 animate-pulse mt-2 mr-2"></div>
+          </div>
+          
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse"></div>
+        </div>
+  
+        {/* Image message skeleton */}
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse"></div>
+          
+          <div className="flex-1">
+            <div className="h-3 w-24 rounded-full bg-gray-700 animate-pulse mb-2"></div>
+            
+            <div className="bg-gray-800 rounded-2xl p-4 max-w-[70%]">
+              {/* Image placeholder */}
+              <div className="w-48 h-32 rounded-lg bg-gray-700 animate-pulse mb-3"></div>
+              
+              <div className="space-y-2">
+                <div className="h-3 w-32 rounded-full bg-gray-700 animate-pulse"></div>
+              </div>
+            </div>
+            
+            <div className="h-2 w-16 rounded-full bg-gray-700 animate-pulse mt-2 ml-2"></div>
+          </div>
+        </div>
+  
+        {/* Short message skeleton */}
+        <div className="flex items-start gap-3 justify-end">
+          <div className="flex-1 flex flex-col items-end">
+            <div className="h-3 w-24 rounded-full bg-gray-700 animate-pulse mb-2"></div>
+            
+            <div className="bg-gray-800 rounded-2xl p-4 max-w-[50%]">
+              <div className="h-3 w-32 rounded-full bg-gray-700 animate-pulse"></div>
+            </div>
+            
+            <div className="h-2 w-16 rounded-full bg-gray-700 animate-pulse mt-2 mr-2"></div>
+          </div>
+          
+          <div className="w-10 h-10 rounded-full bg-gray-700 animate-pulse"></div>
+        </div>
+      </div>
+    );
+  };
+
+
   
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
+//   const SOCKET_API_URL = 'http://localhost:5000';
   const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
   
-const ChatComponent = ({ userId = 11 }) => {
+const ChatComponent = () => {
+
+    const [userId, setUserId] = useState(null);
+    const [users, setUsers] = useState([]);
+    const [notification, setNotification] = useState({ show: false, type: '', message: '' })
+
     const [conversations, setConversations] = useState([]);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -99,6 +217,10 @@ const ChatComponent = ({ userId = 11 }) => {
     const [alertDismissible, setAlertDismissible] = useState(null);
     const [alertActions, setAlertActions] = useState(null);
     
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const itemsPerPage = 30;
+    
     // Edit message states
     const [editingMessageId, setEditingMessageId] = useState(null);
     const [editingContent, setEditingContent] = useState('');
@@ -116,148 +238,296 @@ const ChatComponent = ({ userId = 11 }) => {
     const wsClient = useRef(null);
     const messagesEndRef = useRef(null);
 
+    const [loading, setLoading] = useState(true);
+    const [loadingMessages, setLoadingMessages] = useState(true);
 
 
-  // API Helper with proper headers
-  const apiRequest = async (url, options = {}) => {
-    const defaultHeaders = {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    };
+    const { user, access_token } = useSelector((state) => state.auth);
+    
+    const [searchQuery, setSearchQuery] = useState("");
+    const [selectedRole, setSelectedRole] = useState("");
+    const [selectedStatus, setSelectedStatus] = useState("");
+  
+  
 
-    const config = {
-      ...options,
-      headers: {
-        ...defaultHeaders,
-        ...options.headers,
-      },
-      credentials: 'include',
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
-    }
-  };
-
+    //! API Helper with proper headers
+    // const apiRequest = async (url, options = {}) => {
+        
+    //     const defaultHeaders = {
+    //         'Content-Type': 'application/json',
+    //         'Accept': 'application/json',
+    //     };
+    
+    //     const config = {
+    //         ...options,
+    //         headers: {
+    //         ...defaultHeaders,
+    //         ...options.headers,
+    //         },
+    //         credentials: 'include',
+    //     };
+    
+    //     try {
+    //         const token = access_token; 
+    //         if (!token) {
+    //             console.error('No access token found');
+    //             return;
+    //         }
+    //         const response = await fetch(url, config);
+            
+    //         if (!response.ok) {
+    //         const errorData = await response.json().catch(() => ({}));
+    //         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    //         }
+            
+    //         return await response.json();
+    //     } catch (error) {
+    //         console.error('API Request failed:', error);
+    //         throw error;
+    //     }
+    // };
+    
+    //! Retry connection:
     const retryConnection = () => {
         wsClient.current.connect();
         setAlertActions(null);
     };
-
-  // Initialize WebSocket connection
-  useEffect(() => {
-    if (!userId) return;
-
-    wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
     
-    wsClient.current.on('connected', () => {
-        console.log('WebSocket connected');
-        setIsConnected(true);
+    const fetchUsers = async (page = 1) => {
+        try {
+            setLoading(true);
+            const token = access_token; 
+            
+            if (!token) {
+                console.error('No access token found');
+            return;
+            }
+        
+            
+            const params = new URLSearchParams({
+                page: page.toString(),
+                per_page: itemsPerPage.toString()
+            });
+        
+            if (searchQuery) params.append('search', searchQuery);
+            if (selectedRole !== '') params.append('role', selectedRole);
+            if (selectedStatus !== '') params.append('status', selectedStatus);
+
+        
+            const response = await fetch(`${API_BASE_URL}/users?${params}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            const data = await response.json();
+        
+            if (data.success) {
+                
+                console.log(data.data.users);
+                
+                setUsers(data.data.users.map((u)=>({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, profilePicture: u.profile.picture, timezone: u.profile.timezone,role:u.role})));
+                setTotalPages(data.data.pagination.total);
+                setCurrentPage(data.data.pagination.page);
+            }
+        } catch (error) {
+            console.error('Error fetching users:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+    
+    
+    const clearFilters = () => {
+        setSearchQuery("");
+        setSelectedRole("");
+        setSelectedStatus("");
+    };
+    
+    //! Set userId when user changes
+    useEffect(()=>{
+        if(user){
+            fetchUsers();
+            setUserId(user.id);
+        }
         loadConversations();
         
-        setShowAlert(true)
-        setAlertVariant("success")
-        // setAlertTitle("Connected")
-        setAlertMessage("You are now connected to the chat server.")
-        setAlertShowIcon(true)
-        setAlertDismissible(true)
-    });
-
-    wsClient.current.on('disconnected', () => {
-        console.log('WebSocket disconnected');
-        setIsConnected(false);
-        
-        setShowAlert(true)
-        setAlertVariant("error")
-        // setAlertTitle("Disconnected")
-        setAlertMessage("You have been disconnected from the chat server.")
-        setAlertShowIcon(true)
-        setAlertDismissible(true)
-        setAlertActions(
-            <button
-                onClick={retryConnection}
-                className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 
-                            text-red-300 text-sm font-medium transition-all duration-200 
-                            border border-red-500/30"
-            >
-                Retry
-            </button>
-        )
-    });
+    },[]);
     
-    wsClient.current.on('mark_message_read', (data) => {
-        // If someone else read messages in a conversation, update counts
-        if (data.conversation_id && data.user_id !== userId) {
+    //! Initialize WebSocket connection
+    useEffect(() => {
+        if (!userId) return;
+    
+        wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
+        
+        wsClient.current.on('connected', () => {
+            console.log('WebSocket connected');
+            setIsConnected(true);
             loadConversations();
-        }
-    });
-
-    wsClient.current.on('new_message', handleNewMessage);
-    wsClient.current.on('message_edited', handleMessageEdited);
-    wsClient.current.on('user_typing', handleUserTyping);
-    wsClient.current.on('user_online', handleUserOnline);
-    wsClient.current.on('user_offline', handleUserOffline);
-
-    wsClient.current.connect();
-
-    return () => {
-      if (wsClient.current) {
-        wsClient.current.disconnect();
-      }
-    };
-  }, [userId]);
+            
+            setShowAlert(true)
+            setAlertVariant("success")
+            // setAlertTitle("Connected")
+            setAlertMessage("You are now connected to the chat server.")
+            setAlertShowIcon(true)
+            setAlertDismissible(true)
+        });
+    
+        wsClient.current.on('disconnected', () => {
+            console.log('WebSocket disconnected');
+            setIsConnected(false);
+            
+            setShowAlert(true)
+            setAlertVariant("error")
+            // setAlertTitle("Disconnected")
+            setAlertMessage("You have been disconnected from the chat server.")
+            setAlertShowIcon(true)
+            setAlertDismissible(true)
+            setAlertActions(
+                <button
+                    onClick={retryConnection}
+                    className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 
+                                text-red-300 text-sm font-medium transition-all duration-200 
+                                border border-red-500/30"
+                >
+                    Retry
+                </button>
+            )
+        });
+        
+        wsClient.current.on('mark_message_read', (data) => {
+            // If someone else read messages in a conversation, update counts
+            if (data.conversation_id && data.user_id !== userId) {
+                loadConversations();
+            }
+        });
+    
+        wsClient.current.on('new_message', handleNewMessage);
+        wsClient.current.on('message_edited', handleMessageEdited);
+        wsClient.current.on('user_typing', handleUserTyping);
+        wsClient.current.on('user_online', handleUserOnline);
+        wsClient.current.on('user_offline', handleUserOffline);
+    
+        wsClient.current.connect();
+    
+        return () => {
+            if (wsClient.current) {
+            wsClient.current.disconnect();
+            }
+        };
+    }, [user]);
 
     //! LOAD USER CONVERSATIONS:
     const loadConversations = async () => {
+        setLoading(true);
+        
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            return;
+        }
         try {
-            const data = await apiRequest(
-                `${API_BASE_URL}/chat/conversations?user_id=${userId}`
+            const response = await fetch(
+                `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
             
-            if (data.success && data.data.conversations) {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            console.log('Conversations response:', data);
+            
+            if (data.success && data.data?.conversations) {
                 setConversations(data.data.conversations);
+                setLoading(false);
+
+            } else {
+                console.error('No conversations found or invalid response:', data);
+                setConversations([]);
             }
         } catch (error) {
             console.error('Error loading conversations:', error);
+            setConversations([]);
         }
     };
 
+
     //! LOAD USER MESSAGES FOR CHOSEN CONVERSATION:
     const loadMessages = async (conversationId) => {
+        setLoadingMessages(true);
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            return;
+        }
         try {
-            const data = await apiRequest(
-                `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`
+            const response = await fetch(
+                `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
             
-            if (data.success && data.data.messages) {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.data?.messages) {
                 setMessages(data.data.messages);
+                console.log('Loaded Messages:', data.data.messages);
+                setLoadingMessages(false);
+                loadConversationFiles(conversationId);
             } else {
                 setMessages([]);
+                setLoadingMessages(false);
+                
             }
         } catch (error) {
             console.error('Error loading messages:', error);
             setMessages([]);
         }
     };
+
     
     //! LOAD FILES FOR CHOSEN CONVERSATION:
     const loadConversationFiles = async (conversationId) => {
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            return;
+        }
         try {
-            const data = await apiRequest(
-                `${API_BASE_URL}/chat/conversations/${conversationId}/files`
+            const response = await fetch(
+                `${API_BASE_URL}/chat/conversations/${conversationId}/files`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
             
-            if (data.success && data.data.files) {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.data?.files) {
                 setConversationFiles(data.data.files);
             } else {
                 setConversationFiles([]);
@@ -268,6 +538,8 @@ const ChatComponent = ({ userId = 11 }) => {
         }
     };
 
+    
+    //! load messages and files when selected conversation changes:
     useEffect(() => {
         if (selectedConversation) {
             loadMessages(selectedConversation.id);
@@ -277,7 +549,8 @@ const ChatComponent = ({ userId = 11 }) => {
             }
         }
     }, [selectedConversation]);
-
+    
+    //! scroll to bottom on new message:
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
@@ -308,6 +581,7 @@ const ChatComponent = ({ userId = 11 }) => {
         }
     };
     
+    //! handle message edited:
     const handleMessageEdited = (data) => {
         if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
             setMessages(prev => 
@@ -315,7 +589,8 @@ const ChatComponent = ({ userId = 11 }) => {
             );
         }
     };
-
+    
+    //! handle user typing:
     const handleUserTyping = (data) => {
         if (selectedConversation && data.conversation_id === selectedConversation.id && data.user_id !== userId) {
             setIsTyping(prev => ({
@@ -343,11 +618,13 @@ const ChatComponent = ({ userId = 11 }) => {
             }
         }
     };
-
+    
+    //! handle user online:
     const handleUserOnline = (data) => {
         setOnlineUsers(prev => new Set([...prev, data.user_id]));
     };
     
+    //! handle user offline:
     const handleUserOffline = (data) => {
         setOnlineUsers(prev => {
             const newSet = new Set(prev);
@@ -356,23 +633,41 @@ const ChatComponent = ({ userId = 11 }) => {
         });
     };
     
+    //! delete message:
     const deleteMessage=async(message)=>{
         setDeletedMessage(message);
         setShowDeleteModal(true);
         
     }
     
-    const handleDeleteMessage=async()=>{
-        try{
-            // Handle text message
-            const data = await apiRequest(
+    //! handle delete message:
+    const handleDeleteMessage = async () => {
+        setLoading(true);
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            return;
+        }
+        try {
+            const response = await fetch(
                 `${API_BASE_URL}/chat/conversations/${selectedConversation?.id}/messages/${deletedMessage?.id}?user_id=${userId}`,
                 {
                     method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
             );
-    
-            if (data.success && data.message) {
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success) {
                 setMessages(prev => prev.filter(msg => msg.id !== deletedMessage.id));
                 loadConversations();
                 setShowDeleteModal(false);
@@ -380,30 +675,59 @@ const ChatComponent = ({ userId = 11 }) => {
                 setShowAlert(true);
                 setAlertVariant("success");
                 setAlertDismissible(true);
-                setAlertMessage(data.data.message);
+                setAlertMessage(data.message || data.data?.message || "Message deleted successfully");
+            } else {
+                throw new Error(data.message || "Failed to delete message");
             }
-        }catch(error){
+        } catch (error) {
+            console.error('Error deleting message:', error);
             setShowAlert(true);
             setAlertVariant("error");
             setAlertDismissible(true);
-            setAlertMessage(data.data.message);
+            setAlertMessage(error.message || "Failed to delete message");
+        } finally {
+            setLoading(false);
         }
-    }
+    };
+
     
+    //! mark conversation as read:
     const markConversationAsRead = async (conversationId) => {
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            return;
+        }
         try {
-            await apiRequest(
+            const response = await fetch(
                 `${API_BASE_URL}/chat/conversations/${conversationId}/mark-read?user_id=${userId}`,
                 {
-                    method: 'POST'
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
             );
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.message || "Failed to mark conversation as read");
+            }
         } catch (error) {
             console.error('Error marking conversation as read:', error);
             throw error;
         }
     };
+
     
+    //! handle selected conversation:
     const handleSelectConversation = async (conversation) => {
         setSelectedConversation(conversation);
         
@@ -423,68 +747,117 @@ const ChatComponent = ({ userId = 11 }) => {
         }
     };
     
+    //! handle send message:
+    const handleSendMessage = async (messageContent, file = null) => {
+        if ((!messageContent?.trim() && !file) || !selectedConversation) return;
+        
+        setLoading(true);
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            setLoading(false);
+            return;
+        }
+        
+        try {
+            if (file) {
+                // Handle file upload
+                const formData = new FormData();
+                formData.append('sender_id', userId);
+                formData.append('content', messageContent || 'Sent a file');
+                formData.append('message_type', 'file');
+                formData.append('file', file);
+                
+                const response = await fetch(
+                    `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
+                    {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        credentials: 'include',
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data?.message) {
+                    setMessages(prev => [...prev, data.data.message]);
+                    loadConversations();
+                    loadConversationFiles(selectedConversation.id);
+                } else {
+                    throw new Error(data.message || "Failed to send message");
+                }
+            } else {
+                // Handle text message
+                const response = await fetch(
+                    `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            sender_id: userId,
+                            content: messageContent,
+                            message_type: 'text'
+                        }),
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data?.message) {
+                    setMessages(prev => [...prev, data.data.message]);
+                    loadConversations();
+                } else {
+                    throw new Error(data.message || "Failed to send message");
+                }
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            // Show error alert
+            setShowAlert(true);
+            setAlertVariant("error");
+            setAlertDismissible(true);
+            setAlertMessage(error.message || "Failed to send message");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+
+    //! handle typing:
+    const handleTyping = (conversationId) => {
+        if (wsClient.current && conversationId) {
+            wsClient.current.handleTyping(conversationId);
+        }
+    };
     
-  const handleSendMessage = async (messageContent, file = null) => {
-    if ((!messageContent.trim() && !file) || !selectedConversation) return;
-
-    try {
-      if (file) {
-        // Handle file upload
-        const formData = new FormData();
-        formData.append('sender_id', userId);
-        formData.append('content', messageContent || 'Sent a file');
-        formData.append('message_type', 'file');
-        formData.append('file', file);
-
-        const response = await fetch(
-          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-          {
-            method: 'POST',
-            body: formData,
-            credentials: 'include',
-          }
-        );
-
-        const data = await response.json();
-
-        if (data.success && data.data.message) {
-          setMessages(prev => [...prev, data.data.message]);
-          loadConversations();
-          loadConversationFiles(selectedConversation.id);
-        }
-      } else {
-        // Handle text message
-        const data = await apiRequest(
-          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              sender_id: userId,
-              content: messageContent,
-              message_type: 'text'
-            })
-          }
-        );
-
-        if (data.success && data.data.message) {
-          setMessages(prev => [...prev, data.data.message]);
-          loadConversations();
-        }
-      }
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  };
-
-  const handleTyping = (conversationId) => {
-    if (wsClient.current && conversationId) {
-      wsClient.current.handleTyping(conversationId);
-    }
-  };
-
+    //! handle create conversation:
     const handleCreateConversation = async () => {
         if (selectedParticipants.length === 0) {
             alert('Please select at least one participant');
+            return;
+        }
+        
+        setLoading(true);
+        const token = access_token; 
+        
+        if (!token) {
+            console.error('No access token found');
+            setLoading(false);
             return;
         }
         
@@ -492,57 +865,83 @@ const ChatComponent = ({ userId = 11 }) => {
             const participantIds = selectedParticipants.map(p => p.id);
             
             if (conversationType === 'direct' && participantIds.length !== 1) {
-            alert('Direct messages can only have one other participant');
-            return;
+                alert('Direct messages can only have one other participant');
+                setLoading(false);
+                return;
             }
-        
-            const data = await apiRequest(
-            `${API_BASE_URL}/chat/conversations`,
-            {
-                method: 'POST',
-                body: JSON.stringify({
-                created_by_id: userId,
-                participant_ids: participantIds,
-                name: conversationType === 'group' ? newConversationName : null,
-                conversation_type: conversationType,
-                description: conversationType === 'group' ? newConversationName + ' group chat' : null
-                })
-            }
+            
+            const response = await fetch(
+                `${API_BASE_URL}/chat/conversations`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        created_by_id: userId,
+                        participant_ids: participantIds,
+                        name: conversationType === 'group' ? newConversationName : null,
+                        conversation_type: conversationType,
+                        description: conversationType === 'group' ? newConversationName + ' group chat' : null
+                    }),
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
             );
-        
-            if (data.success && data.data.conversation) {
-            const newConversation = data.data.conversation;
-            setConversations(prev => [newConversation, ...prev]);
-            setSelectedConversation(newConversation);
-            setShowCreateModal(false);
-            resetModal();
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.success && data.data?.conversation) {
+                const newConversation = data.data.conversation;
+                setConversations(prev => [newConversation, ...prev]);
+                setSelectedConversation(newConversation);
+                setShowCreateModal(false);
+                resetModal();
+                
+                // Load messages for the new conversation
+                await loadMessages(newConversation.id);
+                await loadConversationFiles(newConversation.id);
+                
+                // Show success alert
+                setShowAlert(true);
+                setAlertVariant("success");
+                setAlertDismissible(true);
+                setAlertMessage("Conversation created successfully");
+            } else {
+                throw new Error(data.message || "Failed to create conversation");
             }
         } catch (error) {
             console.error('Error creating conversation:', error);
-            alert('Failed to create conversation. Please try again.');
+            alert(error.message || 'Failed to create conversation. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
-  const resetModal = () => {
-    setNewConversationName('');
-    setSelectedParticipants([]);
-    setConversationType('direct');
-  };
+    const resetModal = () => {
+        setNewConversationName('');
+        setSelectedParticipants([]);
+        setConversationType('direct');
+    };
+    
+    
+    const toggleParticipant = (usr) => {
+        setSelectedParticipants(prev => {
+            const isSelected = prev.some(p => p.id === usr.id);
+            if (isSelected) {
+            return prev.filter(p => p.id !== usr.id);
+            } else {
+            return [...prev, usr];
+            }
+        });
+    };
 
-  const toggleParticipant = (user) => {
-    setSelectedParticipants(prev => {
-      const isSelected = prev.some(p => p.id === user.id);
-      if (isSelected) {
-        return prev.filter(p => p.id !== user.id);
-      } else {
-        return [...prev, user];
-      }
-    });
-  };
-
-  const scrollToBottom = () => {
+    const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+    };
 
     const getTypingDisplay = () => {
         const typingUsers = Object.entries(isTyping)
@@ -649,14 +1048,18 @@ const ChatComponent = ({ userId = 11 }) => {
         if (!editingContent.trim()) return;
 
         try {
-            const data = await apiRequest(
+            const data = await fetch(
                 `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages/${messageId}`,
                 {
                     method: 'PUT',
                     body: JSON.stringify({
                         content: editingContent,
                         user_id: userId
-                    })
+                    }),
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
                 }
             );
 
@@ -686,15 +1089,57 @@ const ChatComponent = ({ userId = 11 }) => {
         return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
     };
 
+    const Notification = () => {
+        if (!notification.show) return null
+    
+        const styles = {
+          error: 'border-red-400 bg-red-500/10 text-red-200',
+          success: 'border-green-400 bg-green-500/10 text-green-200',
+          warning: 'border-yellow-400 bg-yellow-500/10 text-yellow-200'
+        }
+    
+        return (
+          <div className="fixed top-4 right-4 z-999999" style={{ zIndex: 999999999999 }}>
+            <Alert className={styles[notification.type]}>
+              <AlertDescription className="font-medium">
+                {notification.message}
+              </AlertDescription>
+            </Alert>
+          </div>
+        )
+      }
+      
+      const showNotification = (type, message) => {
+        setNotification({ show: true, type, message })
+        setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000)
+      }
+      
+    useEffect(() => {
+        fetchUsers(1);
+    }, [searchQuery, selectedRole, selectedStatus]);
+    
     return (
         <div className="chat-app   flex relative font-sans">
             {/* Animated Background */}
             <div className="absolute inset-0">
-              <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
-              <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
-              <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+                <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+                <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
+                <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
             </div>
+            
             <ScrollToTop/>
+            <Notification />
+            
+            {/* <AnimatedNotification
+              autoGenerate={true}
+              maxNotifications={3}
+              variant="glass"
+              position="top-right"
+              showAvatars={true}
+              allowDismiss={true}
+              customMessages={["Welcome!", "Task completed!"]}
+              onNotificationClick={(notification) => console.log(notification)}
+            /> */}
             {/* Create Conversation Modal */}
             {showCreateModal && (
                 <div style={{zIndex:999999999999999}} className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -739,61 +1184,92 @@ const ChatComponent = ({ userId = 11 }) => {
                                 <label className="block text-sm font-semibold text-gray-300 mb-3">
                                     {conversationType === 'direct' ? 'Select Participant' : 'Select Participants'}
                                 </label>
+                                <div className="w-full" data-aos='fade' data-aos-delay="500" style={{zIndex:99999999999999}}>
+                                    {/* Search Bar */}
+                                    <div className="flex-1 my-3">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                            <Input
+                                            placeholder="Search user or conversation..."
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            className="pl-9 bg-gray-700 border-gray-600 text-white w-full"
+                                            style={{ minWidth: '200px' }}
+                                            />
+                                        </div>
+                                    </div>
+                                    {selectedParticipants.length > 0 && (
+                                        <div className="bg-gray-900 rounded-xl p-4 border border-gray-800 mb-2">
+                                            <span className="text-sm font-semibold text-gray-300">Selected: </span>
+                                            <span className="text-sm text-gray-400">
+                                                {selectedParticipants.map(p => `${p.firstName} ${p.lastName}`).join(', ')}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="max-h-80 overflow-y-auto bg-[#0f0f0f] rounded-xl border border-gray-800">
-                                    {MOCK_USERS
-                                        .filter(user => user.id !== userId)
-                                        .map(user => (
+                                    {users
+                                        .filter(u => u.id !== userId)
+                                        .map(u => (
                                             <div 
-                                                key={user.id}
+                                                key={u.id}
                                                 className={`flex items-center p-4 cursor-pointer transition-all duration-300 border-b border-gray-800 last:border-b-0 hover:bg-gray-900 group ${
-                                                    selectedParticipants.some(p => p.id === user.id) 
+                                                    selectedParticipants.some(p => p.id === u.id) 
                                                         ? 'bg-[#c1ff72]/10 border-l-4 border-l-[#c1ff72]' 
                                                         : ''
                                                 }`}
                                                 onClick={() => {
                                                     if (conversationType === 'direct') {
-                                                        setSelectedParticipants([user]);
+                                                        setSelectedParticipants([u]);
                                                     } else {
-                                                        toggleParticipant(user);
+                                                        toggleParticipant(u);
                                                     }
                                                 }}
                                             >
-                                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold text-sm mr-4">
-                                                    {user.firstName[0]}{user.lastName[0]}
+                                                <div className="w-12 h-12 rounded-full bg-linear-to-br from-gray-700 to-gray-800 flex items-center justify-center text-white font-bold text-sm mr-4">
+                                                    <img
+                                                      className="rounded-full h-full w-full"
+                                                      alt="user"
+                                                      src={
+                                                        u?.profilePicture
+                                                        //   ? u.profilePicture
+                                                        //     ? u.profilePicture
+                                                        //     : `${BASE_URL}/${u.profilePicture}`
+                                                        //   : "/default-avatar.png" // fallback image
+                                                      }
+                                                    />
                                                 </div>
                                                 <div className="flex-1">
-                                                    <div className="font-semibold text-white">{user.firstName} {user.lastName}</div>
-                                                    <div className="text-sm text-gray-400">{user.email}</div>
+                                                    <div className="font-semibold text-white">{u.firstName} {u.lastName}</div>
+                                                    <div className="text-sm text-gray-400">{u.email}</div>
                                                 </div>
-                                                <div className="text-xs text-gray-500 bg-gray-900 px-3 py-1 rounded-full">
-                                                    {user.timezone}
+                                                <div className="text-xs px-3 py-1 flex flex-col">
+                                                    <div className="text-xs w-30 text-black bg-white px-3 flex items-center justify-center rounded-full mb-2">
+                                                        {u.timezone?u.timezone:<small style={{fontSize:'10px'}}>No timezone</small>}
+                                                    </div>
+                                                    <div className="text-xs w-30 text-black bg-white px-3 flex items-center justify-center rounded-full">
+                                                        {u.role?u.role:<small style={{fontSize:'10px'}}>No role</small>}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
                                 </div>
                             </div>
 
-                            {selectedParticipants.length > 0 && (
-                                <div className="bg-gray-900 rounded-xl p-4 border border-gray-800">
-                                    <span className="text-sm font-semibold text-gray-300">Selected: </span>
-                                    <span className="text-sm text-gray-400">
-                                        {selectedParticipants.map(p => `${p.firstName} ${p.lastName}`).join(', ')}
-                                    </span>
-                                </div>
-                            )}
+                            
                         </div>
 
                         <div className="sticky bottom-0 bg-[#1a1a1a]/95 backdrop-blur-xl border-t border-gray-800 p-6 rounded-b-2xl flex gap-3 justify-end">
                             <button 
                                 onClick={() => setShowCreateModal(false)}
-                                className="px-6 py-3 rounded-xl bg-gray-800 hover:bg-gray-700 text-white font-semibold transition-all duration-300"
+                                className="px-6 rounded-md h-10 hover:scale-102 hover:shadow-[0px_0px_10px_red] bg-red-400 text-red-950 cursor-pointer font-semibold transition-all duration-400"
                             >
                                 Cancel
                             </button>
                             <button 
                                 onClick={handleCreateConversation}
                                 disabled={selectedParticipants.length === 0}
-                                className="px-6 py-3 rounded-xl bg-[#c1ff72] hover:bg-[#b0ef62] text-black font-semibold transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="px-6  rounded-md h-10 hover:scale-102 hover:shadow-[0px_0px_10px_white] bg-white text-black cursor-pointer font-semibold transition-all duration-400 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Create Conversation
                             </button>
@@ -851,7 +1327,7 @@ const ChatComponent = ({ userId = 11 }) => {
     
             {/* Sidebar */}
             <div style={{zIndex:9999}} className="flex w-full h-full">
-                {showAlert && (
+                {/* {showAlert && (
                     <div style={{zIndex:9999}} className="fixed bottom-6 right-6 min-w-2/5">
                         <Alert
                             variant={alertVariant}
@@ -862,7 +1338,7 @@ const ChatComponent = ({ userId = 11 }) => {
                             actions={alertActions}
                         />
                     </div>
-                )}
+                )} */}
                 
                 <div className="w-80  h-screen  border-r border-gray-900 flex flex-col">
                     {/* User Header */}
@@ -870,90 +1346,171 @@ const ChatComponent = ({ userId = 11 }) => {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-3">
                                 <div className="relative">
-                                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-300 to-purple-300 flex items-center justify-center text-black font-bold">
-                                        {MOCK_USERS.find(u => u.id === userId)?.firstName[0]}
+                                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-300 to-purple-300 flex items-center justify-center border-blue-400 border-2 text-black font-bold">
+                                    <img
+                                        className="rounded-full h-full w-full"
+                                        alt="user"
+                                        src={
+                                        user?.profile.picture
+                                        //   ? u.profilePicture
+                                        //     ? u.profilePicture
+                                        //     : `${BASE_URL}/${u.profilePicture}`
+                                        //   : "/default-avatar.png" // fallback image
+                                        }
+                                    />
                                     </div>
                                     <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
                                 </div>
                                 <div>
                                     <div className="text-white font-semibold">
-                                        {MOCK_USERS.find(u => u.id === userId)?.firstName} {MOCK_USERS.find(u => u.id === userId)?.lastName}
+                                        {users.find(u => u.id === userId)?.firstName} {users.find(u => u.id === userId)?.lastName}
                                     </div>
                                     <div className="text-xs text-gray-400">
-                                        {MOCK_USERS.find(u => u.id === userId)?.email}
+                                        {users.find(u => u.id === userId)?.email}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button 
+                        
+                        <div data-aos='fade' data-aos-delay="300">
+                          <ShineButton 
+                            className="rounded-md flex gap-2 w-full items-center justify-center text-white"
+                            label="New Chat" 
+                            icon={<Plus size={18} className="hover:animate-pulse" />}
+                            size="sm" 
+                            bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                            onClick={() => setShowCreateModal(true)} 
+                          />
+                        </div>
+                        {/* <Button 
                             onClick={() => setShowCreateModal(true)}
-                            className="w-full py-2.5 rounded-xl bg-linear-to-br from-blue-300 to-purple-300 text-black font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+                            className="px-8 w-full py-4 rounded-md bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white  text-black font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+                            // className="w-full py-2.5 rounded-xl bg-linear-to-br from-blue-300 to-purple-300 text-black font-semibold transition-all duration-300 flex items-center justify-center gap-2"
                         >
                             <Plus size={18} />
                             New Chat
-                        </button>
-                    </div>
-        
-                    <div className="flex-1  overflow-y-auto">
-                        {conversations.map(conversation => (
-                            <div
-                                key={conversation.id}
-                                className={`flex items-center p-4 cursor-pointer transition-all duration-200 border-b border-gray-900 hover:bg-gray-900 ${
-                                    selectedConversation?.id === conversation.id 
-                                        ? 'bg-gray-900 border-l-4 border-l-blue-300' 
-                                        : ''
-                                }`}
-                                onClick={() => handleSelectConversation(conversation)}
-                            >
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
-                                    selectedConversation?.id === conversation.id
-                                        ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
-                                        : 'bg-gray-800 text-gray-300'
-                                }`}>
-                                    {getConversationName(conversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                                </div>
-                                <div className="flex-1 min-w-0 relative">
-                                    <div className="flex items-center justify-between mb-1">
-                                        <div className="font-semibold text-white truncate">
-                                            {getConversationName(conversation)}
-                                        </div>
-                                        {conversation.unread_count > 0 && (
-                                            
-                                            <Badge
-                                                className="ml-2 shadow-md shadow-amber-100 text-black text-xs font-bold  py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
-                                                variant="secondary"
-                                            >
-                                                {conversation.unread_count}
-                                            </Badge>
-                                            // <div className="ml-2 bg-[#c1ff72] text-black text-xs font-bold px-2 py-0.5 rounded-full">
-                                                
-                                            // </div>
-                                        )}
-                                    </div>
-                                    <div className="text-sm text-gray-400 truncate">
-                                        {/* Show original content without time processing for preview */}
-                                        {formatMessageContent(conversation.last_message?.content )|| 'No messages yet'}
-                                    </div>
-                                    <div className={conversation.conversation_type=="group"?"flex -space-x-2  absolute right-0 top-9": "hidden"}>
-                                        <Avatar className="size-6">
-                                            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                                            <AvatarFallback>CN</AvatarFallback>
-                                        </Avatar>
-                                        <Avatar className="size-6">
-                                            <AvatarImage src="https://github.com/leerob.png" alt="@leerob" />
-                                            <AvatarFallback>LR</AvatarFallback>
-                                        </Avatar>
-                                        <Avatar className="size-6">
-                                            <AvatarImage
-                                                src="https://github.com/evilrabbit.png"
-                                                alt="@evilrabbit"
-                                            />
-                                            <AvatarFallback>ER</AvatarFallback>
-                                        </Avatar>
-                                    </div>
+                        </Button> */}
+                        
+                        <div className="w-full" data-aos='fade' data-aos-delay="500">
+                            {/* Search Bar */}
+                            <div className="flex-1 my-3">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Input
+                                    placeholder="Search user or conversation..."
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    className="pl-9 bg-gray-700 border-blue-400 border text-white w-full"
+                                    style={{ minWidth: '200px' }}
+                                    />
                                 </div>
                             </div>
-                        ))}
+                        </div>
+                    </div>
+        
+                    <div className="flex-1  overflow-y-auto" data-aos='fade' data-aos-delay="700">
+                        <AnimatePresence mode="wait">
+                            {loading ? (
+                                <div className="flex flex-col gap-6">
+                                    {[...Array(3)].map((_, i) => (
+                                    <ConversationsCardSkeleton key={i} />
+                                    ))}
+                                </div>
+                            ) 
+                            // conversations.length === 0 ? (
+                            //     <motion.div
+                            //         initial={{ opacity: 0, scale: 0.95 }}
+                            //         animate={{ opacity: 1, scale: 1 }}
+                            //         exit={{ opacity: 0, scale: 0.95 }}
+                            //         className="flex flex-col items-center justify-center py-20"
+                            //     >
+                            //         <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
+                            //         <Search className="w-10 h-10 text-blue-500" />
+                            //         </div>
+                            //         <h3 className="text-xl font-semibold text-white mb-2">No conversations found</h3>
+
+                            //     </motion.div>
+                            // ) 
+                            : (
+                                <motion.div 
+                                    layout
+                                    className="flex flex-col  gap-6"
+                                >
+                                    {conversations.map(conversation => (
+                                        <div
+                                            key={conversation.id}
+                                            className={`flex items-center p-4 cursor-pointer transition-all duration-200 border-b border-gray-900 hover:bg-gray-900 ${
+                                                selectedConversation?.id === conversation.id 
+                                                    ? 'bg-gray-900 border-l-4 border-l-blue-300' 
+                                                    : ''
+                                            }`}
+                                            onClick={() => handleSelectConversation(conversation)}
+                                        >
+                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
+                                                selectedConversation?.id === conversation.id
+                                                    ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                                                    : 'bg-gray-800 text-gray-300'
+                                            }`}>
+                                                {/* {getConversationName(conversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)} */}
+                                                <img
+                                                    className="rounded-full border border-blue-300 h-full w-full"
+                                                    alt="user"
+                                                    src={
+                                                    conversation.participants.find((u)=>u.id!==userId)?.
+                                                    profilePicture
+                                                    //   ? u.profilePicture
+                                                    //     ? u.profilePicture
+                                                    //     : `${BASE_URL}/${u.profilePicture}`
+                                                    //   : "/default-avatar.png" // fallback image
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="flex-1 min-w-0 relative">
+                                                <div className="flex items-center justify-between mb-1">
+                                                    <div className="font-semibold text-white truncate">
+                                                        {getConversationName(conversation)}
+                                                    </div>
+                                                    {conversation.unread_count > 0 && (
+                                                        
+                                                        <Badge
+                                                            className="ml-2 shadow-md shadow-amber-100 text-black text-xs font-bold  py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
+                                                            variant="secondary"
+                                                        >
+                                                            {conversation.unread_count}
+                                                        </Badge>
+                                                        // <div className="ml-2 bg-[#c1ff72] text-black text-xs font-bold px-2 py-0.5 rounded-full">
+                                                            
+                                                        // </div>
+                                                    )}
+                                                </div>
+                                                <div className="text-sm text-gray-400 truncate">
+                                                    {/* Show original content without time processing for preview */}
+                                                    {formatMessageContent(conversation.last_message?.content )|| 'No messages yet'}
+                                                </div>
+                                                <div className={conversation.conversation_type=="group"?"flex -space-x-2  absolute right-0 top-9": "hidden"}>
+                                                    <Avatar className="size-6">
+                                                        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                                                        <AvatarFallback>CN</AvatarFallback>
+                                                    </Avatar>
+                                                    <Avatar className="size-6">
+                                                        <AvatarImage src="https://github.com/leerob.png" alt="@leerob" />
+                                                        <AvatarFallback>LR</AvatarFallback>
+                                                    </Avatar>
+                                                    <Avatar className="size-6">
+                                                        <AvatarImage
+                                                            src="https://github.com/evilrabbit.png"
+                                                            alt="@evilrabbit"
+                                                        />
+                                                        <AvatarFallback>ER</AvatarFallback>
+                                                    </Avatar>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                        
                     </div>
                 </div>
     
@@ -1016,13 +1573,18 @@ const ChatComponent = ({ userId = 11 }) => {
     
                             {/* Messages Area */}
                             <div className="flex-1 overflow-y-auto p-6 space-y-4 ">
-                                {messages.length === 0 ? (
-                                    <div className="h-full flex items-center justify-center">
-                                        <div className="text-center">
-                                            <MessageCircle size={64} className="mx-auto mb-4 text-gray-700" />
-                                            <p className="text-gray-500 text-lg">No messages yet. Start the conversation!</p>
+                                {loading ? (
+                                        <div className="flex flex-col gap-6" style={{zIndex:999999}}>
+                                            {[...Array(3)].map((_, i) => (
+                                            <MessagesSkeleton key={i} />
+                                            ))}
                                         </div>
-                                    </div>
+                                    // <div className="h-full flex items-center justify-center">
+                                    //     <div className="text-center">
+                                    //         <MessageCircle size={64} className="mx-auto mb-4 text-gray-700" />
+                                    //         <p className="text-gray-500 text-lg">No messages yet. Start the conversation!</p>
+                                    //     </div>
+                                    // </div>
                                 ) : (
                                     messages.map(message => (
                                         <div className="flex-col gap-2 ">
@@ -1092,21 +1654,22 @@ const ChatComponent = ({ userId = 11 }) => {
                                                             <textarea
                                                                 value={editingContent}
                                                                 onChange={(e) => setEditingContent(e.target.value)}
-                                                                className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-[#c1ff72] transition-all duration-300 resize-none"
+                                                                className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-400 transition-all duration-300 resize-none"
                                                                 rows={3}
                                                                 autoFocus
                                                             />
                                                             <div className="w-full flex gap-2 mt-3 items-center justify-around">
                                                                 <button
                                                                     onClick={cancelEditMessage}
-                                                                    className="w-full flex justify-center items-center p-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200"
+                                                                    className="w-full flex justify-center items-center p-2 rounded-md bg-red-800  hover:shadow-[0px_0px_10px_red] text-gray-300 transition-all duration-200"
                                                                 >
                                                                     <X size={16} />
                                                                 </button>
                                                                 <button
                                                                     onClick={() => saveEditMessage(message.id)}
                                                                     disabled={!editingContent.trim()}
-                                                                    className="w-full flex justify-center items-center p-2 rounded-lg bg-[#c1ff72] hover:bg-[#b0ef62] text-black transition-all duration-200 disabled:opacity-50"
+                                                                    style={{background:'linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)'}}
+                                                                    className="w-full flex justify-center items-center p-2 rounded-md hover:scale:102 hover:shadow-blue-400 hover:shadow-[0px_0px_10px_blue]  text-black transition-all duration-200 disabled:opacity-50"
                                                                 >
                                                                     <Check size={16} />
                                                                 </button>
@@ -1114,14 +1677,14 @@ const ChatComponent = ({ userId = 11 }) => {
                                                         </div>
                                                     ) : (
                                                         <div className={`${message.sender_id === userId?'flex-row-reverse flex gap-2':'flex gap-2'}`}>
-                                                            <Avatar className="size-10 bg-linear-to-br from-blue-300 to-purple-300 text-black font-bold flex items-center justify-center">
+                                                            <Avatar className="size-10 border border-blue-400 text-black font-bold flex items-center justify-center">
                                                             {/* {(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]} */}
-                                                                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                                                                <AvatarImage src={message?.sender?.profilePicture} alt="@shadcn" />
                                                                 <AvatarFallback>{(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]}</AvatarFallback>
                                                             </Avatar>
                                                             <div className={`px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl ${
                                                                 message.sender_id === userId
-                                                                    ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                                                                    ? 'bg-white text-black'
                                                                     : 'bg-[#1a1a1a] text-white border border-gray-800'
                                                             }`}>
                                                                 
@@ -1209,12 +1772,12 @@ const ChatComponent = ({ userId = 11 }) => {
                                 <div>
                                     <h2 className="text-3xl font-bold text-white mb-3">Welcome to Chat</h2>
                                     <p className="text-gray-500 mb-6">Select a conversation or create a new one to start chatting</p>
-                                    <button 
+                                    <Button 
                                         onClick={() => setShowCreateModal(true)}
-                                        className="px-8 py-4 rounded-2xl bg-[#c1ff72] hover:bg-[#b0ef62] text-black font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
+                                        className="px-8 py-4 rounded-md bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white  text-black font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
                                     >
                                         Start New Conversation
-                                    </button>
+                                    </Button>
                                 </div>
                             </div>
                         </div>
@@ -1255,7 +1818,7 @@ const ChatComponent = ({ userId = 11 }) => {
                                 </div>
                                 <div className="space-y-2 max-h-60 overflow-y-auto">
                                     {selectedConversation.participants?.map(participant => {
-                                        const user = MOCK_USERS.find(u => u.id === participant.id) || participant;
+                                        const usr = users.find(u => u.id === participant.id) || participant;
                                         const isOnline = onlineUsers.has(participant.id.toString());
                                         const isCurrentUser = participant.id === userId;
                                         
@@ -1263,7 +1826,12 @@ const ChatComponent = ({ userId = 11 }) => {
                                             <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-900 transition-all">
                                                 <div className="relative">
                                                     <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-semibold text-sm">
-                                                        {(user.firstName || user.first_name)?.[0]}{(user.lastName || user.last_name)?.[0]}
+                                                        {/* {(usr.firstName || usr.first_name)?.[0]}{(usr.lastName || usr.last_name)?.[0]} */}
+                                                        <Avatar className="size-10 bg-linear-to-br from-blue-300 to-purple-300 text-black font-bold flex items-center justify-center">
+                                                            {/* {(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]} */}
+                                                                <AvatarImage src={participant?.profilePicture} alt="@shadcn" />
+                                                                <AvatarFallback>{(participant?.firstName || participant?.first_name)?.[0]}{(participant?.lastName || participant?.last_name)?.[0]}</AvatarFallback>
+                                                            </Avatar>
                                                     </div>
                                                     {isOnline && (
                                                         <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
@@ -1272,10 +1840,10 @@ const ChatComponent = ({ userId = 11 }) => {
                                                 <div className="flex-1 min-w-0">
                                                     <div className="text-white text-sm font-medium flex items-center gap-2">
                                                         <span className="truncate">
-                                                            {user.firstName || user.first_name} {user.lastName || user.last_name}
+                                                            {usr.firstName || usr.first_name} {usr.lastName || usr.last_name}
                                                         </span>
                                                         {isCurrentUser && (
-                                                            <span className="flex-shrink-0 text-xs bg-[#c1ff72] text-black px-2 py-0.5 rounded-full font-semibold">
+                                                            <span className="shrink-0 text-xs bg-[#c1ff72] text-black px-2 py-0.5 rounded-full font-semibold">
                                                                 You
                                                             </span>
                                                         )}

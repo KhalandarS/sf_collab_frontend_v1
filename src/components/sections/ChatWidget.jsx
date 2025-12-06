@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Paperclip, Smile, Check, CheckCheck } from 'lucide-react';
+import { BiSolidMessageEdit } from "react-icons/bi";
 
 // Mock team members data
 const teamMembers = [
@@ -193,7 +194,7 @@ const ChatHeader = ({ onClose }) => {
 // Chat Window Component
 const ChatWindow = ({ onClose, messages, onSendMessage, isTyping }) => {
   return (
-    <div className="fixed bottom-24 right-6 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col animate-slideUp z-50 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-8rem)]">
+    <div style={{zIndex:9999999999}} className="fixed bottom-22 right-6 w-[400px] h-[600px] bg-white rounded-2xl shadow-2xl flex flex-col animate-slideUp z-50 max-w-[calc(100vw-3rem)] max-h-[calc(100vh-8rem)]">
       <ChatHeader onClose={onClose} />
       <MessageList messages={messages} isTyping={isTyping} />
       <MessageInput onSendMessage={onSendMessage} />
@@ -206,15 +207,18 @@ const FloatingButton = ({ onClick, hasUnread }) => {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-6 right-6 w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full shadow-2xl hover:shadow-blue-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 group"
-    >
-      <MessageCircle size={28} className="group-hover:scale-110 transition-transform" />
+      style={{background:'white',zIndex:999999999999}}
+      className="fixed bottom-8 right-12 w-13 h-13 group shadow-2xl hover:shadow-blue-500/50  transition-all duration-700 hover:shadow-[0px_0px_10px_#FFFFFF]  rounded-full  flex items-center justify-center hover:scale-110">
+
+      {/* <MessageCircle size={28} className="group-hover:scale-110 transition-transform" /> */}
+      {/* <img src="/chat.png" className='p-2 group-hover:scale-105 transition-all duration-1000  ' alt="" />  */}
+      <BiSolidMessageEdit size={25} className='text-blue-500' />
       {hasUnread && (
         <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-4 border-white animate-pulse flex items-center justify-center">
           <span className="text-xs font-bold">1</span>
         </div>
       )}
-      <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20"></div>
+      {/* <div className="absolute inset-0 rounded-full bg-blue-400 animate-ping opacity-20"></div> */}
     </button>
   );
 };

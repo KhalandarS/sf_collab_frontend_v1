@@ -49,6 +49,19 @@ const mockUserData = {
     city: "San Francisco",
     timezone: "America/Los_Angeles"
   },
+  accountSecurity: {
+  password: "",
+  newPassword: "",
+  confirmPassword: "",
+  twoFactorEnabled: false,
+  backupCodes: [],
+  sessions: [],
+    connectedAccounts: {
+      google: false,
+      github: false,
+      linkedin: false,
+    }
+  },
   preferences: {
     emailNotifications: true,
     pushNotifications: true,
@@ -72,6 +85,13 @@ const mockUserData = {
       end: "08:00"
     }
   },
+  savedItems: {
+  ideas: [],
+  startups: [],
+  posts: [],
+  resources: [],
+  archived: []
+},
   statistics: {
     total_ideas: 12,
     total_tasks: 45,

@@ -24,6 +24,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
           <div>
             <h1 className="text-2xl font-semibold text-white flex items-center gap-2"><LuLayoutDashboard/>
             <ShinyText 
+            // fontStyle={"Trade Winds, system-ui"}
               text="Dashboard" 
               disabled={false} 
               speed={3} 

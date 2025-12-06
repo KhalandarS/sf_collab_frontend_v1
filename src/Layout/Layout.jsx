@@ -6,6 +6,12 @@ import MobileNavBar from "../components/sections/MobileNavBar";
 import Options from "../components/sections/Options";
 import useScrollHide from "../hooks/useScrollHide";
 import FloatingChatbox from "../components/sections/ChatWidget";
+import AOS from 'aos';
+import 'aos/dist/aos.css'; 
+
+
+import GlassmorphismFeedbackCard from '../components/sections/CompactFeedbackCard';
+
 
 const Layout = () => {
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
@@ -17,10 +23,21 @@ const Layout = () => {
   const optionsRef = useRef(null);
   const navContainerRef = useRef(null);
 
+  const [isOpen, setIsOpen] = useState(false);
+
   // Handle mouse enter for the entire nav area
   const handleNavAreaEnter = () => {
     setIsOptionsVisible(true);
   };
+  
+  useEffect(() => {
+    AOS.init({
+      duration: 800,       
+      easing: "ease-out",  
+      once: false,         
+      mirror: false        
+    });
+  }, []);
   
   useEffect(()=>{
     setIsOptionsVisible(true);
@@ -28,6 +45,8 @@ const Layout = () => {
     setTimeout(()=>{
       setIsOptionsVisible(false);
     },1000);
+    
+    
   },[]);
   
   // Handle mouse leave with proper event delegation
@@ -51,10 +70,12 @@ const Layout = () => {
     }
     setIsOptionsVisible(false);
   };
+  
+  
 
   return (
     <div className="relative h-screen w-screen overflow-hidden flex flex-col">
-      {/* Dark Horizon Glow */}
+      {/* Dark Horizon Glow*/}
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -71,13 +92,13 @@ const Layout = () => {
           isNavHidden ? "h-0" : "h-[60px]"
         } lg:h-[60px]`}
       >
-        <NavBar isHidden={isNavHidden} />
+        <NavBar setIsOpen={setIsOpen} isOpen={isOpen} isHidden={isNavHidden} />
       </div>
 
       <div className="relative flex-1 w-full flex overflow-hidden">
         {/* Desktop Sidebar - Hidden on mobile */}
         <div className="hidden sm:block">
-          <SideBar />
+          <SideBar setIsOpen={setIsOpen} isOpen={isOpen} />
         </div>
         
         {/* Main Content Area */}
@@ -87,10 +108,10 @@ const Layout = () => {
             ref={optionsRef}
             onMouseEnter={handleOptionsEnter}
             onMouseLeave={handleOptionsLeave}
-            className={`transition-all duration-300 px-4 bg-gray-400/8 backdrop-blur-sm p-3 rounded-b-2xl absolute z-50 left-1/3 top-0 ${
+            className={`transition-all duration-300 px-4  absolute z-50 w-full flex justify-center top-0 ${
               isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
             }`}
-            style={{ zIndex: 9999 }}
+            style={{ zIndex: 99999999 }}
           >
             <Options isHidden={isNavHidden} />
           </div>
@@ -103,6 +124,8 @@ const Layout = () => {
           </div>
           
           <FloatingChatbox />
+          <GlassmorphismFeedbackCard />
+
         </div>
       </div>
 

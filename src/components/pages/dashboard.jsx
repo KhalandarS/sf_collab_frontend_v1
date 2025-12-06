@@ -14,15 +14,34 @@ import GlareHover from "../ui/GlareHover";
 import { GrOverview } from "react-icons/gr";
 import ShinyText from "../ui/ShinyText";
 import { useDispatch ,useSelector} from "react-redux";
+import { NotificationList } from "../ui/notification-list";
+import {
+  KanbanBoard,
+  KanbanCard,
+  KanbanCards,
+  KanbanHeader,
+  KanbanProvider,
+} from '../ui/shadcn-io/kanban';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { faker } from '@faker-js/faker';
 
+
+import { GravityStarsBackground } from '../../components/animate-ui/components/backgrounds/gravity-stars';
+
+//!
+
+
+//!
 const Dashboard = () => {
   const [query, setQuery] = useState("");
   const [userData,setUserData]=useState(null);
   // State for search functionality
   const [searchValue, setSearchValue] = useState('');
   
+
   const dispatch=useDispatch();
   const {user,access_token,refreshToken,loading,error} = useSelector((state) => state.auth);
+  
   
   // Search handler function
   const handleSearch = (event) => {
@@ -35,7 +54,7 @@ const Dashboard = () => {
     // Only run this when the user changes
     if (user) {
       setUserData(user);
-      alert(`Welcome back, ${user.firstName}!`);
+      // alert(`Welcome back, ${user.firstName}!`);
     }
   }, [user]);
   
@@ -50,9 +69,35 @@ const Dashboard = () => {
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
-          <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
-          <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-collapsible-down" style={{ animationDelay: '10s' }}/>
+          <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDelay: '10s' }} />
         </div>
+        
+
+    {/* <GravityStarsBackground
+    starsCount={200}
+    
+  starsOpacity={0.3}
+
+  className="absolute inset-0 h-full w-full flex items-center justify-center rounded-xl"
+/> */}
+
+
+    {/* ({ starsCount, starsSize, starsOpacity, glowIntensity, glowAnimation, movementSpeed, mouseInfluence, mouseGravity, gravityStrength, starsInteraction, starsInteractionType, className, ...props }: {
+    [x: string]: any;
+    starsCount?: number;
+    starsSize?: number;
+    starsOpacity?: number;
+    glowIntensity?: number;
+    glowAnimation?: string;
+    movementSpeed?: number;
+    mouseInfluence?: number;
+    mouseGravity?: string;
+    gravityStrength?: number;
+    starsInteraction?: boolean;
+    starsInteractionType?: string;
+    className: any;
+}) */}
         {/* Welcome Banner */}
         <div className="w-full p-6 mb-6">
           <div className="relative overflow-hidden rounded-2xl transition-all">
@@ -78,15 +123,16 @@ const Dashboard = () => {
                   glareColor="#ffffff"
                   glareOpacity={0.3}
                   glareAngle={-30}
+                  // img={}
                   glareSize={300}
                   transitionDuration={800}
                   playOnce={true}
                 >
-                  <div className="w-full flex flex-col lg:flex-row items-start lg:items-center justify-around gap-2 p-4">
+                  <div className="w-full group relative flex flex-col lg:flex-row items-start lg:items-center justify-around gap-2 p-4">
                     <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300`} />
-                  
+                    <img src="/design.png" className="absolute group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
                     {/* Welcome Text */}
-                    <div className="flex-1">
+                    <div className="flex-1 relative">
                       <h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
                         Welcome back, &nbsp;
                         <span className='relative whitespace-nowrap'>
@@ -99,35 +145,39 @@ const Dashboard = () => {
                         </span>
                       </h1>
                       <p className="text-lg text-white/80 max-w-2xl">
-                        Here's what's happening with your startups today. You have <span className="font-semibold text-white">{userData?userData?.notificationsCount:"3"} new notifications</span> and <span className="font-semibold text-white">{userData?userData?.pendingTasksCount:"12"} pending tasks</span> to review.
+                        Here's what's happening with your startups today. You have <span className="font-semibold text-white">{userData?userData?.notificationsCount:"3"} new notification{userData&&userData?.notificationsCount>1?"'s":""}</span> and <span className="font-semibold text-white">{userData?userData?.pendingTasksCount:"12"} pending task{userData&&userData?.pendingTasksCount>1?"'s":""}</span> to review.
                       </p>
                       
                       {/* Stats Row */}
                       <div className="flex flex-wrap gap-6 mt-6">
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-white/70 text-sm">{userData?userData?.activeStartupsCount:"5"} Active Startups</span>
+                          <span className="text-white/70 text-sm" >{userData?userData?.activeStartupsCount:"5"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Active Startups</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm">{userData?`$${userData?.totalRevenue}K`:"$24.8K"} Revenue</span>
+                          <span className="text-white/70 text-sm" >{userData?`$${userData?.totalRevenue}K`:"$24.8K"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Revenue</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm">{userData?`${userData?.satisfactionPercentage}%`:"98%"} Satisfaction</span>
+                          <span className="text-white/70 text-sm" >{userData?`${userData?.satisfactionPercentage}%`:"98%"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Satisfaction</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm">{userData?`${userData?.lastActivityDate} Last activity`:"__"}</span>
+                          <span className="text-white/70 text-sm" >{userData?`${userData?.lastActivityDate} `:"__"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Last activity</span></span>
                         </div>
                       </div>
+                      
                     </div>
       
                     {/* Quick Actions */}
                     <div className="flex  gap-3">
-                      <div className="w-36 flex items-center justify-around h-14 bg-blue-400/30 border border-blue-400 p-3 rounded-full"><img src="/flame.png" alt="flame" style={{width:'40px'}}/><small>{userData?userData?.streakDays:"7"} days Streak</small> </div>
-                      <div className="w-36 flex items-center justify-around h-14 bg-purple-400/30 border border-purple-400 p-3 rounded-full"><img src="/trophy.png" alt="trophy" style={{width:'40px'}}/> <small>{userData?userData?.xpPoints:"1000"} XP</small></div>
+                      <div className="w-40 flex items-center justify-around h-10 bg-blue-400/30 border border-blue-400 p-3 rounded-full"><img src="/flame.png" alt="flame" style={{width:'30px'}}/><small style={{fontFamily: "Trade Winds, system-ui"}}>{userData?userData?.streakDays:"7"}&nbsp;&nbsp; <strong >days Streak</strong> </small> </div>
+                      <div className="w-40 flex items-center justify-around h-10 bg-purple-400/30 border border-purple-400 p-3 rounded-full"><img src="/trophy.png" alt="trophy" style={{width:'30px'}}/> <small style={{fontFamily: "Trade Winds, system-ui"}}>{userData?userData?.xpPoints:"1000"}&nbsp;&nbsp; <strong >XP</strong> </small></div>
                     </div>
+                    
+                    {/* <img src="/startup.png" className="w-70 absolute right-50 -z-30 opacity-15 top-0" alt="" /> */}
+                    
                   </div>
                 </GlareHover>
                 </div>
@@ -147,6 +197,7 @@ const Dashboard = () => {
               
                 <h1 className="relative text-2xl font-semibold text-white"><ShinyText 
               text="Dashboard Overview" 
+              
               disabled={false} 
               speed={3} 
               className='custom-class' 
@@ -159,23 +210,23 @@ const Dashboard = () => {
         <div className="w-full overflow-x-hidden mb-4">
           <DashboardSection searchQuery={query} />
         </div>
-        <div className="w-full h-full overflow-y-auto">
+        {/* <div className="w-full overflow-x-hidden mb-4">
+          <NotificationList />
+        </div> */}
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden">
           <WorldClock />
-          
+        </div>
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden">
+          <Calendar />
+        </div>
+        <div className="w-full h-full overflow-y-auto overflow-x-hidden">
+          {/* <Tasks /> */}
+          <TaskProgress />
+        </div>
+        <div className="w-full overflow-x-hidden">
+          <Tasks searchQuery={query} />
         </div>
         
-        <div className="grid grid-col-1 lg:grid-cols-2 gap-6 w-full p-8">
-          <div className="w-full h-full overflow-y-auto">
-            <Calendar />
-          </div>
-          <div className="w-full h-full overflow-y-auto">
-            {/* <Tasks /> */}
-            <TaskProgress />
-          </div>
-        </div>
-      </div>
-      <div className="w-full overflow-x-hidden">
-        <Tasks searchQuery={query} />
       </div>
 
 

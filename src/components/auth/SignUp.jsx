@@ -1,11 +1,25 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect,useRef } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { setUser,setToken } from "../../services/auth/authSlice";
+import { useDispatch } from "react-redux";
+import NavBar from "../sections/NavBar";
+import useScrollHide from "../../hooks/useScrollHide";
+import { TiThMenu } from "react-icons/ti";
+import { ShineButton } from '../lightswind/shine-button';
+import { FaUserPlus } from "react-icons/fa6";
+import ShinyText from "../ui/ShinyText";
+import { PasswordStrengthIndicator } from "../lightswind/password-strength-indicator";
+import {Button} from '../ui/button';
+import LoadingSpinner from "../LoadingSpinner";
 
 const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5000/api/auth';
+const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
 
 export default function SignUp() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const dispatch=useDispatch();
+  
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
@@ -15,30 +29,80 @@ export default function SignUp() {
     lastName: "",
     email: "",
     password: "",
-    profile_company: "",
-    profile_country: "",
-    profile_city: "",
-    profile_timezone: "UTC",
-    pref_language: "en",
-    pref_timezone: "UTC",
-    pref_theme: "light",
-    agreeToTerms: false
+    // profile_company: "",
+    // profile_country: "",
+    // profile_city: "",
+    // profile_timezone: "UTC",
+    // pref_language: "en",
+    // pref_timezone: "UTC",
+    // pref_theme: "light",
+    // agreeToTerms: false
   })
 
+  const { isHidden: isNavHidden, onScroll } = useScrollHide({
+    deltaThreshold: 4,
+    topReveal: 10,
+  });
+  
+  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+    const optionsRef = useRef(null);
+    const navContainerRef = useRef(null);
+    const revealImgRef = useRef(null);
+    
+    // Handle mouse enter for the entire nav area
+    const handleNavAreaEnter = () => {
+      setIsOptionsVisible(true);
+    };
+    
+    useEffect(()=>{
+      setIsOptionsVisible(true);
+      
+      setTimeout(()=>{
+        setIsOptionsVisible(false);
+      },1000);
+    },[]);
+    
+    // Handle mouse leave with proper event delegation
+    const handleNavAreaLeave = (e) => {
+      // Check if we're moving to the options element
+      if (optionsRef.current && optionsRef.current.contains(e.relatedTarget)) {
+        return; // Don't hide if moving to options
+      }
+      setIsOptionsVisible(false);
+    };
+  
+    // Handle options area specifically
+    const handleOptionsEnter = () => {
+      setIsOptionsVisible(true);
+    };
+  
+    const handleOptionsLeave = (e) => {
+      // Check if we're moving back to the nav area
+      if (navContainerRef.current && navContainerRef.current.contains(e.relatedTarget)) {
+        return; // Don't hide if moving back to nav
+      }
+      setIsOptionsVisible(false);
+    };
+    
   // Listen for OAuth popup messages
   useEffect(() => {
     const handleOAuthMessage = (event) => {
-      const allowedOrigins = [
-        new URL(API_URL).origin,
-        "http://localhost:5000",
-        "null",
-      ];
+      // const allowedOrigins = [
+      //   new URL(API_URL).origin,
+      //   "http://localhost:5000",
+      //   "null",
+      //   "https://sfclb.netlify.app"
+      // ];
   
-      if (!allowedOrigins.includes(event.origin)) {
-        console.warn("Blocked message from:", event.origin);
-        return;
-      }
-  
+      // if (!allowedOrigins.includes(event.origin)) {
+      //   console.warn("Blocked message from:", event.origin);
+      //   return;
+      // }
+      
+      if (event.origin !== ORIGIN) return;
+      
+      // alert(JSON.stringify(event.data));
+      
       const { type, provider, access_token, refreshToken, user, error } = event.data;
   
       if (type === "oauth_success") {
@@ -50,10 +114,14 @@ export default function SignUp() {
   
         setLoaderState(false);
   
-        navigate("/dashboard");
-      }
-  
-      if (type === "oauth_error") {
+        dispatch(setToken(access_token));
+        dispatch(setUser(user));
+        
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+        
+      }else if(type === "oauth_error") {
         console.error("OAuth ERROR:", error);
         setLoaderState(false);
         setErrors(prev => ({
@@ -90,6 +158,20 @@ export default function SignUp() {
     window.open(
       `${API_URL}/google/login`,
       'Google Sign Up',
+      `width=${width},height=${height},left=${left},top=${top}`
+    );
+  };
+  
+  const handleGithubSignUp = () => {
+    setLoaderState(true);
+    const width = 500;
+    const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+    // setAlertConf({title:"Authenticating with GitHub ....", message:"This will only take a moment. Please follow the GitHub sign-in window."});
+    window.open(
+      `${API_URL}/github/login`,
+      'Github Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
   };
@@ -141,13 +223,13 @@ export default function SignUp() {
           last_name: formData.lastName,
           email: formData.email,
           password: formData.password,
-          profile_company: formData.profile_company,
-          profile_country: formData.profile_country,
-          profile_city: formData.profile_city,
-          profile_timezone: formData.profile_timezone,
-          pref_language: formData.pref_language,
-          pref_timezone: formData.pref_timezone,
-          pref_theme: formData.pref_theme,
+          // profile_company: formData.profile_company,
+          // profile_country: formData.profile_country,
+          // profile_city: formData.profile_city,
+          // profile_timezone: formData.profile_timezone,
+          // pref_language: formData.pref_language,
+          // pref_timezone: formData.pref_timezone,
+          // pref_theme: formData.pref_theme,
         }),
       });
 
@@ -159,8 +241,18 @@ export default function SignUp() {
         localStorage.setItem('refreshToken', result.refreshToken);
         localStorage.setItem('user', JSON.stringify(result.user));
         
-        navigate('/dashboard');
-      } else {
+        dispatch(setToken(result.access_token));
+        dispatch(setUser(result.user));
+        
+        setLoaderState(false);
+  
+        // Redirect to dashboard
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 1000);
+      }else {
+        setLoaderState(false);
+      
         setErrors(prev => ({
           ...prev,
           submit: result.error || 'Signup failed'
@@ -201,50 +293,143 @@ export default function SignUp() {
   ];
 
   return (
+  <div>
+    {/* Collapsible Top Nav Container */}
+    <div
+      ref={navContainerRef}
+      onMouseEnter={handleNavAreaEnter}
+      onMouseLeave={handleNavAreaLeave}
+      className={`w-full  overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+        isNavHidden ? "h-0" : "h-[60px]"
+      } lg:h-[60px]`}
+      // style={{zIndex:9999}}
+    >
+      <NavBar isHidden={isNavHidden} />
+    </div>
+    
+    {/* Dark Horizon Glow */}
+    <div
+      className="absolute inset-0 z-0"
+      style={{
+        background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+      }}
+    />
+
     <div className="min-h-screen flex">
       {/* Loader Overlay */}
       {loaderState && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
-          <div className="loader-container flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-            <p className="text-white mt-4 text-lg font-medium">Connecting to Google...</p>
-            <p className="text-gray-300 mt-2 text-sm">Please complete the authentication</p>
-          </div>
-        </div>
+          <LoadingSpinner
+          title="Authenticating ..."
+          message="This will only take a moment."
+        />
       )}
-
+      
       {/* Left side - RECOLLAB Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-black">
-        <img 
-          src="https://images.unsplash.com/photo-1749315098378-4671599e1d81?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwzfHx8ZW58MHx8fHx8"
-          className="w-full h-full object-cover"
+        {/* <img 
+          src="/collaboration.png"
+          className="w-full max-h-screen object-cover"
           alt="Recollab Background" 
-        />
+        /> */}
+        <video src="/Futuristic_Office_Hologram_Animation.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
       </div>
 
       {/* Right side - Sign Up Form */}
-      <div className="w-full lg:w-1/2 bg-black flex items-center justify-center p-8">
+      <div 
+      style={{ 
+        height: '800px', 
+        position: 'relative', 
+        overflow: 'hidden',
+        backgroundColor: '#060010',
+        zIndex:999
+      }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const el = revealImgRef.current;
+        if (el) {
+          el.style.setProperty('--mx', `${x}px`);
+          el.style.setProperty('--my', `${y + rect.height * 0.5}px`);
+        }
+      }}
+      onMouseLeave={() => {
+        const el = revealImgRef.current;
+        if (el) {
+          el.style.setProperty('--mx', '-9999px');
+          el.style.setProperty('--my', '-9999px');
+        }
+      }}
+      className="w-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
+        <img
+          ref={revealImgRef}
+          src="/shiny_logo.png"
+          alt="Reveal effect"
+          style={{
+            position: 'absolute',
+            width: '100%',
+            top: '-10%',
+            zIndex: 5,
+            mixBlendMode: 'lighten',
+            opacity: 0.3,
+            pointerEvents: 'none',
+            '--mx': '-9999px',
+            '--my': '-9999px',
+            WebkitMaskImage: 'radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,1) 0px, rgba(255,255,255,0.95) 60px, rgba(255,255,255,0.6) 120px, rgba(255,255,255,0.25) 180px, rgba(255,255,255,0) 240px)',
+            maskImage: 'radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,1) 0px, rgba(255,255,255,0.95) 60px, rgba(255,255,255,0.6) 120px, rgba(255,255,255,0.25) 180px, rgba(255,255,255,0) 240px)',
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat'
+          }}
+        />
         <div className="w-full max-w-md space-y-6">
           <div className="space-y-2 text-center lg:text-left">
-            <h1 className="text-2xl font-semibold text-white">Sign Up Account</h1>
+          <h1 className="text-4xl text-center font-semibold text-white">
+            <ShinyText 
+              text="Sign up" 
+              disabled={false} 
+              speed={3} 
+              className='mb-5' 
+            />
             <p className="text-gray-400 text-sm">Enter your personal data to create your account.</p>
+            </h1>
           </div>
 
+          <div className="flex items-center justify-between gap-4">
+               {/* Google Sign In Button */}
+               <Button
+                // as="button"
+                // color="white"
+                // speed="5s"
+                className="w-1/2   bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                onClick={handleGoogleSignUp}
+                // thickness="10px"
+              >
+                  <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Continue with Google
+              </Button>
+              
+               {/* Github Sign In Button */}
+                <Button
+                  className="w-1/2 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                  onClick={handleGithubSignUp}
+                >
+                  <svg 
+                    className="w-5 h-5 mr-2" 
+                    viewBox="0 0 24 24" 
+                    fill="currentColor"
+                  >
+                    <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                  </svg>
+                  Continue with GitHub
+                </Button>
+             </div>
+             
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Google Sign Up Button */}
-            <button 
-              type="button"
-              onClick={handleGoogleSignUp}
-              className="w-full bg-transparent border border-gray-700 text-white flex items-center justify-center py-2 rounded hover:bg-gray-800 transition-colors"
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
-              Continue with Google
-            </button>
 
             {/* Divider */}
             <div className="relative">
@@ -314,7 +499,7 @@ export default function SignUp() {
             </div>
 
             {/* Company Field */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label htmlFor="profile_company" className="text-white text-sm">Company</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -329,10 +514,10 @@ export default function SignUp() {
                   className="border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10"
                 />
               </div>
-            </div>
+            </div> */}
 
             {/* Location Fields */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="profile_country" className="text-white text-sm">Country</label>
                 <div className="relative">
@@ -368,10 +553,10 @@ export default function SignUp() {
                   />
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Preferences */}
-            <div className="grid grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="pref_language" className="text-white text-sm">Language</label>
                 <div className="relative">
@@ -408,10 +593,10 @@ export default function SignUp() {
                   </select>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* Theme Preference */}
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <label htmlFor="pref_theme" className="text-white text-sm">Theme Preference</label>
               <select
                 id="pref_theme"
@@ -423,22 +608,29 @@ export default function SignUp() {
                   <option key={theme.value} value={theme.value}>{theme.label}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
             {/* Password Field */}
             <div className="space-y-2">
-              <label htmlFor="password" className="text-white text-sm">Password *</label>
+              {/* <label htmlFor="password" className="text-white text-sm">Password *</label> */}
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute bottom-7 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock size={16} className="text-gray-500" />
                 </div>
-                <input
+                <PasswordStrengthIndicator
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  // onStrengthChange={setStrength}
+                  label="Password *"
+                  showScore={true}
+                  showScoreNumber={true}
+                />
+                {/* <input
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   value={formData.password}
                   onChange={(e) => handleInputChange("password", e.target.value)}
-                  className={`border ${errors.password ? 'border-red-500' : 'border-gray-700'} text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10 pr-10`}
                 />
                 <button
                   type="button"
@@ -446,7 +638,7 @@ export default function SignUp() {
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                </button>
+                </button> */}
               </div>
               {errors.password && <p className="text-red-500 text-xs">{errors.password}</p>}
               <p className="text-xs text-gray-500">Must be at least 8 characters.</p>
@@ -459,15 +651,15 @@ export default function SignUp() {
                 id="agreeToTerms"
                 checked={formData.agreeToTerms}
                 onChange={(e) => handleInputChange("agreeToTerms", e.target.checked)}
-                className="mt-1 rounded border-gray-700 bg-black text-purple-600 focus:ring-purple-500"
+                className="mt-1 rounded border-gray-700 bg-black text-blue-600 focus:ring-blue-500"
               />
               <label htmlFor="agreeToTerms" className="text-sm text-gray-300">
                 I agree to the{" "}
-                <a href="#" className="text-purple-400 hover:text-purple-300">
+                <a href="#" className="text-blue-400 hover:text-blue-300">
                   Terms and Conditions
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-purple-400 hover:text-purple-300">
+                <a href="#" className="text-blue-400 hover:text-blue-300">
                   Privacy Policy
                 </a>
               </label>
@@ -479,13 +671,15 @@ export default function SignUp() {
             )}
 
             {/* Sign Up Button */}
-            <button 
+            <ShineButton 
+              className="w-full  disabled:opacity-50 disabled:cursor-not-allowed relative h-10 cursor-pointer rounded-md flex items-center justify-center text-white "
               type="submit"
               disabled={isLoading}
-              className="w-full bg-white text-black hover:bg-gray-100 font-medium py-2 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Creating Account..." : "Sign Up"}
-            </button>
+              label={isLoading ? "Creating Account..." : "Sign Up"}
+              icon={<FaUserPlus size={20} className="absolute left-35 "/>}
+              size="md" 
+              bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+            />
 
             {/* Login Link */}
             <p className="text-center text-sm text-gray-400">
@@ -502,5 +696,6 @@ export default function SignUp() {
         </div>
       </div>
     </div>
+  </div>
   )
 }

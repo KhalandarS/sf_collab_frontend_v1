@@ -1,14 +1,15 @@
 import React from 'react';
+import './style/Login.css';
 
-const LoadingSpinner = () => {
+const LoadingSpinner = ({title, message}) => {
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center">
-      <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
-        <div className="text-white text-xl font-semibold">Loading...</div>
-        <div className="text-gray-400 text-sm">Please wait while we set things up</div>
+      <div style={{zIndex:99999999999999}} className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50">
+        <div className="loader-container flex flex-col items-center justify-center">
+          <span class="loader"></span>
+          <p className="text-white mt-4 text-lg font-medium">{title}</p>
+          <p className="text-gray-300 mt-2 text-sm">{message}</p>
+        </div>
       </div>
-    </div>
   );
 };
 

@@ -12,6 +12,7 @@ import { Progress } from "../ui/progress";
 import { Alert, AlertDescription } from "../ui/alert";
 import { Label } from "../ui/label";
 import { Separator } from "../ui/separator";
+import { useDispatch, useSelector } from "react-redux";
 
 import {
   Tooltip,
@@ -52,7 +53,8 @@ export default function RegisterStartUp() {
   const [xpPoints, setXpPoints] = useState(0);
   const [techStack, setTechStack] = useState([]);
   const [techInput, setTechInput] = useState("");
-  
+  const { user, access_token } = useSelector((state) => state.auth);
+
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
 
   const logoInputRef = useRef(null);
@@ -314,6 +316,8 @@ export default function RegisterStartUp() {
 
   const handleSubmit = async () => {
     if (!validateStep(8)) return;
+    const token = access_token;
+    if (!token) return;
 
     setIsSubmitting(true);
     
@@ -372,6 +376,10 @@ export default function RegisterStartUp() {
 
       const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/startups/register`, {
         method: "POST",
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          // 'Content-Type': 'application/json',
+        },
         body: submitData,
       });
 
@@ -707,7 +715,7 @@ export default function RegisterStartUp() {
             <span className="text-blue-400 text-sm font-medium">Launch Your Venture</span>
           </div>
           <h1 className="text-4xl font-bold text-white mb-4">
-            Build Your <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>
+            Build Your <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Join thousands of founders who've built successful teams on our platform. 
@@ -759,7 +767,7 @@ export default function RegisterStartUp() {
                 </div>
                 <Progress value={((currentStep - 1) / 8) * 100} className="h-2 bg-gray-700  *:data-[slot=progress-indicator]:bg-blue-500 [&>div]:bg-blue-500/20" />
                 <div  className="h-2  transition-all duration-1000 ease-out rounded-full"
-                  style={{ width: `${((currentStep - 1) / 8) * 100}%`, marginTop: '-8px', background:'linear-gradient(90deg,rgba(13, 91, 181, 1) 0%, rgba(78, 225, 245, 1) 100%)' }}
+                  style={{ width: `${((currentStep - 1) / 8) * 100}%`, marginTop: '-8px', background:'linear-linear(90deg,rgba(13, 91, 181, 1) 0%, rgba(78, 225, 245, 1) 100%)' }}
                 ></div>
               </div>
 
@@ -777,7 +785,7 @@ export default function RegisterStartUp() {
                 
                     <div className="grid md:grid-cols-2 gap-5">
                       <div className="space-y-3">
-                        <Label htmlFor="name" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="name" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           <span>Startup Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge></span>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -804,7 +812,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="industry" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="industry" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           <span>
                             Industry <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
@@ -835,7 +843,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="location" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="location" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
                           <span>Location <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge></span>
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -877,7 +885,7 @@ export default function RegisterStartUp() {
                 
                     <div className="grid md:grid-cols-2 gap-5">
                       <div className="space-y-3">
-                        <Label htmlFor="firstName" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="firstName" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
                           <span>
                             First Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
@@ -906,7 +914,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="lastName" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="lastName" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
                           <span>
                             Last Name <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
@@ -935,7 +943,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="email" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="email" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
                           <span>
                             Email <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
@@ -1092,7 +1100,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="fundingAmount" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="fundingAmount" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Total Funding Raised
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1149,7 +1157,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="revenue" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="revenue" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Annual Revenue
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1203,7 +1211,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="valuation" className="flex justify-between w-full text-sm font-medium text-white flex items-center gap-2">
+                        <Label htmlFor="valuation" className="flex justify-between w-full text-sm font-medium text-white  items-center gap-2">
                           Company Valuation
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1258,7 +1266,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="burnRate" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="burnRate" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Monthly Burn Rate
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1312,7 +1320,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3">
-                        <Label htmlFor="runwayMonths" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="runwayMonths" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Runway (Months)
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1365,7 +1373,7 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="financialNotes" className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="financialNotes" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Financial Notes & Context
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1409,7 +1417,7 @@ export default function RegisterStartUp() {
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* Logo Upload */}
                       <div className="space-y-3">
-                      <Label className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                      <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                         Company Logo <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1460,7 +1468,7 @@ export default function RegisterStartUp() {
 
                       {/* Banner Upload */}
                       <div className="space-y-3">
-                      <Label className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                      <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                         Cover Banner
                         <Tooltip>
                           <TooltipTrigger asChild>
@@ -1523,7 +1531,7 @@ export default function RegisterStartUp() {
                 
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <Label className="text-sm font-medium text-white flex items-center gap-2 flex justify-between w-full">
+                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
                           Business Plan & Documents
                           <Tooltip>
                             <TooltipTrigger asChild>

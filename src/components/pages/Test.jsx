@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import LaserFlow from '../ui/LaserFlow';
+import { FaUserPlus } from "react-icons/fa6";
+import { IoLogIn } from "react-icons/io5";
 
 import {
   Card,
@@ -10,14 +12,14 @@ import {
 } from "../ui/card"
 import {Button} from "../ui/button";
 import StarBorder from '../ui/StarBorder'
-
-import { TrendingUpIcon, UsersIcon, DollarSignIcon, ActivityIcon } from "lucide-react"
+import { TrendingUpIcon, UsersIcon, DollarSignIcon, ActivityIcon, LogIn } from "lucide-react"
 import {   TrendingUp, Activity } from 'lucide-react';
 import Silk from "../ui/Silk";
 import { FaLaptopCode } from "react-icons/fa";
 import ProfileCard from '../ui/ProfileCard'
 import { Badge } from '../ui/badge';
-  
+import GradientText from '../ui/GradientText';
+import { ShineButton } from '../lightswind/shine-button';
   
 import { 
   ArrowLeft, MapPin, Users, Calendar,  Globe, 
@@ -28,10 +30,11 @@ import {
   CheckCircle, PlayCircle, PauseCircle, AlertCircle,
   FileSpreadsheet, MessageSquare, Settings, Search,CheckCircle2Icon,XIcon
 } from 'lucide-react';
+import { GrAdd } from "react-icons/gr";
 
 function CardStats() {
   return (
-    <div className="w-full bg-red-500 h-1/2 p-6 flex justify-center">
+    <div className="w-full  h-full p-6 flex justify-center">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 w-full max-w-6xl">
         {/* Revenue Card */}
         <div className="relative overflow-hidden rounded-xl">
@@ -190,56 +193,76 @@ function CardStats() {
         </div>
 
         {/* Active Now Card */}
-        <div className="relative overflow-hidden rounded-xl">
-          <LaserFlow
-            horizontalBeamOffset={0.0}
-            verticalBeamOffset={0.0}
-            verticalSizing={2}
-            horizontalSizing={1.5}
-            wispDensity={1}
-            wispIntensity={7}
-            wispSpeed={15}
-            falloffStart={1}
-            flowSpeed={0.35}
-            flowStrength={0.25}
-            fogIntensity={1}
-            fogFallSpeed={0.6}
-            fogScale={0.3}
-            decay={1.1}
-            color="rgb(158,255,207)"
-          />
-          
-          <div className='animate-pulse' style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '86%',
-            boxShadow:'0 0 15px white',
-            backgroundColor: '#060010',
-            borderRadius: '20px',
-            border: '2px solid white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '2rem',
-            zIndex: 6
-          }}>
-            <Card className="w-full h-full bg-transparent border-none shadow-none">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-white">Active Now</CardTitle>
-                <Activity className="h-4 w-4 text-gray-300" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-white">+573</div>
-                <p className="text-xs text-gray-300">
-                  +201 since last hour
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+<div className="relative flex items-center justify-center py-4">
+  <div
+    className="
+      relative w-[86%] rounded-2xl border-2 border-white 
+      bg-[#060010] text-white flex flex-col
+      shadow-[0_0_20px_white] overflow-hidden
+    "
+    style={{ zIndex: 6 }}
+  >
+    {/* Left Laser */}
+    <div className="absolute inset-y-0 -left-[36.5%] rotate-90">
+      <LaserFlow
+        horizontalBeamOffset={0.06}
+        verticalBeamOffset={-0.5}
+        verticalSizing={0.5}
+        horizontalSizing={1.5}
+        wispDensity={6}
+        wispIntensity={10}
+        wispSpeed={15}
+        falloffStart={1}
+        flowSpeed={0.35}
+        flowStrength={0.1}
+        fogIntensity={1}
+        fogFallSpeed={0.6}
+        fogScale={0.3}
+        decay={5}
+        color="rgb(158,255,207)"
+      />
+    </div>
+
+    {/* Main Card */}
+    <Card className="w-full h-full bg-transparent border-none shadow-none relative">
+      <CardHeader className="flex flex-row items-center justify-between pb-1">
+        <CardTitle className="text-sm font-medium text-white">
+          Active Now
+        </CardTitle>
+        <Activity className="h-4 w-4 text-gray-300" />
+      </CardHeader>
+
+      <CardContent className="flex flex-col items-center">
+        <div className="text-3xl font-bold text-white">+573</div>
+        <p className="text-xs text-gray-300 mt-1">
+          +201 since last hour
+        </p>
+      </CardContent>
+    </Card>
+
+    {/* Right Laser */}
+    <div className="absolute inset-y-0 -right-[36.5%] -rotate-90">
+      <LaserFlow
+        horizontalBeamOffset={-0.06}
+        verticalBeamOffset={-0.5}
+        verticalSizing={0.5}
+        horizontalSizing={1.5}
+        wispDensity={6}
+        wispIntensity={10}
+        wispSpeed={15}
+        falloffStart={1}
+        flowSpeed={0.35}
+        flowStrength={0.1}
+        fogIntensity={1}
+        fogFallSpeed={0.6}
+        fogScale={0.3}
+        decay={5}
+        color="rgb(158,255,207)"
+      />
+    </div>
+  </div>
+</div>
+
       </div>
     </div>
   );
@@ -573,10 +596,46 @@ export default function Test() {
   <div className="p-5 min-h-screen h-full  text-white ">
           <Hero/>
           <CardStats  />
-          
+          <br />
+          <br />
+          <button style={{
+          margin:'50px',
+  padding:' 7px 30px',
+  border: 'none',
+  borderRadius: '5px',
+  backgroundColor:' #007bff',
+  color: 'white',
+  fontSize: '16px',
+  cursor: 'pointer',
+  boxShadow:' inset 0px 0px 10px rgba(0, 0, 0, 0.5)'
+}}>Click Me</button>
     <br />
   
+  <div className="flex gap-4 p-10">
+    
+    <ShineButton 
+      className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white "
+      label="Login" 
+      icon={<IoLogIn size={18} className="hover:animate-pulse "/>}
+      size="sm" 
+      bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+      onClick={() => alert('Thanks for your support!')} 
+    />
+    
+    <ShineButton 
+      className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white "
+      label="Sign Up" 
+      icon={<FaUserPlus size={17} className="hover:animate-pulse "/>}
+      size="sm" 
+      bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+      onClick={() => alert('Thanks for your support!')} 
+    />
+  </div>
   
+  <br />
+  <br />
+  <hr />
+  <GradientText/>
 {/* <StarBorder
   as="button"
   className="custom-class"

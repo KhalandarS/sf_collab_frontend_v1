@@ -251,7 +251,7 @@ export default function Profile() {
           <div className="relative h-48 sm:h-64 rounded-t-2xl group">
             <img src={profileData.cover} alt="Cover" className="w-full h-full object-cover rounded-t-2xl" />
             <input type="file" ref={coverImageRef} hidden accept="image/*" onChange={(e) => handleImageChange(e, 'cover')} />
-            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-zinc-900/80 to-transparent" />
             {isEditing && (
               <button
                 onClick={() => coverImageRef.current.click()}
@@ -280,7 +280,7 @@ export default function Profile() {
                   </button>
                 )}
               </div>
-              <div className="mt-4 sm:mt-0 sm:pb-4 flex-grow">
+              <div className="mt-4 sm:mt-0 sm:pb-4 grow">
                 {isEditing ? (
                   <input type="text" name="name" value={profileData.name} onChange={handleProfileChange} className="bg-zinc-800 text-2xl sm:text-3xl font-bold text-white p-1 rounded-md w-full" />
                 ) : (
@@ -331,7 +331,7 @@ export default function Profile() {
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm">
               {infoItems.map((item, index) => (
                 <div key={index} className="flex items-center gap-2 text-zinc-400 w-full sm:w-auto">
-                  <item.icon size={16} className="text-blue-400 flex-shrink-0" />
+                  <item.icon size={16} className="text-blue-400 shrink-0" />
                   {isEditing ? (
                     <motion.input
                       initial={{ opacity: 0, y: -10 }}

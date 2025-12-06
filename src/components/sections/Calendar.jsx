@@ -1,237 +1,1348 @@
-import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { 
+  ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, 
+  Filter, Search, X, Trash2, Building2, 
+  Bell, MapPin, 
+  CalendarDays, ListFilter, RefreshCw
+} from 'lucide-react'
 import SpotlightCard from '../ui/SpotlightCard'
 import ShinyText from '../ui/ShinyText'
-
-
+import { Button } from '../ui/button'
+import { Input } from '../ui/input'
+import { Textarea } from '../ui/textarea'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
+import { Badge } from '../ui/badge'
+import { Separator } from '../ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs'
+import { Alert, AlertDescription } from '../ui/alert'
+import { Label } from '../ui/label'
+import { Switch } from '../ui/switch'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addMonths, isSameDay, parseISO } from 'date-fns'
+import { useSelector } from 'react-redux'
+import { ShineButton } from '../lightswind/shine-button'
+import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'lucide-react'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 export default function Calendar() {
+  const { user, access_token } = useSelector((state) => state.auth)
   const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [events, setEvents] = useState([])
+  const [filteredEvents, setFilteredEvents] = useState([])
+  const [showEventModal, setShowEventModal] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [showFilters, setShowFilters] = useState(true)
+  const [loading, setLoading] = useState(false)
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' })
 
-  const navigateMonth = (direction) => {
-    setCurrentDate(prevDate => {
-      const newDate = new Date(prevDate)
-      newDate.setMonth(prevDate.getMonth() + (direction === 'next' ? 1 : -1))
-      return newDate
-    })
-  }
+  const [exporting, setExporting] = useState(false)
+  const [exportFormat, setExportFormat] = useState('json')
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    category: 'all',
+    startup_id: 'all',
+    view: 'month',
+    upcoming_only: false,
+    search: '',
+    start_date: null,
+    end_date: null
+  })
 
-  const generateCalendarDays = () => {
-    const year = currentDate.getFullYear()
-    const month = currentDate.getMonth()
-    
-    const firstDay = new Date(year, month, 1)
-    const lastDay = new Date(year, month + 1, 0)
-    
-    const days = []
-    
-    const prevMonthLastDay = new Date(year, month, 0).getDate()
-    const firstDayOfWeek = firstDay.getDay()
-    
-    for (let i = firstDayOfWeek - 1; i >= 0; i--) {
-      days.push({
-        day: prevMonthLastDay - i,
-        isCurrentMonth: false,
-        isToday: false,
-        date: new Date(year, month - 1, prevMonthLastDay - i)
-      })
-    }
-    
-    const today = new Date()
-    for (let i = 1; i <= lastDay.getDate(); i++) {
-      const date = new Date(year, month, i)
-      days.push({
-        day: i,
-        isCurrentMonth: true,
-        isToday: date.toDateString() === today.toDateString(),
-        date: date
-      })
-    }
-    
-    const remainingDays = 42 - days.length
-    for (let i = 1; i <= remainingDays; i++) {
-      days.push({
-        day: i,
-        isCurrentMonth: false,
-        isToday: false,
-        date: new Date(year, month + 1, i)
-      })
-    }
-    
-    return days
-  }
+  // Event form state
+  const [eventForm, setEventForm] = useState({
+    title: '',
+    description: '',
+    start_date: '',
+    end_date: '',
+    all_day: false,
+    category: 'event',
+    color: '',
+    location: '',
+    startup_id: '',
+    reminder_minutes: 30
+  })
 
-  const monthNames = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December"
+  // Get user's startups from Redux state
+  const userStartups = user?.relationships?.startups || []
+
+  // Event categories with colors
+  const eventCategories = [
+    { value: 'meeting', label: 'Meeting', color: '#3B82F6' },
+    { value: 'deadline', label: 'Deadline', color: '#EF4444' },
+    { value: 'reminder', label: 'Reminder', color: '#F59E0B' },
+    { value: 'event', label: 'Event', color: '#8B5CF6' }
   ]
 
-  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  // View options
+  const viewOptions = [
+    { value: 'month', label: 'Month', icon: <CalendarDays className="h-4 w-4" /> },
+    { value: 'week', label: 'Week', icon: <CalendarIcon className="h-4 w-4" /> },
+    { value: 'list', label: 'List', icon: <ListFilter className="h-4 w-4" /> }
+  ]
 
-  const calendarDays = generateCalendarDays()
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-  return (
-    <div className="min-h-screen  ">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-2.5 ">
-              <CalendarIcon className="h-6 w-6 text-white" />
+  // Fetch events on component mount and when filters change
+  useEffect(() => {
+    fetchEvents()
+  }, [filters.view, filters.upcoming_only, filters.start_date, filters.end_date])
+  
+  useEffect(() => {
+    fetchEvents()
+  }, [])
+  
+  // Apply filters when events or filters change
+  useEffect(() => {
+    applyFilters()
+  }, [events, filters])
+
+  const fetchEvents = async () => {
+    setLoading(true)
+    try {
+      const params = new URLSearchParams()
+      
+      if (filters.startup_id && filters.startup_id !== 'all') {
+        params.append('startup_id', filters.startup_id)
+      }
+      
+      if (filters.category && filters.category !== 'all') {
+        params.append('category', filters.category)
+      }
+      
+      if (filters.start_date) {
+        params.append('start_date', filters.start_date.toISOString())
+      }
+      
+      if (filters.end_date) {
+        params.append('end_date', filters.end_date.toISOString())
+      }
+      
+      if (filters.upcoming_only) {
+        params.append('upcoming_only', 'true')
+      }
+
+      const url = `${API_URL}/calendar-events?${params.toString()}`
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        setEvents(data.data.events || [])
+      } else {
+        showNotification('error', data.message || 'Failed to fetch events')
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      showNotification('error', 'Failed to fetch events')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchUpcomingEvents = async () => {
+    try {
+      const response = await fetch(`${API_URL}/calendar-events/upcoming`, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        return data.data.events_to_remind || []
+      }
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error)
+    }
+    return []
+  }
+
+  const applyFilters = () => {
+    let filtered = [...events]
+
+    // Apply category filter
+    if (filters.category !== 'all') {
+      filtered = filtered.filter(event => event.category === filters.category)
+    }
+
+    // Apply startup filter
+    if (filters.startup_id !== 'all') {
+      filtered = filtered.filter(event => event.startup_id === parseInt(filters.startup_id))
+    }
+
+    // Apply search filter
+    if (filters.search) {
+      const searchTerm = filters.search.toLowerCase()
+      filtered = filtered.filter(event => 
+        event.title.toLowerCase().includes(searchTerm) ||
+        event.description?.toLowerCase().includes(searchTerm) ||
+        event.location?.toLowerCase().includes(searchTerm)
+      )
+    }
+
+    setFilteredEvents(filtered)
+  }
+
+  const showNotification = (type, message) => {
+    setNotification({ show: true, type, message })
+    setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000)
+  }
+
+  const navigateMonth = (direction) => {
+    setCurrentDate(prevDate => addMonths(prevDate, direction === 'next' ? 1 : -1))
+  }
+
+  const goToToday = () => {
+    setCurrentDate(new Date())
+  }
+
+  const handleDateClick = (date) => {
+    setSelectedDate(date)
+    alert(date)
+    setEventForm({
+      ...eventForm,
+      start_date: format(date, "dd/MM/yyyy'T'HH:mm"),
+      end_date: format(new Date(date.getTime() + 60 * 60 * 1000), "dd/MM/yyyy'T'HH:mm") // +1 hour
+    })
+    alert(JSON.stringify(eventForm))
+    
+    setShowEventModal(true)
+    setSelectedEvent(null)
+  }
+
+  const handleEventClick = (event) => {
+    setSelectedEvent(event)
+    setEventForm({
+      title: event.title,
+      description: event.description || '',
+      start_date: format(parseISO(event.start_date), "yyyy-MM-dd'T'HH:mm"),
+      end_date: event.end_date ? format(parseISO(event.end_date), "yyyy-MM-dd'T'HH:mm") : '',
+      all_day: event.all_day,
+      category: event.category,
+      color: event.color,
+      location: event.location || '',
+      startup_id: event.startup_id || '',
+      reminder_minutes: event.reminder_minutes || 30
+    })
+    setShowEventModal(true)
+  }
+
+  const handleCreateEvent = async () => {
+    try {
+      const eventData = {
+        ...eventForm,
+        user_id: user.id,
+        start_date: new Date(eventForm.start_date).toISOString(),
+        end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
+      }
+
+      const response = await fetch(`${API_URL}/calendar-events`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData)
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        showNotification('success', 'Event created successfully')
+        setShowEventModal(false)
+        fetchEvents()
+        setEventForm({
+          title: '',
+          description: '',
+          start_date: '',
+          end_date: '',
+          all_day: false,
+          category: 'event',
+          color: '',
+          location: '',
+          startup_id: '',
+          reminder_minutes: 30
+        })
+      } else {
+        showNotification('error', data.message || 'Failed to create event')
+      }
+    } catch (error) {
+      console.error('Error creating event:', error)
+      showNotification('error', 'Failed to create event')
+    }
+  }
+
+  const handleUpdateEvent = async () => {
+    if (!selectedEvent) return
+
+    try {
+      const eventData = {
+        ...eventForm,
+        start_date: new Date(eventForm.start_date).toISOString(),
+        end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
+      }
+
+      const response = await fetch(`${API_URL}/calendar-events/${selectedEvent.id}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventData)
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        showNotification('success', 'Event updated successfully')
+        setShowEventModal(false)
+        fetchEvents()
+        setSelectedEvent(null)
+      } else {
+        showNotification('error', data.message || 'Failed to update event')
+      }
+    } catch (error) {
+      console.error('Error updating event:', error)
+      showNotification('error', 'Failed to update event')
+    }
+  }
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!window.confirm('Are you sure you want to delete this event?')) return
+
+    try {
+      const response = await fetch(`${API_URL}/calendar-events/${eventId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+
+      const data = await response.json()
+
+      if (data.success) {
+        showNotification('success', 'Event deleted successfully')
+        fetchEvents()
+        if (selectedEvent?.id === eventId) {
+          setSelectedEvent(null)
+          setShowEventModal(false)
+        }
+      } else {
+        showNotification('error', data.message || 'Failed to delete event')
+      }
+    } catch (error) {
+      console.error('Error deleting event:', error)
+      showNotification('error', 'Failed to delete event')
+    }
+  }
+
+  const getEventsForDate = (date) => {
+    return filteredEvents.filter(event => 
+      isSameDay(parseISO(event.start_date), date)
+    )
+  }
+
+  const renderMonthView = () => {
+    const monthStart = startOfMonth(currentDate)
+    const monthEnd = endOfMonth(currentDate)
+    const startDate = startOfWeek(monthStart)
+    const endDate = endOfWeek(monthEnd)
+
+    const weeks = []
+    let days = []
+    let day = startDate
+
+    while (day <= endDate) {
+      for (let i = 0; i < 7; i++) {
+        const dateEvents = getEventsForDate(day)
+        const isCurrentMonth = day.getMonth() === currentDate.getMonth()
+        const isToday = isSameDay(day, new Date())
+
+        days.push(
+          <div
+            key={day.toISOString()}
+            onClick={() =>{ handleDateClick(day);alert(day)}}
+            className={`
+              min-h-32 border border-gray-700/50 p-2 cursor-pointer transition-all
+              ${isCurrentMonth ? 'bg-gray-800/30 hover:bg-gray-700/50' : 'bg-gray-900/20 text-gray-600'}
+              ${isToday ? 'ring-2 ring-blue-500/50' : ''}
+              hover:shadow-lg hover:scale-105 relative group
+            `}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <span className={`
+                text-sm font-medium
+                ${isCurrentMonth ? 'text-white' : 'text-gray-500'}
+                ${isToday ? 'bg-blue-500 text-white px-2 py-1 rounded-full' : ''}
+              `}>
+                {format(day, 'd')}
+              </span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0 bg-transparent border-none cursor-pointer text-white hover:text-blue-400 transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDateClick(day)
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent style={{ zIndex: 999999 }}>
+                    <p>Add event</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
-            <ShinyText 
-              text="Calendar" 
-              disabled={false} 
-              speed={3} 
-              className='custom-class text-2xl font-bold' 
-            />
-            {/* <h1 className="text-2xl font-bold bg-linear-to-r from-white to-slate-300 bg-clip-text text-transparent">
-              Calendar
-            </h1> */}
-          </div>
-          <p className="text-slate-400 text-lg ml-14">Plan and organize your schedule</p>
-        </div>
 
-        {/* Calendar Card */}
-        <SpotlightCard
-        spotlightColor="rgba(59, 130, 246, 0.10)"
-        className=" backdrop-blur-xl rounded-3xl border border-slate-700/50 overflow-hidden shadow-2xl">
-          {/* Calendar Header */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-violet-500/30 to-purple-600/30"></div>
-          <div className="w-full relative bg-linear-to-br from-violet-500/10 to-purple-600/10 border-b border-slate-700/50 p-6">
-            <div className="w-full flex items-center justify-between">
-              <button 
-                onClick={() => navigateMonth('prev')}
-                className="group p-3 hover:bg-slate-700/50 rounded-xl transition-all duration-300 border border-transparent hover:border-slate-600/50"
-              >
-                <ChevronLeft className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
-              </button>
-              
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-white mb-1">
-                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </h2>
-                <div className="flex items-center justify-center gap-2 text-sm text-slate-400">
-                  <Clock className="h-4 w-4" />
-                  <span>{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</span>
-                </div>
-              </div>
-              
-              <button 
-                onClick={() => navigateMonth('next')}
-                className="group p-3 hover:bg-slate-700/50 rounded-xl transition-all duration-300 border border-transparent hover:border-slate-600/50"
-              >
-                <ChevronRight className="h-5 w-5 text-slate-400 group-hover:text-white transition-colors" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6">
-            {/* Week days header */}
-            <div className="grid grid-cols-7 gap-2 mb-4">
-              {weekDays.map((day) => (
-                <div key={day} className="text-center py-3 px-2 rounded-lg bg-slate-800/50">
-                  <span className="text-sm font-semibold text-slate-300">{day}</span>
+            <div className="space-y-1 max-h-20 overflow-y-auto">
+              {dateEvents.map((event, idx) => (
+                <div
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleEventClick(event)
+                  }}
+                  className="text-xs p-1.5 rounded truncate cursor-pointer hover:opacity-90 transition-opacity"
+                  style={{ backgroundColor: event.color || '#3B82F6' }}
+                >
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
+                    <span className="font-medium text-white">{event.title}</span>
+                  </div>
                 </div>
               ))}
             </div>
+          </div>
+        )
 
-            {/* Calendar days grid */}
-            <div className="grid grid-cols-7 gap-2">
-              {calendarDays.map((day, index) => {
-                const isWeekend = index % 7 === 0 || index % 7 === 6
-                
-                return (
-                  <div
-                    key={index}
-                    className={`
-                      group relative h-14 flex items-center justify-center text-sm font-medium rounded-xl cursor-pointer
-                      transition-all duration-300
-                      ${day.isCurrentMonth 
-                        ? 'text-white hover:bg-slate-700/50 hover:scale-105 hover:shadow-lg' 
-                        : 'text-slate-600 hover:text-slate-500'
-                      }
-                      ${day.isToday 
-                        ? 'bg-linear-to-br from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:shadow-violet-500/50 ring-2 ring-violet-400/50 hover:scale-110' 
-                        : day.isCurrentMonth
-                        ? 'bg-slate-800/30 hover:bg-slate-700/50 border border-slate-700/30 hover:border-slate-600/50'
-                        : 'bg-slate-900/20'
-                      }
-                      ${isWeekend && day.isCurrentMonth && !day.isToday ? 'ring-1 ring-slate-700/30' : ''}
-                    `}
-                  >
-                    {/* Day number */}
-                    <span className={`
-                      relative z-10 transition-transform duration-300
-                      ${day.isToday ? 'font-bold' : ''}
-                    `}>
-                      {day.day}
-                    </span>
+        day = new Date(day.getTime() + 24 * 60 * 60 * 1000)
+      }
+      weeks.push(
+        <div key={day.toISOString()} className="grid grid-cols-7 gap-px">
+          {days}
+        </div>
+      )
+      days = []
+    }
 
-                    {/* Hover effect */}
-                    {day.isCurrentMonth && !day.isToday && (
-                      <div className="absolute inset-0 rounded-xl bg-linear-to-br from-violet-500/0 to-purple-600/0 group-hover:from-violet-500/10 group-hover:to-purple-600/10 transition-all duration-300" />
-                    )}
+    return weeks
+  }
 
-                    {/* Today indicator dot */}
-                    {day.isToday && (
-                      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full shadow-lg" />
-                    )}
+  const renderWeekView = () => {
+    const weekStart = startOfWeek(currentDate)
+    const days = []
+
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart.getTime() + i * 24 * 60 * 60 * 1000)
+      const dateEvents = getEventsForDate(day)
+      const isToday = isSameDay(day, new Date())
+
+      days.push(
+        <div key={day.toISOString()} className="flex-1">
+          <div className={`
+            p-3 border-b border-gray-700 text-center
+            ${isToday ? 'bg-blue-500/20' : 'bg-gray-800/30'}
+          `}>
+            <div className="text-sm font-medium text-gray-300">{format(day, 'EEE')}</div>
+            <div className={`
+              text-lg font-bold mt-1
+              ${isToday ? 'text-blue-400' : 'text-white'}
+            `}>
+              {format(day, 'd')}
+            </div>
+          </div>
+          <div 
+            className="min-h-96 p-2 space-y-2"
+            onClick={() => handleDateClick(day)}
+          >
+            {dateEvents.map((event, idx) => (
+              <div
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleEventClick(event)
+                }}
+                className="p-2 rounded-lg text-sm cursor-pointer hover:shadow-md transition-shadow"
+                style={{ backgroundColor: event.color || '#3B82F6', color: 'white' }}
+              >
+                <div className="font-medium">{event.title}</div>
+                {!event.all_day && (
+                  <div className="text-xs opacity-90">
+                    {format(parseISO(event.start_date), 'HH:mm')} - {format(parseISO(event.end_date), 'HH:mm')}
                   </div>
-                )
-              })}
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex border border-gray-700 rounded-lg overflow-hidden">
+        {days}
+      </div>
+    )
+  }
+
+  const renderListView = () => {
+    const sortedEvents = [...filteredEvents].sort((a, b) => 
+      new Date(a.start_date) - new Date(b.start_date)
+    )
+
+    return (
+      <div className="space-y-3">
+        {sortedEvents.map((event) => (
+          <Card 
+            key={event.id}
+            className="border-gray-700 bg-gray-800/30 hover:bg-gray-700/50 cursor-pointer"
+            onClick={() => handleEventClick(event)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="w-3 h-12 rounded"
+                    style={{ backgroundColor: event.color || '#3B82F6' }}
+                  />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-semibold text-white">{event.title}</h4>
+                      <Badge variant="outline" className={`text-white text-xs`}>
+                        {event.category}
+                      </Badge>
+                      {event.startup && (
+                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                          <Building2 className="h-3 w-3 mr-1" />
+                          {event.startup.name}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 mt-1">{event.description}</p>
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                      <div className="flex items-center gap-1">
+                        <CalendarIcon className="h-3 w-3" />
+                        {format(parseISO(event.start_date), 'MMM d, yyyy HH:mm')}
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {event.location}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {event.is_ongoing && (
+                    <Badge variant="default" className="bg-green-500/20 text-green-400 border-green-500/30">
+                      Ongoing
+                    </Badge>
+                  )}
+                  {event.should_remind && (
+                    <Bell className="h-4 w-4 text-yellow-400 animate-pulse" />
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  const renderView = () => {
+    switch (filters.view) {
+      case 'week':
+        return renderWeekView()
+      case 'list':
+        return renderListView()
+      default:
+        return renderMonthView()
+    }
+  }
+
+  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+  const Notification = () => {
+    if (!notification.show) return null
+
+    const styles = {
+      error: 'border-red-400 bg-red-500/10 text-red-200',
+      success: 'border-green-400 bg-green-500/10 text-green-200',
+      warning: 'border-yellow-400 bg-yellow-500/10 text-yellow-200'
+    }
+
+    return (
+      <div className="fixed top-4 right-4 z-999999" style={{ zIndex: 999999999999 }}>
+        <Alert className={styles[notification.type]}>
+          <AlertDescription className="font-medium">
+            {notification.message}
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  const handleExportCalendar = async (format) => {
+    try {
+      setExporting(true)
+      
+      // Build query parameters
+      const params = new URLSearchParams()
+      params.append('format', format)
+      
+      // Add filters to export
+      if (filters.startup_id && filters.startup_id !== 'all') {
+        params.append('startup_id', filters.startup_id)
+      }
+      
+      if (filters.category && filters.category !== 'all') {
+        params.append('category', filters.category)
+      }
+      
+      if (filters.start_date) {
+        params.append('start_date', filters.start_date.toISOString())
+      }
+      
+      if (filters.end_date) {
+        params.append('end_date', filters.end_date.toISOString())
+      }
+  
+      const url = `${API_URL}/calendar-events/export?${params.toString()}`
+      
+      const response = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      })
+  
+      if (!response.ok) {
+        throw new Error('Export failed')
+      }
+  
+      // Handle different response types
+      const contentType = response.headers.get('content-type')
+      
+      if (contentType.includes('application/json')) {
+        const data = await response.json()
+        // For JSON, we can download it as a file
+        const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `calendar_export_${new Date().toISOString().split('T')[0]}.json`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      } else if (contentType.includes('text/csv') || contentType.includes('text/calendar')) {
+        // For CSV and iCal, use the built-in download
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        
+        let filename = `calendar_export_${new Date().toISOString().split('T')[0]}`
+        if (contentType.includes('text/csv')) {
+          filename += '.csv'
+        } else if (contentType.includes('text/calendar')) {
+          filename += '.ics'
+        }
+        
+        a.href = url
+        a.download = filename
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+  
+      showNotification('success', `Calendar exported successfully as ${format.toUpperCase()}`)
+    } catch (error) {
+      console.error('Error exporting calendar:', error)
+      showNotification('error', 'Failed to export calendar')
+    } finally {
+      setExporting(false)
+    }
+  }
+  
+  
+  return (
+    <div className="min-h-screen text-white">
+      <Notification />
+
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2.5 bg-blue-500/10 rounded-lg">
+                <CalendarIcon className="h-6 w-6 text-blue-400" />
+              </div>
+              <ShinyText 
+                text="Calendar" 
+                disabled={false} 
+                speed={3} 
+                className='text-2xl font-bold' 
+              />
             </div>
+            <p className="text-gray-400 text-lg ml-14">Plan and organize your schedule</p>
           </div>
 
-          {/* Footer Stats */}
-          <div className="border-t border-slate-700/50 p-6 bg-slate-900/30">
-            <div className="grid grid-cols-3 gap-4">
-              <div className="text-center">
-                <p className="text-sm text-slate-400 mb-1">Current Month</p>
-                <p className="text-lg font-bold text-white">{monthNames[currentDate.getMonth()]}</p>
-              </div>
-              <div className="text-center border-x border-slate-700/50">
-                <p className="text-sm text-slate-400 mb-1">Total Days</p>
-                <p className="text-lg font-bold text-white">
-                  {new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate()}
-                </p>
-              </div>
-              <div className="text-center">
-                <p className="text-sm text-slate-400 mb-1">Today</p>
-                <p className="text-lg font-bold bg-linear-to-r from-violet-400 to-purple-400 bg-clip-text text-transparent">
-                  {new Date().getDate()}
-                </p>
-              </div>
+          <div style={{ zIndex: 999999 }} className="flex items-center gap-3">
+            <div data-aos='fade-left' data-aos-delay="100">
+              <ShineButton 
+                className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white"
+                label="Today" 
+                icon={<CalendarIcon size={18} className="hover:animate-pulse" />}
+                size="sm" 
+                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                onClick={goToToday} 
+              />
+            </div>
+            
+            <div data-aos='fade-left' data-aos-delay="200">
+              <ShineButton 
+                className="rounded-md flex gap-2 w-[140px] items-center justify-center text-white"
+                label="New Event" 
+                icon={<Plus size={18} className="hover:animate-pulse" />}
+                size="sm" 
+                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                onClick={() => {
+                  setSelectedEvent(null)
+                  setEventForm({
+                    title: '',
+                    description: '',
+                    start_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                    end_date: format(new Date(new Date().getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
+                    all_day: false,
+                    category: 'event',
+                    color: '',
+                    location: '',
+                    startup_id: '',
+                    reminder_minutes: 30
+                  })
+                  setShowEventModal(true)
+                }} 
+              />
             </div>
           </div>
-        </SpotlightCard>
+        </div>
 
-        {/* Quick Actions */}
-        <div className="mt-6 grid grid-cols-2 gap-4 p-2">
-          <button className="group bg-linear-to-br from-slate-800/30 to-slate-900/30 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-violet-500/50 transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-violet-500/10 rounded-lg ring-1 ring-violet-500/20 group-hover:bg-violet-500/20 transition-colors">
-                <CalendarIcon className="h-5 w-5 text-violet-400" />
+        {/* Filters and Controls */}
+        <div className="mb-6">
+          <SpotlightCard
+            spotlightColor="rgba(59, 130, 246, 0.10)"
+            className="backdrop-blur-xl bg-transparent relative rounded-2xl border border-gray-700/50 overflow-hidden"
+          >
+            <img src="/design_2.png" className=" absolute object-cover top-0 left-0  w-full h-fit -mt-60 opacity-15" />
+            <div className="p-4">
+              <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <div data-aos='fade-left' data-aos-delay="300">
+                  <ShineButton 
+                    className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
+                    label="JSON Format" 
+                    icon={<FileJson size={16} className="hover:animate-pulse" />}
+                    size="sm" 
+                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                    onClick={() => handleExportCalendar('json')}
+                  />
+                </div>
+                
+                <div data-aos='fade-left' data-aos-delay="300">
+                  <ShineButton 
+                    className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
+                    label="CSV Format" 
+                    icon={<FileSpreadsheet size={16} className="hover:animate-pulse" />}
+                    size="sm" 
+                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                    onClick={() => handleExportCalendar('csv')}
+                  />
+                </div>
+
+                <div data-aos='fade-left' data-aos-delay="300">
+                  <ShineButton 
+                    className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
+                    label="iCal Format" 
+                    icon={<CalendarFile size={16} className="hover:animate-pulse" />}
+                    size="sm" 
+                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                    onClick={() => handleExportCalendar('ical')} 
+                  />
+                </div>
               </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-slate-200">Go to Today</p>
-                <p className="text-xs text-slate-400">Jump to current date</p>
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                {/* View Controls */}
+                <div className="flex items-center gap-2">
+                  <Button
+                    onClick={() => navigateMonth('prev')}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  <h2 className="text-xl font-bold text-white mx-4">
+                    {format(currentDate, 'MMMM yyyy')}
+                  </h2>
+                  
+                  <Button
+                    onClick={() => navigateMonth('next')}
+                    variant="outline"
+                    size="sm"
+                    className="border-gray-700 text-gray-600 hover:text-gray-950 hover:border-blue-500"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                {/* View Tabs */}
+                <Tabs value={filters.view} onValueChange={(value) => setFilters({...filters, view: value})}>
+                  <TabsList className="bg-gray-800/50 border border-gray-700">
+                    {viewOptions.map((view) => (
+                      <TabsTrigger key={view.value} value={view.value} className={`${filters.view === view.value?'':'text-white'}`}>
+                        {view.icon}
+                        {view.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </Tabs>
+
+                {/* Filter Button */}
+                <div className="flex items-center gap-2">
+                  <div data-aos='fade-left' data-aos-delay="300">
+                    <ShineButton 
+                      className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
+                      label="Filters" 
+                      icon={<Filter size={16} className="hover:animate-pulse" />}
+                      size="sm" 
+                      bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                      onClick={() => setShowFilters(!showFilters)} 
+                    />
+                  </div>
+                  
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={fetchEvents}
+                    disabled={loading}
+                  >
+                    <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                  </Button>
+                </div>
               </div>
+
+              {/* Advanced Filters */}
+              {showFilters && (
+                <div className="mt-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30" style={{ zIndex: 99999 }}>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    {/* Category Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-400">Category</Label>
+                      <Select
+                        value={filters.category}
+                        onValueChange={(value) => setFilters({...filters, category: value})}
+                      >
+                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 999999 }}>
+                          <SelectValue placeholder="All categories" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700" style={{ zIndex: 9999999 }}>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {eventCategories.map(cat => (
+                            <SelectItem key={cat.value} value={cat.value} className="flex text-white hover:text-gray-800 items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: cat.color }}
+                              />
+                              {cat.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Startup Filter */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-400">Startup</Label>
+                      <Select
+                        value={filters.startup_id}
+                        onValueChange={(value) => setFilters({...filters, startup_id: value})}
+                      >
+                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 999999 }}>
+                          <SelectValue placeholder="All startups" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-gray-800 border-gray-700" style={{ zIndex: 9999999 }}>
+                          <SelectItem value="all">All Startups</SelectItem>
+                          {userStartups.length > 0 ? (
+                            userStartups.map(startup => (
+                              <SelectItem key={startup.id} value={startup.id.toString()} className="text-white hover:text-gray-800">
+                                {startup.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <SelectItem value="no-startups" disabled>No startups found</SelectItem>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Date Range */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-400">Date Range</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="date"
+                          className="border-gray-700 bg-gray-800/50"
+                          value={filters.start_date ? format(filters.start_date, 'yyyy-MM-dd') : ''}
+                          onChange={(e) => setFilters({
+                            ...filters, 
+                            start_date: e.target.value ? new Date(e.target.value) : null
+                          })}
+                        />
+                        <Input
+                          type="date"
+                          className="border-gray-700 bg-gray-800/50"
+                          value={filters.end_date ? format(filters.end_date, 'yyyy-MM-dd') : ''}
+                          onChange={(e) => setFilters({
+                            ...filters, 
+                            end_date: e.target.value ? new Date(e.target.value) : null
+                          })}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Search */}
+                    <div className="space-y-2">
+                      <Label className="text-sm text-gray-400">Search</Label>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                        <Input
+                          placeholder="Search events..."
+                          className="pl-10 border-gray-700 bg-gray-800/50"
+                          value={filters.search}
+                          onChange={(e) => setFilters({...filters, search: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Filters */}
+                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={filters.upcoming_only}
+                        onCheckedChange={(checked) => setFilters({...filters, upcoming_only: checked})}
+                      />
+                      <Label className="text-sm text-gray-400">Show upcoming only</Label>
+                    </div>
+                    
+                    <div data-aos='fade-left' data-aos-delay="400">
+                      <ShineButton 
+                        className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
+                        label="Clear Filters" 
+                        icon={<X size={16} className="hover:animate-pulse" />}
+                        size="sm" 
+                        bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                        onClick={() => setFilters({
+                          category: 'all',
+                          startup_id: 'all',
+                          view: 'month',
+                          upcoming_only: false,
+                          search: '',
+                          start_date: null,
+                          end_date: null
+                        })} 
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
-          </button>
+          </SpotlightCard>
+        </div>
+
+        {/* Calendar View */}
+        <div className="mb-6">
+          {filters.view === 'month' && (
+            <div  className="mb-4 grid grid-cols-7 gap-px bg-gray-800 rounded-lg overflow-hidden">
+              {weekDays.map((day) => (
+                <div onClick={()=>handleDateClick(day)} key={day} className="p-3 text-center bg-gray-800/50 border-b border-gray-700">
+                  <span className="text-sm font-semibold text-gray-400">{day}</span>
+                </div>
+              ))}
+            </div>
+          )}
           
-          <button className="group bg-linear-to-br from-slate-800/30 to-slate-900/30 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-purple-500/50 transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-500/10 rounded-lg ring-1 ring-purple-500/20 group-hover:bg-purple-500/20 transition-colors">
-                <Clock className="h-5 w-5 text-purple-400" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-slate-200">View Events</p>
-                <p className="text-xs text-slate-400">See all scheduled items</p>
-              </div>
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
-          </button>
+          ) : filteredEvents.length === 0 ? (
+            <Card className="border-gray-700 bg-gray-800/30" style={{ zIndex: 1 }}>
+              <CardContent className="p-8 text-center">
+                <CalendarIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-400 mb-2">No events found</h3>
+                <p className="text-gray-500 mb-4">Try adjusting your filters or create a new event</p>
+                <div data-aos='fade-up' data-aos-delay="100">
+                  <ShineButton 
+                    className="rounded-md flex gap-2 w-40 items-center justify-center text-white mx-auto"
+                    label="Create Event" 
+                    icon={<Plus size={18} className="hover:animate-pulse" />}
+                    size="sm" 
+                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                    onClick={() => {
+                      setSelectedEvent(null)
+                      setEventForm({
+                        title: '',
+                        description: '',
+                        start_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
+                        end_date: format(new Date(new Date().getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
+                        all_day: false,
+                        category: 'event',
+                        color: '',
+                        location: '',
+                        startup_id: '',
+                        reminder_minutes: 30
+                      })
+                      setShowEventModal(true)
+                    }} 
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            renderView()
+          )}
+        </div>
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="border-gray-700 bg-gray-800/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Total Events</p>
+                  <p className="text-2xl font-bold text-white">{events.length}</p>
+                </div>
+                <CalendarIcon className="h-8 w-8 text-blue-400" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-gray-700 bg-gray-800/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Upcoming</p>
+                  <p className="text-2xl font-bold text-green-400">
+                    {events.filter(e => !e.is_past).length}
+                  </p>
+                </div>
+                <Bell className="h-8 w-8 text-green-400" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-gray-700 bg-gray-800/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">This Month</p>
+                  <p className="text-2xl font-bold text-purple-400">
+                    {events.filter(e => 
+                      new Date(e.start_date).getMonth() === currentDate.getMonth() &&
+                      new Date(e.start_date).getFullYear() === currentDate.getFullYear()
+                    ).length}
+                  </p>
+                </div>
+                <CalendarDays className="h-8 w-8 text-purple-400" />
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-gray-700 bg-gray-800/30">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-400">Today</p>
+                  <p className="text-2xl font-bold text-yellow-400">
+                    {getEventsForDate(new Date()).length}
+                  </p>
+                </div>
+                <Clock className="h-8 w-8 text-yellow-400" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
+
+      {/* Event Modal */}
+      <Dialog open={showEventModal} onOpenChange={setShowEventModal}>
+        <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl" style={{ zIndex: 9999999 }}>
+          <DialogHeader>
+            <DialogTitle className="text-white text-2xl">
+              {selectedEvent ? 'Edit Event' : 'Create New Event'}
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              {selectedDate ? `Date: ${format(selectedDate, 'MMMM d, yyyy')}` : 'Create a new calendar event'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Title */}
+            <div className="space-y-2">
+              <Label className="text-white">Title *</Label>
+              <Input
+                value={eventForm.title}
+                onChange={(e) => setEventForm({...eventForm, title: e.target.value})}
+                placeholder="Event title"
+                className="border-gray-700 bg-gray-800/50 text-white"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label className="text-white">Description</Label>
+              <Textarea
+                value={eventForm.description}
+                onChange={(e) => setEventForm({...eventForm, description: e.target.value})}
+                placeholder="Event description"
+                rows={3}
+                className="border-gray-700 bg-gray-800/50 text-white"
+              />
+            </div>
+
+            {/* Date & Time */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-white">Start Date & Time *</Label>
+                <Input
+                  type="datetime-local"
+                  value={eventForm.start_date}
+                  onChange={(e) => setEventForm({...eventForm, start_date: e.target.value})}
+                  className="border-gray-700 bg-gray-800/50 text-white"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-white">End Date & Time</Label>
+                <Input
+                  type="datetime-local"
+                  value={eventForm.end_date}
+                  onChange={(e) => setEventForm({...eventForm, end_date: e.target.value})}
+                  className="border-gray-700 bg-gray-800/50 text-white"
+                />
+              </div>
+            </div>
+
+            {/* Category & Startup */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-white">Category</Label>
+                <Select
+                  value={eventForm.category}
+                  onValueChange={(value) => setEventForm({...eventForm, category: value})}
+                >
+                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
+                    {eventCategories.map(cat => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: cat.color }}
+                          />
+                          {cat.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white">Startup (Optional)</Label>
+                <Select
+                  value={eventForm.startup_id}
+                  onValueChange={(value) => setEventForm({...eventForm, startup_id: value})}
+                >
+                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
+                    <SelectValue placeholder="Select startup" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
+                    <SelectItem value="0">Personal Event</SelectItem>
+                    {userStartups.length > 0 ? (
+                      userStartups.map(startup => (
+                        <SelectItem key={startup.id} value={startup.id}>
+                          {startup.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-startups" disabled>No startups available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Location & Reminder */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-white">Location</Label>
+                <Input
+                  value={eventForm.location}
+                  onChange={(e) => setEventForm({...eventForm, location: e.target.value})}
+                  placeholder="Event location"
+                  className="border-gray-700 bg-gray-800/50 text-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white">Reminder</Label>
+                <Select
+                  value={eventForm.reminder_minutes.toString()}
+                  onValueChange={(value) => setEventForm({...eventForm, reminder_minutes: parseInt(value)})}
+                >
+                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
+                    <SelectValue placeholder="Select reminder" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
+                    <SelectItem value="0">No reminder</SelectItem>
+                    <SelectItem value="5">5 minutes before</SelectItem>
+                    <SelectItem value="15">15 minutes before</SelectItem>
+                    <SelectItem value="30">30 minutes before</SelectItem>
+                    <SelectItem value="60">1 hour before</SelectItem>
+                    <SelectItem value="1440">1 day before</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* All Day Switch */}
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={eventForm.all_day}
+                onCheckedChange={(checked) => setEventForm({...eventForm, all_day: checked})}
+              />
+              <Label className="text-white">All day event</Label>
+            </div>
+          </div>
+
+          {/* <DialogFooter className="gap-2" >
+            {selectedEvent && (
+              <div data-aos='fade-right' data-aos-delay="100" style={{ zIndex: 99999999999}}>
+                <ShineButton 
+                style={{ zIndex: 9999999 }}
+                  className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
+                  label="Delete Event" 
+                  icon={<Trash2 size={16} className="hover:animate-pulse" />}
+                  size="sm" 
+                  bgColor="linear-gradient(325deg, hsl(0 84% 56%) 0%, hsl(0 100% 69%) 55%, hsl(0 84% 56%) 90%)" 
+                  onClick={() => handleDeleteEvent(selectedEvent.id)} 
+                />
+              </div>
+            )}
+            
+            <div data-aos='fade-left' data-aos-delay="200" style={{ zIndex: 99999999999 }}>
+              <ShineButton 
+              style={{ zIndex: 9999999 }}
+                className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white"
+                label="Cancel" 
+                icon={<X size={16} className="hover:animate-pulse" />}
+                size="sm" 
+                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                onClick={() => {
+                  setShowEventModal(false)
+                  setSelectedEvent(null)
+                  setEventForm({
+                    title: '',
+                    description: '',
+                    start_date: '',
+                    end_date: '',
+                    all_day: false,
+                    category: 'event',
+                    color: '',
+                    location: '',
+                    startup_id: '',
+                    reminder_minutes: 30
+                  })
+                }} 
+              />
+            </div>
+            
+            <div data-aos='fade-left' data-aos-delay="300" style={{ zIndex: 99999999999 }}>
+              <ShineButton 
+              style={{ zIndex: 9999999 }}
+                className="rounded-md flex gap-2 w-40 items-center justify-center text-white"
+                label={selectedEvent ? 'Update Event' : 'Create Event'} 
+                icon={selectedEvent ? <RefreshCw size={16} className="hover:animate-pulse" /> : <Plus size={16} className="hover:animate-pulse" />}
+                size="sm" 
+                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+                disabled={!eventForm.title || !eventForm.start_date} 
+              />
+            </div>
+          </DialogFooter> */}
+               <DialogFooter className="gap-2">
+            {selectedEvent && (
+              <Button
+                variant="destructive"
+                onClick={() => handleDeleteEvent(selectedEvent.id)}
+                className="mr-auto"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+            )}
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEventModal(false)
+                setSelectedEvent(null)
+                setEventForm({
+                  title: '',
+                  description: '',
+                  start_date: '',
+                  end_date: '',
+                  all_day: false,
+                  category: 'event',
+                  color: '',
+                  location: '',
+                  startup_id: '',
+                  reminder_minutes: 30
+                })
+              }}
+              className="border-gray-700 text-gray-300 hover:text-white"
+            >
+              Cancel
+            </Button>
+            
+            <Button
+              onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+              disabled={!eventForm.title || !eventForm.start_date}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {selectedEvent ? 'Update Event' : 'Create Event'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

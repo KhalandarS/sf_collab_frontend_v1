@@ -20,7 +20,7 @@ const NotFound = () => {
             Go to Dashboard
           </Link>
           <div className="text-sm text-gray-500">
-            <Link to="/home" className="text-gray-300 hover:text-white">Home</Link>
+            <Link to="/dashboard" className="text-gray-300 hover:text-white">Home</Link>
             {" • "}
             <Link to="/projects" className="text-gray-300 hover:text-white">Projects</Link>
             {" • "}

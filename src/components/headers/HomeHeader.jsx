@@ -99,7 +99,7 @@ const FilterHeader = ({
 
 
   return (
-    <div className="w-full flex flex-col sm:flex-col justify-end items-end min-h-[80px] p-4 px-2">
+    <div className="w-full flex flex-col sm:flex-col justify-end items-end min-h-20 p-4 px-2">
       {/* page hint */}
       <div className="w-full self-start mb-4">
         <p className="text-xs text-gray-400">

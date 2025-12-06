@@ -16,6 +16,7 @@ import { Progress } from '../ui/progress';
 import ShinyText from "../ui/ShinyText";
 
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -46,7 +47,9 @@ const DiscoverStartups = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedStartup, setSelectedStartup] = useState(null);
   const navigate = useNavigate();
-
+  
+  const {user,access_token,refreshToken} = useSelector((state) => state.auth);
+  
   const itemsPerPage = 9;
 
   // Get current funding range values
@@ -69,22 +72,34 @@ const DiscoverStartups = () => {
   const fetchStartups = async (page = 1) => {
     try {
       setLoading(true);
+      const token = access_token; 
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+  
       const fundingRange = getFundingRangeValues();
       
       const params = new URLSearchParams({
         page: page.toString(),
         per_page: itemsPerPage.toString()
       });
-
+  
       if (searchQuery) params.append('search', searchQuery);
       if (selectedIndustry !== 'All') params.append('industry', selectedIndustry);
       if (selectedStage !== 'All') params.append('stage', selectedStage);
       if (fundingRange.min !== null) params.append('min_funding', fundingRange.min.toString());
       if (fundingRange.max !== null) params.append('max_funding', fundingRange.max.toString());
-
-      const response = await fetch(`${API_URL}/startups?${params}`);
+  
+      const response = await fetch(`${API_URL}/startups?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
       const data = await response.json();
-
+  
       if (data.success) {
         setStartups(data.data.startups);
         setTotalPages(data.data.pagination.pages);
@@ -97,23 +112,38 @@ const DiscoverStartups = () => {
     }
   };
 
+
   // Fetch industries and stages
   const fetchFilters = async () => {
     try {
+      const token = access_token;
+      if (!token) return;
+  
       const [industriesRes, stagesRes] = await Promise.all([
-        fetch(`${API_URL}/startups/industries`),
-        fetch(`${API_URL}/startups/stages`)
+        fetch(`${API_URL}/startups/industries`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${API_URL}/startups/stages`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
       ]);
-
+  
       const industriesData = await industriesRes.json();
       const stagesData = await stagesRes.json();
-
+  
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);
     } catch (error) {
       console.error('Error fetching filters:', error);
     }
   };
+
 
   useEffect(() => {
     fetchStartups();
@@ -940,7 +970,7 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
 
 // Skeleton Loading Component
 const StartupCardSkeleton = () => (
-  <Card className="p-6 border-gray-700 bg-gray-800/50 backdrop-blur-sm animate-pulse">
+  <Card className="p-6 border-gray-700 bg-gray-800/5 backdrop-blur-sm animate-pulse">
     <div className="flex items-start gap-4 mb-4">
       <div className="w-14 h-14 bg-gray-700 rounded-xl shrink-0"></div>
       <div className="flex-1 space-y-2">

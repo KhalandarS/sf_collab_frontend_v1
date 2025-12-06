@@ -33,6 +33,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import ShinyText from '../ui/ShinyText';
 
+import { useSelector } from 'react-redux';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const StartupDetailPage = () => {
@@ -63,6 +65,8 @@ const StartupDetailPage = () => {
   const [calendarEvents, setCalendarEvents] = useState([]);
   
   const [isCreator, setIsCreator] = useState(false);
+  
+  const {user,access_token,refreshToken} = useSelector((state) => state.auth);
 
   // Form states
   const [joinForm, setJoinForm] = useState({
@@ -86,22 +90,48 @@ const StartupDetailPage = () => {
     document_type: 'general'
   });
 
-  // Fetch startup data
+   // Fetch startup data
   const fetchStartupData = async () => {
     try {
       setLoading(true);
+      const token = access_token;
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
+  
       const [startupRes, membersRes, documentsRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/startups/${id}`),
-        fetch(`${API_URL}/startups/${id}/members`),
-        fetch(`${API_URL}/startups/${id}/documents`),
-        fetch(`${API_URL}/startups/${id}/stats`)
+        fetch(`${API_URL}/startups/${id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${API_URL}/startups/${id}/members`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${API_URL}/startups/${id}/documents`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }),
+        fetch(`${API_URL}/startups/${id}/stats`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        })
       ]);
-
+  
       const startupData = await startupRes.json();
       const membersData = await membersRes.json();
       const documentsData = await documentsRes.json();
       const statsData = await statsRes.json();
-
+  
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) setMembers(membersData.data.members);
       if (documentsData.success) setDocuments(documentsData.data.documents);
@@ -114,6 +144,7 @@ const StartupDetailPage = () => {
       setLoading(false);
     }
   };
+
 
   // Load mock data for new tabs
   const loadMockData = () => {
