@@ -87,19 +87,22 @@ export default function SignUp() {
   // Listen for OAuth popup messages
   useEffect(() => {
     const handleOAuthMessage = (event) => {
-      // const allowedOrigins = [
-      //   new URL(API_URL).origin,
-      //   "http://localhost:5000",
-      //   "null",
-      //   "https://sfclb.netlify.app"
-      // ];
+      const allowedOrigins = [
+        window.location.origin ,
+        "http://localhost:5000",
+        "null",
+        "https://sfclb.netlify.app",
+        "https://sfclb.netlify.app/",
+        "https://sf-collab-backend-flask.onrender.com/",
+        "https://sf-collab-backend-flask.onrender.com"
+      ];
   
-      // if (!allowedOrigins.includes(event.origin)) {
-      //   console.warn("Blocked message from:", event.origin);
-      //   return;
-      // }
+      if (!allowedOrigins.includes(event.origin)) {
+        console.warn("Blocked message from:", event.origin);
+        return;
+      }
       
-      if (event.origin !== ORIGIN) return;
+      // if (event.origin !== ORIGIN) return;
       
       // alert(JSON.stringify(event.data));
       
