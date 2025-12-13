@@ -1129,7 +1129,7 @@ export default function Chat() {
                               __html: message.content.replace(
                                 new RegExp(searchQuery, "gi"),
                                 (match) =>
-                                  `<span class="bg-yellow-300 text-black">${match}</span>`
+                                  `<span className="bg-yellow-300 text-black">${match}</span>`
                               ),
                             }}
                           />

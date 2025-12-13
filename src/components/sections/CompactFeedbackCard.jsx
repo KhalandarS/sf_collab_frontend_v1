@@ -46,7 +46,7 @@ const CompactFeedbackCard = () => {
   };
 
   return (
-    <div style={{zIndex: 999999999999}} className="fixed bottom-7 right-32 z-50">
+    <div style={{zIndex: 999999999999}} className="fixed bottom-7 right-32 z-50 option-a option">
       <TooltipProvider>
         <Tooltip open={tooltipOpen} onOpenChange={setTooltipOpen}>
           <TooltipTrigger asChild>

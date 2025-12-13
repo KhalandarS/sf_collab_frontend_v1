@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ArrowLeft,
   Share2,
@@ -12,717 +12,955 @@ import {
   ThumbsUp,
   MessageSquare,
   Send,
-  Image as ImageIcon,
-  Link as LinkIcon,
+  Clock,
+  Building2,
+  FileCode,
+  BarChart3,
+  Globe,
+  ChevronRight,
+  FileUp,
+  Users,
+  Award,
+  Star,
+  Zap,
+  BookOpen,
+  Layers,
+  Target,
+  TrendingUp,
+  CheckCircle,
+  X,
+  AlertCircle,
+  InfoIcon,
+  Mail
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { allimg } from "../../utils";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../ui/card";
+import { Button } from "../ui/button";
+import { Badge } from "../ui/badge";
+import { Progress } from "../ui/progress";
+import { Textarea } from "../ui/textarea";
+import { Input } from "../ui/input";
+import { Separator } from "../ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
-const Knowledgedetails = () => {
-  const [knowledgeDetails, setKnowledgeDetails] = useState(null);
-  const [comment, setComment] = useState("");
-  const [bookmarks, setBookmarks] = useState(new Set());
-  const [bookmarkNotification, setBookmarkNotification] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [commentsLoading, setCommentsLoading] = useState(false);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
-  const [downloadError, setDownloadError] = useState(null);
+const mockKnowledgeData = [
+  {
+    id: 101,
+    title: "How to Build a Scalable Backend Architecture for Modern SaaS",
+    titleDescription: "A comprehensive guide to designing, implementing, and scaling microservices-based backend systems with enterprise-grade reliability and performance.",
+    contentPreview: `Building a scalable backend requires careful planning across multiple dimensions:
 
+## Core Principles
+1. Microservices Architecture - Decompose by business capability
+2. Event-Driven Communication - Use message brokers for loose coupling
+3. Distributed Caching - Implement Redis/Memcached for performance
+4. Container Orchestration - Kubernetes for deployment and scaling
+5. Observability - Comprehensive logging, metrics, and tracing
+
+## Best Practices
+- Implement circuit breakers and retry logic
+- Use API gateways for request routing
+- Implement rate limiting and throttling
+- Design for horizontal scaling
+- Use database connection pooling
+
+## Performance Optimization
+- Implement CDN for static assets
+- Use database indexing strategically
+- Implement background job processing
+- Optimize database queries
+- Use connection pooling`,
+    category: "Engineering",
+    tags: ["Backend", "Architecture", "Scalability", "Microservices", "DevOps", "Kubernetes", "Docker", "AWS"],
+    views: 1520,
+    downloads: 320,
+    likes: 230,
+    createdAt: "2025-02-10T12:30:00Z",
+    updatedAt: "2025-02-12T10:05:00Z",
+    fileUrl: "backend-guide.pdf",
+    author: {
+      id: 201,
+      firstName: "Aman",
+      lastName: "Khan",
+      role: "Senior Architect",
+      company: "TechCorp",
+      expertise: "Cloud Infrastructure",
+      contributions: 42,
+      followers: 1200,
+      avatar: "https://i.pravatar.cc/150?u=aman"
+    },
+    attachments: [
+      { id: 1, name: "backend-architecture-guide.pdf", url: "#", size: "2.4 MB", pages: 48 },
+      { id: 2, name: "architecture-diagram.fig", url: "#", size: "1.8 MB", type: "Design" },
+      { id: 3, name: "code-samples.zip", url: "#", size: "3.2 MB", type: "Code" },
+    ],
+    expertiseLevel: "Advanced",
+    readTime: "15 min",
+    difficulty: "Hard",
+    rating: 4.8,
+    reviews: 42,
+    prerequisites: ["Basic understanding of APIs", "Familiarity with cloud concepts", "Knowledge of databases"],
+    learningOutcomes: [
+      "Design scalable microservices architecture",
+      "Implement event-driven systems",
+      "Configure monitoring and observability",
+      "Deploy containerized applications"
+    ]
+  },
+];
+
+const commentsKey = (id) => `mock_comments_${id}`;
+const bookmarksKey = "mock_bookmarks";
+
+function loadCommentsFromStorage(id) {
+  try {
+    const raw = localStorage.getItem(commentsKey(id));
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Failed to parse comments from localStorage", e);
+    return [];
+  }
+}
+
+function saveCommentsToStorage(id, comments) {
+  try {
+    localStorage.setItem(commentsKey(id), JSON.stringify(comments));
+  } catch (e) {
+    console.error("Failed to save comments to localStorage", e);
+  }
+}
+
+function loadBookmarksFromStorage() {
+  try {
+    const raw = localStorage.getItem(bookmarksKey);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("Failed to parse bookmarks from localStorage", e);
+    return [];
+  }
+}
+
+function saveBookmarksToStorage(bookmarks) {
+  try {
+    localStorage.setItem(bookmarksKey, JSON.stringify(bookmarks));
+  } catch (e) {
+    console.error("Failed to save bookmarks to localStorage", e);
+  }
+}
+
+function getFileTypeLabel(urlOrName) {
+  if (!urlOrName) return "file";
+  const ext = String(urlOrName).split(".").pop().toLowerCase();
+  if (!ext) return "file";
+  return ext;
+}
+
+function getFileIcon(type) {
+  const ext = type.toLowerCase();
+  if (["pdf", "doc", "docx"].includes(ext)) return FileText;
+  if (["xlsx", "xls", "csv"].includes(ext)) return BarChart3;
+  if (["zip", "rar", "tar", "gz"].includes(ext)) return FileCode;
+  if (["fig", "sketch", "xd"].includes(ext)) return Layers;
+  return FileText;
+}
+
+export default function Knowledgedetails() {
   const location = useLocation();
-  const queryParams = new URLSearchParams(location.search);
-  const id = queryParams.get("id");
+  const params = new URLSearchParams(location.search);
+  const idParam = params.get("id");
+  const id = idParam ? Number(idParam) : mockKnowledgeData[0].id;
 
-  const getfileUrlColor = (type) => {
-    const colors = {
-      pdf: "bg-red-600",
-      docs: "bg-blue-600",
-      xls: "bg-green-600",
-      ppt: "bg-yellow-600",
-      txt: "bg-gray-600",
-      png: "bg-pink-600",
-      jpg: "bg-orange-600",
-      jpeg: "bg-orange-600",
-    };
-    return colors[type] || "bg-gray-600";
-  };
-  // Fetch comments for the resource
-  const fetchComments = async () => {
-    if (!id) return;
+  const item = mockKnowledgeData.find((m) => Number(m.id) === Number(id)) || mockKnowledgeData[0];
 
-    setCommentsLoading(true);
-    try {
-      const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/knowledge/${id}/comments`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data.comments || []);
-      } else {
-        console.warn("Comments API response not OK:", response.status);
-        setComments([]);
-      }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-      setComments([]);
-    } finally {
-      setCommentsLoading(false);
-    }
-  };
-
-  // Submit a new comment
-  const submitComment = async () => {
-    if (!comment.trim() || !id) return;
-
-    setCommentSubmitting(true);
-    const token = localStorage.getItem("authToken");
-
-    try {
-      const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/knowledge/${id}/comments`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-          body: JSON.stringify({ content: comment.trim() }),
-        }
-      );
-
-      if (response.ok) {
-        await fetchComments();
-        setComment("");
-      } else {
-        console.warn("Comment submission failed:", response.status);
-      }
-    } catch (error) {
-      console.error("Error submitting comment:", error);
-      alert("Failed to submit comment. Please try again.");
-    } finally {
-      setCommentSubmitting(false);
-    }
-  };
-
-  // Fetch resource details
-  const fetchKnowledgeDetails = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("authToken");
-
-      const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/knowledge/${id}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        }
-      );
-
-      if (response.ok) {
-        const { resource: data } = await response.json();
-
-        if (data) {
-          const resourceData = {
-            id: data._id || id,
-            title: data.title || "Untitled Resource",
-            titleDescription:
-              data.titleDescription || "No title description available.",
-            contentPreview:
-              data.contentPreview || "No content preview available.",
-            category: data.category || "Uncategorized",
-            author: {
-              name: data.author
-                ? `${data.author.firstName || ""} ${
-                    data.author.lastName || ""
-                  }`.trim() || "Unknown Author"
-                : "Unknown Author",
-              role: data.author?.role || "Contributor",
-              avatar:
-                data.author?.avatar || `https://i.pravatar.cc/150?img=${id}`,
-            },
-            date: data.createdAt
-              ? new Date(data.createdAt).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })
-              : "Unknown Date",
-            fileUrl: data.image?.contentType?.split("/")[1] || "bin",
-            views: data.views?.toString() || "0", // uses backend-calculated unique views
-            downloads: data.downloads || 0,
-            likes: data.likes || 0,
-            comments: data.comments?.length || 0,
-            tags: data.tags || [],
-            relatedResources:
-              data.relatedResources?.map((res) => ({
-                id: res.id,
-                title: res.title || "Untitled",
-                category: res.category || "Uncategorized",
-                fileUrl: res.image?.contentType?.split("/")[1] || "bin",
-                views: res.views?.toString() || "0",
-              })) || [],
-          };
-
-          setKnowledgeDetails(resourceData);
-          setComments(data.comments || []); // get comments directly from backend
-        } else {
-          throw new Error("No resource data returned.");
-        }
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Status ${response.status}`);
-      }
-    } catch (err) {
-      console.error("Error fetching knowledge details:", err.message);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [comments, setComments] = useState(() => loadCommentsFromStorage(item.id));
+  const [commentText, setCommentText] = useState("");
+  const [isBookmarked, setIsBookmarked] = useState(() => {
+    const b = loadBookmarksFromStorage();
+    return b.includes(item.id);
+  });
+  const [likes, setLikes] = useState(item.likes || 0);
+  const [localViews, setLocalViews] = useState(item.views || 0);
+  const [bookmarkNotification, setBookmarkNotification] = useState({ show: false, message: "" });
 
   useEffect(() => {
-    if (id) {
-      fetchKnowledgeDetails();
-      fetchComments();
-    } else {
-      setError("No resource ID provided.");
-      setLoading(false);
-    }
-  }, [id]);
-
-  // ✅ Fetch Bookmarks
-  useEffect(() => {
-    const fetchBookmarks = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-
-        const response = await fetch(
-          `https://sfcolab-backend.onrender.com/api/knowledge/bookmarks`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!response.ok) throw new Error("Failed to fetch bookmarks");
-
-        const data = await response.json();
-
-        // Handle object or array gracefully
-        let bookmarkArray = [];
-        if (Array.isArray(data.bookmarks)) {
-          bookmarkArray = data.bookmarks;
-        } else if (data.bookmarks?.knowledge) {
-          bookmarkArray = data.bookmarks.knowledge;
-        } else if (data.knowledge) {
-          bookmarkArray = data.knowledge;
-        }
-
-        const bookmarkSet = new Set(
-          bookmarkArray.map((b) =>
-            b.knowledgeId ? b.knowledgeId.toString() : b.toString()
-          )
-        );
-
-        setBookmarks(bookmarkSet);
-      } catch (error) {
-        console.error("Bookmarks fetch error:", error);
-      }
-    };
-
-    fetchBookmarks();
+    setLocalViews((v) => v + 1);
   }, []);
 
-  // Whether current knowledge is bookmarked
-  const isBookmarked = Boolean(id && bookmarks.has(id));
+  useEffect(() => {
+    saveCommentsToStorage(item.id, comments);
+  }, [comments, item.id]);
 
-  // Toggle bookmark — communicates with backend toggle endpoint
-  const handleBookmark = async (e) => {
-    e?.stopPropagation?.();
+  const handlePostComment = () => {
+    const trimmed = (commentText || "").trim();
+    if (!trimmed) return;
 
-    if (!id) {
-      setBookmarkNotification("No knowledge selected to bookmark");
-      setTimeout(() => setBookmarkNotification(""), 2000);
-      return;
-    }
-
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      setBookmarkNotification("Please log in to bookmark resources");
-      setTimeout(() => setBookmarkNotification(""), 2000);
-      return;
-    }
-
-    const knowledgeIdStr = id.toString();
-    const wasBookmarked = bookmarks.has(knowledgeIdStr);
-
-    // Optimistic update
-    setBookmarks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(knowledgeIdStr)) {
-        newSet.delete(knowledgeIdStr);
-        setBookmarkNotification("Bookmark removed");
-      } else {
-        newSet.add(knowledgeIdStr);
-        setBookmarkNotification("Knowledge bookmarked!");
+    const user = (() => {
+      try {
+        const raw = localStorage.getItem("user");
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
       }
-      setTimeout(() => setBookmarkNotification(""), 2000);
-      return newSet;
-    });
+    })();
 
-    try {
-      const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/knowledge/${knowledgeIdStr}/bookmark`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+    const author = user
+      ? { 
+          id: user.id, 
+          name: `${user.firstName} ${user.lastName}`, 
+          avatar: user.avatar || allimg.profileImg,
+          role: user.role || "Member"
         }
-      );
+      : { id: "guest", name: "Guest User", avatar: allimg.profileImg, role: "Visitor" };
 
-      if (!response.ok) {
-        throw new Error("Failed to toggle bookmark");
-      }
+    const newComment = {
+      id: Date.now(),
+      resource_id: item.id,
+      content: trimmed,
+      author,
+      createdAt: new Date().toISOString(),
+      likes: 0,
+      replies: []
+    };
 
-      const data = await response.json();
-      if (data?.bookmarks) {
-        let bookmarkArray = [];
-        if (Array.isArray(data.bookmarks)) {
-          bookmarkArray = data.bookmarks;
-        } else if (data.bookmarks?.knowledge) {
-          bookmarkArray = data.bookmarks.knowledge;
-        } else if (data.knowledge) {
-          bookmarkArray = data.knowledge;
-        }
+    setComments((prev) => [newComment, ...prev]);
+    setCommentText("");
+  };
 
-        const bookmarkSet = new Set(
-          bookmarkArray.map((b) =>
-            b.knowledgeId ? b.knowledgeId.toString() : b.toString()
-          )
-        );
-        setBookmarks(bookmarkSet);
-      } else if (typeof data?.bookmarked === "boolean") {
-        setBookmarks((prev) => {
-          const newSet = new Set(prev);
-          if (data.bookmarked) {
-            newSet.add(knowledgeIdStr);
-          } else {
-            newSet.delete(knowledgeIdStr);
-          }
-          return newSet;
-        });
-      }
-    } catch (error) {
-      console.error("Bookmark toggle error:", error);
-      setBookmarks((prev) => {
-        const newSet = new Set(prev);
-        if (wasBookmarked) {
-          newSet.add(knowledgeIdStr);
-        } else {
-          newSet.delete(knowledgeIdStr);
-        }
-        return newSet;
-      });
-      setBookmarkNotification("Failed to update bookmark");
-      setTimeout(() => setBookmarkNotification(""), 2000);
+  const toggleBookmark = () => {
+    const current = loadBookmarksFromStorage();
+    let updated;
+    if (current.includes(item.id)) {
+      updated = current.filter((x) => x !== item.id);
+      setIsBookmarked(false);
+      setBookmarkNotification({ show: true, message: "Removed from bookmarks", type: "info" });
+    } else {
+      updated = [item.id, ...current];
+      setIsBookmarked(true);
+      setBookmarkNotification({ show: true, message: "Added to bookmarks", type: "success" });
     }
+    saveBookmarksToStorage(updated);
+    setTimeout(() => setBookmarkNotification({ show: false, message: "" }), 3000);
+  };
+
+  const toggleLike = () => {
+    setLikes((l) => (l || 0) + 1);
   };
 
   const handleShare = async () => {
+    const url = `${window.location.origin}/knowledge-details?id=${item.id}`;
     try {
-      const url = `${window.location.origin}/knowledge-details?id=${
-        knowledgeDetails?.id || id
-      }`;
       if (navigator.share) {
-        await navigator.share({
-          title: knowledgeDetails?.title || "Knowledge Resource",
-          url: url,
-        });
+        await navigator.share({ title: item.title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
+        setBookmarkNotification({ show: true, message: "Link copied to clipboard!", type: "success" });
+        setTimeout(() => setBookmarkNotification({ show: false, message: "" }), 3000);
       }
     } catch (e) {
       console.error("Share failed:", e);
     }
   };
 
-  // Handles the download
-  const handleDownload = async () => {
-    try {
-      setDownloadError(null);
-      const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/knowledge/${id}/file`,
-        {
-          method: "GET",
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to download file");
-      }
-
-      const blob = await response.blob();
-
-      // extract filename from headers if available
-      const contentDisposition = response.headers.get("Content-Disposition");
-      let filename = "downloaded-file";
-      if (contentDisposition) {
-        const match = contentDisposition.match(/filename="(.+)"/);
-        if (match) filename = match[1];
-      }
-
-      // create a temporary link and trigger download
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error(error);
-      setDownloadError("Failed to download file");
-    }
+  const getCategoryColor = (category) => {
+    const colors = {
+      Engineering: "bg-blue-500/20 text-blue-400 border-blue-400/30",
+      Business: "bg-green-500/20 text-green-400 border-green-400/30",
+      Design: "bg-purple-500/20 text-purple-400 border-purple-400/30",
+      Marketing: "bg-pink-500/20 text-pink-400 border-pink-400/30",
+      Default: "bg-gray-500/20 text-gray-400 border-gray-400/30",
+    };
+    return colors[category] || colors.Default;
   };
 
-  const handleCommentSubmit = (e) => {
-    e.preventDefault();
-    submitComment();
+  const getExpertiseColor = (level) => {
+    const colors = {
+      Beginner: "bg-green-500/20 text-green-400 border-green-400/30",
+      Intermediate: "bg-yellow-500/20 text-yellow-400 border-yellow-400/30",
+      Advanced: "bg-red-500/20 text-red-400 border-red-400/30",
+      Default: "bg-gray-500/20 text-gray-400 border-gray-400/30",
+    };
+    return colors[level] || colors.Default;
   };
 
-  const formatCommentTime = (timestamp) => {
-    return new Date(timestamp).toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
+  const getDifficultyColor = (level) => {
+    const colors = {
+      Easy: "bg-green-500/20 text-green-400",
+      Medium: "bg-yellow-500/20 text-yellow-400",
+      Hard: "bg-red-500/20 text-red-400",
+      Default: "bg-gray-500/20 text-gray-400",
+    };
+    return colors[level] || colors.Default;
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
     });
   };
 
-  const formatCommentDate = (timestamp) => {
-    return new Date(timestamp).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const Notification = () => {
+    if (!bookmarkNotification.show) return null;
+
+    const styles = {
+      success: 'border-green-400/30 bg-green-500/10 text-green-200',
+      info: 'border-blue-400/30 bg-blue-500/10 text-blue-200',
+      error: 'border-red-400/30 bg-red-500/10 text-red-200'
+    };
+
+    const icons = {
+      success: <CheckCircle size={20} />,
+      info: <InfoIcon size={20} />,
+      error: <AlertCircle size={20} />
+    };
+
+    return (
+      <div style={{zIndex: 9999}} className="fixed top-20 right-4 z-50">
+        <div className={`rounded-xl border p-4 backdrop-blur-sm ${styles[bookmarkNotification.type]}`}>
+          <div className="flex items-center gap-3">
+            {icons[bookmarkNotification.type]}
+            <span className="font-medium">{bookmarkNotification.message}</span>
+            <button 
+              onClick={() => setBookmarkNotification({ show: false, message: "" })}
+              className="ml-2 hover:opacity-70 transition-opacity"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="text-gray-300">Loading knowledge resource...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="text-red-500">Error: {error}</p>
-      </div>
-    );
-  }
-
-  if (!knowledgeDetails) {
-    return (
-      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
-        <p className="text-gray-300">No resource found.</p>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen bg-[#0A0A0A] text-white">
-      <div className="border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen  text-white">
+      <Notification />
+
+      <div className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
             <Link
               to="/knowledge"
-              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
             >
-              <ArrowLeft className="h-5 w-5" />
-              <span>Back to Resources</span>
+              <div className="p-2 rounded-lg bg-gray-800/50 border border-gray-700 group-hover:border-blue-400/50 transition-colors">
+                <ArrowLeft className="h-5 w-5" />
+              </div>
+              <span className="hidden sm:inline">Back to Knowledge Base</span>
             </Link>
-            <div className="flex items-center gap-4">
-              <button
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                onClick={handleShare}
-                aria-label="Share"
-              >
-                <Share2 className="h-5 w-5" />
-              </button>
-              <button
-                className={`p-2 rounded-lg transition-colors ${
-                  isBookmarked
-                    ? "bg-blue-500/10 text-blue-400"
-                    : "hover:bg-white/10"
-                }`}
-                onClick={handleBookmark}
-                aria-label="Bookmark"
-              >
-                <Bookmark
-                  className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`}
-                />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      {bookmarkNotification && (
-        <div className="fixed bottom-4 right-4 bg-[#1A1A1A] text-white px-4 py-2 rounded-xl shadow-lg">
-          {bookmarkNotification}
-        </div>
-      )}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-8">
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <div className="flex justify-between items-start mb-6">
-                <h1 className="text-3xl font-bold">{knowledgeDetails.title}</h1>
-                <button
-                  className={`${getfileUrlColor(
-                    knowledgeDetails.fileUrl
-                  )} text-sm px-3 py-1 font-medium rounded-sm capitalize`}
-                >
-                  {knowledgeDetails.fileUrl}
-                </button>
-              </div>
-              <h2 className="text-xl font-semibold mb-2">Title Description</h2>
-              <p className="text-gray-300 text-lg leading-relaxed mb-6">
-                {knowledgeDetails.titleDescription}
-              </p>
-              <div className="flex flex-wrap gap-2 mb-6">
-                {knowledgeDetails.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-[#2A2A2A] text-sm px-3 py-1 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              <div className="flex items-center justify-between text-gray-400">
-                <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1">
-                    <Eye className="h-5 w-5" />
-                    {knowledgeDetails.views}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Download className="h-5 w-5" />
-                    {knowledgeDetails.downloads}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>{knowledgeDetails.date}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">Content Preview</h2>
-              <div className="prose prose-invert max-w-none">
-                <pre className="whitespace-pre-wrap font-sans text-gray-300">
-                  {knowledgeDetails.contentPreview}
-                </pre>
-              </div>
-              <div className="mt-6 flex justify-center">
-                <button
-                  onClick={handleDownload}
-                  className="bg-blue-600 px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="h-5 w-5" />
-                  Download Full Resource
-                </button>
-                {downloadError && (
-                  <div style={{ color: "red", marginTop: "8px" }}>
-                    {downloadError}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">
-                Comments & Feedback
-              </h2>
-              <div className="space-y-6">
-                {commentsLoading ? (
-                  <p className="text-gray-400">Loading comments...</p>
-                ) : comments.length > 0 ? (
-                  comments.map((commentItem) => (
-                    <div key={commentItem.id} className="flex gap-4">
-                      <img
-                        src={`https://i.pravatar.cc/150?u=${commentItem.author.id}`}
-                        alt={commentItem.author.firstName}
-                        className="w-10 h-10 rounded-full"
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium">
-                            {commentItem.author.firstName}{" "}
-                            {commentItem.author.lastName}
-                          </h3>
-                          <span className="text-sm text-gray-400">
-                            {formatCommentDate(commentItem.createdAt)} at{" "}
-                            {formatCommentTime(commentItem.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-gray-300 mb-2">
-                          {commentItem.content}
-                        </p>
-                        <div className="flex items-center gap-4 text-gray-400">
-                          <button className="flex items-center gap-1 hover:text-white transition-colors">
-                            <ThumbsUp className="h-4 w-4" />
-                            <span>0</span>
-                          </button>
-                          <button className="hover:text-white transition-colors">
-                            Reply
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-gray-400">
-                    No comments yet. Be the first to comment!
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-8">
-                <form onSubmit={handleCommentSubmit}>
-                  <div className="flex gap-4">
-                    <img
-                      src={knowledgeDetails.author.avatar}
-                      alt={knowledgeDetails.author.name}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div className="flex-1">
-                      <textarea
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Add your comment..."
-                        className="w-full bg-[#2A2A2A] rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        rows="3"
-                        disabled={commentSubmitting}
-                      />
-                      <div className="flex items-center justify-between mt-2">
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            disabled={commentSubmitting}
-                          >
-                            <ImageIcon className="h-5 w-5" />
-                          </button>
-                          <button
-                            type="button"
-                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                            disabled={commentSubmitting}
-                          >
-                            <LinkIcon className="h-5 w-5" />
-                          </button>
-                        </div>
-                        <button
-                          type="submit"
-                          className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                          disabled={!comment.trim() || commentSubmitting}
-                        >
-                          {commentSubmitting ? "Posting..." : "Post Comment"}
-                          <Send className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
-              </div>
+            
+            <div className="flex items-center gap-3">
+              <Badge className="bg-blue-400/10 text-blue-400 border-blue-400/30">
+                <Eye className="h-3 w-3 mr-1" /> {localViews} views
+              </Badge>
+              <Badge className="bg-green-400/10 text-green-400 border-green-400/30">
+                <Download className="h-3 w-3 mr-1" /> {item.downloads} downloads
+              </Badge>
             </div>
           </div>
 
-          <div className="space-y-8">
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">Author</h2>
-              <div className="flex items-center gap-4">
-                <img
-                  src={knowledgeDetails.author.avatar}
-                  alt={knowledgeDetails.author.name}
-                  className="w-16 h-16 rounded-full"
-                />
-                <div>
-                  <h3 className="font-medium text-lg">
-                    {knowledgeDetails.author.name}
+          <div className="inline-flex items-center gap-2 bg-blue-400/10 border border-blue-400/30 rounded-full px-4 py-2 mb-4">
+            <BookOpen className="w-4 h-4 text-blue-400" />
+            <span className="text-blue-400 text-sm font-medium">Knowledge Resource</span>
+          </div>
+          
+          <h1 className="text-4xl font-bold text-white mb-4">
+            Expert <span className="bg-gradient-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Knowledge</span> Hub
+          </h1>
+          <p className="text-lg text-gray-300 max-w-3xl">
+            Dive deep into specialized knowledge curated by industry experts. 
+            <span className="text-white font-semibold"> Average learning improvement: 68%.</span>
+          </p>
+        </div>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+          {/* Left Sidebar - Author & Stats */}
+          <div className="lg:col-span-3">
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <User className="w-5 h-5 text-blue-400" />
+                  Author Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex flex-col items-center text-center">
+                  <img
+                    src={item.author.avatar}
+                    alt={item.author.firstName}
+                    className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-blue-400/30"
+                  />
+                  <h3 className="text-xl font-bold text-white mb-1">
+                    {item.author.firstName} {item.author.lastName}
                   </h3>
-                  <p className="text-gray-400">
-                    {knowledgeDetails.author.role}
-                  </p>
+                  <Badge className="bg-blue-400/20 text-blue-400 border-blue-400/30 mb-2">
+                    {item.author.role}
+                  </Badge>
+                  <p className="text-gray-400 text-sm mb-4">{item.author.company}</p>
+                  
+                  <div className="grid grid-cols-2 gap-3 w-full mb-6">
+                    <div className="text-center p-3 bg-gray-700/30 rounded-lg">
+                      <div className="text-2xl font-bold text-white">{item.author.contributions}</div>
+                      <div className="text-xs text-gray-400">Contributions</div>
+                    </div>
+                    <div className="text-center p-3 bg-gray-700/30 rounded-lg">
+                      <div className="text-2xl font-bold text-white">{item.author.followers}</div>
+                      <div className="text-xs text-gray-400">Followers</div>
+                    </div>
+                  </div>
+                  
+                  <Button className="w-full bg-blue-400 hover:bg-blue-500 text-white">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Contact Author
+                  </Button>
                 </div>
-              </div>
-            </div>
 
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">Related Resources</h2>
-              <div className="space-y-4">
-                {knowledgeDetails.relatedResources.length > 0 ? (
-                  knowledgeDetails.relatedResources.map((resource) => (
-                    <Link
-                      key={resource.id}
-                      to={`/knowledge-details?id=${resource.id}`}
-                      className="block p-4 bg-[#2A2A2A] rounded-xl hover:bg-[#333333] transition-colors"
+                <Separator className="bg-gray-700" />
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Expertise Level</span>
+                    <Badge className={getExpertiseColor(item.expertiseLevel)}>
+                      {item.expertiseLevel}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Difficulty</span>
+                    <Badge className={getDifficultyColor(item.difficulty)}>
+                      {item.difficulty}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Read Time</span>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-blue-400" />
+                      <span className="text-white">{item.readTime}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="bg-gray-700" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Star className="w-4 h-4 text-blue-400" />
+                    <span className="text-white text-sm font-medium">Quality Rating</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      {[...Array(5)].map((_, i) => (
+                        <Star 
+                          key={i} 
+                          className={`h-4 w-4 ${i < Math.floor(item.rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-400'}`} 
+                        />
+                      ))}
+                      <span className="ml-2 text-white font-medium">{item.rating}</span>
+                    </div>
+                    <span className="text-gray-400 text-sm">({item.reviews} reviews)</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Quick Stats */}
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mt-6">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                  Resource Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Engagement Score</span>
+                    <span className="text-blue-400 font-bold">94%</span>
+                  </div>
+                  <Progress value={94} className="h-2 bg-gray-700 [&>div]:bg-gradient-to-r from-blue-400 to-blue-600" />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 bg-gray-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-white">{likes}</div>
+                    <div className="text-xs text-gray-400">Likes</div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-700/30 rounded-lg">
+                    <div className="text-2xl font-bold text-white">{comments.length}</div>
+                    <div className="text-xs text-gray-400">Comments</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Center Content - Main Article */}
+          <div className="lg:col-span-6">
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <Badge className={getCategoryColor(item.category)}>
+                    {item.category}
+                  </Badge>
+                  <Badge className={getExpertiseColor(item.expertiseLevel)}>
+                    {item.expertiseLevel}
+                  </Badge>
+                  <Badge className="bg-gray-500/20 text-gray-400 border-gray-400/30">
+                    <Clock className="h-3 w-3 mr-1" /> {item.readTime} read
+                  </Badge>
+                </div>
+                
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-white mb-4 leading-tight">
+                  {item.title}
+                </CardTitle>
+                
+                <CardDescription className="text-lg text-gray-300">
+                  {item.titleDescription}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-8">
+                {/* Tags */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Tag className="h-4 w-4 text-blue-400" />
+                    <span className="text-sm font-medium text-white">Topics Covered</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.tags.map((tag, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-600 transition-colors cursor-default"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Content Preview */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-blue-400" />
+                    <h2 className="text-xl font-semibold text-white">Content Overview</h2>
+                  </div>
+                  
+                  <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600">
+                    <div className="prose prose-invert max-w-none">
+                      <div className="text-gray-300 whitespace-pre-wrap leading-relaxed">
+                        {item.contentPreview.split('\n').map((line, index) => {
+                          if (line.startsWith('## ')) {
+                            return <h3 key={index} className="text-xl font-semibold text-white mt-4 mb-2">{line.replace('## ', '')}</h3>;
+                          }
+                          if (line.startsWith('- ')) {
+                            return <li key={index} className="ml-4 text-gray-300 mb-1">{line.replace('- ', '')}</li>;
+                          }
+                          if (line.startsWith('**') && line.endsWith('**')) {
+                            return <strong key={index} className="text-white">{line.replace(/\*\*/g, '')}</strong>;
+                          }
+                          if (line.trim() === '') {
+                            return <br key={index} />;
+                          }
+                          return <p key={index} className="mb-3">{line}</p>;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Prerequisites & Outcomes */}
+                <div className="grid md:grid-cols-2 gap-6">
+                  <Card className="bg-gray-700/30 border-gray-600">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2 text-white">
+                        <Target className="h-5 w-5 text-blue-400" />
+                        Prerequisites
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {item.prerequisites.map((req, index) => (
+                          <li key={index} className="flex items-center gap-2 text-gray-300">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            {req}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-gray-700/30 border-gray-600">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2 text-white">
+                        <Award className="h-5 w-5 text-blue-400" />
+                        Learning Outcomes
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {item.learningOutcomes.map((outcome, index) => (
+                          <li key={index} className="flex items-center gap-2 text-gray-300">
+                            <Zap className="h-4 w-4 text-yellow-400" />
+                            {outcome}
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Attachments */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2">
+                    <FileUp className="h-5 w-5 text-blue-400" />
+                    <h2 className="text-xl font-semibold text-white">Resources & Downloads</h2>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {item.attachments.map((attachment) => {
+                      const FileIcon = getFileIcon(getFileTypeLabel(attachment.name));
+                      return (
+                        <Card key={attachment.id} className="border-gray-600 bg-gray-700/30 hover:bg-gray-700/50 transition-all hover:border-blue-400/50">
+                          <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-4">
+                                <div className="h-12 w-12 rounded-lg bg-blue-400/10 border border-blue-400/30 flex items-center justify-center">
+                                  <FileIcon className="h-6 w-6 text-blue-400" />
+                                </div>
+                                <div>
+                                  <div className="text-sm font-medium text-white mb-1">{attachment.name}</div>
+                                  <div className="flex items-center gap-3 text-xs text-gray-400">
+                                    <span>{attachment.size}</span>
+                                    <span>•</span>
+                                    <span>{getFileTypeLabel(attachment.name).toUpperCase()}</span>
+                                    {attachment.pages && (
+                                      <>
+                                        <span>•</span>
+                                        <span>{attachment.pages} pages</span>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <Button variant="outline" size="sm" className="border-blue-400/30 text-blue-400 hover:bg-blue-400/10">
+                                <Download className="h-4 w-4 mr-2" />
+                                Download
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Discussion Section */}
+                <div className="space-y-6 pt-6 border-t border-gray-700">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-blue-400" />
+                      <h2 className="text-xl font-semibold text-white">Community Discussion</h2>
+                    </div>
+                    <Badge variant="outline" className="bg-gray-700/50 text-gray-300 border-gray-600">
+                      {comments.length} comments
+                    </Badge>
+                  </div>
+
+                  {/* New Comment Form */}
+                  <Card className="border-gray-600 bg-gray-700/30">
+                    <CardContent className="p-4">
+                      <div className="flex gap-4">
+                        <img
+                          src={allimg.profileImg}
+                          alt="You"
+                          className="w-10 h-10 rounded-full object-cover border-2 border-blue-400/30"
+                        />
+                        <div className="flex-1">
+                          <Textarea
+                            value={commentText}
+                            onChange={(e) => setCommentText(e.target.value)}
+                            placeholder="Share your thoughts, ask questions, or provide feedback..."
+                            className="w-full bg-gray-800/50 border-gray-600 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 rounded-xl p-4 min-h-[100px] resize-none"
+                          />
+                          <div className="flex justify-between items-center mt-3">
+                            <div className="text-sm text-gray-400">
+                              Share your expertise or questions
+                            </div>
+                            <Button
+                              onClick={handlePostComment}
+                              disabled={!commentText.trim()}
+                              className="bg-blue-400 hover:bg-blue-500 text-white disabled:bg-gray-600 disabled:cursor-not-allowed"
+                            >
+                              <Send className="h-4 w-4 mr-2" />
+                              Post Comment
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Comments List */}
+                  <div className="space-y-4">
+                    {comments.length === 0 ? (
+                      <Card className="border-gray-600 bg-gray-700/30">
+                        <CardContent className="py-8 text-center">
+                          <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                          <h3 className="text-lg font-medium text-white mb-2">No comments yet</h3>
+                          <p className="text-gray-400">Be the first to start the discussion!</p>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      comments.map((comment) => (
+                        <Card key={comment.id} className="border-gray-600 bg-gray-700/30">
+                          <CardContent className="p-4">
+                            <div className="flex gap-4">
+                              <img
+                                src={comment.author.avatar || allimg.profileImg}
+                                alt={comment.author.name}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div>
+                                    <div className="font-medium text-white">
+                                      {comment.author.name}
+                                    </div>
+                                    <Badge variant="outline" className="bg-gray-600/50 text-gray-300 border-gray-500 text-xs">
+                                      {comment.author.role}
+                                    </Badge>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    {new Date(comment.createdAt).toLocaleDateString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </div>
+                                </div>
+                                <div className="text-gray-300 whitespace-pre-wrap">
+                                  {comment.content}
+                                </div>
+                                <div className="flex items-center gap-4 mt-3">
+                                  <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-400 hover:text-white">
+                                    <ThumbsUp className="h-3 w-3 mr-1" />
+                                    {comment.likes || 0}
+                                  </Button>
+                                  <Button variant="ghost" size="sm" className="h-8 px-2 text-gray-400 hover:text-white">
+                                    Reply
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+
+              <CardFooter className="border-t border-gray-700 pt-6">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      onClick={toggleLike}
+                      variant="outline"
+                      className="border-gray-600 hover:border-blue-400 hover:bg-blue-400/10"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-medium">{resource.title}</h3>
-                        <span className="text-sm text-gray-400">
-                          {resource.fileUrl}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm text-gray-400">
-                        <span>{resource.category}</span>
-                        <span>{resource.views} views</span>
-                      </div>
-                    </Link>
-                  ))
-                ) : (
-                  <p className="text-gray-400">
-                    No related resources available.
-                  </p>
-                )}
-              </div>
-            </div>
+                      <ThumbsUp className="h-4 w-4 mr-2" />
+                      Like ({likes})
+                    </Button>
+                    <Button
+                      onClick={toggleBookmark}
+                      variant="outline"
+                      className={`border ${isBookmarked ? 'border-blue-400 bg-blue-400/10 text-blue-400' : 'border-gray-600 hover:border-blue-400'}`}
+                    >
+                      <Bookmark className={`h-4 w-4 mr-2 ${isBookmarked ? 'fill-current' : ''}`} />
+                      {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+                    </Button>
+                  </div>
+                  <Button
+                    onClick={handleShare}
+                    variant="outline"
+                    className="border-gray-600 hover:border-blue-400 hover:bg-blue-400/10"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          </div>
 
-            <div className="bg-[#1A1A1A] rounded-4xl p-8">
-              <h2 className="text-2xl font-semibold mb-6">Quick Info</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Category</span>
-                  <span>{knowledgeDetails.category}</span>
+          {/* Right Sidebar - Related Info */}
+          <div className="lg:col-span-3">
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <InfoIcon className="w-5 h-5 text-blue-400" />
+                  Resource Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Published Date</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-blue-400" />
+                      <span className="text-white">{formatDate(item.createdAt)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Last Updated</span>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-green-400" />
+                      <span className="text-white">{formatDate(item.updatedAt)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Resource Type</span>
+                    <Badge className="bg-purple-400/20 text-purple-400 border-purple-400/30">
+                      Guide
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400 text-sm">Format</span>
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-blue-400" />
+                      <span className="text-white">PDF + Resources</span>
+                    </div>
+                  </div>
                 </div>
-                {/* <div className="flex items-center justify-between">
-                  <span className="text-gray-400">File Type</span>
-                  <span>{knowledgeDetails.fileUrl}</span>
-                </div> */}
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Added</span>
-                  <span>{knowledgeDetails.date}</span>
+
+                <Separator className="bg-gray-700" />
+
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-400" />
+                    <span className="text-white text-sm font-medium">Community Impact</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Helpful Votes</span>
+                      <span className="text-green-400">92%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Completion Rate</span>
+                      <span className="text-blue-400">87%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Avg. Time Spent</span>
+                      <span className="text-white">14.5 min</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-400">Downloads</span>
-                  <span>{knowledgeDetails.downloads}</span>
+
+                <Separator className="bg-gray-700" />
+
+                <div className="pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Zap className="w-4 h-4 text-blue-400" />
+                    <span className="text-white text-sm font-medium">Key Insights</span>
+                  </div>
+                  <p className="text-gray-300 text-sm">
+                    Resources with detailed architecture guides receive <span className="text-blue-400 font-medium">3x more engagement</span> from engineering teams and are 68% more likely to be implemented in production environments.
+                  </p>
                 </div>
-              </div>
-            </div>
+
+                <div className="pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <TrendingUp className="w-4 h-4 text-blue-400" />
+                    <span className="text-white text-sm font-medium">Popularity Trend</span>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Weekly Views</span>
+                      <span className="text-green-400">+24%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Downloads</span>
+                      <span className="text-green-400">+18%</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-400">Engagement</span>
+                      <span className="text-green-400">+31%</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Related Topics */}
+            <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mt-6">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-blue-400" />
+                  Related Topics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-2">
+                  {item.tags.slice(0, 8).map((tag, index) => (
+                    <Badge
+                      key={index}
+                      variant="outline"
+                      className="bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-600 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  <p className="text-xs text-gray-400">
+                    Explore related resources by clicking on these topics. Our AI will recommend similar content based on your interests.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
+
+      <style>{`
+        .prose {
+          color: #d1d5db;
+        }
+        .prose h3 {
+          color: white;
+          font-weight: 600;
+          margin-top: 1.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .prose p {
+          margin-bottom: 0.75rem;
+          line-height: 1.6;
+        }
+        .prose li {
+          margin-bottom: 0.5rem;
+          line-height: 1.5;
+        }
+        .prose strong {
+          color: white;
+          font-weight: 600;
+        }
+      `}</style>
     </div>
   );
-};
-
-export default Knowledgedetails;
+}

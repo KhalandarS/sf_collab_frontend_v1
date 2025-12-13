@@ -242,7 +242,7 @@ const TimeAwareMessageInput = ({ onSend, onTyping, conversationId }) => {
   };
 
   return (
-    <div className="w-full space-y-3">
+    <div className=" space-y-3">
       <div className="relative">
         {/* File Preview */}
         {selectedFile && (
@@ -358,13 +358,7 @@ const TimeAwareMessageInput = ({ onSend, onTyping, conversationId }) => {
           </div>
         )}
       </div>
-      
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] rounded-full border border-gray-800">
-        <Clock size={14} className="text-gray-600" />
-        <span className="text-xs text-gray-500">
-          <strong>Tip:</strong> Type times like "19:00" (press Tab) or "19" (press Space for options)
-        </span>
-      </div>
+
     </div>
   );
 };

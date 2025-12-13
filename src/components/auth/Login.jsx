@@ -186,7 +186,7 @@ export default function Login() {
 
     setIsLoading(true)
     try {
-      const result = await loginUser(formData)
+      const result = await dispatch(loginUser(formData)).unwrap();
       
       if (result.success) {
         dispatch(setToken(result.access_token));
@@ -302,7 +302,7 @@ export default function Login() {
             className="w-full max-h-screen object-cover"
             alt="Recollab Background" 
           /> */}
-          <video src="/Futuristic_Office_Hologram_Animation.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
+          <video src="/Create_a_short_cinematic_intro.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
         </div>
         
         {/* Right side - Login Form */}

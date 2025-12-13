@@ -15,6 +15,7 @@ html, body{
     background-color: black;
     overflow-x: hidden;
     /* font-family: "Trade Winds", system-ui; */
+    
 }
 
 /* Add this in your globals.css or tailwind.css */

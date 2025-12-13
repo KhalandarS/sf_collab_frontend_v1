@@ -32,15 +32,25 @@ import ChatComponent from "./components/ChatComponent.jsx";
 import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/Profile.jsx";
-import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 // import QwenChat from './components/pages/QwenChat/QwenChat';
-import BackgroundRemover from './components/pages/Background_remover/BackgroundRemover.jsx';
+// import BackgroundRemover from './components/pages/Background_remover/BackgroundRemover.jsx';
 import GeminiChat from './components/pages/Chat_bot/GeminiChat.jsx';
 import AnimeConverter from "./components/pages/Background_remover/AnimeConverter.jsx";
 
+//!
+import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
+import ImageEditor from "./components/pages/Image_Logo_Generator/image_editor_app.jsx";
+import QwenChat from "./components/pages/Business_plan_generator/qwen_chat_component.jsx";
+import BackgroundRemover from "./components/pages/Background_remover/BackgroundRemover_2.jsx";
+import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator_2.jsx";
+
+
+//!
+
 function App() {
   return (
+  <div className="">
     <Routes>
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />
@@ -80,15 +90,21 @@ function App() {
         <Route path="startup-details/:id" element={<StartupDetailPage />} />
         
         {/* Tools */}
-        <Route path="business-plan" element={<BusinessIdeaGenerator />} />
-        <Route path="multimodal-images" element={<ImageGenerator />} />
-        <Route path="logo-generator" element={<StartupLogoGenerator />} />
+        {/* <Route path="business-plan" element={<BusinessIdeaGenerator />} /> */}
+        {/* <Route path="chat-ai" element={<GeminiChat />} /> */}
+        {/* <Route path="logo-generator" element={<StartupLogoGenerator />} /> */}
+        
         <Route path="data-scraper" element={<ScraperForm />} />
         <Route path="chat" element={<ChatComponent />} />
-        {/* <Route path="qwen-chat" element={<QwenChat />} /> */}
         
-        <Route path="background-remover" element={<BackgroundRemover />} />
-        <Route path="chat-ai" element={<GeminiChat />} />
+        {/*===== new comps ======*/}
+        <Route path="multimodal-images" element={<ImageGenerator />} /> done
+        <Route path="qwen-chat" element={<QwenChat />} /> done
+        <Route path="pdf-signing" element={<PDFSigningApp />} /> done
+        <Route path="background-remover" element={<BackgroundRemover />} /> done
+        <Route path="image-editor" element={<ImageEditor />} /> done
+        {/* ==================== */}
+        
         <Route path="anime-converter" element={<AnimeConverter />} />
         
         {/* User */}
@@ -115,6 +131,7 @@ function App() {
       {/* Catch all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+  </div>
   );
 }
 

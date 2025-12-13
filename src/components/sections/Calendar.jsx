@@ -8,6 +8,11 @@ import {
 import SpotlightCard from '../ui/SpotlightCard'
 import ShinyText from '../ui/ShinyText'
 import { Button } from '../ui/button'
+import {
+  ButtonGroup,
+  ButtonGroupSeparator,
+  ButtonGroupText,
+} from "../ui/button-group"
 import { Input } from '../ui/input'
 import { Textarea } from '../ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
@@ -25,6 +30,7 @@ import { useSelector } from 'react-redux'
 import { ShineButton } from '../lightswind/shine-button'
 import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+
 export default function Calendar() {
   const { user, access_token } = useSelector((state) => state.auth)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -704,19 +710,18 @@ export default function Calendar() {
 
           <div style={{ zIndex: 999999 }} className="flex items-center gap-3">
             <div data-aos='fade-left' data-aos-delay="100">
-              <ShineButton 
-                className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white"
-                label="Today" 
-                icon={<CalendarIcon size={18} className="hover:animate-pulse" />}
+              <Button 
+                className="rounded-md flex gap-2 w-[110px] items-center justify-center hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-900 cursor-pointer bg-white text-black"
                 size="sm" 
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
                 onClick={goToToday} 
-              />
+              >
+                <CalendarIcon size={18} className="hover:animate-pulse" /> Today
+              </Button>
             </div>
             
             <div data-aos='fade-left' data-aos-delay="200">
               <ShineButton 
-                className="rounded-md flex gap-2 w-[140px] items-center justify-center text-white"
+                className="rounded-md flex h-8.5 gap-2 w-[140px] items-center justify-center text-white"
                 label="New Event" 
                 icon={<Plus size={18} className="hover:animate-pulse" />}
                 size="sm" 
@@ -749,44 +754,43 @@ export default function Calendar() {
             className="backdrop-blur-xl bg-transparent relative rounded-2xl border border-gray-700/50 overflow-hidden"
           >
             <img src="/design_2.png" className=" absolute object-cover top-0 left-0  w-full h-fit -mt-60 opacity-15" />
-            <div className="p-4">
-              <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <div className="p-4" style={{zIndex:99999}}>
+              <div className="flex flex-col md:flex-row justify-end items-center mb-6 gap-4">
                 <div data-aos='fade-left' data-aos-delay="300">
-                  <ShineButton 
-                    className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
-                    label="JSON Format" 
-                    icon={<FileJson size={16} className="hover:animate-pulse" />}
-                    size="sm" 
-                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                    onClick={() => handleExportCalendar('json')}
-                  />
-                </div>
-                
-                <div data-aos='fade-left' data-aos-delay="300">
-                  <ShineButton 
-                    className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
-                    label="CSV Format" 
-                    icon={<FileSpreadsheet size={16} className="hover:animate-pulse" />}
-                    size="sm" 
-                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                    onClick={() => handleExportCalendar('csv')}
-                  />
-                </div>
-
-                <div data-aos='fade-left' data-aos-delay="300">
-                  <ShineButton 
-                    className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
-                    label="iCal Format" 
-                    icon={<CalendarFile size={16} className="hover:animate-pulse" />}
-                    size="sm" 
-                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                    onClick={() => handleExportCalendar('ical')} 
-                  />
+                  <ButtonGroup>
+                    <Button 
+                      onClick={() => handleExportCalendar('json')}
+                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                    >
+                      <FileJson size={16} className="hover:animate-pulse" />
+                      JSON Format
+                    </Button>
+                    
+                    <ButtonGroupSeparator />
+                    
+                    <Button 
+                      onClick={() => handleExportCalendar('csv')}
+                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                    >
+                      <FileSpreadsheet size={16} className="hover:animate-pulse" />
+                      CSV Format
+                    </Button>
+                    
+                    <ButtonGroupSeparator />
+                    
+                    <Button 
+                      onClick={() => handleExportCalendar('ical')}
+                      className="flex gap-2 items-center justify-center bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-800 cursor-pointer text-black border-none"
+                    >
+                      <CalendarFile size={16} className="hover:animate-pulse" />
+                      iCal Format
+                    </Button>
+                  </ButtonGroup>
                 </div>
               </div>
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="flex flex-col md:flex-row gap-4 items-center justify-between" >
                 {/* View Controls */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" style={{zIndex:99999}}>
                   <Button
                     onClick={() => navigateMonth('prev')}
                     variant="outline"
@@ -812,7 +816,7 @@ export default function Calendar() {
 
                 {/* View Tabs */}
                 <Tabs value={filters.view} onValueChange={(value) => setFilters({...filters, view: value})}>
-                  <TabsList className="bg-gray-800/50 border border-gray-700">
+                  <TabsList style={{zIndex:99999}} className="bg-gray-800/50 border border-gray-700">
                     {viewOptions.map((view) => (
                       <TabsTrigger key={view.value} value={view.value} className={`${filters.view === view.value?'':'text-white'}`}>
                         {view.icon}
@@ -823,16 +827,18 @@ export default function Calendar() {
                 </Tabs>
 
                 {/* Filter Button */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2" style={{zIndex:99999}}>
                   <div data-aos='fade-left' data-aos-delay="300">
-                    <ShineButton 
-                      className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
-                      label="Filters" 
-                      icon={<Filter size={16} className="hover:animate-pulse" />}
+                    <Button 
+                      className="rounded-md flex gap-2 w-[130px] items-center bg-transparent hover:bg-transparent cursor-pointer justify-center text-white"
+                      // label="Filters" 
+                      // icon={<Filter size={16} className="hover:animate-pulse" />}
                       size="sm" 
-                      bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                      // bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
                       onClick={() => setShowFilters(!showFilters)} 
-                    />
+                    >
+                    <Filter size={16} className="hover:animate-pulse" /> Filters 
+                    </Button>
                   </div>
                   
                   <Button
@@ -848,7 +854,7 @@ export default function Calendar() {
 
               {/* Advanced Filters */}
               {showFilters && (
-                <div className="mt-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30" style={{ zIndex: 99999 }}>
+                <div className="mt-4 p-4 border border-gray-700 rounded-lg bg-gray-800/30 relative" style={{ zIndex: 50 }}>
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     {/* Category Filter */}
                     <div className="space-y-2">
@@ -857,10 +863,17 @@ export default function Calendar() {
                         value={filters.category}
                         onValueChange={(value) => setFilters({...filters, category: value})}
                       >
-                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 999999 }}>
+                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 60 }}>
                           <SelectValue placeholder="All categories" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700" style={{ zIndex: 9999999 }}>
+                        <SelectContent 
+                          className="bg-gray-800 border-gray-700" 
+                          position="popper"
+                          style={{ 
+                            zIndex: 9999999,
+                            position: 'absolute'
+                          }}
+                        >
                           <SelectItem value="all">All Categories</SelectItem>
                           {eventCategories.map(cat => (
                             <SelectItem key={cat.value} value={cat.value} className="flex text-white hover:text-gray-800 items-center gap-2">
@@ -874,7 +887,7 @@ export default function Calendar() {
                         </SelectContent>
                       </Select>
                     </div>
-
+              
                     {/* Startup Filter */}
                     <div className="space-y-2">
                       <Label className="text-sm text-gray-400">Startup</Label>
@@ -882,10 +895,17 @@ export default function Calendar() {
                         value={filters.startup_id}
                         onValueChange={(value) => setFilters({...filters, startup_id: value})}
                       >
-                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 999999 }}>
+                        <SelectTrigger className="border-gray-700 bg-gray-800/50" style={{ zIndex: 60 }}>
                           <SelectValue placeholder="All startups" />
                         </SelectTrigger>
-                        <SelectContent className="bg-gray-800 border-gray-700" style={{ zIndex: 9999999 }}>
+                        <SelectContent 
+                          className="bg-gray-800 border-gray-700" 
+                          position="popper"
+                          style={{ 
+                            zIndex: 9999999,
+                            position: 'absolute'
+                          }}
+                        >
                           <SelectItem value="all">All Startups</SelectItem>
                           {userStartups.length > 0 ? (
                             userStartups.map(startup => (
@@ -899,7 +919,7 @@ export default function Calendar() {
                         </SelectContent>
                       </Select>
                     </div>
-
+              
                     {/* Date Range */}
                     <div className="space-y-2">
                       <Label className="text-sm text-gray-400">Date Range</Label>
@@ -924,7 +944,7 @@ export default function Calendar() {
                         />
                       </div>
                     </div>
-
+              
                     {/* Search */}
                     <div className="space-y-2">
                       <Label className="text-sm text-gray-400">Search</Label>
@@ -939,7 +959,7 @@ export default function Calendar() {
                       </div>
                     </div>
                   </div>
-
+              
                   {/* Additional Filters */}
                   <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
                     <div className="flex items-center gap-2">

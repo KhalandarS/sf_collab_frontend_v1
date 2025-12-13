@@ -66,15 +66,9 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="relative w-full mx-auto py-4 mb-4 overflow-x-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
-          <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-collapsible-down" style={{ animationDelay: '10s' }}/>
-          <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-bounce" style={{ animationDelay: '10s' }} />
-        </div>
         
-
-    {/* <GravityStarsBackground
+{/* 
+    <GravityStarsBackground
     starsCount={200}
     
   starsOpacity={0.3}
@@ -82,22 +76,6 @@ const Dashboard = () => {
   className="absolute inset-0 h-full w-full flex items-center justify-center rounded-xl"
 /> */}
 
-
-    {/* ({ starsCount, starsSize, starsOpacity, glowIntensity, glowAnimation, movementSpeed, mouseInfluence, mouseGravity, gravityStrength, starsInteraction, starsInteractionType, className, ...props }: {
-    [x: string]: any;
-    starsCount?: number;
-    starsSize?: number;
-    starsOpacity?: number;
-    glowIntensity?: number;
-    glowAnimation?: string;
-    movementSpeed?: number;
-    mouseInfluence?: number;
-    mouseGravity?: string;
-    gravityStrength?: number;
-    starsInteraction?: boolean;
-    starsInteractionType?: string;
-    className: any;
-}) */}
         {/* Welcome Banner */}
         <div className="w-full p-6 mb-6">
           <div className="relative overflow-hidden rounded-2xl transition-all">
@@ -152,19 +130,19 @@ const Dashboard = () => {
                       <div className="flex flex-wrap gap-6 mt-6">
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                          <span className="text-white/70 text-sm" >{userData?userData?.activeStartupsCount:"5"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Active Startups</span></span>
+                          <span className="text-white/70 text-sm" >{userData?userData?.activeStartupsCount:"5"} <span style={{fontFamily: "Trade Winds, system-ui", fontWeight:'lighter',textSpacingTrim:'space-first'}}>Active Startups</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm" >{userData?`$${userData?.totalRevenue}K`:"$24.8K"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Revenue</span></span>
+                          <span className="text-white/70 text-sm" >{userData?`$${userData?.totalRevenue}K`:"$24.8K"} <span style={{fontFamily: "Trade Winds, system-ui", fontWeight:'lighter',textSpacingTrim:'space-first'}}>Revenue</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm" >{userData?`${userData?.satisfactionPercentage}%`:"98%"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Satisfaction</span></span>
+                          <span className="text-white/70 text-sm" >{userData?`${userData?.satisfactionPercentage}%`:"98%"} <span style={{fontFamily: "Trade Winds, system-ui", fontWeight:'lighter',textSpacingTrim:'space-first'}}>Satisfaction</span></span>
                         </div>
                         <div className="flex items-center gap-3">
                           <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-                          <span className="text-white/70 text-sm" >{userData?`${userData?.lastActivityDate} `:"__"} <span style={{fontFamily: "Trade Winds, system-ui"}}>Last activity</span></span>
+                          <span className="text-white/70 text-sm" >{userData?`${userData?.lastActivityDate} `:"__"} <span style={{fontFamily: "Trade Winds, system-ui", fontWeight:'lighter',textSpacingTrim:'space-first'}}>Last activity</span></span>
                         </div>
                       </div>
                       

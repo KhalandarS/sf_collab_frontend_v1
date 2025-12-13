@@ -8,6 +8,7 @@ import '../components/style/ChatComponent.css';
 import { Input } from './ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ShineButton } from './lightswind/shine-button'
+import { LuPresentation } from "react-icons/lu";
 
 import {
     Avatar,
@@ -23,7 +24,9 @@ import {
     ShareIcon,
     ThumbsDownIcon,
     ThumbsUpIcon,
-    Eye
+    Eye,
+    Clock,
+    Menu
   } from 'lucide-react';
 import { MessageCircle, Plus, Send, Edit2, Check, X, Users, Circle, Phone, Video, Star, Search, Settings, Bell, Image, FileText, File, Download, ChevronDown, ChevronUp } from 'lucide-react';
 import Tippy from '@tippyjs/react';
@@ -36,47 +39,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert'
 import AnimatedNotification  from '../components/lightswind/animated-notification'
-// Mock users data
-// const MOCK_USERS = [
-//   { id: 11, firstName: 'John', lastName: 'Doe', email: 'john@example.com', profilePicture: null, timezone: 'America/New_York' },
-//   { id: 12, firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', profilePicture: null, timezone: 'Europe/London' },
-//   { id: 13, firstName: 'Mike', lastName: 'Johnson', email: 'mike@example.com', profilePicture: null, timezone: 'Asia/Tokyo' },
-//   { id: 14, firstName: 'Sarah', lastName: 'Wilson', email: 'sarah@example.com', profilePicture: null, timezone: 'Australia/Sydney' },
-//   { id: 15, firstName: 'David', lastName: 'Brown', email: 'david@example.com', profilePicture: null, timezone: 'Europe/Paris' },
-// ];
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip"; 
 
-const actions = [
-    {
-      icon: ThumbsUpIcon,
-      label: 'Like',
-      onClick: () => setLiked(!liked),
-    },
-    {
-      icon: ThumbsDownIcon,
-      label: 'Dislike',
-      onClick: () => setDisliked(!disliked),
-    },
-    {
-      icon: CopyIcon,
-      label: 'Copy',
-      onClick: () => handleCopy(),
-    },
-    {
-      icon: ShareIcon,
-      label: 'Share',
-      onClick: () => handleShare(),
-    },
-    {
-        icon: Edit2,
-        label: 'Update',
-        onClick: () => handleShare(),
-    },
-    {
-        icon: RiDeleteBin6Line,
-        label: 'Delete',
-        onClick: () => handleShare(),
-    },
-  ];
+// Add to your existing imports
+import PaintingBoard from './collaboration-canvas/PaintingBoard'; // Adjust path as needed
+
 
   const ConversationsCardSkeleton = () => (
     <div className="animate-pulse  w-full">
@@ -181,6 +153,199 @@ const MessagesSkeleton = () => {
   };
 
 
+// Add this component for reusability
+const RightSidebarContent = ({ 
+    selectedConversation, 
+    users, 
+    userId, 
+    onlineUsers, 
+    conversationFiles,
+    showFilesExpanded,
+    setShowFilesExpanded,
+    showLinksExpanded,
+    setShowLinksExpanded,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
+    onClose
+  }) => (
+    <>
+        
+      
+      {onClose && (
+        <div className="flex items-center justify-between p-4 border-b border-gray-900">
+          <h3 className="text-white font-bold">Details</h3>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg bg-gray-800 text-gray-300"
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
+  
+      {/* Members Section */}
+      <div className="p-4 border-b border-gray-900">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-white font-bold flex items-center gap-2">
+            <Users size={18} />
+            Members
+          </h3>
+          <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
+            {selectedConversation.participants?.length}
+          </span>
+        </div>
+        <div className="space-y-2 max-h-60 overflow-y-auto">
+          {selectedConversation.participants?.map(participant => {
+            const usr = users.find(u => u.id === participant.id) || participant;
+            const isOnline = onlineUsers.has(participant.id.toString());
+            const isCurrentUser = participant.id === userId;
+            
+            return (
+              <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-900 transition-all">
+                <div className="relative">
+                  <Avatar className="size-10 bg-linear-to-br from-blue-300 to-purple-300 text-black font-bold flex items-center justify-center">
+                    <AvatarImage src={participant?.profilePicture} alt="@shadcn" />
+                    <AvatarFallback>
+                      {(participant?.firstName || participant?.first_name)?.[0]}
+                      {(participant?.lastName || participant?.last_name)?.[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  {isOnline && (
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-white text-sm font-medium flex items-center gap-2">
+                    <span className="truncate">
+                      {usr.firstName || usr.first_name} {usr.lastName || usr.last_name}
+                    </span>
+                    {isCurrentUser && (
+                      <span className="shrink-0 text-xs bg-[#c1ff72] text-black px-2 py-0.5 rounded-full font-semibold">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {isOnline ? 'Online' : 'Offline'}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+  
+      {/* Files Section */}
+      <div className="p-4 border-b border-gray-900">
+        <button
+          onClick={() => setShowFilesExpanded(!showFilesExpanded)}
+          className="w-full flex items-center justify-between text-white font-bold mb-3 hover:text-[#c1ff72] transition-colors group"
+        >
+          <div className="flex items-center gap-2">
+            <Image size={18} />
+            <span>{conversationFiles.filter(f => f.file_type?.startsWith('image/')).length} photos</span>
+          </div>
+          {showFilesExpanded ? 
+            <ChevronUp size={16} className="text-gray-400 group-hover:text-[#c1ff72]" /> : 
+            <ChevronDown size={16} className="text-gray-400 group-hover:text-[#c1ff72]" />
+          }
+        </button>
+        
+        {showFilesExpanded && (
+          <div className="grid grid-cols-2 gap-2 animate-in fade-in-50 duration-200">
+            {conversationFiles
+              .filter(file => file.file_type?.startsWith('image/'))
+              .slice(0, 4)
+              .map((file, idx) => {
+                const imageUrl = file.file_url.startsWith('http') 
+                  ? file.file_url 
+                  : `${SOCKET_API_URL}${file.file_url}`;
+                
+                return (
+                  <div 
+                    key={idx} 
+                    className="aspect-square rounded-lg overflow-hidden bg-gray-900 hover:opacity-80 transition-all duration-200 cursor-pointer group relative"
+                  >
+                    <img 
+                      src={imageUrl} 
+                      alt={file.file_name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                      loading="lazy"
+                    />
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </div>
+  
+      {/* All Files Section */}
+      <div className="p-4">
+        <button
+          onClick={() => setShowLinksExpanded(!showLinksExpanded)}
+          className="w-full flex items-center justify-between text-white font-bold mb-3 hover:text-[#c1ff72] transition-colors group"
+        >
+          <div className="flex items-center gap-2">
+            <File size={18} />
+            <span>{conversationFiles.length} files</span>
+          </div>
+          {showLinksExpanded ? 
+            <ChevronUp size={16} className="text-gray-400 group-hover:text-[#c1ff72]" /> : 
+            <ChevronDown size={16} className="text-gray-400 group-hover:text-[#c1ff72]" />
+          }
+        </button>
+        
+        {showLinksExpanded && (
+          <div className="space-y-2 max-h-96 overflow-y-auto animate-in fade-in-50 duration-200">
+            {conversationFiles.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <File size={32} className="mx-auto mb-2 opacity-50" />
+                <p className="text-sm">No files shared yet</p>
+              </div>
+            ) : (
+              conversationFiles.map((file, idx) => (
+                <div 
+                  key={idx} 
+                  className="flex items-center gap-3 p-3 bg-gray-900 rounded-lg hover:bg-gray-800 transition-all duration-200 cursor-pointer group"
+                >
+                  <div className="flex-shrink-0">
+                    {getFileIcon(file.file_type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white text-sm font-medium truncate">
+                      {file.file_name}
+                    </div>
+                    <div className="text-xs text-gray-500 flex items-center gap-2">
+                      {formatFileSize(file.file_size)}
+                      <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                      {new Date(file.uploaded_at).toLocaleDateString()}
+                    </div>
+                  </div>
+                  <a 
+                    href={file.file_url} 
+                    download
+                    className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-700 transition-all duration-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Download size={16} className="text-gray-400 hover:text-white" />
+                  </a>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+        
+              
+      <div className="flex items-center gap-2 px-4 py-2.5">
+        <Clock size={14} className="text-gray-600" />
+        <span className="text-xs text-gray-500">
+          <strong>Tip:</strong> Type times like "19:00" (press Tab) or "19" (press Space for options)
+        </span>
+      </div>
+      </div>
+    </>
+  );
+  
   
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   
@@ -200,6 +365,10 @@ const ChatComponent = () => {
     const [onlineUsers, setOnlineUsers] = useState(new Set());
     const [isConnected, setIsConnected] = useState(false);
     
+    // Add these state variables
+const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+
     // Modal states
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -235,12 +404,14 @@ const ChatComponent = () => {
     
     const [readConversations, setReadConversations] = useState(new Set());
     
-    const wsClient = useRef(null);
+    const [wsClient, setWsClient] = useState(null);
     const messagesEndRef = useRef(null);
 
     const [loading, setLoading] = useState(true);
     const [loadingMessages, setLoadingMessages] = useState(true);
-
+    
+    const [initialConversationsLoad, setInitialConversationsLoad] = useState(true);
+    const [initialMessagesLoad, setInitialMessagesLoad] = useState(true);
 
     const { user, access_token } = useSelector((state) => state.auth);
     
@@ -248,50 +419,123 @@ const ChatComponent = () => {
     const [selectedRole, setSelectedRole] = useState("");
     const [selectedStatus, setSelectedStatus] = useState("");
   
-  
-
-    //! API Helper with proper headers
-    // const apiRequest = async (url, options = {}) => {
+    // Add this with your other state variables
+    const [showWhiteboardModal, setShowWhiteboardModal] = useState(false);
+    // Add to your state variables
+    const [hoveredConversationId, setHoveredConversationId] = useState(null);
+    
+    const [likedMessages, setLikedMessages] = useState(new Set());
+    const [dislikedMessages, setDislikedMessages] = useState(new Set());
+    const [copiedMessage, setCopiedMessage] = useState(null);
+    
+    //! Like message function
+    const handleLike = (messageId) => {
+      const newLiked = new Set(likedMessages);
+      if (newLiked.has(messageId)) {
+        newLiked.delete(messageId);
+        showNotification('info', 'Removed like from message');
+      } else {
+        newLiked.add(messageId);
+        showNotification('success', 'Liked message');
+      }
+      setLikedMessages(newLiked);
+    };
+    
+    //! Dislike message function
+    const handleDislike = (messageId) => {
+      const newDisliked = new Set(dislikedMessages);
+      if (newDisliked.has(messageId)) {
+        newDisliked.delete(messageId);
+        showNotification('info', 'Removed dislike from message');
+      } else {
+        newDisliked.add(messageId);
+        showNotification('info', 'Disliked message');
+      }
+      setDislikedMessages(newDisliked);
+    };
+    
+    //! Copy message function
+    const handleCopy = async (message) => {
+      try {
+        await navigator.clipboard.writeText(message.content);
+        setCopiedMessage(message.id);
+        showNotification('success', 'Message copied to clipboard');
         
-    //     const defaultHeaders = {
-    //         'Content-Type': 'application/json',
-    //         'Accept': 'application/json',
-    //     };
+        // Reset copied state after 2 seconds
+        setTimeout(() => setCopiedMessage(null), 2000);
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        showNotification('error', 'Failed to copy message');
+      }
+    };
     
-    //     const config = {
-    //         ...options,
-    //         headers: {
-    //         ...defaultHeaders,
-    //         ...options.headers,
-    //         },
-    //         credentials: 'include',
-    //     };
+    //! Share message function
+    const handleShare = async (message) => {
+      const shareData = {
+        title: `Message from ${message.sender?.firstName || message.sender?.first_name} ${message.sender?.lastName || message.sender?.last_name}`,
+        text: message.content,
+        url: window.location.href + `?message=${message.id}`
+      };
     
-    //     try {
-    //         const token = access_token; 
-    //         if (!token) {
-    //             console.error('No access token found');
-    //             return;
-    //         }
-    //         const response = await fetch(url, config);
-            
-    //         if (!response.ok) {
-    //         const errorData = await response.json().catch(() => ({}));
-    //         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    //         }
-            
-    //         return await response.json();
-    //     } catch (error) {
-    //         console.error('API Request failed:', error);
-    //         throw error;
-    //     }
-    // };
+      try {
+        if (navigator.share) {
+          await navigator.share(shareData);
+          showNotification('success', 'Message shared');
+        } else {
+          // Fallback: copy to clipboard
+          await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
+          showNotification('success', 'Link copied to clipboard');
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+          showNotification('error', 'Failed to share message');
+        }
+      }
+    };
+    
+    
+    const actions = [
+      {
+        icon: ThumbsUpIcon,
+        label: 'Like',
+        onClick: (message) => handleLike(message.id),
+      },
+      {
+        icon: ThumbsDownIcon,
+        label: 'Dislike',
+        onClick: (message) => handleDislike(message.id),
+      },
+      {
+        icon: CopyIcon,
+        label: 'Copy',
+        onClick: (message) => handleCopy(message),
+      },
+      {
+        icon: ShareIcon,
+        label: 'Share',
+        onClick: (message) => handleShare(message),
+      },
+      {
+        icon: Edit2,
+        label: 'Edit',
+        onClick: (message) => handleUpdate(message),
+      },
+      {
+        icon: RiDeleteBin6Line,
+        label: 'Delete',
+        onClick: (message) => handleDelete(message),
+      },
+    ];
     
     //! Retry connection:
+    // Add retryConnection function:
     const retryConnection = () => {
-        wsClient.current.connect();
-        setAlertActions(null);
+      if (wsClient) {
+          wsClient.reconnect();
+      }
     };
+
     
     const fetchUsers = async (page = 1) => {
         try {
@@ -346,160 +590,615 @@ const ChatComponent = () => {
     };
     
     //! Set userId when user changes
-    useEffect(()=>{
-        if(user){
-            fetchUsers();
-            setUserId(user.id);
-        }
-        loadConversations();
-        
-    },[]);
-    
-    //! Initialize WebSocket connection
     useEffect(() => {
-        if (!userId) return;
-    
-        wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
-        
-        wsClient.current.on('connected', () => {
-            console.log('WebSocket connected');
-            setIsConnected(true);
-            loadConversations();
-            
-            setShowAlert(true)
-            setAlertVariant("success")
-            // setAlertTitle("Connected")
-            setAlertMessage("You are now connected to the chat server.")
-            setAlertShowIcon(true)
-            setAlertDismissible(true)
+      if (user) {
+        fetchUsers();
+        setUserId(user.id);
+        loadConversations().then(() => {
+            setInitialConversationsLoad(false);
+        }).catch(error => {
+            console.error('Failed to load conversations:', error);
+            setInitialConversationsLoad(false);
         });
-    
-        wsClient.current.on('disconnected', () => {
-            console.log('WebSocket disconnected');
-            setIsConnected(false);
-            
-            setShowAlert(true)
-            setAlertVariant("error")
-            // setAlertTitle("Disconnected")
-            setAlertMessage("You have been disconnected from the chat server.")
-            setAlertShowIcon(true)
-            setAlertDismissible(true)
-            setAlertActions(
-                <button
-                    onClick={retryConnection}
-                    className="px-4 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 
-                                text-red-300 text-sm font-medium transition-all duration-200 
-                                border border-red-500/30"
-                >
-                    Retry
-                </button>
-            )
-        });
-        
-        wsClient.current.on('mark_message_read', (data) => {
-            // If someone else read messages in a conversation, update counts
-            if (data.conversation_id && data.user_id !== userId) {
-                loadConversations();
-            }
-        });
-    
-        wsClient.current.on('new_message', handleNewMessage);
-        wsClient.current.on('message_edited', handleMessageEdited);
-        wsClient.current.on('user_typing', handleUserTyping);
-        wsClient.current.on('user_online', handleUserOnline);
-        wsClient.current.on('user_offline', handleUserOffline);
-    
-        wsClient.current.connect();
-    
-        return () => {
-            if (wsClient.current) {
-            wsClient.current.disconnect();
-            }
-        };
+      }
     }, [user]);
 
-    //! LOAD USER CONVERSATIONS:
-    const loadConversations = async () => {
-        setLoading(true);
+    //! Initialize WebSocket connection
+    // useEffect(() => {
+    //   if (!userId) return;
+    
+    //   wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
+      
+    //   // Connection events
+    //   wsClient.current.on('connected', () => {
+    //       console.log('WebSocket connected');
+    //       setIsConnected(true);
+    //       loadConversations();
+    //       showNotification('success', 'Connected to chat server');
+    //   });
+    
+    //   wsClient.current.on('disconnected', () => {
+    //       console.log('WebSocket disconnected');
+    //       setIsConnected(false);
+    //       showNotification('error', 'Disconnected from chat server');
+    //   });
+    
+    //   wsClient.current.on('connection_error', (error) => {
+    //       console.error('Connection error:', error);
+    //       showNotification('error', 'Connection error occurred');
+    //   });
+    
+    //   wsClient.current.on('reconnected', (attemptNumber) => {
+    //       console.log('Reconnected after attempt:', attemptNumber);
+    //       showNotification('success', `Reconnected after ${attemptNumber} attempts`);
+    //   });
+    
+    //   wsClient.current.on('reconnect_failed', () => {
+    //       console.error('Reconnection failed');
+    //       showNotification('error', 'Failed to reconnect to chat server');
+    //   });
+    
+    //   // Message events
+    //   wsClient.current.on('new_message', (data) => {
+    //     console.log('New message received via WebSocket:', data);
         
-        const token = access_token; 
+    //     // Check if this message is for the current conversation
+    //     const isCurrentConversation = selectedConversation?.id === data.conversation_id;
         
-        if (!token) {
-            console.error('No access token found');
-            return;
+    //     // Always handle the message
+    //     handleNewMessage(data);
+        
+    //     // Show notification only if not in the current conversation
+    //     if (!isCurrentConversation) {
+    //         const conversation = conversations.find(c => c.id === data.conversation_id);
+    //         const conversationName = getConversationName(conversation) || 'Unknown conversation';
+    //         showNotification('info', `New message in ${conversationName}`);
+    //     }
+    //   });
+    
+    //   wsClient.current.on('message_edited', (data) => {
+    //       console.log('Message edited:', data);
+    //       handleMessageEdited(data);
+    //       showNotification('info', 'Message was edited');
+    //   });
+    
+    //   wsClient.current.on('message_deleted', (data) => {
+    //       console.log('Message deleted:', data);
+    //       handleMessageDeleted(data);
+    //       showNotification('info', 'Message was deleted');
+    //   });
+    
+    //   wsClient.current.on('mark_message_read', (data) => {
+    //       console.log('Message read:', data);
+    //       // If someone else read messages in a conversation, update counts
+    //       if (data.conversation_id && data.user_id !== userId) {
+    //           showNotification('info', 'Messages marked as read');
+    //           loadConversations();
+    //       }
+    //   });
+    
+    //   // Typing events
+    //   wsClient.current.on('user_typing', (data) => {
+    //       console.log('User typing:', data);
+    //       handleUserTyping(data);
+    //   });
+    
+    //   // User status events
+    //   wsClient.current.on('user_online', (data) => {
+    //       console.log(`User ${data.user_id} is now online`);
+    //       handleUserOnline(data);
+    //       showNotification('success', `User ${data.user_name || data.user_id} is now online`);
+    //   });
+    
+    //   wsClient.current.on('user_offline', (data) => {
+    //       console.log(`User ${data.user_id} is now offline`);
+    //       handleUserOffline(data);
+    //       showNotification('info', `User ${data.user_name || data.user_id} went offline`);
+    //   });
+    
+    //   wsClient.current.on('user_status_changed', (data) => {
+    //       console.log(`User ${data.user_id} status changed to ${data.status}`);
+    //       showNotification('info', `User ${data.user_name || data.user_id} is now ${data.status}`);
+    //   });
+    
+    //   // Conversation events
+    //   wsClient.current.on('conversation_created', (data) => {
+    //       console.log('New conversation created:', data);
+    //       handleConversationCreated(data);
+    //       showNotification('success', 'New conversation created');
+    //   });
+    
+    //   wsClient.current.on('conversation_updated', (data) => {
+    //       console.log('Conversation updated:', data);
+    //       handleConversationUpdated(data);
+    //       showNotification('info', 'Conversation updated');
+    //   });
+    
+    //   // Participant events
+    //   wsClient.current.on('participant_added', (data) => {
+    //       console.log('Participant added:', data);
+    //       handleParticipantAdded(data);
+    //       showNotification('info', `User ${data.user_name} added to conversation`);
+    //   });
+    
+    //   wsClient.current.on('participant_removed', (data) => {
+    //       console.log('Participant removed:', data);
+    //       handleParticipantRemoved(data);
+    //       showNotification('info', `User ${data.user_name} removed from conversation`);
+    //   });
+    
+    //   wsClient.current.on('added_to_conversation', (data) => {
+    //       console.log('Added to conversation:', data);
+    //       handleAddedToConversation(data);
+    //       showNotification('success', 'You were added to a conversation');
+    //   });
+    
+    //   wsClient.current.on('removed_from_conversation', (data) => {
+    //       console.log('Removed from conversation:', data);
+    //       handleRemovedFromConversation(data);
+    //       showNotification('error', 'You were removed from a conversation');
+    //   });
+    
+    //   // Error events
+    //   wsClient.current.on('error', (error) => {
+    //       console.error('Socket error:', error);
+    //       showNotification('error', `Chat error: ${error.message || 'Unknown error'}`);
+    //   });
+    
+    //   wsClient.current.connect();
+    //   setWsClient(client);
+      
+    //   return () => {
+    //       if (wsClient.current) {
+    //           wsClient.current.disconnect();
+    //           wsClient.current = null; 
+    //       }
+    //   };
+    // }, [userId]);
+    
+    
+    //! Initialize WebSocket connection
+  useEffect(() => {
+    if (!userId || wsClient) return; // Don't reinitialize if client already exists
+  
+    const client = new ChatWebSocketClient(SOCKET_API_URL, userId, {
+      maxReconnectAttempts: 5,
+      reconnectionDelay: 1000,
+      timeout: 20000
+    });
+    
+    // Connection events
+    client.on('connected', () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+      loadConversations();
+      showNotification('success', 'Connected to chat server');
+    });
+  
+    client.on('disconnected', () => {
+      console.log('WebSocket disconnected');
+      setIsConnected(false);
+      showNotification('error', 'Disconnected from chat server');
+    });
+  
+    client.on('connection_error', (error) => {
+      console.error('Connection error:', error);
+      showNotification('error', 'Connection error occurred');
+    });
+  
+    client.on('reconnected', (attemptNumber) => {
+      console.log('Reconnected after attempt:', attemptNumber);
+      showNotification('success', `Reconnected after ${attemptNumber} attempts`);
+    });
+  
+    client.on('reconnect_failed', () => {
+      console.error('Reconnection failed');
+      showNotification('error', 'Failed to reconnect to chat server');
+    });
+  
+    // Message events
+    client.on('new_message', (data) => {
+      console.log('New message received via WebSocket:', data);
+      
+      // Check if this message is for the current conversation
+      const isCurrentConversation = selectedConversation?.id === data.conversation_id;
+      
+      // Always handle the message
+      handleNewMessage(data);
+      
+      // Show notification only if not in the current conversation
+      if (!isCurrentConversation) {
+        const conversation = conversations.find(c => c.id === data.conversation_id);
+        const conversationName = getConversationName(conversation) || 'Unknown conversation';
+        showNotification('info', `New message in ${conversationName}`);
+      }
+    });
+  
+    client.on('message_edited', (data) => {
+      console.log('Message edited:', data);
+      handleMessageEdited(data);
+      showNotification('info', 'Message was edited');
+    });
+  
+    client.on('message_deleted', (data) => {
+      console.log('Message deleted:', data);
+      handleMessageDeleted(data);
+      showNotification('info', 'Message was deleted');
+    });
+  
+    client.on('mark_message_read', (data) => {
+      console.log('Message read:', data);
+      // If someone else read messages in a conversation, update counts
+      if (data.conversation_id && data.user_id !== userId) {
+        showNotification('info', 'Messages marked as read');
+        loadConversations();
+      }
+    });
+  
+    // Typing events
+    client.on('user_typing', (data) => {
+      console.log('User typing:', data);
+      handleUserTyping(data);
+    });
+  
+    // User status events
+    client.on('user_online', (data) => {
+      console.log(`User ${data.user_id} is now online`);
+      handleUserOnline(data);
+      showNotification('success', `User ${data.user_name || data.user_id} is now online`);
+    });
+  
+    client.on('user_offline', (data) => {
+      console.log(`User ${data.user_id} is now offline`);
+      handleUserOffline(data);
+      showNotification('info', `User ${data.user_name || data.user_id} went offline`);
+    });
+  
+    client.on('user_status_changed', (data) => {
+      console.log(`User ${data.user_id} status changed to ${data.status}`);
+      showNotification('info', `User ${data.user_name || data.user_id} is now ${data.status}`);
+    });
+  
+    // Conversation events
+    client.on('conversation_created', (data) => {
+      console.log('New conversation created:', data);
+      handleConversationCreated(data);
+      showNotification('success', 'New conversation created');
+    });
+  
+    client.on('conversation_updated', (data) => {
+      console.log('Conversation updated:', data);
+      handleConversationUpdated(data);
+      showNotification('info', 'Conversation updated');
+    });
+  
+    // Participant events
+    client.on('participant_added', (data) => {
+      console.log('Participant added:', data);
+      handleParticipantAdded(data);
+      showNotification('info', `User ${data.user_name} added to conversation`);
+    });
+  
+    client.on('participant_removed', (data) => {
+      console.log('Participant removed:', data);
+      handleParticipantRemoved(data);
+      showNotification('info', `User ${data.user_name} removed from conversation`);
+    });
+  
+    client.on('added_to_conversation', (data) => {
+      console.log('Added to conversation:', data);
+      handleAddedToConversation(data);
+      showNotification('success', 'You were added to a conversation');
+    });
+  
+    client.on('removed_from_conversation', (data) => {
+      console.log('Removed from conversation:', data);
+      handleRemovedFromConversation(data);
+      showNotification('error', 'You were removed from a conversation');
+    });
+  
+    // Error events
+    client.on('error', (error) => {
+      console.error('Socket error:', error);
+      showNotification('error', `Chat error: ${error.message || 'Unknown error'}`);
+    });
+  
+    client.connect();
+    setWsClient(client);
+    
+    return () => {
+      if (client) {
+        client.disconnect();
+        setWsClient(null);
+      }
+    };
+  }, [userId]); // Only depend on userId
+  
+  // Debug: Log WebSocket state changes
+  useEffect(() => {
+    if (!wsClient) {
+        console.log('WebSocket client is null');
+        return;
+    }
+    
+    console.log('WebSocket client state:', {
+        isConnected: wsClient.isConnected(),
+        socketId: wsClient.getSocketId(),
+        userId: wsClient.userId
+    });
+    
+    const checkInterval = setInterval(() => {
+        console.log('Current WebSocket connection state:', wsClient.isConnected());
+    }, 10000); // Check every 10 seconds
+    
+    return () => clearInterval(checkInterval);
+  }, [wsClient]);
+
+  //! Clean up event handlers when dependencies change
+  useEffect(() => {
+    if (!wsClient) return;
+    
+    // Re-attach event handlers when selectedConversation or conversations change
+    // This ensures we have the latest callbacks
+    const eventHandlers = {
+      new_message: handleNewMessage,
+      message_edited: handleMessageEdited,
+      message_deleted: handleMessageDeleted,
+      mark_message_read: (data) => {
+        if (data.conversation_id && data.user_id !== userId) {
+          loadConversations();
         }
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+      },
+      user_typing: handleUserTyping,
+      user_online: handleUserOnline,
+      user_offline: handleUserOffline,
+      user_status_changed: () => {}, // Empty handler as we just show notification
+      conversation_created: handleConversationCreated,
+      conversation_updated: handleConversationUpdated,
+      participant_added: handleParticipantAdded,
+      participant_removed: handleParticipantRemoved,
+      added_to_conversation: handleAddedToConversation,
+      removed_from_conversation: handleRemovedFromConversation,
+      error: (error) => {
+        showNotification('error', `Chat error: ${error.message || 'Unknown error'}`);
+      }
+    };
+    
+    // Store references to the actual handler functions
+    const handlerRefs = {};
+    
+    // Re-attach all handlers
+    Object.entries(eventHandlers).forEach(([event, handler]) => {
+        // Store the reference
+        handlerRefs[event] = handler;
+        // Remove any existing handler first
+        wsClient.off(event);
+        // Add new handler
+        wsClient.on(event, handler);
+    });
+    
+    return () => {
+        // Clean up specific handlers when component unmounts or dependencies change
+        if (wsClient) {
+            Object.entries(handlerRefs).forEach(([event, handler]) => {
+                // Only remove the handler we registered
+                wsClient.off(event, handler);
+            });
+        }
+    };
+  }, [wsClient, userId]);
+  
+    //!NEw Event handlers:
+    //! handle conversation created:
+    const handleConversationCreated = (data) => {
+        // If the new conversation includes the current user
+        if (data.conversation && data.conversation.participants?.some(p => p.id === userId)) {
+            // Add the new conversation to the list
+            setConversations(prev => {
+                if (prev.some(c => c.id === data.conversation.id)) {
+                    return prev;
                 }
+                return [data.conversation, ...prev];
+            });
+            
+            // If this is the current user creating the conversation, select it
+            if (data.conversation.created_by_id === userId) {
+                setSelectedConversation(data.conversation);
+                loadMessages(data.conversation.id);
+                loadConversationFiles(data.conversation.id);
+            }
+        }
+    };
+    
+    //! handle conversation updated:
+    const handleConversationUpdated = (data) => {
+        if (data.conversation) {
+            // Update the conversation in the list
+            setConversations(prev => 
+                prev.map(c => c.id === data.conversation.id ? data.conversation : c)
             );
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Update selected conversation if it's the current one
+            if (selectedConversation?.id === data.conversation.id) {
+                setSelectedConversation(data.conversation);
             }
-            
-            const data = await response.json();
-            
-            console.log('Conversations response:', data);
-            
-            if (data.success && data.data?.conversations) {
-                setConversations(data.data.conversations);
-                setLoading(false);
-
+        }
+    };
+    
+    //! handle participant added:
+    const handleParticipantAdded = (data) => {
+        if (selectedConversation?.id === data.conversation_id) {
+            // Reload conversation to get updated participant list
+            loadConversations();
+            showNotification('info', `${data.user_name} joined the conversation`);
+        }
+    };
+    
+    //! handle participant removed:
+    const handleParticipantRemoved = (data) => {
+        if (selectedConversation?.id === data.conversation_id) {
+            // If the current user was removed
+            if (data.user_id === userId) {
+                showNotification('error', 'You were removed from this conversation');
+                setSelectedConversation(null);
+                setMessages([]);
             } else {
-                console.error('No conversations found or invalid response:', data);
-                setConversations([]);
+                showNotification('info', `${data.user_name} left the conversation`);
             }
-        } catch (error) {
-            console.error('Error loading conversations:', error);
-            setConversations([]);
+            loadConversations();
+        }
+    };
+    
+    //! handle added to conversation:
+    const handleAddedToConversation = (data) => {
+        if (data.conversation) {
+            // Add the conversation to the list
+            setConversations(prev => {
+                if (prev.some(c => c.id === data.conversation.id)) {
+                    return prev;
+                }
+                return [data.conversation, ...prev];
+            });
+            
+            // Show notification with conversation name
+            const conversationName = getConversationName(data.conversation);
+            showNotification('success', `You were added to "${conversationName}"`);
+        }
+    };
+    
+    //! handle removed from conversation:
+    const handleRemovedFromConversation = (data) => {
+        // Remove the conversation from the list
+        setConversations(prev => 
+            prev.filter(c => c.id !== data.conversation_id)
+        );
+        
+        // If this was the selected conversation, clear it
+        if (selectedConversation?.id === data.conversation_id) {
+            setSelectedConversation(null);
+            setMessages([]);
+        }
+        
+        showNotification('error', 'You were removed from a conversation');
+    };
+    
+    //! handle message deleted:
+    const handleMessageDeleted = (data) => {
+        if (data.message_id && selectedConversation && data.conversation_id === selectedConversation.id) {
+            // Remove the deleted message from the list
+            setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
+            
+            // Reload files in case a file message was deleted
+            loadConversationFiles(selectedConversation.id);
         }
     };
 
+    //!END Event handlers:
 
+    //! LOAD USER CONVERSATIONS:
+    const loadConversations = async () => {
+      if(initialConversationsLoad){
+          setLoading(true);
+      }
+      
+      const token = access_token; 
+      
+      if (!token) {
+          console.error('No access token found');
+          setLoading(false);
+          if(initialConversationsLoad){
+              setInitialConversationsLoad(false);
+          }
+          return;
+      }
+      
+      try {
+          const response = await fetch(
+              `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
+                  headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                  }
+              }
+          );
+          
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          console.log('Conversations response:', data);
+          
+          if (data.success && data.data?.conversations) {
+              setConversations(prevConversations => {
+                  // Only update if conversations actually changed
+                  const newConversations = data.data.conversations;
+                  const hasChanged = JSON.stringify(prevConversations) !== JSON.stringify(newConversations);
+                  return hasChanged ? newConversations : prevConversations;
+              });
+          } else {
+              console.error('No conversations found or invalid response:', data);
+              setConversations([]);
+          }
+      } catch (error) {
+          console.error('Error loading conversations:', error);
+          // Don't reset conversations on error to keep existing data
+      } finally {
+          setLoading(false);
+          if(initialConversationsLoad){
+              setInitialConversationsLoad(false);
+          }
+      }
+    };
+    
     //! LOAD USER MESSAGES FOR CHOSEN CONVERSATION:
     const loadMessages = async (conversationId) => {
-        setLoadingMessages(true);
-        const token = access_token; 
-        
-        if (!token) {
-            console.error('No access token found');
-            return;
-        }
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success && data.data?.messages) {
-                setMessages(data.data.messages);
-                console.log('Loaded Messages:', data.data.messages);
-                setLoadingMessages(false);
-                loadConversationFiles(conversationId);
-            } else {
-                setMessages([]);
-                setLoadingMessages(false);
-                
-            }
-        } catch (error) {
-            console.error('Error loading messages:', error);
-            setMessages([]);
-        }
+      if (initialMessagesLoad) {
+          setLoadingMessages(true);
+      }
+      
+      const token = access_token; 
+      
+      if (!token) {
+          console.error('No access token found');
+          setLoadingMessages(false);
+          setInitialMessagesLoad(false);
+          return;
+      }
+      
+      try {
+          const response = await fetch(
+              `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
+                  headers: {
+                      'Authorization': `Bearer ${token}`,
+                      'Content-Type': 'application/json'
+                  }
+              }
+          );
+          
+          if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data.success && data.data?.messages) {
+              setMessages(data.data.messages);
+              console.log('Loaded Messages:', data.data.messages);
+              loadConversationFiles(conversationId);
+          } else {
+              setMessages([]);
+          }
+      } catch (error) {
+          console.error('Error loading messages:', error);
+          setMessages([]);
+      } finally {
+          setLoadingMessages(false);
+          if (initialMessagesLoad) {
+              setInitialMessagesLoad(false);
+          }
+      }
     };
 
     
@@ -544,8 +1243,8 @@ const ChatComponent = () => {
         if (selectedConversation) {
             loadMessages(selectedConversation.id);
             loadConversationFiles(selectedConversation.id);
-            if (wsClient.current) {
-                wsClient.current.joinConversation(selectedConversation.id);
+            if (wsClient) {
+                wsClient.joinConversation(selectedConversation.id);
             }
         }
     }, [selectedConversation]);
@@ -554,31 +1253,49 @@ const ChatComponent = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+    
+    //! Clean up all typing timeouts
+    useEffect(() => {
+      return () => {
+          if (window.typingTimeouts) {
+              Object.values(window.typingTimeouts).forEach(timeout => {
+                  clearTimeout(timeout);
+              });
+              window.typingTimeouts = {};
+          }
+      };
+  }, []);
 
     //! HANDLE NEW MESSAGE:
     const handleNewMessage = (data) => {
-        if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
-            setMessages(prev => {
-                if (prev.some(msg => msg.id === data.message.id)) {
-                    return prev;
-                }
-                return [...prev, data.message];
-            });
-            
-            // If this message is from another user and we're not currently viewing this conversation,
-            // increment the unread count locally and reload conversations
-            if (data.message.sender_id !== userId) {
-                loadConversations(); // This will refresh the unread counts
-            }
-            
-            // Reload files if message has attachment
-            if (data.message.file_url) {
-                loadConversationFiles(selectedConversation.id);
-            }
-        } else if (data.message && data.conversation_id !== selectedConversation?.id) {
-            // Message in another conversation - reload conversations to update unread counts
-            loadConversations();
-        }
+      
+      if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
+          setMessages(prev => {
+              // Check for duplicates more thoroughly
+              const isDuplicate = prev.some(msg => 
+                  msg.id === data.message.id || 
+                  (msg.content === data.message.content && 
+                   msg.sender_id === data.message.sender_id &&
+                   Math.abs(new Date(msg.created_at).getTime() - new Date(data.message.created_at).getTime()) < 1000)
+              );
+              
+              if (isDuplicate) {
+                  return prev;
+              }
+              return [...prev, data.message];
+          });
+          loadConversations();
+          
+          
+          // Load files if needed
+          if (data.message.file_url) {
+              loadConversationFiles(selectedConversation.id);
+          }
+      } else if (data.message && data.conversation_id !== selectedConversation?.id) {
+          // Message in another conversation
+          console.log('Message in other conversation, updating list');
+          loadConversations();
+      }
     };
     
     //! handle message edited:
@@ -729,22 +1446,27 @@ const ChatComponent = () => {
     
     //! handle selected conversation:
     const handleSelectConversation = async (conversation) => {
-        setSelectedConversation(conversation);
-        
-        // Mark conversation as read when selected
-        if (conversation && conversation.id) {
-            try {
-                await markConversationAsRead(conversation.id);
-                
-                // Update local state to reflect read status
-                setReadConversations(prev => new Set([...prev, conversation.id]));
-                
-                // Reload conversations to update unread counts
-                loadConversations();
-            } catch (error) {
-                console.error('Error marking conversation as read:', error);
-            }
-        }
+      // Reset initial messages load when switching to a different conversation
+      if (selectedConversation?.id !== conversation.id) {
+          setInitialMessagesLoad(true);
+      }
+      
+      setSelectedConversation(conversation);
+      
+      // Mark conversation as read when selected
+      if (conversation && conversation.id) {
+          try {
+              await markConversationAsRead(conversation.id);
+              
+              // Update local state to reflect read status
+              setReadConversations(prev => new Set([...prev, conversation.id]));
+              
+              // Reload conversations to update unread counts
+              loadConversations();
+          } catch (error) {
+              console.error('Error marking conversation as read:', error);
+          }
+      }
     };
     
     //! handle send message:
@@ -840,8 +1562,8 @@ const ChatComponent = () => {
 
     //! handle typing:
     const handleTyping = (conversationId) => {
-        if (wsClient.current && conversationId) {
-            wsClient.current.handleTyping(conversationId);
+        if (wsClient && conversationId) {
+            wsClient.handleTyping(conversationId);
         }
     };
     
@@ -984,7 +1706,7 @@ const ChatComponent = () => {
                 return convertToAmPm(time24);
             });
             
-            formattedContent = formattedContent.replace(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/gi, '<span class="inline-block px-2 py-0.5 mx-1 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full border border-green-500/30">$1</span>');
+            formattedContent = formattedContent.replace(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/gi, '<span className="inline-block px-2 py-0.5 mx-1 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full border border-green-500/30">$1</span>');
             
             return <span dangerouslySetInnerHTML={{ __html: formattedContent }} />;
         }
@@ -1043,6 +1765,16 @@ const ChatComponent = () => {
         setEditingMessageId(null);
         setEditingContent('');
     };
+    
+    //! Update message function
+    const handleUpdate = (message) => {
+      startEditMessage(message);
+    };
+    
+    //! Delete message function
+    const handleDelete = (message) => {
+      deleteMessage(message);
+    };
 
     const saveEditMessage = async (messageId) => {
         if (!editingContent.trim()) return;
@@ -1099,7 +1831,7 @@ const ChatComponent = () => {
         }
     
         return (
-          <div className="fixed top-4 right-4 z-999999" style={{ zIndex: 999999999999 }}>
+          <div className="fixed top-25 right-4 z-999999" style={{ zIndex: 99999999999999 }}>
             <Alert className={styles[notification.type]}>
               <AlertDescription className="font-medium">
                 {notification.message}
@@ -1118,6 +1850,95 @@ const ChatComponent = () => {
         fetchUsers(1);
     }, [searchQuery, selectedRole, selectedStatus]);
     
+    //! Whiteboard
+    const WhiteboardModal = () => {
+      
+      if (!showWhiteboardModal || !selectedConversation || !userId || !wsClient) {
+        console.log('WhiteboardModal not showing due to missing:', {
+            showWhiteboardModal,
+            selectedConversation: !!selectedConversation,
+            userId,
+            wsClient: !!wsClient
+        });
+        return null;
+      }
+      
+      const handleBackgroundClick = (e) => {
+        // Check if clicking on the background overlay
+        if (e.target.className?.includes && e.target.className.includes('fixed inset-0')) {
+          setShowWhiteboardModal(false);
+        }
+      };
+      return (
+        <div 
+          style={{zIndex: 99999999999999}}
+          className="fixed inset-0  bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center"
+          onClick={handleBackgroundClick}
+        >
+          {/* Close Button */}
+          <button
+            onClick={() => setShowWhiteboardModal(false)}
+            className="absolute top-4 right-4 z-50 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 group"
+          >
+            <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
+          </button>
+          
+          {/* Title */}
+          <div className="absolute top-4 left-4 z-50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                <span className="text-white font-bold text-sm">
+                  {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                </span>
+              </div>
+              <div>
+                <h2 className="text-white font-bold text-xl">
+                  Whiteboard: {getConversationName(selectedConversation)}
+                </h2>
+                <p className="text-gray-400 text-sm">
+                  Real-time collaborative drawing with {selectedConversation.participants?.length} participants
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Painting Board */}
+          <div className="w-full h-full pt-16 pb-4 px-4">
+            <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-800 bg-[#0f0f0f]">
+              <PaintingBoard 
+                conversationId={selectedConversation.id}
+                currentUserId={userId}
+                wsClient={wsClient}
+              />
+            </div>
+          </div>
+          
+          {/* Quick Actions Bar */}
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-gray-800">
+            <button
+              onClick={() => setShowWhiteboardModal(false)}
+              className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 flex items-center gap-2"
+            >
+              <X size={16} />
+              <span>Close</span>
+            </button>
+            <button
+              onClick={() => {
+                // You could add share functionality here
+                navigator.clipboard.writeText(window.location.href);
+                showNotification('success', 'Whiteboard link copied!');
+              }}
+              className="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 flex items-center gap-2"
+            >
+              <ShareIcon size={16} />
+              <span>Share</span>
+            </button>
+          </div>
+        </div>
+      );
+    };
+    
+    
     return (
         <div className="chat-app   flex relative font-sans">
             {/* Animated Background */}
@@ -1127,7 +1948,7 @@ const ChatComponent = () => {
                 <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
             </div>
             
-            <ScrollToTop/>
+            {/* <ScrollToTop/> */}
             <Notification />
             
             {/* <AnimatedNotification
@@ -1324,657 +2145,719 @@ const ChatComponent = () => {
                     </div>
                 </div>
             )}
-    
-            {/* Sidebar */}
-            <div style={{zIndex:9999}} className="flex w-full h-full">
-                {/* {showAlert && (
-                    <div style={{zIndex:9999}} className="fixed bottom-6 right-6 min-w-2/5">
-                        <Alert
-                            variant={alertVariant}
-                            // title={alertTitle}
-                            message={alertMessage}
-                            showIcon={alertShowIcon}
-                            dismissible={alertDismissible}
-                            actions={alertActions}
-                        />
-                    </div>
-                )} */}
-                
-                <div className="w-80  h-screen  border-r border-gray-900 flex flex-col">
-                    {/* User Header */}
-                    <div className="p-4 border-b border-gray-900">
-                        <div className="flex items-center justify-between mb-4">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-300 to-purple-300 flex items-center justify-center border-blue-400 border-2 text-black font-bold">
-                                    <img
-                                        className="rounded-full h-full w-full"
-                                        alt="user"
-                                        src={
-                                        user?.profile.picture
-                                        //   ? u.profilePicture
-                                        //     ? u.profilePicture
-                                        //     : `${BASE_URL}/${u.profilePicture}`
-                                        //   : "/default-avatar.png" // fallback image
-                                        }
-                                    />
-                                    </div>
-                                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
-                                </div>
-                                <div>
-                                    <div className="text-white font-semibold">
-                                        {users.find(u => u.id === userId)?.firstName} {users.find(u => u.id === userId)?.lastName}
-                                    </div>
-                                    <div className="text-xs text-gray-400">
-                                        {users.find(u => u.id === userId)?.email}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div data-aos='fade' data-aos-delay="300">
-                          <ShineButton 
-                            className="rounded-md flex gap-2 w-full items-center justify-center text-white"
-                            label="New Chat" 
-                            icon={<Plus size={18} className="hover:animate-pulse" />}
-                            size="sm" 
-                            bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                            onClick={() => setShowCreateModal(true)} 
+            
+            <WhiteboardModal />
+            
+            {/* Main Chat Container */}
+            <div style={{ zIndex: 9999 }} className="flex flex-col md:flex-row relative w-full h-screen overflow-hidden">
+              {/* Sidebar - Hidden on mobile, visible on medium+ */}
+              <div className="hidden md:flex flex-shrink-0 w-full md:w-80 lg:w-80 h-screen border-r border-gray-900 flex-col ">
+                {/* User Header */}
+                <div className="p-4 border-b border-gray-900">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="relative">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-300 to-purple-300 flex items-center justify-center border-blue-400 border-2 text-black font-bold">
+                          <img
+                            className="rounded-full h-full w-full object-cover"
+                            alt="user"
+                            src={user?.profile.picture || "/default-avatar.png"}
                           />
                         </div>
-                        {/* <Button 
-                            onClick={() => setShowCreateModal(true)}
-                            className="px-8 w-full py-4 rounded-md bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white  text-black font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
-                            // className="w-full py-2.5 rounded-xl bg-linear-to-br from-blue-300 to-purple-300 text-black font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-                        >
-                            <Plus size={18} />
-                            New Chat
-                        </Button> */}
-                        
-                        <div className="w-full" data-aos='fade' data-aos-delay="500">
-                            {/* Search Bar */}
-                            <div className="flex-1 my-3">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                    <Input
-                                    placeholder="Search user or conversation..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    className="pl-9 bg-gray-700 border-blue-400 border text-white w-full"
-                                    style={{ minWidth: '200px' }}
-                                    />
-                                </div>
-                            </div>
+                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-white font-semibold truncate">
+                          {users.find(u => u.id === userId)?.firstName} {users.find(u => u.id === userId)?.lastName}
                         </div>
+                        <div className="text-xs text-gray-400 truncate">
+                          {users.find(u => u.id === userId)?.email}
+                        </div>
+                      </div>
                     </div>
-        
-                    <div className="flex-1  overflow-y-auto" data-aos='fade' data-aos-delay="700">
-                        <AnimatePresence mode="wait">
-                            {loading ? (
-                                <div className="flex flex-col gap-6">
-                                    {[...Array(3)].map((_, i) => (
-                                    <ConversationsCardSkeleton key={i} />
-                                    ))}
-                                </div>
-                            ) 
-                            // conversations.length === 0 ? (
-                            //     <motion.div
-                            //         initial={{ opacity: 0, scale: 0.95 }}
-                            //         animate={{ opacity: 1, scale: 1 }}
-                            //         exit={{ opacity: 0, scale: 0.95 }}
-                            //         className="flex flex-col items-center justify-center py-20"
-                            //     >
-                            //         <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
-                            //         <Search className="w-10 h-10 text-blue-500" />
-                            //         </div>
-                            //         <h3 className="text-xl font-semibold text-white mb-2">No conversations found</h3>
-
-                            //     </motion.div>
-                            // ) 
-                            : (
-                                <motion.div 
-                                    layout
-                                    className="flex flex-col  gap-6"
-                                >
-                                    {conversations.map(conversation => (
-                                        <div
-                                            key={conversation.id}
-                                            className={`flex items-center p-4 cursor-pointer transition-all duration-200 border-b border-gray-900 hover:bg-gray-900 ${
-                                                selectedConversation?.id === conversation.id 
-                                                    ? 'bg-gray-900 border-l-4 border-l-blue-300' 
-                                                    : ''
-                                            }`}
-                                            onClick={() => handleSelectConversation(conversation)}
-                                        >
-                                            <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
-                                                selectedConversation?.id === conversation.id
-                                                    ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
-                                                    : 'bg-gray-800 text-gray-300'
-                                            }`}>
-                                                {/* {getConversationName(conversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)} */}
-                                                <img
-                                                    className="rounded-full border border-blue-300 h-full w-full"
-                                                    alt="user"
-                                                    src={
-                                                    conversation.participants.find((u)=>u.id!==userId)?.
-                                                    profilePicture
-                                                    //   ? u.profilePicture
-                                                    //     ? u.profilePicture
-                                                    //     : `${BASE_URL}/${u.profilePicture}`
-                                                    //   : "/default-avatar.png" // fallback image
-                                                    }
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0 relative">
-                                                <div className="flex items-center justify-between mb-1">
-                                                    <div className="font-semibold text-white truncate">
-                                                        {getConversationName(conversation)}
-                                                    </div>
-                                                    {conversation.unread_count > 0 && (
-                                                        
-                                                        <Badge
-                                                            className="ml-2 shadow-md shadow-amber-100 text-black text-xs font-bold  py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
-                                                            variant="secondary"
-                                                        >
-                                                            {conversation.unread_count}
-                                                        </Badge>
-                                                        // <div className="ml-2 bg-[#c1ff72] text-black text-xs font-bold px-2 py-0.5 rounded-full">
-                                                            
-                                                        // </div>
-                                                    )}
-                                                </div>
-                                                <div className="text-sm text-gray-400 truncate">
-                                                    {/* Show original content without time processing for preview */}
-                                                    {formatMessageContent(conversation.last_message?.content )|| 'No messages yet'}
-                                                </div>
-                                                <div className={conversation.conversation_type=="group"?"flex -space-x-2  absolute right-0 top-9": "hidden"}>
-                                                    <Avatar className="size-6">
-                                                        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-                                                        <AvatarFallback>CN</AvatarFallback>
-                                                    </Avatar>
-                                                    <Avatar className="size-6">
-                                                        <AvatarImage src="https://github.com/leerob.png" alt="@leerob" />
-                                                        <AvatarFallback>LR</AvatarFallback>
-                                                    </Avatar>
-                                                    <Avatar className="size-6">
-                                                        <AvatarImage
-                                                            src="https://github.com/evilrabbit.png"
-                                                            alt="@evilrabbit"
-                                                        />
-                                                        <AvatarFallback>ER</AvatarFallback>
-                                                    </Avatar>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                        
+                  </div>
+                  
+                  <div data-aos='fade' data-aos-delay="300" className="w-full">
+                    <ShineButton 
+                      className="rounded-md flex gap-2 w-full items-center justify-center text-white"
+                      label="New Chat" 
+                      icon={<Plus size={18} className="hover:animate-pulse" />}
+                      size="sm" 
+                      bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+                      onClick={() => setShowCreateModal(true)} 
+                    />
+                  </div>
+                  
+                  <div className="w-full" data-aos='fade' data-aos-delay="500">
+                    {/* Search Bar */}
+                    <div className="flex-1 my-3">
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          placeholder="Search user or conversation..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-9 bg-gray-700 border-blue-400 border text-white w-full"
+                        />
+                      </div>
                     </div>
+                  </div>
                 </div>
-    
-                {/* Main Chat Area */}
-                <div className="flex-1 h-screen  flex flex-col ">
-                    {selectedConversation ? (
-                        <>
-                            {/* Chat Header */}
-                            <div className="bg-[#0f0f0f] border-b border-gray-900 p-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center font-bold text-white">
-                                            {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                                        </div>
-                                        <div>
-                                            <h3 className="text-lg font-bold text-white">
-                                                {getConversationName(selectedConversation)}
-                                            </h3>
-                                            <div className="flex items-center gap-2 text-sm text-gray-400">
-                                                <span>{selectedConversation.participants?.length} members</span>
-                                                {selectedConversation.participants?.some(p => onlineUsers.has(p.id.toString())) && (
-                                                    <span className="flex items-center gap-1 text-green-500">
-                                                        <Circle size={6} className="fill-green-500" />
-                                                        Online
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <button 
-                                            onClick={() => alert('Voice call coming soon!')}
-                                            className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 relative group cursor-not-allowed"
-                                            title="Voice call (Coming soon)"
-                                        >
-                                            <Phone size={20} />
-                                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                Coming soon
-                                            </span>
-                                        </button>
-                                        <button 
-                                            onClick={() => alert('Video call coming soon!')}
-                                            className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 relative group cursor-not-allowed"
-                                            title="Video call (Coming soon)"
-                                        >
-                                            <Video size={20} />
-                                            <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                                                Coming soon
-                                            </span>
-                                        </button>
-                                        <button className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200">
-                                            <Star size={20} />
-                                        </button>
-                                        <button className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200">
-                                            <Search size={20} />
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-    
-                            {/* Messages Area */}
-                            <div className="flex-1 overflow-y-auto p-6 space-y-4 ">
-                                {loading ? (
-                                        <div className="flex flex-col gap-6" style={{zIndex:999999}}>
-                                            {[...Array(3)].map((_, i) => (
-                                            <MessagesSkeleton key={i} />
-                                            ))}
-                                        </div>
-                                    // <div className="h-full flex items-center justify-center">
-                                    //     <div className="text-center">
-                                    //         <MessageCircle size={64} className="mx-auto mb-4 text-gray-700" />
-                                    //         <p className="text-gray-500 text-lg">No messages yet. Start the conversation!</p>
-                                    //     </div>
-                                    // </div>
-                                ) : (
-                                    messages.map(message => (
-                                        <div className="flex-col gap-2 ">
-                                            <div 
-                                                key={message.id}
-                                                className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                                                onMouseEnter={() => setHoveredMessageId(message.id)}
-                                                onMouseLeave={() => setHoveredMessageId(null)}
-                                            >
-                                                <div className={` max-w-[70%] ${message.sender_id === userId ? 'items-end' : 'items-start'} flex flex-col`}>
-                                                    <div className={`${message.sender_id === userId?'flex-row-reverse flex gap-2  mb-1 px-1 items-center':'flex  items-center gap-2 mb-1 px-1'}`}>
-                                                        {/* Display timestamp converted from sender's timezone to current user's timezone */}
-                                                        <span className="text-xs text-gray-600 mr-5">
-                                                            {formatMessageTime(
-                                                                message.created_at, 
-                                                                message.sender_timezone, 
-                                                                getCurrentUserTimezone()
-                                                            )}
-                                                        </span>
-                                                        <span className="text-xs font-semibold text-gray-500 mr-5">
-                                                            {message.sender?.firstName || message.sender?.first_name} {message.sender?.lastName || message.sender?.last_name}
-                                                        </span>
-                                                        {message.sender_id === userId && hoveredMessageId === message.id && editingMessageId !== message.id && (
-                                                            <div  className="flex items-center gap-2">
-                                                            {/* Edit Button with Tippy */}
-                                                            <Tippy
-                                                                theme='custom'
-                                                                // sticky={true}
-                                                                content="Edit message"
-                                                                placement="bottom"
-                                                                delay={[100, 50]}
-                                                                duration={[200, 150]}
-                                                                arrow={false}
-                                                            >
-                                                                <button
-                                                                    onClick={() => startEditMessage(message)}
-                                                                    className="p-2 rounded-full cursor-pointer bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200"
-                                                                >
-                                                                    <Edit2 size={12} />
-                                                                </button>
-                                                            </Tippy>
-                                                            
-                                                            {/* Delete Button with Tippy */}
-                                                            <Tippy
-                                                                content="Delete message"
-                                                                placement="bottom"
-                                                                theme='custom'
-                                                                delay={[100, 50]}
-                                                                duration={[200, 150]}
-                                                                arrow={false}
-                                                            >
-                                                                <button
-                                                                    onClick={() => deleteMessage(message)}
-                                                                    className="p-2 rounded-full cursor-pointer bg-red-800/70 hover:bg-red-700/70 text-gray-400 transition-all duration-200"
-                                                                >
-                                                                    <RiDeleteBin6Line size={12} />
-                                                                </button>
-                                                            </Tippy>
-                                                            
-    
-                                                        </div>
-                                                        )}
-                                                    </div>
-                                                    
-                                                    {editingMessageId === message.id ? (
-                                                        <div style={{width:'350px'}} className=" bg-[#1a1a1a] rounded-2xl border border-gray-800 p-4 shadow-lg">
-                                                            <textarea
-                                                                value={editingContent}
-                                                                onChange={(e) => setEditingContent(e.target.value)}
-                                                                className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-400 transition-all duration-300 resize-none"
-                                                                rows={3}
-                                                                autoFocus
-                                                            />
-                                                            <div className="w-full flex gap-2 mt-3 items-center justify-around">
-                                                                <button
-                                                                    onClick={cancelEditMessage}
-                                                                    className="w-full flex justify-center items-center p-2 rounded-md bg-red-800  hover:shadow-[0px_0px_10px_red] text-gray-300 transition-all duration-200"
-                                                                >
-                                                                    <X size={16} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => saveEditMessage(message.id)}
-                                                                    disabled={!editingContent.trim()}
-                                                                    style={{background:'linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)'}}
-                                                                    className="w-full flex justify-center items-center p-2 rounded-md hover:scale:102 hover:shadow-blue-400 hover:shadow-[0px_0px_10px_blue]  text-black transition-all duration-200 disabled:opacity-50"
-                                                                >
-                                                                    <Check size={16} />
-                                                                </button>
-                                                            </div>
-                                                        </div>
-                                                    ) : (
-                                                        <div className={`${message.sender_id === userId?'flex-row-reverse flex gap-2':'flex gap-2'}`}>
-                                                            <Avatar className="size-10 border border-blue-400 text-black font-bold flex items-center justify-center">
-                                                            {/* {(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]} */}
-                                                                <AvatarImage src={message?.sender?.profilePicture} alt="@shadcn" />
-                                                                <AvatarFallback>{(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]}</AvatarFallback>
-                                                            </Avatar>
-                                                            <div className={`px-5 py-3 rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl ${
-                                                                message.sender_id === userId
-                                                                    ? 'bg-white text-black'
-                                                                    : 'bg-[#1a1a1a] text-white border border-gray-800'
-                                                            }`}>
-                                                                
-                                                                {message.file_url && (
-                                                                    <div className="mb-2">
-                                                                    {/* {alert(message.file_url)} */}
-                                                                        {message.file_type?.startsWith('image/') ? (
-                                                                            <img 
-                                                                                src={message.file_url.startsWith("http")
-                                                                                    ? message.file_url
-                                                                                    : `${SOCKET_API_URL}${message.file_url}`} 
-                                                                                alt={message.file_name}
-                                                                                className="max-w-full rounded-lg mb-2"
-                                                                            />
-                                                                        ) : (
-                                                                            <div className="flex items-center gap-2 bg-black/20 p-3 rounded-lg">
-                                                                                {getFileIcon(message.file_type)}
-                                                                                <div className="flex-1">
-                                                                                    <div className="font-semibold text-sm">{message.file_name}</div>
-                                                                                    <div className="text-xs opacity-70">{formatFileSize(message.file_size)}</div>
-                                                                                </div>
-                                                                                <a 
-                                                                                    href={message.file_url} 
-                                                                                    download
-                                                                                    className="p-2 rounded-lg hover:bg-black/20 transition-all"
-                                                                                >
-                                                                                    <Download size={16} />
-                                                                                </a>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                )}
-                                                                <div className="leading-relaxed">
-                                                                    {formatMessageContent(message.content)}
-                                                                </div>
-                                                                {message.is_edited && (
-                                                                    <div className="mt-2 text-xs opacity-70 italic">
-                                                                        (edited)
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <Actions className={`flex mt-1  ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}>
-                                                {actions.map((action) => (
-                                                  <Action key={action.label} label={action.label} tooltip={action.label} className={"rounded-full"}>
-                                                    <action.icon className="size-3.5" />
-                                                  </Action>
-                                                ))}
-                                              </Actions>
-                                        </div>
-                                    ))
-                                )}
-                                <div ref={messagesEndRef} />
-                                
-                                {getTypingDisplay() && (
-                                    <div className="flex items-center gap-3 px-5 py-3 bg-[#1a1a1a] rounded-2xl border border-gray-800 max-w-fit">
-                                        <div className="flex gap-1">
-                                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0s'}}></span>
-                                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></span>
-                                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></span>
-                                        </div>
-                                        <span className="text-sm text-gray-400 italic">{getTypingDisplay()}</span>
-                                    </div>
-                                )}
-                            </div>
-    
-                            {/* Message Input */}
-                            <div className="p-4">
-                                <TimeAwareMessageInput
-                                    onSend={handleSendMessage}
-                                    onTyping={handleTyping}
-                                    conversationId={selectedConversation?.id}
-                                />
-                            </div>
-                        </>
+              
+                {/* Conversations List */}
+                <div className="flex-1 overflow-y-auto" data-aos='fade' data-aos-delay="700">
+                  <AnimatePresence mode="wait">
+                    {loading && initialConversationsLoad? (
+                      <div className="flex flex-col gap-6 p-4">
+                        {[...Array(3)].map((_, i) => (
+                          <ConversationsCardSkeleton key={i} />
+                        ))}
+                      </div>
                     ) : (
-                        <div className="flex-1 flex items-center justify-center">
-                            <div className="text-center space-y-6">
-                                <div className="w-24 h-24 mx-auto bg-gray-900 rounded-3xl flex items-center justify-center">
-                                    <MessageCircle size={48} className="text-gray-700" />
-                                </div>
-                                <div>
-                                    <h2 className="text-3xl font-bold text-white mb-3">Welcome to Chat</h2>
-                                    <p className="text-gray-500 mb-6">Select a conversation or create a new one to start chatting</p>
-                                    <Button 
-                                        onClick={() => setShowCreateModal(true)}
-                                        className="px-8 py-4 rounded-md bg-white hover:shadow-[0px_0px_10px_white] hover:bg-white  text-black font-semibold transition-all duration-300 hover:scale-105 shadow-lg"
-                                    >
-                                        Start New Conversation
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                {/* Right Sidebar - Members & Files */}
-                {selectedConversation && (
-                    <div className={` border-l h-screen border-gray-900   flex flex-col overflow-y-auto transition-all duration-300 ${
-                        isSidebarCollapsed ? 'w-0 opacity-0' : 'w-80 opacity-100'
-                    }`}>
-                        {/* Toggle Button */}
-                        <button
-                            onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                            className={`absolute w-16 top-4  z-10 p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-300 border border-gray-700 ${
-                                isSidebarCollapsed 
-                                    ? 'right-12 rotate-180' 
-                                    : 'right-12 '
+                      <motion.div 
+                        layout
+                        className="flex flex-col gap-1 p-2"
+                      >
+                        {conversations.map(conversation => (
+                          <div
+                            key={conversation.id}
+                            className={`flex items-center p-3 cursor-pointer transition-all duration-200 rounded-lg hover:bg-gray-900 ${
+                              selectedConversation?.id === conversation.id 
+                                ? 'bg-gray-900 border-l-4 border-l-blue-300' 
+                                : ''
                             }`}
-                            style={{zIndex:9999999999}}
-                            title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-                        >
-                            <ChevronRight size={16} />
-                        </button>
-                
-                        {/* Sidebar Content */}
-                        <div className={`${isSidebarCollapsed ? 'hidden' : 'block'} h-full`}>
-                            {/* Members Section */}
-                            <div className="p-4 border-b border-gray-900">
-                                <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-white font-bold flex items-center gap-2">
-                                        <Users size={18} />
-                                        Members
-                                    </h3>
-                                    <span className="text-xs text-gray-400 bg-gray-800 px-2 py-1 rounded-full">
-                                        {selectedConversation.participants?.length}
-                                    </span>
+                            onClick={() => handleSelectConversation(conversation)}
+                            onMouseEnter={() => setHoveredConversationId(conversation.id)}
+                            onMouseLeave={() => setHoveredConversationId(null)}
+                          >
+                            <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
+                              selectedConversation?.id === conversation.id
+                                ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                                : 'bg-gray-800 text-gray-300'
+                            }`}>
+                              <img
+                                className="rounded-full border border-blue-300 h-full w-full object-cover"
+                                alt="user"
+                                src={
+                                  conversation.participants.find((u)=>u.id!==userId)?.profilePicture || "/default-avatar.png"
+                                }
+                              />
+                            </div>
+                            <div className="relative flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <div className="font-semibold text-white truncate text-sm">
+                                  {getConversationName(conversation)}
                                 </div>
-                                <div className="space-y-2 max-h-60 overflow-y-auto">
-                                    {selectedConversation.participants?.map(participant => {
-                                        const usr = users.find(u => u.id === participant.id) || participant;
-                                        const isOnline = onlineUsers.has(participant.id.toString());
-                                        const isCurrentUser = participant.id === userId;
-                                        
-                                        return (
-                                            <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-900 transition-all">
-                                                <div className="relative">
-                                                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-semibold text-sm">
-                                                        {/* {(usr.firstName || usr.first_name)?.[0]}{(usr.lastName || usr.last_name)?.[0]} */}
-                                                        <Avatar className="size-10 bg-linear-to-br from-blue-300 to-purple-300 text-black font-bold flex items-center justify-center">
-                                                            {/* {(message.sender?.firstName || message.sender?.first_name)?.[0]}{(message.sender?.lastName || message.sender?.last_name)?.[0]} */}
-                                                                <AvatarImage src={participant?.profilePicture} alt="@shadcn" />
-                                                                <AvatarFallback>{(participant?.firstName || participant?.first_name)?.[0]}{(participant?.lastName || participant?.last_name)?.[0]}</AvatarFallback>
-                                                            </Avatar>
-                                                    </div>
-                                                    {isOnline && (
-                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
-                                                    )}
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="text-white text-sm font-medium flex items-center gap-2">
-                                                        <span className="truncate">
-                                                            {usr.firstName || usr.first_name} {usr.lastName || usr.last_name}
-                                                        </span>
-                                                        {isCurrentUser && (
-                                                            <span className="shrink-0 text-xs bg-[#c1ff72] text-black px-2 py-0.5 rounded-full font-semibold">
-                                                                You
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                    <div className="text-xs text-gray-500">
-                                                        {isOnline ? 'Online' : 'Offline'}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                                {conversation.unread_count > 0 && (
+                                  <Badge
+                                    className="ml-2 shadow-md shadow-amber-100 text-black text-xs font-bold py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
+                                    variant="secondary"
+                                  >
+                                    {conversation.unread_count}
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="text-xs text-gray-400 truncate">
+                                {formatMessageContent(conversation.last_message?.content) || 'No messages yet'}
+                              </div>
+                              {conversation.conversation_type === "group" && (
+                                <div className="flex -space-x-2 -bottom-2 absolute right-0">
+                                    {/* Show first 3 participants (excluding current user) */}
+                                    {conversation.participants
+                                        .filter(participant => participant.id !== userId) // Filter out current user
+                                        .slice(0, 3) // Take only first 3
+                                        .map((participant, index) => (
+                                            <Avatar 
+                                                key={participant.id} 
+                                                className="size-6 border-2 border-[#0f0f0f]"
+                                                style={{ zIndex: 3 - index }} // Ensure proper stacking
+                                            >
+                                                <AvatarImage 
+                                                    src={participant.profilePicture || "/default-avatar.png"} 
+                                                    alt={`${participant.firstName} ${participant.lastName}`}
+                                                    className="object-cover"
+                                                />
+                                                <AvatarFallback>
+                                                    {participant.firstName?.[0] || ''}{participant.lastName?.[0] || ''}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        ))}
+                                    
+                                    {/* Show +X if there are more than 3 participants */}
+                                    {conversation.participants.filter(p => p.id !== userId).length > 3 && (
+                                        <div className="size-6 rounded-full bg-gray-800 border-2 border-[#0f0f0f] flex items-center justify-center text-xs text-gray-400 font-semibold">
+                                            +{conversation.participants.filter(p => p.id !== userId).length - 3}
+                                        </div>
+                                    )}
+                                    
+                                    {/* Show current user's avatar if they're the only one in group */}
+                                    {conversation.participants.filter(p => p.id !== userId).length === 0 && (
+                                        <Avatar className="size-6 border-2 border-[#0f0f0f]">
+                                            <AvatarImage 
+                                                src={user?.profile.picture || "/default-avatar.png"} 
+                                                alt="You"
+                                            />
+                                            <AvatarFallback>YOU</AvatarFallback>
+                                        </Avatar>
+                                    )}
                                 </div>
-                            </div>
-                
-                            {/* Files Section */}
-                            <div className="p-4 border-b border-gray-900">
+                              )}
+                              
+                              {hoveredConversationId === conversation.id && (
                                 <button
-                                    onClick={() => setShowFilesExpanded(!showFilesExpanded)}
-                                    className="w-full flex items-center justify-between text-white font-bold mb-3 hover:text-[#c1ff72] transition-colors group"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSelectConversation(conversation);
+                                    setShowWhiteboardModal(true);
+                                  }}
+                                  className={`${conversation.conversation_type === "group"?"right-16":"right-2"} absolute flex justify-center items-center h-7 w-7 -bottom-2 transform  p-2 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-blue-400 transition-all duration-200`}
+                                  
+                                  
+                                  title="Open Whiteboard"
                                 >
-                                    <div className="flex items-center gap-2">
-                                        <Image size={18} />
-                                        <span>{conversationFiles.filter(f => f.file_type?.startsWith('image/')).length} photos</span>
-                                    </div>
-                                    {showFilesExpanded ? 
-                                        <ChevronUp size={16} className="text-gray-400 group-hover:text-[#c1ff72]" /> : 
-                                        <ChevronDown size={16} className="text-gray-400 group-hover:text-[#c1ff72]" />
-                                    }
+                                  {/* <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                  </svg> */}
+                                  <LuPresentation/>
                                 </button>
-                                
-                                {showFilesExpanded && (
-                                    <div className="grid grid-cols-2 gap-2 animate-in fade-in-50 duration-200">
-                                        {conversationFiles
-                                        .filter(file => file.file_type?.startsWith('image/'))
-                                        .slice(0, 4)
-                                        .map((file, idx) => {
-                                            const imageUrl = file.file_url.startsWith('http') 
-                                                ? file.file_url 
-                                                : `${SOCKET_API_URL}${file.file_url}`;
-                                            
-                                            return (
-                                                <div 
-                                                    key={idx} 
-                                                    className="aspect-square rounded-lg overflow-hidden bg-gray-900 hover:opacity-80 transition-all duration-200 cursor-pointer group relative"
-                                                >
-                                                    <img 
-                                                        src={imageUrl} 
-                                                        alt={file.file_name}
-                                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-                                                        onError={(e) => {
-                                                            e.target.style.display = 'none';
-                                                            e.target.parentElement.innerHTML = `
-                                                                <div class="w-full h-full flex items-center justify-center text-gray-500 bg-gray-800">
-                                                                    <Image size={20} class="text-gray-600 mb-1" />
-                                                                    <span class="text-xs">Failed to load</span>
-                                                                </div>
-                                                            `;
-                                                        }}
-                                                    />
-                                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                                        <Eye size={16} className="text-white" />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                              )}
                             </div>
-                
-                            {/* All Files Section */}
-                            <div className="p-4">
-                                <button
-                                    onClick={() => setShowLinksExpanded(!showLinksExpanded)}
-                                    className="w-full flex items-center justify-between text-white font-bold mb-3 hover:text-[#c1ff72] transition-colors group"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <File size={18} />
-                                        <span>{conversationFiles.length} files</span>
-                                    </div>
-                                    {showLinksExpanded ? 
-                                        <ChevronUp size={16} className="text-gray-400 group-hover:text-[#c1ff72]" /> : 
-                                        <ChevronDown size={16} className="text-gray-400 group-hover:text-[#c1ff72]" />
-                                    }
-                                </button>
-                                
-                                {showLinksExpanded && (
-                                    <div className="space-y-2 max-h-96 overflow-y-auto animate-in fade-in-50 duration-200">
-                                        {conversationFiles.length === 0 ? (
-                                            <div className="text-center py-8 text-gray-500">
-                                                <File size={32} className="mx-auto mb-2 opacity-50" />
-                                                <p className="text-sm">No files shared yet</p>
-                                            </div>
-                                        ) : (
-                                            conversationFiles.map((file, idx) => (
-                                                <div 
-                                                    key={idx} 
-                                                    className="flex items-center gap-3 p-3 bg-gray-900 rounded-lg hover:bg-gray-800 transition-all duration-200 cursor-pointer group"
-                                                >
-                                                    <div className="flex-shrink-0">
-                                                        {getFileIcon(file.file_type)}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-white text-sm font-medium truncate">
-                                                            {file.file_name}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500 flex items-center gap-2">
-                                                            {formatFileSize(file.file_size)}
-                                                            <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
-                                                            {new Date(file.uploaded_at).toLocaleDateString()}
-                                                        </div>
-                                                    </div>
-                                                    <a 
-                                                        href={file.file_url} 
-                                                        download
-                                                        className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-700 transition-all duration-200 opacity-0 group-hover:opacity-100"
-                                                        onClick={(e) => e.stopPropagation()}
-                                                        title="Download file"
-                                                    >
-                                                        <Download size={16} className="text-gray-400 hover:text-white" />
-                                                    </a>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
+              
+              {/* Mobile Header - Only shown on mobile */}
+              {/* <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-900 ">
+                <button
+                  onClick={() => setShowWhiteboardModal(true)}
+                  className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white"
+                  disabled={!selectedConversation}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                  className="p-2 rounded-lg bg-gray-800 text-gray-300"
+                >
+                  <Menu size={20} />
+                </button>
+                {selectedConversation ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-white">
+                      {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                     </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white truncate max-w-[150px]">
+                        {getConversationName(selectedConversation)}
+                      </h3>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-white font-bold">Messages</div>
                 )}
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="p-2 rounded-lg bg-gray-800 text-gray-300"
+                >
+                  <Plus size={20} />
+                </button>
+              </div> */}
+              
+              <div className="md:hidden flex items-center justify-between p-4 border-b border-gray-900">
+                <button
+                  onClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
+                  className="p-2 rounded-lg bg-gray-800 text-gray-300"
+                >
+                  <Menu size={20} />
+                </button>
+                
+                {/* Title in middle */}
+                {selectedConversation ? (
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center font-bold text-white">
+                      {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white truncate max-w-[150px]">
+                        {getConversationName(selectedConversation)}
+                      </h3>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-white font-bold">Messages</div>
+                )}
+                
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowWhiteboardModal(true)}
+                    className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={!selectedConversation}
+                    title="Whiteboard"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="p-2 rounded-lg bg-gray-800 text-gray-300"
+                  >
+                    <Plus size={20} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Mobile Sidebar Overlay */}
+              {isMobileSidebarOpen && (
+                <div 
+                  className="md:hidden fixed inset-0 bg-black/70 z-50"
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                >
+                  <div 
+                    className="absolute left-0 top-0 h-full w-4/5 max-w-sm bg-[#0f0f0f] border-r border-gray-900"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Mobile Sidebar Content - Same as desktop but with close button */}
+                    <div className="p-4 border-b border-gray-900">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-300 to-purple-300 flex items-center justify-center border-blue-400 border-2 text-black font-bold">
+                              <img
+                                className="rounded-full h-full w-full object-cover"
+                                alt="user"
+                                src={user?.profile.picture || "/default-avatar.png"}
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="text-white font-semibold">
+                              {user?.firstName} {user?.lastName}
+                            </div>
+                            <div className="text-xs text-gray-400 truncate">
+                              {user?.email}
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => setIsMobileSidebarOpen(false)}
+                          className="p-2 rounded-lg bg-gray-800 text-gray-300"
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+                      
+                      {/* Search in mobile sidebar */}
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <Input
+                          placeholder="Search..."
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          className="pl-9 bg-gray-700 border-blue-400 border text-white w-full"
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Mobile conversations list */}
+                    <div className="overflow-y-auto h-[calc(100%-140px)]">
+                      {conversations.map(conversation => (
+                        <div
+                          key={conversation.id}
+                          className={`flex items-center p-3 cursor-pointer transition-all duration-200 border-b border-gray-900 hover:bg-gray-900 ${
+                            selectedConversation?.id === conversation.id 
+                              ? 'bg-gray-900 border-l-4 border-l-blue-300' 
+                              : ''
+                          }`}
+                          onClick={() => {
+                            handleSelectConversation(conversation);
+                            setIsMobileSidebarOpen(false);
+                          }}
+                        >
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${
+                            selectedConversation?.id === conversation.id
+                              ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                              : 'bg-gray-800 text-gray-300'
+                          }`}>
+                            <img
+                              className="rounded-full border border-blue-300 h-full w-full object-cover"
+                              alt="user"
+                              src={
+                                conversation.participants.find((u)=>u.id!==userId)?.profilePicture || "/default-avatar.png"
+                              }
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-white truncate text-sm mb-1">
+                              {getConversationName(conversation)}
+                            </div>
+                            <div className="text-xs text-gray-400 truncate">
+                              {formatMessageContent(conversation.last_message?.content) || 'No messages yet'}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Main Chat Area */}
+              <div className={`flex-1 flex  flex-col h-full ${selectedConversation ? '' : 'items-center justify-center'} `}>
+                {selectedConversation ? (
+                  <>
+                    {/* Chat Header */}
+                    <div className="bg-[#0f0f0f] border-b border-gray-900 p-4 flex-shrink-0">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gray-800 flex items-center justify-center font-bold text-white">
+                            {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="text-lg font-bold text-white truncate">
+                              {getConversationName(selectedConversation)}
+                            </h3>
+                            <div className="flex items-center gap-2 text-sm text-gray-400">
+                              <span>{selectedConversation.participants?.length} members</span>
+                              {selectedConversation.participants?.some(p => onlineUsers.has(p.id.toString())) && (
+                                <span className="flex items-center gap-1 text-green-500">
+                                  <Circle size={6} className="fill-green-500" />
+                                  Online
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {/* Mobile Menu Button */}
+                          <button 
+                            onClick={() => setIsRightSidebarOpen(!isRightSidebarOpen)}
+                            className="md:hidden p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300"
+                          >
+                            <Users size={20} />
+                          </button>
+                          <div className="hidden md:flex items-center gap-2">
+                            {/* Whiteboard Button  */}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button 
+                                  onClick={() => setShowWhiteboardModal(true)}
+                                  className="p-3 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+                                  disabled={!selectedConversation}
+                                >
+                                  <svg 
+                                    className="w-5 h-5" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path 
+                                      strokeLinecap="round" 
+                                      strokeLinejoin="round" 
+                                      strokeWidth={2} 
+                                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" 
+                                    />
+                                  </svg>
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent side="bottom" arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
+                                <p>Open Whiteboard</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            
+                            <button 
+                              onClick={() => alert('Voice call coming soon!')}
+                              className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 cursor-not-allowed"
+                              title="Voice call (Coming soon)"
+                            >
+                              <Phone size={20} />
+                            </button>
+                            <button 
+                              onClick={() => alert('Video call coming soon!')}
+                              className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 cursor-not-allowed"
+                              title="Video call (Coming soon)"
+                            >
+                              <Video size={20} />
+                            </button>
+                            <button className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200">
+                              <Star size={20} />
+                            </button>
+                            <button className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200">
+                              <Search size={20} />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+              
+                    {/* Messages Area */}
+                    <div className={`flex-1 overflow-y-auto p-4 md:p-6 space-y-4 `}>
+                      {loadingMessages &&initialMessagesLoad ? (
+                        <div className="flex flex-col gap-6">
+                          {[...Array(3)].map((_, i) => (
+                            <MessagesSkeleton key={i} />
+                          ))}
+                        </div>
+                      ) : messages.length === 0 ? (
+                        <div className="h-full flex items-center justify-center">
+                          <div className="text-center">
+                            <MessageCircle size={64} className="mx-auto mb-4 text-gray-700" />
+                            <p className="text-gray-500 text-lg">No messages yet. Start the conversation!</p>
+                          </div>
+                        </div>
+                      ) : (
+                        messages.map(message => (
+                          <div key={message.id} className="space-y-1">
+                            <div 
+                              className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
+                              onMouseEnter={() => setHoveredMessageId(message.id)}
+                              onMouseLeave={() => setHoveredMessageId(null)}
+                            >
+                              <div className={`max-w-[85%] md:max-w-[70%] ${message.sender_id === userId ? 'items-end' : 'items-start'} flex flex-col`}>
+                                <div className={`${message.sender_id === userId?'flex-row-reverse flex gap-2 mb-1 px-1 items-center':'flex items-center gap-2 mb-1 px-1'}`}>
+                                  <span className="text-xs text-gray-600">
+                                    {formatMessageTime(
+                                      message.created_at, 
+                                      message.sender_timezone, 
+                                      getCurrentUserTimezone()
+                                    )}
+                                  </span>
+                                  <span className="text-xs font-semibold text-gray-500">
+                                    {message.sender?.firstName || message.sender?.first_name} {message.sender?.lastName || message.sender?.last_name}
+                                  </span>
+                                  {message.sender_id === userId && hoveredMessageId === message.id && editingMessageId !== message.id && (
+                                    <div className="flex items-center gap-1">
+                                      <Tippy content="Edit message" placement="bottom">
+                                        <button
+                                          onClick={() => startEditMessage(message)}
+                                          className="p-1 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400"
+                                        >
+                                          <Edit2 size={12} />
+                                        </button>
+                                      </Tippy>
+                                      <Tippy content="Delete message" placement="bottom">
+                                        <button
+                                          onClick={() => deleteMessage(message)}
+                                          className="p-1 rounded-full bg-red-800/70 hover:bg-red-700/70 text-gray-400"
+                                        >
+                                          <RiDeleteBin6Line size={12} />
+                                        </button>
+                                      </Tippy>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {editingMessageId === message.id ? (
+                                  <div className="w-full max-w-[350px] bg-[#1a1a1a] rounded-2xl border border-gray-800 p-4 shadow-lg">
+                                    <textarea
+                                      value={editingContent}
+                                      onChange={(e) => setEditingContent(e.target.value)}
+                                      className="w-full px-4 py-3 bg-[#0f0f0f] border border-gray-800 rounded-xl text-white focus:outline-none focus:border-blue-400 transition-all duration-300 resize-none"
+                                      rows={3}
+                                      autoFocus
+                                    />
+                                    <div className="flex gap-2 mt-3">
+                                      <button
+                                        onClick={cancelEditMessage}
+                                        className="flex-1 p-2 rounded-md bg-red-800 hover:shadow-[0px_0px_10px_red] text-gray-300"
+                                      >
+                                        <X size={16} />
+                                      </button>
+                                      <button
+                                        onClick={() => saveEditMessage(message.id)}
+                                        disabled={!editingContent.trim()}
+                                        style={{background:'linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)'}}
+                                        className="flex-1 p-2 rounded-md hover:shadow-[0px_0px_10px_blue] text-black disabled:opacity-50"
+                                      >
+                                        <Check size={16} />
+                                      </button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className={`${message.sender_id === userId?'flex-row-reverse flex gap-2':'flex gap-2'}`}>
+                                    <Avatar className="size-8 md:size-10 border border-blue-400 flex-shrink-0">
+                                      <AvatarImage src={message?.sender?.profilePicture} alt="@shadcn" />
+                                      <AvatarFallback>
+                                        {(message.sender?.firstName || message.sender?.first_name)?.[0]}
+                                        {(message.sender?.lastName || message.sender?.last_name)?.[0]}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className={`px-4 py-3 rounded-2xl shadow-lg max-w-full ${
+                                      message.sender_id === userId
+                                        ? 'bg-white text-black'
+                                        : 'bg-[#1a1a1a] text-white border border-gray-800'
+                                    }`}>
+    
+                                      {message.file_url && (
+                                        <div className="mb-2">
+                                          {message.file_type?.startsWith('image/') ? (
+                                            <img 
+                                              src={message.file_url.startsWith("http")
+                                                ? message.file_url
+                                                : `${SOCKET_API_URL}${message.file_url}`} 
+                                              alt={message.file_name}
+                                              className="max-w-full rounded-lg max-h-60 object-contain"
+                                            />
+                                          ) : (
+                                            <div className="flex items-center gap-2 bg-black/20 p-2 rounded-lg">
+                                              {getFileIcon(message.file_type)}
+                                              <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-sm truncate">{message.file_name}</div>
+                                                <div className="text-xs opacity-70">{formatFileSize(message.file_size)}</div>
+                                              </div>
+                                              <a 
+                                                href={message.file_url} 
+                                                download
+                                                className="p-1 rounded-lg hover:bg-black/20"
+                                              >
+                                                <Download size={16} />
+                                              </a>
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                      <div className="break-words whitespace-pre-wrap">
+                                        {formatMessageContent(message.content)}
+                                      </div>
+                                      {message.is_edited && (
+                                        <div className="mt-1 text-xs opacity-70 italic">
+                                          (edited)
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className={`flex mt-1 ${message.sender_id === userId ? 'justify-end' : 'justify-start'} px-2`}>
+                              <div className="flex gap-2">
+                                {(likedMessages.has(message.id) || dislikedMessages.has(message.id)) && (
+                                  <div className="flex gap-1 mb-2">
+                                    {likedMessages.has(message.id) && (
+                                      <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <ThumbsUpIcon size={10} />
+                                        Liked
+                                      </span>
+                                    )}
+                                    {dislikedMessages.has(message.id) && (
+                                      <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                        <ThumbsDownIcon size={10} />
+                                        Disliked
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                      <div ref={messagesEndRef} />
+                      
+                      {getTypingDisplay() && (
+                        <div className="flex items-center gap-3 px-4 py-3 bg-[#1a1a1a] rounded-2xl border border-gray-800 max-w-fit">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0s'}}></span>
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.15s'}}></span>
+                            <span className="w-2 h-2 bg-gray-500 rounded-full animate-bounce" style={{animationDelay: '0.3s'}}></span>
+                          </div>
+                          <span className="text-sm text-gray-400 italic">{getTypingDisplay()}</span>
+                        </div>
+                      )}
+                    </div>
+              
+                    {/* Message Input */}
+                    <div className="sticky bottom-0 p-4  border-t border-gray-900 flex-shrink-0">
+                      <TimeAwareMessageInput
+                        onSend={handleSendMessage}
+                        onTyping={handleTyping}
+                        conversationId={selectedConversation?.id}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center p-4">
+                    <div className="text-center space-y-6 max-w-md">
+                      <div className="w-24 h-24 mx-auto bg-gray-900 rounded-3xl flex items-center justify-center">
+                        <MessageCircle size={48} className="text-gray-700" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Welcome to Chat</h2>
+                        <p className="text-gray-500 mb-6">Select a conversation or create a new one to start chatting</p>
+                        <Button 
+                          onClick={() => setShowCreateModal(true)}
+                          className="px-6 py-3 md:px-8 md:py-4 rounded-md bg-white hover:shadow-[0px_0px_10px_white] text-black font-semibold transition-all duration-300"
+                        >
+                          Start New Conversation
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Right Sidebar - Members & Files */}
+              {selectedConversation && (
+                <div className="relative">
+                  {/* Mobile Overlay Sidebar */}
+                  {isRightSidebarOpen && (
+                    <div 
+                      className="md:hidden fixed inset-0  z-50"
+                      onClick={() => setIsRightSidebarOpen(false)}
+                    >
+                      <div 
+                        className="absolute right-0 top-0 h-full w-4/5 max-w-sm  border-l border-gray-900"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <RightSidebarContent 
+                          selectedConversation={selectedConversation}
+                          users={users}
+                          userId={userId}
+                          onlineUsers={onlineUsers}
+                          conversationFiles={conversationFiles}
+                          showFilesExpanded={showFilesExpanded}
+                          setShowFilesExpanded={setShowFilesExpanded}
+                          showLinksExpanded={showLinksExpanded}
+                          setShowLinksExpanded={setShowLinksExpanded}
+                          onClose={() => setIsRightSidebarOpen(false)}
+                        />
+                      </div>
+                    </div>
+                  )}
+              <button
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                className="absolute left-0 top-14 -translate-x-1/2 z-10 p-2 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-300 border border-gray-700"
+                title={isSidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <ChevronRight size={16} className={isSidebarCollapsed ? '' : 'rotate-180'} />
+              </button>
+                  {/* Desktop Right Sidebar */}
+                  <div className={`hidden relative md:flex flex-shrink-0 w-80 lg:w-80 border-l border-gray-900  flex-col overflow-y-auto transition-all duration-300 ${
+                    isSidebarCollapsed ? 'w-0 opacity-0' : 'w-80 lg:w-80 opacity-100'
+                  }`}>
+                    <RightSidebarContent 
+                      selectedConversation={selectedConversation}
+                      users={users}
+                      userId={userId}
+                      onlineUsers={onlineUsers}
+                      conversationFiles={conversationFiles}
+                      showFilesExpanded={showFilesExpanded}
+                      setShowFilesExpanded={setShowFilesExpanded}
+                      showLinksExpanded={showLinksExpanded}
+                      setShowLinksExpanded={setShowLinksExpanded}
+                      isSidebarCollapsed={isSidebarCollapsed}
+                      setIsSidebarCollapsed={setIsSidebarCollapsed}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
-            
             {/* Debug Controls
             {process.env.NODE_ENV === 'development' && selectedConversation && (
                 <div className="fixed bottom-4 right-4 flex gap-2 z-50">
@@ -2011,3 +2894,4 @@ const ChatComponent = () => {
 };
 
 export default ChatComponent;
+

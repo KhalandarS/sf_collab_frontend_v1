@@ -161,6 +161,7 @@ const AnimeConverter = () => {
 
   return (
     <div className="min-h-screen py-8">
+      
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -170,7 +171,7 @@ const AnimeConverter = () => {
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">
-                Anime AI Converter
+                Anime AI Converter 
               </h1>
               <p className="text-gray-300 mt-1">
                 Transform your photos into anime characters instantly!
@@ -179,7 +180,8 @@ const AnimeConverter = () => {
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-8 lg:grid-cols-3 relative p-2">
+          <div className='absolute bg-gray-500/10 w-full h-full backdrop-blur-sm rounded-md p-2 flex justify-center items-center' style={{zIndex:99999999}}><span className='text-sm bg-blue-500 text-blue-200 rounded-full p-1 px-2  w-fit'>Coming soon</span></div>
           {/* Left Panel - Controls */}
           <div className="lg:col-span-1">
             <Card className="bg-gray-800/50 backdrop-blur-sm border-gray-700 shadow-lg h-fit sticky top-8">

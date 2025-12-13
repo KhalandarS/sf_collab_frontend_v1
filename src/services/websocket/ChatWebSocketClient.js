@@ -1,41 +1,63 @@
 import io from 'socket.io-client';
 
 class ChatWebSocketClient {
-  constructor(serverUrl, userId) {
+  constructor(serverUrl, userId, options = {}) {
     this.serverUrl = serverUrl;
     this.userId = userId;
     this.socket = null;
     this.eventHandlers = {};
     this.typingTimeouts = {};
+    this.whiteboardTimeouts = {};
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = options.maxReconnectAttempts || 5;
+    this.options = options;
+    this.activeWhiteboards = new Set(); // Track active whiteboard sessions
   }
 
   // Initialize and connect to WebSocket server
   connect() {
-    this.socket = io(this.serverUrl, {
+    const defaultOptions = {
       query: { user_id: this.userId },
       transports: ['websocket', 'polling'],
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
-    });
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    };
+
+    const socketOptions = { ...defaultOptions, ...this.options };
+    
+    this.socket = io(this.serverUrl, socketOptions);
 
     this.setupDefaultHandlers();
     return this.socket;
   }
 
-  // Setup default event handlers - FIXED: Added missing event handlers
+  // Setup default event handlers
   setupDefaultHandlers() {
+    // Connection events
     this.socket.on('connect', () => {
       console.log('Connected to chat server');
+      this.reconnectAttempts = 0;
       this.trigger('connected');
       
-      // Join all user's conversation rooms
-      this.joinUserConversations();
+      // IMPORTANT: Wait a bit before joining conversations to ensure socket is fully registered
+      setTimeout(() => {
+        // Join all user's conversation rooms
+        this.joinUserConversations();
+      }, 200);
     });
 
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from chat server');
-      this.trigger('disconnected');
+    this.socket.on('disconnect', (reason) => {
+      console.log('Disconnected from chat server:', reason);
+      this.trigger('disconnected', reason);
+      
+      // Leave all whiteboards on disconnect
+      this.activeWhiteboards.forEach(conversationId => {
+        this.leaveWhiteboard(conversationId);
+      });
+      this.activeWhiteboards.clear();
     });
 
     this.socket.on('connect_error', (error) => {
@@ -43,6 +65,31 @@ class ChatWebSocketClient {
       this.trigger('connection_error', error);
     });
 
+    // Reconnection events
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log('Reconnected to chat server, attempt:', attemptNumber);
+      this.trigger('reconnected', attemptNumber);
+      
+      // Re-join conversations and whiteboards
+      this.joinUserConversations();
+      this.activeWhiteboards.forEach(conversationId => {
+        this.joinWhiteboard(conversationId);
+      });
+    });
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log('Reconnection attempt:', attemptNumber);
+      this.reconnectAttempts = attemptNumber;
+      this.trigger('reconnect_attempt', attemptNumber);
+    });
+
+    this.socket.on('reconnect_failed', () => {
+      console.error('Reconnection failed after all attempts');
+      this.trigger('reconnect_failed');
+    });
+
+    // ========== CHAT EVENTS ==========
+    
     // User status events
     this.socket.on('user_online', (data) => {
       console.log(`User ${data.user_id} is now online`);
@@ -77,7 +124,7 @@ class ChatWebSocketClient {
 
     this.socket.on('mark_message_read', (data) => {
       console.log('Message read:', data);
-      this.trigger('message_read', data);
+      this.trigger('mark_message_read', data);
     });
 
     // Typing events
@@ -97,7 +144,7 @@ class ChatWebSocketClient {
       this.trigger('conversation_updated', data);
     });
 
-    // Participant events - ADDED: Missing event handlers
+    // Participant events
     this.socket.on('participant_added', (data) => {
       console.log('Participant added:', data);
       this.trigger('participant_added', data);
@@ -117,18 +164,85 @@ class ChatWebSocketClient {
       console.log('Removed from conversation:', data);
       this.trigger('removed_from_conversation', data);
     });
-  }
 
-  // Join all user's conversation rooms
-  joinUserConversations() {
-    this.socket.emit('join_user_conversations', {
-      user_id: this.userId
+    // ========== WHITEBOARD EVENTS ==========
+    
+    // Whiteboard drawing events
+    this.socket.on('whiteboard_image', (data) => {
+      console.log('Whiteboard drawing received:', data);
+      this.trigger('whiteboard_image', data);
+    });
+
+    this.socket.on('whiteboard_cleared', (data) => {
+      console.log('Whiteboard cleared:', data);
+      this.trigger('whiteboard_cleared', data);
+    });
+
+    this.socket.on('whiteboard_undo', (data) => {
+      console.log('Whiteboard undo:', data);
+      this.trigger('whiteboard_undo', data);
+    });
+
+    this.socket.on('whiteboard_redo', (data) => {
+      console.log('Whiteboard redo:', data);
+      this.trigger('whiteboard_redo', data);
+    });
+
+    // Whiteboard user events
+    this.socket.on('user_joined_whiteboard', (data) => {
+      console.log(`User ${data.user_name} joined whiteboard`);
+      this.trigger('user_joined_whiteboard', data);
+    });
+
+    this.socket.on('user_left_whiteboard', (data) => {
+      console.log(`User ${data.user_name} left whiteboard`);
+      this.trigger('user_left_whiteboard', data);
+    });
+
+    this.socket.on('active_whiteboard_users', (data) => {
+      console.log('Active whiteboard users:', data.active_users);
+      this.trigger('active_whiteboard_users', data);
+    });
+
+    // Error event (for custom emits)
+    this.socket.on('error', (error) => {
+      console.error('Socket error:', error);
+      this.trigger('error', error);
+    });
+    
+    
+    this.socket.on('user_cursor_moved', (data) => {
+      console.log('User cursor moved:', data);
+      this.trigger('user_cursor_moved', data);
     });
   }
 
+  // ========== CHAT METHODS ==========
+  
+  // Join all user's conversation rooms
+  joinUserConversations(maxRetries = 3) {
+    const attemptJoin = (attempt = 1) => {
+        return this.emitWithCallback('join_user_conversations', {
+            user_id: this.userId
+        }).catch(error => {
+            if (attempt < maxRetries && error.message.includes('Socket not ready')) {
+                console.log(`Attempt ${attempt} failed, retrying in 200ms...`);
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        resolve(attemptJoin(attempt + 1));
+                    }, 200);
+                });
+            }
+            throw error;
+        });
+    };
+    
+    return attemptJoin();
+  } 
+
   // Join a specific conversation room
   joinConversation(conversationId) {
-    this.socket.emit('join_conversation', {
+    return this.emitWithCallback('join_conversation', {
       conversation_id: conversationId,
       user_id: this.userId
     });
@@ -136,15 +250,27 @@ class ChatWebSocketClient {
 
   // Leave a conversation room
   leaveConversation(conversationId) {
-    this.socket.emit('leave_conversation', {
+    return this.emitWithCallback('leave_conversation', {
       conversation_id: conversationId,
       user_id: this.userId
     });
   }
 
+  // Send a new message
+  sendMessage(conversationId, content, messageType = 'text', metadata = {}, replyToId = null) {
+    return this.emitWithCallback('send_message', {
+      conversation_id: conversationId,
+      user_id: this.userId,
+      content: content,
+      message_type: messageType,
+      metadata: metadata,
+      reply_to_id: replyToId
+    });
+  }
+
   // Start typing indicator
   startTyping(conversationId) {
-    this.socket.emit('start_typing', {
+    return this.emitWithCallback('start_typing', {
       conversation_id: conversationId,
       user_id: this.userId
     });
@@ -152,20 +278,22 @@ class ChatWebSocketClient {
 
   // Stop typing indicator
   stopTyping(conversationId) {
-    this.socket.emit('stop_typing', {
+    return this.emitWithCallback('stop_typing', {
       conversation_id: conversationId,
       user_id: this.userId
     });
   }
 
-  // Auto-stop typing after delay
+  // Auto-stop typing after delay with improved handling
   handleTyping(conversationId, delay = 3000) {
-    this.startTyping(conversationId);
-
     // Clear existing timeout
     if (this.typingTimeouts[conversationId]) {
       clearTimeout(this.typingTimeouts[conversationId]);
+      delete this.typingTimeouts[conversationId];
     }
+
+    // Start typing
+    this.startTyping(conversationId);
 
     // Set new timeout to stop typing
     this.typingTimeouts[conversationId] = setTimeout(() => {
@@ -176,10 +304,149 @@ class ChatWebSocketClient {
 
   // Mark message as read
   markMessageRead(conversationId, messageId) {
-    this.socket.emit('mark_message_read', {
+    return this.emitWithCallback('mark_message_read', {
       conversation_id: conversationId,
       user_id: this.userId,
       message_id: messageId
+    });
+  }
+
+  // Edit a message
+  editMessage(conversationId, messageId, newContent, metadata = {}) {
+    return this.emitWithCallback('edit_message', {
+      conversation_id: conversationId,
+      user_id: this.userId,
+      message_id: messageId,
+      content: newContent,
+      metadata: metadata
+    });
+  }
+
+  // Delete a message
+  deleteMessage(conversationId, messageId) {
+    return this.emitWithCallback('delete_message', {
+      conversation_id: conversationId,
+      user_id: this.userId,
+      message_id: messageId
+    });
+  }
+
+  // ========== WHITEBOARD METHODS ==========
+  
+  // Join a whiteboard session
+  joinWhiteboard(conversationId) {
+    this.activeWhiteboards.add(conversationId);
+    return this.emitWithCallback('join_whiteboard', {
+      conversation_id: conversationId,
+      user_id: this.userId
+    });
+  }
+
+  // Leave a whiteboard session
+  leaveWhiteboard(conversationId) {
+    this.activeWhiteboards.delete(conversationId);
+    return this.emitWithCallback('leave_whiteboard', {
+      conversation_id: conversationId,
+      user_id: this.userId
+    });
+  }
+
+  // Send whiteboard drawing data (optimized with debouncing)
+  sendWhiteboardDrawing(conversationId, imageData, debounceDelay = 100) {
+    // Clear existing timeout
+    if (this.whiteboardTimeouts[conversationId]) {
+      clearTimeout(this.whiteboardTimeouts[conversationId]);
+    }
+
+    // Debounce drawing events to prevent flooding
+    return new Promise((resolve, reject) => {
+      this.whiteboardTimeouts[conversationId] = setTimeout(() => {
+        this.emitWithCallback('whiteboard_drawing', {
+          conversation_id: conversationId,
+          user_id: this.userId,
+          image_data: imageData
+        })
+        .then(resolve)
+        .catch(reject);
+        
+        delete this.whiteboardTimeouts[conversationId];
+      }, debounceDelay);
+    });
+  }
+
+  // Clear whiteboard
+  clearWhiteboard(conversationId) {
+    return this.emitWithCallback('whiteboard_clear', {
+      conversation_id: conversationId,
+      user_id: this.userId
+    });
+  }
+
+  // Whiteboard undo
+  undoWhiteboard(conversationId) {
+    return this.emitWithCallback('whiteboard_undo', {
+      conversation_id: conversationId,
+      user_id: this.userId
+    });
+  }
+
+  // Whiteboard redo
+  redoWhiteboard(conversationId) {
+    return this.emitWithCallback('whiteboard_redo', {
+      conversation_id: conversationId,
+      user_id: this.userId
+    });
+  }
+
+  // Get active whiteboard users
+  getWhiteboardUsers(conversationId) {
+    return this.emitWithCallback('get_whiteboard_users', {
+      conversation_id: conversationId
+    });
+  }
+
+  // Send drawing in real-time (for smooth drawing)
+  sendDrawingData(conversationId, drawingData) {
+    // For real-time drawing, send immediately without debouncing
+    return this.emitWithCallback('whiteboard_drawing', {
+      conversation_id: conversationId,
+      user_id: this.userId,
+      image_data: drawingData
+    });
+  }
+
+  // Batch send multiple drawing operations
+  sendBatchDrawings(conversationId, drawingsArray) {
+    return this.emitWithCallback('whiteboard_batch_drawings', {
+      conversation_id: conversationId,
+      user_id: this.userId,
+      drawings: drawingsArray
+    });
+  }
+
+  // ========== UTILITY METHODS ==========
+  
+  // Utility method for emitting with optional callback
+  emitWithCallback(event, data, callback) {
+    if (!this.isConnected()) {
+      console.error(`Cannot emit ${event}: Not connected`);
+      const error = new Error('Not connected to server');
+      if (callback) callback(error);
+      return Promise.reject(error);
+    }
+
+    return new Promise((resolve, reject) => {
+      this.socket.emit(event, data, (response) => {
+        if (response && response.error) {
+          console.error(`Error in ${event}:`, response.error);
+          const error = new Error(response.error || 'Unknown error');
+          reject(error);
+          if (callback) callback(error);
+        } else {
+          resolve(response);
+          if (callback) callback(null, response);
+        }
+      });
     });
   }
 
@@ -200,11 +467,20 @@ class ChatWebSocketClient {
     );
   }
 
+  // Remove all handlers for an event
+  offAll(event) {
+    if (this.eventHandlers[event]) {
+      this.eventHandlers[event] = [];
+    }
+  }
+
   // Trigger event handlers
   trigger(event, data) {
     if (!this.eventHandlers[event]) return;
     
-    this.eventHandlers[event].forEach(handler => {
+    // Create a copy of handlers to avoid issues if handlers are removed during execution
+    const handlers = [...this.eventHandlers[event]];
+    handlers.forEach(handler => {
       try {
         handler(data);
       } catch (error) {
@@ -216,20 +492,72 @@ class ChatWebSocketClient {
   // Disconnect from server
   disconnect() {
     if (this.socket) {
+      // Leave all whiteboards before disconnecting
+      this.activeWhiteboards.forEach(conversationId => {
+        this.leaveWhiteboard(conversationId);
+      });
+      this.activeWhiteboards.clear();
+      
       this.socket.disconnect();
       this.socket = null;
     }
     
-    // Clear all typing timeouts
-    Object.values(this.typingTimeouts).forEach(timeout => {
-      clearTimeout(timeout);
+    // Clear all timeouts
+    Object.keys(this.typingTimeouts).forEach(conversationId => {
+      clearTimeout(this.typingTimeouts[conversationId]);
     });
     this.typingTimeouts = {};
+    
+    Object.keys(this.whiteboardTimeouts).forEach(conversationId => {
+      clearTimeout(this.whiteboardTimeouts[conversationId]);
+    });
+    this.whiteboardTimeouts = {};
   }
 
   // Check if connected
   isConnected() {
     return this.socket && this.socket.connected;
+  }
+
+  // Get socket ID
+  getSocketId() {
+    return this.socket ? this.socket.id : null;
+  }
+
+  // Manual reconnect
+  reconnect() {
+    if (this.socket) {
+      this.socket.connect();
+    }
+  }
+
+  // Check if user is in a specific whiteboard
+  isInWhiteboard(conversationId) {
+    return this.activeWhiteboards.has(conversationId);
+  }
+
+  // Get list of active whiteboards
+  getActiveWhiteboards() {
+    return Array.from(this.activeWhiteboards);
+  }
+
+  // Set user status (online/away/busy)
+  setUserStatus(status) {
+    return this.emitWithCallback('set_user_status', {
+      user_id: this.userId,
+      status: status
+    });
+  }
+
+  // Get connection statistics
+  getConnectionStats() {
+    return {
+      isConnected: this.isConnected(),
+      socketId: this.getSocketId(),
+      reconnectAttempts: this.reconnectAttempts,
+      activeWhiteboards: this.getActiveWhiteboards(),
+      serverUrl: this.serverUrl
+    };
   }
 }
 

@@ -302,7 +302,7 @@ const FloatingChatbox = () => {
   }, [isOpen, messages]);
 
   return (
-    <div className="min-h-screenp-8">
+    <div className="min-h-screenp-8 option-b option">
       
 
       {isOpen && (
@@ -316,7 +316,7 @@ const FloatingChatbox = () => {
       
       {!isOpen && <FloatingButton onClick={handleToggle} hasUnread={hasUnread} />}
 
-      <style jsx>{`
+      <style >{`
         @keyframes slideUp {
           from {
             opacity: 0;

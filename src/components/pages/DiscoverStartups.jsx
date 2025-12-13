@@ -970,7 +970,7 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
 
 // Skeleton Loading Component
 const StartupCardSkeleton = () => (
-  <Card className="p-6 border-gray-700 bg-gray-800/5 backdrop-blur-sm animate-pulse">
+  <Card className="p-6 border-gray-700 ">
     <div className="flex items-start gap-4 mb-4">
       <div className="w-14 h-14 bg-gray-700 rounded-xl shrink-0"></div>
       <div className="flex-1 space-y-2">

@@ -213,7 +213,9 @@ export default function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) return;
-
+    
+    alert(JSON.stringify(formData));
+    
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/register`, {
@@ -622,7 +624,7 @@ export default function SignUp() {
                 </div>
                 <PasswordStrengthIndicator
                   value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
+                  onChange={(value) => handleInputChange("password", value)}
                   // onStrengthChange={setStrength}
                   label="Password *"
                   showScore={true}

@@ -1,18 +1,22 @@
-import React, { useState } from 'react'
-import { Search, ChevronDown, ChevronUp, Book, MessageSquare, Phone, Mail, FileText, Video, Users, ArrowRight, HelpCircle } from 'lucide-react'
-import { Button } from '../ui/button'
-import { Input } from '../ui/input'
-import { Textarea } from '../ui/textarea'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card'
-import { Alert, AlertDescription } from '../ui/alert'
-import { Label } from '../ui/label'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip'
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion'
-import StarBorder from '../ui/StarBorder'
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Search, Book, MessageSquare, Phone, Mail, FileText, Video, Users, 
+  ArrowRight, HelpCircle, ChevronDown, Sparkles, Zap, Shield, Clock
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Button } from '../ui/button';
+
+const ShinyText = ({ text, className = "" }) => (
+  <span className={`inline-block bg-gradient-to-r from-blue-300 via-purple-300 to-blue-300 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%] ${className}`}>
+    {text}
+  </span>
+);
 
 const Help = () => {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' })
+  const [searchQuery, setSearchQuery] = useState('');
+  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+  const [expandedFaq, setExpandedFaq] = useState(null);
 
   const faqs = [
     {
@@ -35,259 +39,456 @@ const Help = () => {
       question: 'What are the different project stages?',
       answer: 'Projects progress through five stages: Idea Stage (conceptualization), MVP Stage (minimum viable product), Growth Stage (user acquisition), Scale Stage (expansion), and Research Stage (market analysis). Each stage has specific KPIs and success metrics.'
     }
-  ]
+  ];
 
   const guides = [
     {
       id: 1,
       title: 'Getting Started Guide',
-      icon: <Book className="h-5 w-5 text-blue-600" />,
+      icon: <img src="/roadmap.png" alt="" className="w-10 h-10 text-white"/>,
       description: 'Learn the fundamentals of our platform',
       link: '/getting-started',
-      category: 'Basics'
+      category: 'Basics',
+      color: 'from-blue-500 to-cyan-500'
     },
     {
       id: 2,
       title: 'Project Management',
-      icon: <FileText className="h-5 w-5 text-blue-600" />,
+      icon: <img src="/project.png" alt="" className="w-10 h-10 text-white"/>,
       description: 'Advanced project management techniques',
       link: '/project-management',
-      category: 'Advanced'
+      category: 'Advanced',
+      color: 'from-purple-500 to-pink-500'
     },
     {
       id: 3,
       title: 'Team Collaboration',
-      icon: <Users className="h-5 w-5 text-blue-600" />,
+      icon: <img src="/team.png" alt="" className="w-10 h-10 text-white"/>,
       description: 'Optimize team workflow and communication',
       link: '/team-collaboration',
-      category: 'Team'
+      category: 'Team',
+      color: 'from-green-500 to-emerald-500'
     },
     {
       id: 4,
       title: 'Video Tutorials',
-      icon: <Video className="h-5 w-5 text-blue-600" />,
+      icon: <img src="/video.png" alt="" className="w-10 h-10 text-white"/>,
       description: 'Comprehensive step-by-step video guides',
       link: '/video-tutorials',
-      category: 'Learning'
+      category: 'Learning',
+      color: 'from-orange-500 to-red-500'
     }
-  ]
+  ];
 
   const supportOptions = [
     {
       id: 1,
       title: 'Live Chat Support',
-      icon: <MessageSquare className="h-5 w-5" />,
+      icon: <img src="/message_2.png" alt="message" className="w-16 h-16 text-white"/>,
       description: 'Instant assistance from our support team',
-      details: 'Available 24/7 for premium users, 9AM-6PM EST for all users',
-      buttonText: 'Start Chat',
-      action: () => console.log('Start chat')
+      details: 'Available 24/7 for premium users',
+      badge: 'Instant',
+      color: 'from-blue-500 to-cyan-500'
     },
     {
       id: 2,
       title: 'Phone Support',
-      icon: <Phone className="h-5 w-5" />,
+      icon: <img src="/call.png" alt="call" className="w-16 h-16 text-white"/>,
       description: 'Direct conversation with our experts',
-      details: '+1 (555) 123-4567 • Mon-Fri 8AM-8PM EST',
-      buttonText: 'Call Now',
-      action: () => console.log('Initiate call')
+      details: '+48 507 351 830 • Mon-Fri 8AM-8PM EST',
+      badge: 'Priority',
+      color: 'from-purple-500 to-pink-500'
     },
     {
       id: 3,
       title: 'Email Support',
-      icon: <Mail className="h-5 w-5" />,
+      icon: <img src="/email.png" alt="email" className="w-16 h-16 text-white"/>,
       description: 'Detailed technical assistance',
-      details: 'support@example.com • Response within 24 hours',
-      buttonText: 'Send Email',
-      action: () => console.log('Open email')
+      details: 'support@sfcollab.com • Response within 24 hours',
+      badge: '24h Response',
+      color: 'from-green-500 to-emerald-500'
     }
-  ]
+  ];
 
   const handleSubmitContact = (e) => {
-    e.preventDefault()
-    console.log('Contact form submitted:', contactForm)
-    // Reset form
-    setContactForm({ name: '', email: '', message: '' })
-  }
+    e.preventDefault();
+    console.log('Contact form submitted:', contactForm);
+    setContactForm({ name: '', email: '', message: '' });
+  };
 
   return (
-    <div className="min-h-screen  text-white">
-      {/* Header Section */}
-      <div className=" border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="flex items-center gap-3 mb-4">
-            <HelpCircle className="h-8 w-8 text-blue-600" />
-            <h1 className="text-4xl font-bold text-white">Help Center</h1>
+    <div className="min-h-screen ">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        
+        {/* Header Section */}
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.1 }}
+          className="text-center mb-16 relative overflow-hidden"
+        >
+          {/* Background Elements */}
+          <div className="absolute inset-0 overflow-hidden">
+            <motion.div
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute -top-20 left-1/4 w-40 h-40 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl"
+            />
+            <motion.div
+              animate={{
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4],
+              }}
+              transition={{
+                duration: 10,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute -top-10 right-1/4 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
+            />
           </div>
-          <p className="text-lg text-gray-600 mb-8 max-w-3xl">
+
+          {/* Badge */}
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6 py-2 backdrop-blur-sm mb-6"
+          >
+            <HelpCircle className="w-4 h-4 text-blue-400" />
+            <span className="text-xs font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
+              24/7 Support Available
+            </span>
+          </motion.div>
+
+          {/* Main Heading */}
+          <motion.h1
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
+          >
+            <ShinyText text="How Can We" />
+            <br />
+            <ShinyText text="Help You Today?" className="custom-title" />
+          </motion.h1>
+
+          <motion.p
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto"
+          >
             Find answers, guides, and resources to help you get the most out of our platform.
-          </p>
-          
-          <div className="relative max-w-2xl">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
+            Our support team is here to assist you every step of the way.
+          </motion.p>
+
+          {/* Search Bar */}
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="max-w-2xl mx-auto relative"
+          >
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
               type="text"
               placeholder="Search for articles, guides, or FAQs..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 py-6 text-base bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+              className="w-full pl-12 pr-4 py-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
             />
-          </div>
-        </div>
-      </div>
+          </motion.div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Stats */}
+          <motion.div
+            initial={{ y: 30, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.6 }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-12 max-w-3xl mx-auto"
+          >
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-1">500+</div>
+              <div className="text-sm text-gray-400">Help Articles</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-1">24/7</div>
+              <div className="text-sm text-gray-400">Support Hours</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-1">&lt;2min</div>
+              <div className="text-sm text-gray-400">Avg Response</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-white mb-1">98%</div>
+              <div className="text-sm text-gray-400">Satisfaction Rate</div>
+            </div>
+          </motion.div>
+        </motion.div>
+
         {/* Quick Guides Section */}
-        <section className="mb-16">
+        <motion.section
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mb-20"
+        >
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-white">Documentation & Guides</h2>
-              <p className="text-gray-600 mt-2">Comprehensive resources to help you succeed</p>
+              <h2 className="text-3xl font-bold text-white mb-2">Documentation & Guides</h2>
+              <p className="text-gray-400">Comprehensive resources to help you succeed</p>
             </div>
-            <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50">
-              View All Guides
-            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {guides.map((guide) => (
+            {guides.map((guide, index) => {
+              const Icon = guide.icon;
+              return (
+                <Link
+                  key={guide.id}
+                  to={guide.link}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                  className="group block"
+                >
+                  <div className="relative h-full p-6 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 overflow-hidden">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${guide.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                    
+                    <div className="relative">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`p-3`}>
+                          {Icon}
+                        </div>
+                        <span className="text-xs font-medium px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-full">
+                          {guide.category}
+                        </span>
+                      </div>
 
-              <Card key={guide.id} className="hover:shadow-lg border-0 rounded-md hover:bg-white/25 hover:scale-105 m-2 transition-all duration-200 bg-white/20 ">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="p-2 bg-blue-50 rounded-lg">
-                      {guide.icon}
+                      <h3 className="text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors">
+                        {guide.title}
+                      </h3>
+                      <p className="text-sm text-gray-400 mb-4">{guide.description}</p>
+
+                      <div className="flex items-center text-blue-400 text-sm font-medium group-hover:gap-2 transition-all">
+                        <span>Read Guide</span>
+                        <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+                      </div>
                     </div>
-                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                      {guide.category}
-                    </span>
                   </div>
-                  <CardTitle className="text-lg mt-4 text-white">{guide.title}</CardTitle>
-                  <CardDescription>{guide.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button variant="ghost" className="w-full justify-between text-blue-600 hover:text-blue-700 hover:bg-blue-50">
-                    Read Guide
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                </Link>
+              );
+            })}
           </div>
-        </section>
+        </motion.section>
 
         {/* FAQ Section */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold text-white mb-8">Frequently Asked Questions</h2>
+        <motion.section
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.9 }}
+          className="mb-20"
+        >
+          <h2 className="text-3xl font-bold text-white mb-8">Frequently Asked Questions</h2>
           
-          <Accordion type="single" collapsible className="space-y-4">
-            {faqs.map((faq) => (
-              <AccordionItem key={faq.id} value={faq.id} className="border border-gray-200 rounded-lg ">
-                <AccordionTrigger className="hover:no-underline hover:bg-gray-50 hover:text-black group px-0 py-6">
-                  <span className="text-left font-semibold px-4">{faq.question}</span>
-                </AccordionTrigger>
-                <AccordionContent className="pb-6 pt-0">
-                  <p className="text-gray-600 px-4">{faq.answer}</p>
-                  <Button variant="link" className="px-4 text-blue-600 mt-4">
-                    Read more about this topic
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
+          <div className="space-y-4">
+            {faqs.map((faq, index) => (
+              <motion.div
+                key={faq.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.0 + index * 0.1 }}
+                className="bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl overflow-hidden hover:border-gray-600 transition-all"
+              >
+                <button
+                  onClick={() => setExpandedFaq(expandedFaq === faq.id ? null : faq.id)}
+                  className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-gray-800/50 transition-colors"
+                >
+                  <span className="text-lg font-semibold text-white pr-4">{faq.question}</span>
+                  <motion.div
+                    animate={{ rotate: expandedFaq === faq.id ? 180 : 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  </motion.div>
+                </button>
+                
+                <AnimatePresence>
+                  {expandedFaq === faq.id && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-5 pt-0">
+                        <p className="text-gray-300 leading-relaxed">{faq.answer}</p>
+                        <button className="mt-4 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1">
+                          Read more about this topic
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             ))}
-          </Accordion>
-        </section>
+          </div>
+        </motion.section>
 
         {/* Support Options */}
-        <section className="mb-16">
-          <h2 className="text-2xl font-bold text-white mb-2">Contact Support</h2>
-          <p className="text-gray-600 mb-8">Get help from our dedicated support team</p>
+        <motion.section
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 1.1 }}
+          className="mb-20"
+        >
+          <h2 className="text-3xl font-bold text-white mb-2">Contact Support</h2>
+          <p className="text-gray-400 mb-8">Get help from our dedicated support team</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {supportOptions.map((option) => (
-              <Card key={option.id} className="text-center hover:shadow-lg border-0 rounded-md hover:bg-white/25 hover:scale-105 m-2 transition-all duration-200 bg-white/20 ">
-                <CardHeader>
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 text-blue-600 mb-4">
-                    {option.icon}
+            {supportOptions.map((option, index) => {
+              const Icon = option.icon;
+              return (
+                <motion.div
+                  key={option.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1.2 + index * 0.1 }}
+                  className="group relative p-6 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 text-center overflow-hidden"
+                >
+                  <div className={`absolute inset-0 bg-gradient-to-br ${option.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
+                  
+                  <div className="relative">
+                    <div className={`inline-flex items-center justify-center w-16 h-16 mb-4`}>
+                      {Icon}
+                    </div>
+
+                    <div className="mb-4">
+                      <span className="inline-block px-3 py-1 bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-medium rounded-full mb-3">
+                        {option.badge}
+                      </span>
+                      <h3 className="text-xl font-semibold text-white mb-2">{option.title}</h3>
+                      <p className="text-gray-400 mb-2">{option.description}</p>
+                      <p className="text-sm text-gray-500">{option.details}</p>
+                    </div>
+
+                    <Button className="w-full px-4 py-3 bg-white text-black hover:bg-white hover:shadow-[0px_0px_8px_white] font-medium rounded-lg transition-all duration-300 transform group-hover:scale-102 cursor-pointer">
+                      Get Started
+                    </Button>
                   </div>
-                  <CardTitle className={'text-white'}>{option.title}</CardTitle>
-                  <CardDescription className={'text-white/70'}>{option.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-gray-200 mb-4">{option.details}</p>
-                  <Button onClick={option.action} className="w-full bg-blue-600 hover:bg-blue-700">
-                    {option.buttonText}
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* Contact Form */}
-          <Card className=" hover:shadow-lg border-0 rounded-md hover:bg-white/25  m-2 transition-all duration-200 bg-white/20 ">
-            <CardHeader>
-              <CardTitle className="text-xl text-white">Send us a message</CardTitle>
-              <CardDescription className='text-gray-400'>
-                Can't find what you're looking for? Send us a detailed message and we'll get back to you within 24 hours.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmitContact} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-white">Full Name *</Label>
-                    <Input
-                      id="name"
-                      placeholder="John Doe"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="john@example.com"
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="message" className="text-white">How can we help you? *</Label>
-                  <Textarea
-                    id="message"
-                    placeholder="Describe your issue or question in detail..."
-                    rows={4}
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.5 }}
+            className="p-8 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700"
+          >
+            <h3 className="text-2xl font-bold text-white mb-2">Send us a message</h3>
+            <p className="text-gray-400 mb-6">
+              Can't find what you're looking for? Send us a detailed message and we'll get back to you within 24 hours.
+            </p>
+
+            <form onSubmit={handleSubmitContact} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="John Doe"
+                    value={contactForm.name}
+                    onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
                     required
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
                   />
                 </div>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  Submit Message
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-        </section>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Email Address *
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="john@example.com"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                    required
+                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  How can we help you? *
+                </label>
+                <textarea
+                  placeholder="Describe your issue or question in detail..."
+                  rows={4}
+                  value={contactForm.message}
+                  onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                  required
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all resize-none"
+                />
+              </div>
+              <Button
+                type="submit"
+                className="px-6 py-3 hover:shadow-[0px_0px_8px_white] cursor-pointer bg-white text-black hover:bg-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105"
+              >
+                Submit Message
+              </Button>
+            </form>
+          </motion.div>
+        </motion.section>
 
         {/* Alert Banner */}
-        <Alert className="rounded-md bg-white/20 hover:bg-white/25  border-blue-200">
-          <AlertDescription className="text-white">
-            <strong>Need urgent assistance?</strong> Our priority support team is available 24/7 for enterprise customers. 
-            <Button variant="link" className="text-gray-300 hover:text-blue-500 p-0 ml-2 h-auto">
-              Learn about enterprise support
-            </Button>
-          </AlertDescription>
-        </Alert>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.6 }}
+          className="p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl backdrop-blur-sm"
+        >
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-blue-500/20 rounded-lg">
+              <Sparkles className="w-5 h-5 text-blue-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white mb-1">
+                <strong>Need urgent assistance?</strong> Our priority support team is available 24/7 for enterprise customers.
+              </p>
+              <button className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1 mt-2">
+                Learn about enterprise support
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </motion.div>
       </div>
-    </div>
-  )
-}
 
-export default Help
+      <style >{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        .animate-shimmer {
+          animation: shimmer 3s linear infinite;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Help;

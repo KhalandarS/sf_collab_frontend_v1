@@ -9,7 +9,7 @@ export async function loginRequest(credentials) {
     body: JSON.stringify(credentials),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Login failed');
+  if (!res.ok) throw new Error(data.message || 'Login failed API');
   return data;
 }
 
