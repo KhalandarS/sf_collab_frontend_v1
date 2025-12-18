@@ -250,7 +250,7 @@ import AccessRequests from "./components/auth/admin/AccessRequests";
 import UserPermissions from "./components/auth/admin/UserPermissions";
 import PermissionManagement from "./components/auth/admin/PermissionManagement";
 //!
-import Pricing from "./components/pages/pricing.jsx";
+import Pricing from "./components/pages/Pricing.jsx";
 import MentorshipOverview from "./components/pages/Mentorship/MentorshipOverview.jsx";
 import MentorshipPrograms from "./components/pages/Mentorship/MentorshipPrograms.jsx";
 import MentorshipRequests from "./components/pages/Mentorship/MentorshipRequests.jsx";
