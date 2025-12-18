@@ -71,7 +71,7 @@ const convertTasksToFeatures = (tasks) => {
     column: columns.find(col => col.backendStatus === task.status)?.id || columns[0].id,
     status: statuses.find(status => status.backendStatus === task.status) || statuses[0],
     priority: task.priority,
-    owner: users.find(user => user.id === task.assigned_to?.toString()) || faker.helpers.arrayElement(users),
+    owner: users.find(user => user?.id === task.assigned_to?.toString()) || faker.helpers.arrayElement(users),
     progress_percentage: task.progress_percentage || 0,
     tags: task.tags || [],
     labels: task.labels || [],

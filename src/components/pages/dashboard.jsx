@@ -54,7 +54,6 @@ const Dashboard = () => {
     // Only run this when the user changes
     if (user) {
       setUserData(user);
-      // alert(`Welcome back, ${user.firstName}!`);
     }
   }, [user]);
   

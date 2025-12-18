@@ -615,16 +615,16 @@ const StartUpdetails = () => {
                     >
                       <div className="flex items-start gap-4 mb-4">
                         <img
-                          src={item.user.avatar || allimg.profileImg}
-                          alt={item.user.name}
+                          src={item.user?.avatar || allimg.profileImg}
+                          alt={item.user?.name}
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full"
                         />
                         <div>
                           <h3 className="font-medium text-sm sm:text-base">
-                            {item.user.name}
+                            {item.user?.name}
                           </h3>
                           <p className="text-gray-400 text-xs sm:text-sm">
-                            {item.user.role}
+                            {item.user?.role}
                           </p>
                         </div>
                         <div className="ml-auto flex items-center gap-1">

@@ -246,7 +246,7 @@ export default function Calendar() {
     try {
       const eventData = {
         ...eventForm,
-        user_id: user.id,
+        user_id: user?.id,
         start_date: new Date(eventForm.start_date).toISOString(),
         end_date: eventForm.end_date ? new Date(eventForm.end_date).toISOString() : null
       }

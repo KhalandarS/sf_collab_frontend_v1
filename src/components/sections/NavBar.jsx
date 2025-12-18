@@ -55,7 +55,7 @@ const LogoutIcon = () => (
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 
-const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
+const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   
   const [notifications, setNotifications] = useState([]);
@@ -147,13 +147,13 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
       
       // The API returns { data: { notifications: [...] } }
       const notificationsData = result.data?.notifications || [];
-      setNotifications(notificationsData.filter(notif =>notif.isRead !== true)?.map((notif)=>({ id: notif?.id, text: notif?.message, time: notif?.createdAt, unread: notif?.isRead, type:notif?.type })) || []);
+      setNotifications(notificationsData.filter(notif =>notif.isRead !== true)?.map((notif)=>({ id: notif?.id, title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead, type:notif?.type })) || []);
       
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
       // Fallback to user relationships if API fails
       if (user?.relationships?.notifications) {
-        setNotifications(user.relationships.notifications?.filter(notif => notif.isRead !== true)?.map((notif)=>({ id: notif?.id, text: notif?.message, time: notif?.createdAt, unread: notif?.isRead , type:notif?.type})) || []);
+        setNotifications(user?.relationships?.notifications?.filter(notif => notif.isRead !== true)?.map((notif)=>({ id: notif?.id,title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead , type:notif?.type})) || []);
       }
     }
   };
@@ -225,7 +225,7 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
                   glareSize={300}
                   transitionDuration={800}
                   playOnce={true}
-                  style={{background:"rgba(58, 58, 58, 0.283)",backdropFilter:" blur(10px)"}}
+                  style={{background:"rgba(58, 58, 58, 0.600)",backdropFilter:" blur(10px)"}}
                 >
                   <div style={{borderRadius:' 15px'}} className="  w-80 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   {/* Header */}
@@ -250,6 +250,9 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
                             <BellIcon />
                           </div>
                           <div className="flex-1 min-w-0">
+                            <p className={`text-md  text-white font-medium`}>
+                              {notif.title}
+                            </p>
                             <p className={`text-sm ${notif.unread ? 'text-white font-medium' : 'text-slate-400'}`}>
                               {notif.text}
                             </p>
@@ -315,16 +318,18 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
                   <div className="p-4 border-b border-slate-700/50">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-slate-700/50">
-                      <img
-                        className="rounded-full h-full w-full"
-                        src={
-                          user?.profile?.picture
-                            ? (user.profile.picture.startsWith("http") || user.profile.picture.startsWith("https"))
-                              ? user.profile.picture
-                              : `${BASE_URL}/${user.profile.picture}`
-                            : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" // fallback image
-                        }
-                      />
+                        <img
+                          className="rounded-full h-full w-full"
+                          src={
+                            user?.profile?.picture
+                              ? user.profile.picture.startsWith("http") || user.profile.picture.startsWith("https")
+                                ? user.profile.picture
+                                : user.profile.picture.startsWith("/uploads")
+                                  ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
+                                  : `${BASE_URL}/${user.profile.picture}`
+                              : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                          }
+                        />
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-white ">{user?.firstName} {user?.lastName}</p>
@@ -376,18 +381,18 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false }) => {
                 className="flex items-center gap-2.5 w-11 h-11  rounded-full bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-300 border border-slate-700/50 group"
               >
                 <div className="w-full h-full  transition-all">
-                <img
-                  className="rounded-full h-full w-full"
-                  alt="user"
-                  src={
-                    user?.profile?.picture
-                      ? user.profile.picture.startsWith("http")
-                        ? user.profile.picture
-                        : `${BASE_URL}/${user.profile.picture}`
-                      : "/default-avatar.png" // fallback image
-                  }
-                />
-
+                  <img
+                    className="rounded-full h-full w-full"
+                    src={
+                      user?.profile?.picture
+                        ? user.profile.picture.startsWith("http") || user.profile.picture.startsWith("https")
+                          ? user.profile.picture
+                          : user.profile.picture.startsWith("/uploads")
+                            ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
+                            : `${BASE_URL}/${user.profile.picture}`
+                        : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    }
+                  />
                 </div>
               </button>
             </Tippy>

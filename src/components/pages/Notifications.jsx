@@ -101,7 +101,7 @@ const Notifications = () => {
       // console.error("Failed to fetch notifications:", error);
       // Fallback to user relationships if API fails
       if (user?.relationships?.notifications) {
-        setNotifications(user.relationships.notifications);
+        setNotifications(user?.relationships?.notifications);
       }
     } finally {
       setLoading(false);
@@ -408,7 +408,7 @@ const Notifications = () => {
                   Mark All Read
                 </Button>
                 
-                <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
+                {/* <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
                   <DialogTrigger asChild>
                     <Button className="bg-gradient-to-r from-blue-300 to-purple-300 text-black hover:from-blue-400 hover:to-purple-400">
                       <Plus className="h-4 w-4 mr-2" />
@@ -476,7 +476,7 @@ const Notifications = () => {
                       </Button>
                     </DialogFooter>
                   </DialogContent>
-                </Dialog>
+                </Dialog> */}
               </div>
             </div>
           </CardContent>
@@ -687,7 +687,7 @@ const Notifications = () => {
                                         <DialogTitle>Notification Actions</DialogTitle>
                                       </DialogHeader>
                                       <div className="space-y-2">
-                                        <Button
+                                        {/* <Button
                                           variant="ghost"
                                           className="w-full justify-start text-blue-300 hover:bg-blue-500/20"
                                           onClick={() => {
@@ -697,7 +697,7 @@ const Notifications = () => {
                                         >
                                           <Edit className="h-4 w-4 mr-2" />
                                           Edit
-                                        </Button>
+                                        </Button> */}
                                         <Button
                                           variant="ghost"
                                           className="w-full justify-start text-purple-300 hover:bg-purple-500/20"
@@ -741,7 +741,7 @@ const Notifications = () => {
                                   {notification.user && (
                                     <div className="flex items-center gap-1">
                                       <User className="h-3 w-3" />
-                                      <span>{notification.user.firstName} {notification.user.lastName}</span>
+                                      <span>{notification.user?.firstName} {notification.user?.lastName}</span>
                                     </div>
                                   )}
                                 </div>

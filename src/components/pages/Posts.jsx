@@ -178,15 +178,15 @@ const LeftSidebar = () => {
         <CardContent className="p-4">
           <div className="space-y-4">
             {suggestions.map((user) => (
-              <div key={user.name} className="flex items-center justify-between">
+              <div key={user?.name} className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <Avatar className="w-8 h-8">
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>{user.name[0]}</AvatarFallback>
+                    <AvatarImage src={user?.avatar} />
+                    <AvatarFallback>{user?.name[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="text-sm font-medium text-white">{user.name}</p>
-                    <p className="text-xs text-zinc-400">{user.location}</p>
+                    <p className="text-sm font-medium text-white">{user?.name}</p>
+                    <p className="text-xs text-zinc-400">{user?.location}</p>
                   </div>
                 </div>
                 <Button size="sm" variant="outline" className="text-xs border-blue-400/50 text-blue-400 hover:bg-blue-500/20">

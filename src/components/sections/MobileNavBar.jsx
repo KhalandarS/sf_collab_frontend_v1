@@ -10,7 +10,7 @@ import {
 import { IoNotificationsOutline, IoNotifications } from "react-icons/io5";
 import { BsChatDots, BsChatDotsFill } from "react-icons/bs";
 
-const MobileNavBar = ({ isHidden = false }) => {
+const MobileNavBar = ({ isHidden = false, isAdmin }) => {
   const location = useLocation();
 
   const navItems = [
@@ -43,7 +43,7 @@ const MobileNavBar = ({ isHidden = false }) => {
       isActive: location.pathname === "/notifications",
     },
     {
-      path: "/messages",
+      path: "/chat",
       icon: BsChatDots,
       activeIcon: BsChatDotsFill,
       label: "Messages",
@@ -71,6 +71,7 @@ const MobileNavBar = ({ isHidden = false }) => {
             </Link>
           );
         })}
+        
       </div>
     </div>
   );

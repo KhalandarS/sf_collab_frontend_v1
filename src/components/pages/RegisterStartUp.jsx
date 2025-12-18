@@ -172,9 +172,9 @@ export default function RegisterStartUp() {
       const user = JSON.parse(userData);
       setFormData(prev => ({
         ...prev,
-        creator_first_name: user.first_name || user.firstName || "",
-        creator_last_name: user.last_name || user.lastName || "",
-        creator_email: user.email || ""
+        creator_first_name: user?.first_name || user?.firstName || "",
+        creator_last_name: user?.last_name || user?.lastName || "",
+        creator_email: user?.email || ""
       }));
     }
   }, []);

@@ -294,10 +294,10 @@ export default function ProjectDetails() {
               <div className="space-y-4">
                 {goal.comments.map((c)=> (
                   <div key={c.id} className="flex gap-4">
-                    <img src={c.user.avatar} alt={c.user.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={c.user?.avatar} alt={c.user?.name} className="w-10 h-10 rounded-full object-cover" />
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
-                        <div className="text-sm font-medium">{c.user.name}</div>
+                        <div className="text-sm font-medium">{c.user?.name}</div>
                         <div className="text-xs text-gray-400">{c.created_at}</div>
                       </div>
                       <div className="text-sm text-gray-300">{c.message}</div>

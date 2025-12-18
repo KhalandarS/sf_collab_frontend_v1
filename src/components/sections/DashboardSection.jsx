@@ -11,8 +11,8 @@ const DashboardSection = ({ searchQuery = '' }) => {
   const dashboardCards = useMemo(() => {
     if (!user?.dashboardMetrics) return []
     
-    const metrics = user.dashboardMetrics
-    const stats = user.statistics || {}
+    const metrics = user?.dashboardMetrics
+    const stats = user?.statistics || {}
     
     return [
       {
