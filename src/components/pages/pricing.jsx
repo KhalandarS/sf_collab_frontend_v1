@@ -1,6 +1,6 @@
 
 
-// src/components/pages/Pricing.jsx
+
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import CollaboratorPricing from "./Pricing/CollaboratorPricing.jsx";
