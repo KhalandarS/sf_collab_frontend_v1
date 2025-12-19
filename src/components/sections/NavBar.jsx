@@ -143,17 +143,17 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
       const result = await response.json();
       
       // Debug log to see the actual response structure
-      console.log('Notifications API Response:', result);
+      // console.log('Notifications API Response:', result);
       
       // The API returns { data: { notifications: [...] } }
       const notificationsData = result.data?.notifications || [];
-      setNotifications(notificationsData.filter(notif =>notif.isRead !== true)?.map((notif)=>({ id: notif?.id, title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead, type:notif?.type })) || []);
+      setNotifications(notificationsData.filter(notif =>notif.isRead !== true)?.map((notif)=>({ id: notif?.id, title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead, type:notif?.notification_type })) || []);
       
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
       // Fallback to user relationships if API fails
       if (user?.relationships?.notifications) {
-        setNotifications(user?.relationships?.notifications?.filter(notif => notif.isRead !== true)?.map((notif)=>({ id: notif?.id,title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead , type:notif?.type})) || []);
+        setNotifications(user?.relationships?.notifications?.filter(notif => notif.isRead !== true)?.map((notif)=>({ id: notif?.id,title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead , type:notif?.notification_type})) || []);
       }
     }
   };

@@ -572,7 +572,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
         
             if (data.success) {
                 
-                console.log(data.data.users);
+                // console.log(data.data.users);
                 
                 setUsers(data.data.users.map((u)=>({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, profilePicture: u.profile.picture, timezone: u.profile.timezone,role:u.role})));
                 setTotalPages(data.data.pagination.total);
@@ -795,13 +795,13 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     });
   
     client.on('reconnect_failed', () => {
-      console.error('Reconnection failed');
+      // console.error('Reconnection failed');
       showNotification('error', 'Failed to reconnect to chat server');
     });
   
     // Message events
     client.on('new_message', (data) => {
-      console.log('New message received via WebSocket:', data);
+      // console.log('New message received via WebSocket:', data);
       
       // Check if this message is for the current conversation
       const isCurrentConversation = selectedConversation?.id === data.conversation_id;
@@ -818,19 +818,19 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     });
   
     client.on('message_edited', (data) => {
-      console.log('Message edited:', data);
+      // console.log('Message edited:', data);
       handleMessageEdited(data);
       showNotification('info', 'Message was edited');
     });
   
     client.on('message_deleted', (data) => {
-      console.log('Message deleted:', data);
+      // console.log('Message deleted:', data);
       handleMessageDeleted(data);
       showNotification('info', 'Message was deleted');
     });
   
     client.on('mark_message_read', (data) => {
-      console.log('Message read:', data);
+      // console.log('Message read:', data);
       // If someone else read messages in a conversation, update counts
       if (data.conversation_id && data.user_id !== userId) {
         showNotification('info', 'Messages marked as read');
@@ -840,62 +840,62 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   
     // Typing events
     client.on('user_typing', (data) => {
-      console.log('User typing:', data);
+      // console.log('User typing:', data);
       handleUserTyping(data);
     });
   
     // User status events
     client.on('user_online', (data) => {
-      console.log(`User ${data.user_id} is now online`);
+      // console.log(`User ${data.user_id} is now online`);
       handleUserOnline(data);
       showNotification('success', `User ${data.user_name || data.user_id} is now online`);
     });
   
     client.on('user_offline', (data) => {
-      console.log(`User ${data.user_id} is now offline`);
+      // console.log(`User ${data.user_id} is now offline`);
       handleUserOffline(data);
       showNotification('info', `User ${data.user_name || data.user_id} went offline`);
     });
   
     client.on('user_status_changed', (data) => {
-      console.log(`User ${data.user_id} status changed to ${data.status}`);
+      // console.log(`User ${data.user_id} status changed to ${data.status}`);
       showNotification('info', `User ${data.user_name || data.user_id} is now ${data.status}`);
     });
   
     // Conversation events
     client.on('conversation_created', (data) => {
-      console.log('New conversation created:', data);
+      // console.log('New conversation created:', data);
       handleConversationCreated(data);
       showNotification('success', 'New conversation created');
     });
   
     client.on('conversation_updated', (data) => {
-      console.log('Conversation updated:', data);
+      // console.log('Conversation updated:', data);
       handleConversationUpdated(data);
       showNotification('info', 'Conversation updated');
     });
   
     // Participant events
     client.on('participant_added', (data) => {
-      console.log('Participant added:', data);
+      // console.log('Participant added:', data);
       handleParticipantAdded(data);
       showNotification('info', `User ${data.user_name} added to conversation`);
     });
   
     client.on('participant_removed', (data) => {
-      console.log('Participant removed:', data);
+      // console.log('Participant removed:', data);
       handleParticipantRemoved(data);
       showNotification('info', `User ${data.user_name} removed from conversation`);
     });
   
     client.on('added_to_conversation', (data) => {
-      console.log('Added to conversation:', data);
+      // console.log('Added to conversation:', data);
       handleAddedToConversation(data);
       showNotification('success', 'You were added to a conversation');
     });
   
     client.on('removed_from_conversation', (data) => {
-      console.log('Removed from conversation:', data);
+      // console.log('Removed from conversation:', data);
       handleRemovedFromConversation(data);
       showNotification('error', 'You were removed from a conversation');
     });
@@ -924,11 +924,11 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
         return;
     }
     
-    console.log('WebSocket client state:', {
-        isConnected: wsClient.isConnected(),
-        socketId: wsClient.getSocketId(),
-        userId: wsClient.userId
-    });
+    // console.log('WebSocket client state:', {
+    //     isConnected: wsClient.isConnected(),
+    //     socketId: wsClient.getSocketId(),
+    //     userId: wsClient.userId
+    // });
     
     const checkInterval = setInterval(() => {
         console.log('Current WebSocket connection state:', wsClient.isConnected());
@@ -1131,7 +1131,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
           
           const data = await response.json();
           
-          console.log('Conversations response:', data);
+          // console.log('Conversations response:', data);
           
           if (data.success && data.data?.conversations) {
               setConversations(prevConversations => {
@@ -1188,7 +1188,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
           
           if (data.success && data.data?.messages) {
               setMessages(data.data.messages);
-              console.log('Loaded Messages:', data.data.messages);
+              // console.log('Loaded Messages:', data.data.messages);
               loadConversationFiles(conversationId);
           } else {
               setMessages([]);
@@ -1592,7 +1592,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                 const data = await response.json();
                 
                 if (data.success && data.data?.message) {
-                  const msg=formatMessageContent(data.data?.message?.content)
+                  const msg=formatT(data.data?.message?.content)
                   handleCreateNotification(
                     `You have new message from ${user?.firstName} ${user?.lastName}`,
                     msg,
@@ -1782,6 +1782,31 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
         return content;
     };
     
+    const formatT=(content)=>{
+      if (!content) return '';
+        
+        // Only process if content contains time placeholders like [14:30]
+        const timePattern = /\[(\d{1,2}:\d{2})\]/g;
+        
+        if (timePattern.test(content)) {
+            const convertToAmPm = (time24) => {
+                const [hours, minutes] = time24.split(':');
+                let hour = parseInt(hours, 10);
+                const minute = minutes;
+                
+                const period = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12 || 12;
+                
+                return `${hour}:${minute} ${period}`;
+            };
+            
+            let formattedContent = content.replace(/\[(\d{1,2}:\d{2})\]/g, (match, time24) => {
+                return convertToAmPm(time24);
+            });
+            return formattedContent;
+          }
+    }
+    
     // Format timestamp based on sender's timezone and display in current user's timezone
     const formatMessageTime = (timestamp, senderTimezone, currentUserTimezone = 'UTC') => {
         if (!timestamp) return '';
@@ -1921,12 +1946,12 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     const WhiteboardModal = () => {
       
       if (!showWhiteboardModal || !selectedConversation || !userId || !wsClient) {
-        console.log('WhiteboardModal not showing due to missing:', {
-            showWhiteboardModal,
-            selectedConversation: !!selectedConversation,
-            userId,
-            wsClient: !!wsClient
-        });
+        // console.log('WhiteboardModal not showing due to missing:', {
+        //     showWhiteboardModal,
+        //     selectedConversation: !!selectedConversation,
+        //     userId,
+        //     wsClient: !!wsClient
+        // });
         return null;
       }
       
