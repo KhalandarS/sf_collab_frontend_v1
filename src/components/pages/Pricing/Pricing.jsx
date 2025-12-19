@@ -1,13 +1,13 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import CollaboratorPricing from "./CollaboratorPricing.jsx";
-import FounderPricing from "./FounderPricing.jsx";
-import EquityAccess from "./EquityAccess.jsx";
-import InvestorPricing from "./InvestorPricing.jsx";
-import RoleBasedPricing from "./RoleBasedPricing.jsx";
-import ComparePlans from "./ComparePlans.jsx";
-import FAQSection from "./FAQSection.jsx";
+import CollaboratorPricing from "../Pricing/CollaboratorPricing";
+import FounderPricing from "../Pricing/FounderPricing";
+import EquityAccess from "../Pricing/EquityAccess";
+import InvestorPricing from "../Pricing/InvestorPricing";
+import RoleBasedPricing from "../Pricing/RoleBasedPricing";
+import ComparePlans from "../Pricing/ComparePlans";
+import FAQSection from "../Pricing/FAQSection";
 
 const Pricing = () => {
   const { ref, inView } = useInView({
