@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import NavBar from "../Navbar";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -59,6 +60,7 @@ const About = () => {
   return (
     <div ref={main} className="bg-[#0b0b0b] text-white relative overflow-hidden">
       {/* Floating Blobs Background */}
+      <NavBar/>
       <div className="parallax-bg absolute inset-0 -z-10">
         <div className="blob absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl"></div>
         <div className="blob absolute bottom-10 right-10 w-72 h-72 bg-gradient-to-r from-pink-600/20 to-blue-600/20 rounded-full blur-3xl"></div>

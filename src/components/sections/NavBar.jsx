@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
-import { DrawLineText } from "../../../components/gsap/draw-line-text";
+import { DrawLineText } from "../gsap/draw-line-text";
 import { HelpCircle, MapPinIcon, StarIcon } from "lucide-react";
-import { ProfilePeek } from "../../../components/gsap/profile-peek";
+import { ProfilePeek } from "../gsap/profile-peek";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";

@@ -1,7 +1,7 @@
 "use client";;
 import { useEffect, useRef } from "react";
 
-import { ScrollArea, ScrollBar } from "../../src/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "../ui/scroll-area";
 
 export const ResponseWriter = ({
     text,

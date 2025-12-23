@@ -29,7 +29,7 @@
    - **Authorized JavaScript origins:**
      - `http://localhost:5173` (for development)
      - `https://yourdomain.com` (for production)
-   
+
    - **Authorized redirect URIs:**
      - `http://localhost:5173/auth/callback` (for development)
      - `https://yourdomain.com/auth/callback` (for production)

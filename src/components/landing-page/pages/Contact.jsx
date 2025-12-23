@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
 import gsap from "gsap";
+import Navbar from "../Navbar";
 
 const Contact = () => {
   const main = useRef();
@@ -23,7 +24,10 @@ const Contact = () => {
   }, []);
 
   return (
+    <>
+      <Navbar />
     <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 min-h-screen">
+      
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 contact-animate">
@@ -97,7 +101,8 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      </>
   );
 };
 
