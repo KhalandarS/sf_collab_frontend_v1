@@ -706,7 +706,7 @@ const getAccentBorder = (color) => {
             whileTap={{ scale: 0.95 }}
             className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-gray-600 to-white-600 hover:from-white-500 hover:to-gray-500 transition-all duration-300 font-medium text-lg overflow-hidden"
           >
-            <span>Start Your 14-Day Trial</span>
+            <span>JOIN THE WAIT LIST</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
           </motion.button>

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
+import { Mail, Phone, MapPin, Twitter, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
 
 const Contact = () => {
@@ -41,18 +41,18 @@ const Contact = () => {
             <div className="contact-animate">
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Details</h2>
               <div className="space-y-4 text-gray-300">
-                <p className="flex items-center gap-4">
+                {/* <p className="flex items-center gap-4">
                   <MapPin className="w-5 h-5 text-gray-400" />
                   <span>123 Innovation Drive, San Francisco, CA 94105</span>
-                </p>
+                </p> */}
                 <p className="flex items-center gap-4">
                   <Mail className="w-5 h-5 text-gray-400" />
-                  <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">hello@sfcollab.com</a>
+                  <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">sfcollab333@gmail.com</a>
                 </p>
-                <p className="flex items-center gap-4">
+                {/* <p className="flex items-center gap-4">
                   <Phone className="w-5 h-5 text-gray-400" />
                   <a href="tel:+1234567890" className="hover:text-white transition">(123) 456-7890</a>
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -60,8 +60,8 @@ const Contact = () => {
               <h2 className="text-2xl font-semibold text-white mb-4">Follow Us</h2>
               <div className="flex items-center gap-6">
                 <a href="#" className="text-gray-400 hover:text-white transition"><Twitter className="w-6 h-6" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><Github className="w-6 h-6" /></a>
+                <a href="https://www.linkedin.com/company/sfcollab/about/" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
+                <a href="#" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
               </div>
             </div>
           </div>
