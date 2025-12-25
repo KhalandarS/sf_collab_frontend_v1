@@ -29,7 +29,13 @@ export const ShineButton: React.FC<ShineButtonProps> = ({
   disabled,
   type,
   size = "md",
-  bgColor = "linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)",
+  bgColor = `linear-gradient(325deg,
+  hsl(0 0% 20%) 0%,
+  hsl(0 0% 45%) 55%,
+  hsl(0 0% 20%) 90%
+)
+
+`,
   icon
 }) => {
   const { padding, fontSize } = sizeStyles[size];

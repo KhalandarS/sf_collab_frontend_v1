@@ -27,7 +27,7 @@ const Contact = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 contact-animate">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-gray-400 to-black bg-clip-text text-transparent">
             Get In Touch
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed text-lg">
@@ -42,15 +42,15 @@ const Contact = () => {
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Details</h2>
               <div className="space-y-4 text-gray-300">
                 <p className="flex items-center gap-4">
-                  <MapPin className="w-5 h-5 text-indigo-400" />
+                  <MapPin className="w-5 h-5 text-gray-400" />
                   <span>123 Innovation Drive, San Francisco, CA 94105</span>
                 </p>
                 <p className="flex items-center gap-4">
-                  <Mail className="w-5 h-5 text-indigo-400" />
+                  <Mail className="w-5 h-5 text-gray-400" />
                   <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">hello@sfcollab.com</a>
                 </p>
                 <p className="flex items-center gap-4">
-                  <Phone className="w-5 h-5 text-indigo-400" />
+                  <Phone className="w-5 h-5 text-gray-400" />
                   <a href="tel:+1234567890" className="hover:text-white transition">(123) 456-7890</a>
                 </p>
               </div>
@@ -88,7 +88,7 @@ const Contact = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-semibold py-3 px-6 rounded-md hover:opacity-90 transition-opacity duration-300"
+                  className="w-full bg-gradient-to-r from-gray-600 to-black text-white font-semibold py-3 px-6 rounded-md hover:opacity-90 transition-opacity duration-300"
                 >
                   Send Message
                 </button>

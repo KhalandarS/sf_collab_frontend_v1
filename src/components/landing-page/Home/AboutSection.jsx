@@ -318,7 +318,7 @@ const getAccentBorder = (color) => {
           <h1 className="text-5xl lg:text-7xl font-semibold tracking-tight mb-6">
             The Startup
             <br />
-            <span className="bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+            <span className="  bg-gradient-to-br from-gray-800 to-gray-900 bg-clip-text text-transparent">
               Operating System
             </span>
           </h1>
@@ -577,7 +577,7 @@ const getAccentBorder = (color) => {
                   {index === activeRailIndex && (
                     <motion.div
                       layoutId="activeIndicator"
-                      className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-500 to-blue-500"
+                      className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-gray-500 to-white"
                     />
                   )}
                 </motion.div>
@@ -621,15 +621,15 @@ const getAccentBorder = (color) => {
                   {/* Content */}
                   <div className="absolute bottom-0 left-0 right-0 p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full bg-${item.accent}-500/10 backdrop-blur-sm`}>
-                        <div className={`w-1.5 h-1.5 rounded-full bg-${item.accent}-500 animate-pulse`} />
+                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full  backdrop-blur-sm`}>
+                        <div className={`w-1.5 h-1.5 rounded-full  animate-pulse`} />
                         <span className="text-xs font-medium">{item.tag}</span>
                       </div>
                       <span className="text-sm text-white/40">{index + 1}/{aboutRail.length}</span>
                     </div>
                     
                     <h4 className="text-xl font-semibold mb-2">{item.title}</h4>
-                    <div className={`text-2xl font-bold mb-3 text-${item.accent}-400`}>
+                    <div className={`text-2xl font-bold mb-3 `}>
                       {item.stat}
                     </div>
                     <p className="text-sm text-white/70 leading-relaxed">
@@ -654,7 +654,7 @@ const getAccentBorder = (color) => {
             >
               <div className="stat-item p-6 rounded-xl bg-white/[0.02] border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <div className="w-2 h-2 rounded-full " />
                   <span className="font-mono text-2xl lg:text-3xl font-bold">0.05s</span>
                 </div>
                 <p className="text-sm text-white/50">Sync latency</p>
@@ -662,7 +662,7 @@ const getAccentBorder = (color) => {
               
               <div className="stat-item p-6 rounded-xl bg-white/[0.02] border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500" />
+                  <div className="w-2 h-2 rounded-full " />
                   <span className="font-mono text-2xl lg:text-3xl font-bold">24/7</span>
                 </div>
                 <p className="text-sm text-white/50">Live collaboration</p>
@@ -670,7 +670,7 @@ const getAccentBorder = (color) => {
               
               <div className="stat-item p-6 rounded-xl bg-white/[0.02] border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-violet-500" />
+                  <div className="w-2 h-2 rounded-full " />
                   <span className="font-mono text-2xl lg:text-3xl font-bold">∞</span>
                 </div>
                 <p className="text-sm text-white/50">Canvas scale</p>
@@ -678,7 +678,7 @@ const getAccentBorder = (color) => {
               
               <div className="stat-item p-6 rounded-xl bg-white/[0.02] border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <div className="w-2 h-2 rounded-full" />
                   <span className="font-mono text-2xl lg:text-3xl font-bold">100%</span>
                 </div>
                 <p className="text-sm text-white/50">Uptime SLA</p>
@@ -704,7 +704,7 @@ const getAccentBorder = (color) => {
           <motion.button 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 transition-all duration-300 font-medium text-lg overflow-hidden"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-gray-600 to-white-600 hover:from-white-500 hover:to-gray-500 transition-all duration-300 font-medium text-lg overflow-hidden"
           >
             <span>Start Your 14-Day Trial</span>
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
