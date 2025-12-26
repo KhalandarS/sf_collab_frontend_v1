@@ -633,6 +633,8 @@ import MentorshipOverview from "./components/pages/Mentorship/MentorshipOverview
 import MentorshipPrograms from "./components/pages/Mentorship/MentorshipPrograms.jsx";
 import MentorshipRequests from "./components/pages/Mentorship/MentorshipRequests.jsx";
 import MentorshipProgramDetails from "./components/pages/Mentorship/MentorshipProgramDetails.jsx";
+import Waitlist from "./components/waitlist/Waitlist.jsx";
+import Refer from "./components/waitlist/refer.jsx";
 
 function App() {
   return (
@@ -643,6 +645,9 @@ function App() {
         <Route path="about" element={<About />} />
         <Route path="startuppage" element={<StartupPage />} />
         <Route path="team" element={<Team />} />
+        <Route path="waitlist" element={<Waitlist />} />
+        <Route path="refer" element={<Refer />} />
+
         <Route path="explore" element={<Explore />} />
         <Route path="products" element={<Products />} />
         <Route path="contact" element={<Contact />} />

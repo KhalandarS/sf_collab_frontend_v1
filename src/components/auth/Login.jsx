@@ -93,6 +93,7 @@ export default function Login() {
     const handleOAuthMessage = (event) => {
       const allowedOrigins = [
         "http://localhost:5000",
+        "http://localhost:5001",
         window.location.origin,
         "http://127.0.0.1:5000",
         "null",
@@ -187,9 +188,10 @@ export default function Login() {
 
     setIsLoading(true)
     try {
+      console.log(formData);
       const result = await dispatch(loginUser(formData)).unwrap();
       
-      if (result.success) {
+      if (result.success) { 
         dispatch(setToken(result.access_token));
         dispatch(setUser(result.user));
         
