@@ -12,6 +12,7 @@ const teamMembers = [
     name: "Oskar",
     role: "CEO & Visionary",
     img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Driving the company's vision and strategy with a passion for innovation.",
     socials: {
       linkedin: "#",
@@ -22,6 +23,7 @@ const teamMembers = [
     name: "Suhail",
     role: "Lead Full Stack Developer",
     img: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Architecting robust and scalable solutions that power our platform.",
     socials: {
       linkedin: "#",
@@ -32,6 +34,7 @@ const teamMembers = [
     name: "Emmanuel",
     role: "Backend & DevOps Engineer",
     img: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Ensuring our infrastructure is reliable, secure, and performs at scale.",
     socials: {
       linkedin: "#",
@@ -42,6 +45,7 @@ const teamMembers = [
     name: "Jane Doe",
     role: "Lead UI/UX Designer",
     img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Crafting intuitive and beautiful user experiences that delight our users.",
     socials: {
       linkedin: "#",
@@ -52,6 +56,7 @@ const teamMembers = [
     name: "John Smith",
     role: "Frontend Developer",
     img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Bringing designs to life with clean, efficient, and interactive code.",
     socials: {
       linkedin: "#",
@@ -62,6 +67,7 @@ const teamMembers = [
     name: "Emily White",
     role: "Product Manager",
     img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Guiding product development from concept to launch with a user-centric approach.",
     socials: {
       linkedin: "#",
@@ -72,6 +78,7 @@ const teamMembers = [
     name: "Michael Brown",
     role: "Marketing & Growth",
     img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Expanding our reach and building a community of passionate innovators.",
     socials: {
       linkedin: "#",
@@ -82,6 +89,7 @@ const teamMembers = [
     name: "Sarah Green",
     role: "3D & Motion Graphics Artist",
     img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80",
+    logo: "https://raw.githubusercontent.com/Success-Framework/sf_collab_frontend_v1/43ff973d5541833351fa7a5ea57633b8d0fcc5c6/src/assets/imgs/SFCOLLAB%20LOGO%2021%20WHITE.svg",
     desc: "Creating stunning visuals and animations that define our brand's identity.",
     socials: {
       linkedin: "#",
@@ -152,6 +160,7 @@ const Team = () => {
               <p className="text-gray-400 font-medium mb-2">{person.role}</p>
               <p className="text-gray-400 text-sm">{person.desc}</p>
               <div className="flex items-center gap-4 mt-4">
+                <img src={person.logo} alt="SF Collab Logo" className="h-6 w-auto" />
                 <a href={person.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Linkedin size={20} /></a>
                 <a href={person.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Instagram size={20} /></a>
               </div>
