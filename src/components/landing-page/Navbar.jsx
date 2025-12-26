@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Linkedin, Menu, X, Youtube } from 'lucide-react';
+import { Linkedin, Instagram, Menu } from 'lucide-react';
 import gsap from 'gsap';
 import { heroAssest, mainsong } from './utils';
 
@@ -228,10 +228,8 @@ const Navbar = () => {
 
             <div className='lg:px-8 px-3 flex items-center gap-12'>
               <div className='flex gap-2'>
-                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Facebook /></a>
-                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
                 <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
-                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Youtube /></a>
+                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
               </div>
             </div>
           </div>
