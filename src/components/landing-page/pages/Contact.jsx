@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Mail, Phone, MapPin, Twitter, Linkedin, Github ,Instagram} from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
@@ -64,7 +64,6 @@ const Contact = () => {
             <div className="contact-animate">
               <h2 className="text-2xl font-semibold text-white mb-4">Follow Us</h2>
               <div className="flex items-center gap-6">
-                <a href="#" className="text-gray-400 hover:text-white transition"><Twitter className="w-6 h-6" /></a>
                 <a href="https://www.linkedin.com/company/sfcollab/about/" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
                 <a href="#" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
               </div>
