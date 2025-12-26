@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Linkedin, Twitter, Facebook } from "lucide-react";
+import { Linkedin, Instagram } from "lucide-react";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 
@@ -15,8 +15,7 @@ const teamMembers = [
     desc: "Driving the company's vision and strategy with a passion for innovation.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -26,8 +25,7 @@ const teamMembers = [
     desc: "Architecting robust and scalable solutions that power our platform.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -37,8 +35,7 @@ const teamMembers = [
     desc: "Ensuring our infrastructure is reliable, secure, and performs at scale.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -48,8 +45,7 @@ const teamMembers = [
     desc: "Crafting intuitive and beautiful user experiences that delight our users.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -59,8 +55,7 @@ const teamMembers = [
     desc: "Bringing designs to life with clean, efficient, and interactive code.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -70,8 +65,7 @@ const teamMembers = [
     desc: "Guiding product development from concept to launch with a user-centric approach.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -81,8 +75,7 @@ const teamMembers = [
     desc: "Expanding our reach and building a community of passionate innovators.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
   {
@@ -92,8 +85,7 @@ const teamMembers = [
     desc: "Creating stunning visuals and animations that define our brand's identity.",
     socials: {
       linkedin: "#",
-      twitter: "#",
-      facebook: "#",
+      instagram: "#",
     },
   },
 ];
@@ -161,8 +153,7 @@ const Team = () => {
               <p className="text-gray-400 text-sm">{person.desc}</p>
               <div className="flex items-center gap-4 mt-4">
                 <a href={person.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Linkedin size={20} /></a>
-                <a href={person.socials.twitter} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Twitter size={20} /></a>
-                <a href={person.socials.facebook} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Facebook size={20} /></a>
+                <a href={person.socials.instagram} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Instagram size={20} /></a>
               </div>
             </div>
           ))}
