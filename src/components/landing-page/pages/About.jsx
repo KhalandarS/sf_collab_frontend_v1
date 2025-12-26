@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import NavBar from "../Navbar";
+import Footer from "../Footer";
+import JoinSection from "../../../components/JoinSection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -58,9 +60,10 @@ const About = () => {
   }, []);
 
   return (
+    <>
+      <NavBar />
     <div ref={main} className="bg-[#0b0b0b] text-white relative overflow-hidden">
       {/* Floating Blobs Background */}
-      <NavBar/>
       <div className="parallax-bg absolute inset-0 -z-10">
         <div className="blob absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl"></div>
         <div className="blob absolute bottom-10 right-10 w-72 h-72 bg-gradient-to-r from-pink-600/20 to-blue-600/20 rounded-full blur-3xl"></div>
@@ -185,22 +188,13 @@ const About = () => {
         </div>
       </section> */}
 
-      {/*Call to Action */}
-      <section className="py-20 text-center bg-gradient-to-r from-indigo-600 to-purple-700 relative z-10">
-        <h2 className="text-3xl lg:text-4xl font-semibold mb-4">
-          Operate Your Startup In One Place
-        </h2>
-        <p className="text-gray-200 mb-8">
-          Use Sf Collab to execute faster, collaborate better, and scale smarter — without switching tools.
-        </p>
-        <a
-          href="https://bright-bunny-ceef3b.netlify.app/login"
-          className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
-        >
-          Request Access →
-        </a>
-      </section>
-    </div>
+        {/*Call to Action */}
+        <JoinSection text="Use Sf Collab to execute faster, collaborate better, and scale smarter — without switching tools."
+        title='Operate Your Startup In One Place' ref={null} />
+      
+      </div>
+      <Footer />
+      </>
   );
 };
 

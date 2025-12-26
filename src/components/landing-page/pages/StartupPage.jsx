@@ -1,6 +1,9 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
+import JoinSection from "../../../components/JoinSection";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -45,6 +48,8 @@ const Startup = () => {
   }, []);
 
   return (
+    <>
+      <Navbar />
     <div className="bg-[#0b0b0b] text-white relative overflow-hidden">
       {/* Floating blobs */}
       <div ref={bgRef} className="absolute inset-0 -z-10">
@@ -107,20 +112,14 @@ const Startup = () => {
         </div>
       </section>
 
-      {/* Join Section */}
-      <section ref={joinRef} className="py-24 px-6 lg:px-20 bg-gradient-to-r from-indigo-600 to-purple-700 text-center">
-        <h2 className="text-3xl lg:text-4xl font-semibold mb-6">Request Access</h2>
-        <p className="text-gray-200 mb-10">
-          Build calmly and deliberately. Operate with momentum. Replace your stack with one system.
-        </p>
-        <a
-          href="https://bright-bunny-ceef3b.netlify.app/login"
-          className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
-        >
-          Request Access →
-        </a>
-      </section>
-    </div>
+        {/* Join Section */}
+        <JoinSection text="Build calmly and deliberately. 
+        Operate with momentum. Replace your stack with one system."
+          ref={joinRef} title="Join Us" />
+      
+      </div>
+      <Footer />
+      </>
   );
 };
 

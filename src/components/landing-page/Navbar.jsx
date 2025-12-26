@@ -201,7 +201,7 @@ const Navbar = () => {
                   key={index}
                   to={link.href}
                   ref={(el) => (linksRef.current[index] = el)}
-                  className='lg:text-6xl md:text-5xl text-2xl font-medium Messina hover:text-zinc-400 transition-all'
+                  className='lg:text-4xl md:text-3xl text-2xl font-medium Messina hover:text-zinc-200 hover:underline transition-all'
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}
