@@ -3,7 +3,7 @@ import herovideotwo from '../../../assets/videos/hero.mp4';
 import herovideothree from '../../../assets/videos/aedb3913.mp4';
 
 
-import mainAudio from '../../../assets/audio/Don Toliver - Lose My Mind (feat. Doja Cat) [From F1 The Movie] [Official Music Video].mp3'
+import mainAudio from '../../../assets/audio/WhatsApp Audio 2025-12-26 at 12.35.46 PM.mp3'
 
 
 

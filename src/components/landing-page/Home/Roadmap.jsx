@@ -11,13 +11,13 @@ const phases = [
     icon: Rocket,
     phase: "PHASE 0",
     title: "MVP – Essential Core",
-    gradient: "from-purple-900 to-black-500",
+    gradient: "from-gray-900 to-black-500",
     dot: "bg-white",
     items: [
-      "Better UI/UX with smooth transitions",
-      "Enhanced scrolling and box expansion",
-      "Improved filtering capabilities",
-      "Basic chat functionality",
+      "3d Landing",
+      "Auto Time Connecting",
+      "Business Plan",
+      "Social Media Basic",
       "Equity access for founders",
       "Security basics",
       "Flexible access options",
@@ -29,14 +29,13 @@ const phases = [
     icon: Target,
     phase: "PHASE 1",
     title: "Core Functionalities & Monetization",
-    gradient: "from-purple-900 to-black-500",
+    gradient: "from-gray-900 to-black-500",
     dot: "bg-white",
     items: [
-      "Advanced chat system",
-      "Gamified loyalty system",
-      "In-app call feature",
-      "Team manager integration",
-      "Integrated calendar",
+      "Google Meet and Drive Replacement",
+      "Advanced",
+      "Sfmanager",
+      "AI Assistent",
       "AI task assignment",
       "Custom triggers",
       "Knowledge base / wiki",
@@ -48,7 +47,7 @@ const phases = [
     icon: Brain,
     phase: "PHASE 2",
     title: "Advanced AI Features & Global Expansion",
-    gradient: "from-purple-900 to-black-500",
+    gradient: "from-gray-900 to-black-500",
     dot: "bg-white",
     items: [
       "AI chat summaries",
@@ -109,7 +108,7 @@ export default function Roadmap() {
             return (
               <motion.div
                 key={phase.phase}
-                className="phase-card bg-transparent border border-violet-600 rounded-xl overflow-hidden shadow-[rgba(88,28,135,0.35)] shadow-2xl hover:shadow-[rgba(88,28,135,0.5)] transition-shadow duration-300"
+                className="phase-card bg-transparent border border-gray-600 rounded-xl overflow-hidden shadow-[rgba(88,28,135,0.35)] shadow-2xl hover:shadow-[rgba(88,28,135,0.5)] transition-shadow duration-300"
                 whileHover={{ y: -4 }}
               >
                 <div className={`bg-gradient-to-r ${phase.gradient} text-white p-6`}>

@@ -136,7 +136,7 @@ const Team = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-gray-900 to-white bg-clip-text text-transparent">
             Meet Our Team
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed text-lg">
@@ -149,7 +149,7 @@ const Team = () => {
           {teamMembers.map((person, i) => (
             <div
               key={i}
-              className="team-card bg-[#111111] rounded-2xl p-6 flex flex-col items-center text-center border border-transparent hover:border-purple-500/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300"
+              className="team-card bg-[#111111] rounded-2xl p-6 flex flex-col items-center text-center border border-transparent hover:border-gray-500/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300"
             >
               <img
                 src={person.img}
@@ -157,7 +157,7 @@ const Team = () => {
                 className="w-32 h-32 rounded-full object-cover mb-5 border-2 border-purple-400/30"
               />
               <h3 className="text-xl font-semibold text-white">{person.name}</h3>
-              <p className="text-indigo-400 font-medium mb-2">{person.role}</p>
+              <p className="text-gray-400 font-medium mb-2">{person.role}</p>
               <p className="text-gray-400 text-sm">{person.desc}</p>
               <div className="flex items-center gap-4 mt-4">
                 <a href={person.socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-white transition-colors"><Linkedin size={20} /></a>

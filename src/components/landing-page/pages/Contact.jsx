@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
+import { Mail, Phone, MapPin, Twitter, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
@@ -32,7 +32,7 @@ const Contact = () => {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-16 contact-animate">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-gray-400 to-black bg-clip-text text-transparent">
             Get In Touch
           </h1>
           <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed text-lg">
@@ -46,18 +46,18 @@ const Contact = () => {
             <div className="contact-animate">
               <h2 className="text-2xl font-semibold text-white mb-4">Contact Details</h2>
               <div className="space-y-4 text-gray-300">
-                <p className="flex items-center gap-4">
-                  <MapPin className="w-5 h-5 text-indigo-400" />
+                {/* <p className="flex items-center gap-4">
+                  <MapPin className="w-5 h-5 text-gray-400" />
                   <span>123 Innovation Drive, San Francisco, CA 94105</span>
-                </p>
+                </p> */}
                 <p className="flex items-center gap-4">
-                  <Mail className="w-5 h-5 text-indigo-400" />
-                  <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">hello@sfcollab.com</a>
+                  <Mail className="w-5 h-5 text-gray-400" />
+                  <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">sfcollab333@gmail.com</a>
                 </p>
-                <p className="flex items-center gap-4">
-                  <Phone className="w-5 h-5 text-indigo-400" />
+                {/* <p className="flex items-center gap-4">
+                  <Phone className="w-5 h-5 text-gray-400" />
                   <a href="tel:+1234567890" className="hover:text-white transition">(123) 456-7890</a>
-                </p>
+                </p> */}
               </div>
             </div>
 
@@ -65,8 +65,8 @@ const Contact = () => {
               <h2 className="text-2xl font-semibold text-white mb-4">Follow Us</h2>
               <div className="flex items-center gap-6">
                 <a href="#" className="text-gray-400 hover:text-white transition"><Twitter className="w-6 h-6" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><Github className="w-6 h-6" /></a>
+                <a href="https://www.linkedin.com/company/sfcollab/about/" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
+                <a href="#" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
               </div>
             </div>
           </div>
@@ -93,7 +93,7 @@ const Contact = () => {
               <div>
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-700 text-white font-semibold py-3 px-6 rounded-md hover:opacity-90 transition-opacity duration-300"
+                  className="w-full bg-gradient-to-r from-gray-600 to-black text-white font-semibold py-3 px-6 rounded-md hover:opacity-90 transition-opacity duration-300"
                 >
                   Send Message
                 </button>
