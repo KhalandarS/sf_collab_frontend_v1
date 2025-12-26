@@ -193,7 +193,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom"; // Added Link import
 import NavBar from "../components/sections/NavBar";
-import SideBar from "../components/sections/SideBar";
+import SideBar from "../components/sections/sidebar/SideBar";
 import MobileNavBar from "../components/sections/MobileNavBar";
 import Options from "../components/sections/Options";
 import useScrollHide from "../hooks/useScrollHide";

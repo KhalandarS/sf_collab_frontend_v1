@@ -2,6 +2,8 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Linkedin, Twitter, Facebook } from "lucide-react";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -128,6 +130,8 @@ const Team = () => {
   }, []);
 
   return (
+    <>
+      <Navbar />
     <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
@@ -164,7 +168,9 @@ const Team = () => {
           ))}
         </div>
       </div>
-    </div>
+      </div>
+      <Footer />
+      </>
   );
 };
 

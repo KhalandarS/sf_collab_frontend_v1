@@ -99,7 +99,8 @@ export default function Login() {
         "https://sfclb.netlify.app",
         "https://sfclb.netlify.app/",
         "https://sf-collab-backend-flask.onrender.com/",
-        "https://sf-collab-backend-flask.onrender.com"
+        "https://sf-collab-backend-flask.onrender.com",
+        "https://api.sfcollab.com",
       ];
       
       // alert(new URL(API_URL).origin);

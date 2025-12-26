@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Twitter, Linkedin, Github } from "lucide-react";
 import gsap from "gsap";
 import Navbar from "../Navbar";
+import Footer from "../Footer";
 
 const Contact = () => {
   const main = useRef();
@@ -102,6 +103,8 @@ const Contact = () => {
         </div>
       </div>
       </div>
+      <Footer />
+      
       </>
   );
 };

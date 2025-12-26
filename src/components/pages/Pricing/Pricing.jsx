@@ -8,6 +8,8 @@ import InvestorPricing from "./InvestorPricing";
 import RoleBasedPricing from "./RoleBasedPricing";
 import ComparePlans from "./ComparePlans";
 import FAQSection from "./FAQSection";
+import NavBar from '../../landing-page/Navbar';
+import Footer from '../../landing-page/Footer';
 
 const Pricing = () => {
   const { ref, inView } = useInView({
@@ -16,11 +18,13 @@ const Pricing = () => {
   });
 
   return (
+    <>
+      <NavBar />
     <motion.main 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="w-full bg-gradient-to-b from-slate-50 to-white"
+      className="w-full bg-linear-to-b from-stone-800 to-black"
     >
       {/* Hero Section */}
       <motion.section 
@@ -71,7 +75,9 @@ const Pricing = () => {
 
       {/* FAQ Section */}
       <FAQSection />
-    </motion.main>
+      </motion.main>
+      <Footer />
+      </>
   );
 };
 

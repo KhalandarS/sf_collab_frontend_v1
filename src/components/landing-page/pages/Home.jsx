@@ -43,9 +43,8 @@ const Home = () => {
 
   return (
     <div className="overflow-y-hidden w-full ">
-      <div className=''>
-        <Navbar/>
-      </div>
+      <Navbar/>
+
 
       <section className='flex w-full flex-col overflow-x-hidden space-y-24 scrollbar-hide scroll-smooth'>
         <Hero/>
@@ -57,10 +56,8 @@ const Home = () => {
         <StartUp/>
         <Contact/>
       </section>
-
-      <div className=''>
         <Footer/>
-      </div>
+
     </div>
   )
 }

@@ -85,10 +85,10 @@ const RoleBasedPricing = () => {
       className="py-16 px-4"
     >
       <div className="mx-auto max-w-7xl">
-        <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">
+        <h2 className="text-3xl font-bold text-white text-center mb-2">
           Find Your Perfect Plan
         </h2>
-        <p className="text-gray-600 text-center mb-12">
+        <p className="text-white/80 text-center mb-12">
           Select your role to see recommended features and pricing
         </p>
 
@@ -105,8 +105,8 @@ const RoleBasedPricing = () => {
                 className={`
                   relative p-4 rounded-xl border-2 transition-all duration-300
                   ${selectedCategory === category.id 
-                    ? `border-transparent bg-gradient-to-br ${category.color} text-white shadow-lg` 
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? `border-gray-200 bg-gradient-to-br ${category.color} text-white shadow-lg` 
+                    : 'border-gray-200 bg-gradient-to-br from-black to-purple-900 text-white/80'
                   }
                 `}
               >
@@ -122,11 +122,11 @@ const RoleBasedPricing = () => {
           key={selectedCategory}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl border border-gray-200 p-6 shadow-lg"
+          className="bg-gradient-to-br from-black to-purple-900 rounded-2xl border border-gray-200 p-6 shadow-lg"
         >
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+              <h3 className="text-xl font-bold text-white mb-4">
                 Recommended for {currentCategory?.name}
               </h3>
               <div className="space-y-4">
@@ -178,7 +178,7 @@ const RoleBasedPricing = () => {
             </div>
 
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Virtual Currency Benefits</h4>
+              <h4 className="font-semibold text-white mb-3">Virtual Currency Benefits</h4>
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg">
                   <span className="font-medium text-amber-800">XP Multiplier</span>
@@ -202,7 +202,7 @@ const RoleBasedPricing = () => {
                 >
                   Start 7-Day Free Trial
                 </motion.button>
-                <p className="text-center text-gray-500 text-sm mt-2">
+                <p className="text-center text-white text-sm mt-2">
                   No credit card required • Cancel anytime
                 </p>
               </div>
