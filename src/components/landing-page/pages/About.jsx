@@ -78,7 +78,7 @@ const About = () => {
           The Startup Operating System
         </h1>
         <p className="text-gray-300 max-w-2xl leading-relaxed text-lg">
-          Sf Collab unifies execution, real-time collaboration, operations, and AI-assisted workflows into one calm, continuous platform built for founders.
+          SFCollab unifies execution, real-time collaboration, operations, and AI-assisted workflows into one calm, continuous platform built for founders.
         </p>
       </section>
 
