@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const mockProgramDetails = {
   id: 1,
   title: "Founder Mentorship Program",
@@ -55,7 +57,7 @@ const MentorshipProgramDetails = () => {
       setLoading(true);
 
       const res = await fetch(
-        `https://sfcolab-backend.onrender.com/api/startups/${startupId}/mentorship/programs/${programId}`
+        `${API_URL}/startups/${startupId}/mentorship/programs/${programId}`
       );
 
       if (!res.ok) throw new Error("API failed");

@@ -3,6 +3,9 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import StartUpHeader from "../headers/StartUpHeader";
 import ScrollToTop from "../sections/ScrollToTop";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 import {
   Users,
   Building2,
@@ -45,7 +48,7 @@ const StartUp = () => {
       setError("");
 
       const res = await axios.get(
-        "https://sfcolab-backend.onrender.com/api/startup",
+        `${API_URL}/startup`,
         {
           params: {
             page,

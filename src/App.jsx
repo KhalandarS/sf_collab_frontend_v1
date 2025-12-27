@@ -36,6 +36,11 @@ import Profile from "./components/pages/Profile/Profile.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 import QwenChat from './components/pages/QwenChat/QwenChat';
+import Waitlist from "./components/waitlist/Waitlist.jsx";
+import ReferPage from "./components/waitlist/refer.jsx";
+import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
+import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
+import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
 
 function App() {
   return (
@@ -43,7 +48,14 @@ function App() {
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
-
+      {/* Refer and Waitlist */}
+      <Route path="/waitlist" element={<Waitlist />} />
+      <Route path="/refer" element={<ReferPage />} />
+      
+      {/* Terms and conditions and privacy policy */}
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/data-collection-and-tracking" element={<DataCollection />} />
       {/* Protected Routes */}
       <Route 
         path="/" 

@@ -13,6 +13,8 @@ import {
 import SavedHeader from "./SavedHeader";
 import { Link } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const SavedList = () => {
   const [activeTab, setActiveTab] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,9 +52,9 @@ const SavedList = () => {
         };
 
         const [ideationRes, startupRes, knowledgeRes] = await Promise.all([
-          fetch("https://sfcolab-backend.onrender.com/api/ideation/bookmarks", { headers }),
-          fetch("https://sfcolab-backend.onrender.com/api/startup/bookmarks", { headers }),
-          fetch("https://sfcolab-backend.onrender.com/api/knowledge/bookmarks", { headers }),
+          fetch(`${API_URL}/ideation/bookmarks`, { headers }),
+          fetch(`${API_URL}/startup/bookmarks`, { headers }),
+          fetch(`${API_URL}/knowledge/bookmarks`, { headers }),
         ]);
 
         const [ideationData, startupData, knowledgeData] = await Promise.all([

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Phone,
@@ -695,7 +696,7 @@ export default function Chat() {
       return () => clearInterval(timer);
     } catch (err) {
       console.error("Error starting recording:", err);
-      alert("Could not access microphone. Please check permissions.");
+      toast.error("Could not access microphone. Please check permissions.");
     }
   };
 

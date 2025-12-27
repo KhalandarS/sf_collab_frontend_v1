@@ -1,77 +1,65 @@
-import React, { useEffect } from "react";
-import Hero from "../Home/Hero";
-import AboutSection from "../Home/AboutSection";
-import Roadmap from "../Home/Roadmap";
-import Explore from "../Home/Explore";
-import Products from "../Home/Products";
-import StartUp from "../Home/StartUp";
-import Contact from "./Contact";
-import Team from "./Team";
-import Navbar from "../Navbar";
-import Footer from "../Footer";
 
-import Lenis from "lenis";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
-import "lenis/dist/lenis.css";
-
-gsap.registerPlugin(ScrollTrigger);
+import React, { useEffect, useRef } from 'react'
+import Hero from '../Home/Hero'
+import About from '../Home/About'
+import Roadmap from '../Home/Roadmap'
+import AboutSection from '../Home/AboutSection'
+import Explore from '../Home/Explore'
+import Products from '../Home/Products'
+import StartUp from '../Home/StartUp'
+import Contact from './Contact'
+import Team from './Team'
+import Navbar from '../Navbar'
+import Footer from '../Footer'
+import 'lenis/dist/lenis.css'
 
 const Home = () => {
   useEffect(() => {
-    // Initialize Lenis
-    const lenis = new Lenis({
-      smooth: true,
-      lerp: 0.08,
-      wheelMultiplier: 1,
-      smoothTouch: false,
+    let lenis;
+    let rafId;
+    
+    // Dynamically import Lenis and initialize on the client side
+    import('lenis').then(({ default: Lenis }) => {
+      lenis = new Lenis();
+      
+      // Optional: Log scroll events for debugging
+      // lenis.on('scroll', (e) => {
+      //   console.log(e);
+      // });
+      
+      const raf = (time) => {
+        lenis.raf(time);
+        rafId = requestAnimationFrame(raf);
+      };
+      
+      rafId = requestAnimationFrame(raf);
     });
-
-    // Lenis RAF
-    function raf(time) {
-      lenis.raf(time);
-      requestAnimationFrame(raf);
-    }
-    requestAnimationFrame(raf);
-
-    // Sync Lenis with GSAP ScrollTrigger
-    lenis.on("scroll", ScrollTrigger.update);
-
-    gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
-    });
-
-    gsap.ticker.lagSmoothing(0);
-
+    
+    // Cleanup function to destroy Lenis and cancel animation frame
     return () => {
-      lenis.destroy();
-      gsap.ticker.remove(lenis.raf);
-      ScrollTrigger.killAll();
-    };
-  }, []);
+      if (rafId) cancelAnimationFrame(rafId);
+      if (lenis) lenis.destroy();
+    }
+  }, [])
 
   return (
-    <div className="w-full overflow-hidden bg-black text-white">
-      {/* Navbar */}
-      <Navbar />
+    <div className="overflow-y-hidden md:w-full w-screen">
+        <Navbar/>
 
-      {/* Page Sections */}
-      <main className="flex flex-col space-y-24 overflow-x-hidden">
-        <Hero />
-        <AboutSection />
-        <Explore />
-        <Products />
-        <Roadmap />
-        <Team />
-        <StartUp />
-        <Contact />
-      </main>
+      <section className='flex w-full flex-col overflow-x-hidden space-y-24 scrollbar-hide scroll-smooth'>
+        <Hero/>
+        <AboutSection/>
+        <Explore/>
+        <Products/>
+        <Roadmap/>
+        <Team/>
+        <StartUp/>
+        <Contact/>
+      </section>
 
-      {/* Footer */}
-      <Footer />
+        <Footer/>
     </div>
-  );
-};
+  )
+}
 
-export default Home;
+export default Home

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { toast } from 'react-toastify';
 import {
   ArrowLeft,
   MessageSquare,
@@ -102,7 +103,7 @@ const IdeationDetails = () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) {
-          alert("Please log in to like this idea");
+          toast.error("Please log in to like this idea");
           return;
         }
 
@@ -305,12 +306,12 @@ const IdeationDetails = () => {
     try {
       const token = localStorage.getItem("authToken");
       if (!token) {
-        alert("Please log in to join the team");
+        toast.error("Please log in to join the team");
         return;
       }
 
       if (!joinName.trim() || !joinPosition.trim()) {
-        alert("Please fill in name and position");
+        toast.error("Please fill in name and position");
         return;
       }
 
@@ -361,7 +362,7 @@ const IdeationDetails = () => {
     } catch (err) {
       console.error("Error joining team:", err);
       const errorMessage = err.message || "Failed to join team. Please try again.";
-      alert(errorMessage);
+      toast.error(errorMessage);
     }
   };
 
@@ -474,7 +475,7 @@ const IdeationDetails = () => {
     } catch (err) {
       console.error("Error deleting idea:", err);
       setShowDeleteModal(false);
-      alert("Failed to delete idea. Please try again.");
+      toast.error("Failed to delete idea. Please try again.");
     }
   };
 

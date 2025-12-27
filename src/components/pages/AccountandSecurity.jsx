@@ -1,6 +1,7 @@
 
 
 import { Check, User, X } from "lucide-react"
+import { toast } from 'react-toastify'
 // Import necessary dependencies
 import React, { useState } from "react"
 
@@ -60,10 +61,10 @@ const AccountandSecurity = () => {
       await new Promise(resolve => setTimeout(resolve, 1000))
       
       // Show success message
-      alert('Profile updated successfully!')
+      toast.success('Profile updated successfully!')
     } catch (error) {
       console.error('Error updating profile:', error)
-      alert('Failed to update profile. Please try again.')
+      toast.error('Failed to update profile. Please try again.')
     } finally {
       setIsLoading(false)
     }

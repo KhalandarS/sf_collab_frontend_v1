@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { toast } from 'react-toastify';
 import {
   ArrowLeft,
   Share2,
@@ -173,7 +174,7 @@ export default function ProjectDetails() {
         await navigator.share({ title: goal.title, url });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
+        toast.success("Link copied to clipboard!");
       }
     } catch (e) {
       console.error("share failed", e);

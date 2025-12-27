@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { 
+import { toast } from 'react-toastify';
+import {
   Lightbulb, 
   BarChart3, 
   Mic, 
@@ -47,7 +48,7 @@ export default function BusinessIdeaGenerator() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
     if (!SpeechRecognition) {
-      alert('Speech recognition is not supported in your browser.');
+      toast.error('Speech recognition is not supported in your browser.');
       return;
     }
 

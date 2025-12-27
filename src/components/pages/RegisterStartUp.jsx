@@ -374,7 +374,7 @@ export default function RegisterStartUp() {
         submitData.append("documents", doc);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000'}/startups/register`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/startups/register`, {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`,

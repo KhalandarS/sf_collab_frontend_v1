@@ -1,5 +1,6 @@
 // ProfileSettings.jsx
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 import { Eye, EyeOff } from "lucide-react";
 import { ArrowLeft, Save, User, Bell, Shield, Palette, Globe, Bookmark, ExternalLink, Trash2, Share2 } from 'lucide-react';
 
@@ -194,10 +195,10 @@ const ProfileSettings = ({ onBack }) => {
           socialLinks: data.profile.profile?.socialLinks ?? formData.profile.socialLinks
         });
       }
-      alert('Profile updated successfully');
+      toast.success('Profile updated successfully');
     } catch (err) {
       console.error(err);
-      alert('Failed to update profile');
+      toast.error('Failed to update profile');
     } finally {
       setSaving(false);
     }
@@ -218,10 +219,10 @@ const ProfileSettings = ({ onBack }) => {
         if (!res.ok) throw new Error('Upload failed');
         const data = await res.json();
         updateProfileNested({ picture: data.picture || pictureUrl });
-        alert('Profile picture updated');
+        toast.success('Profile picture updated');
       } catch (err) {
         console.error(err);
-        alert('Failed to upload picture');
+        toast.error('Failed to upload picture');
       }
     };
     reader.readAsDataURL(file);
@@ -235,10 +236,10 @@ const ProfileSettings = ({ onBack }) => {
       });
       if (!res.ok) throw new Error('Removal failed');
       updateProfileNested({ picture: null });
-      alert('Profile picture removed');
+      toast.success('Profile picture removed');
     } catch (err) {
       console.error(err);
-      alert('Failed to remove picture');
+      toast.error('Failed to remove picture');
     }
   };
 
@@ -261,10 +262,10 @@ const ProfileSettings = ({ onBack }) => {
       if (!res.ok) throw new Error('Preferences update failed');
       const data = await res.json();
       if (data.preferences) updatePreferences(data.preferences);
-      alert('Preferences updated');
+      toast.success('Preferences updated');
     } catch (err) {
       console.error(err);
-      alert('Failed to update preferences');
+      toast.error('Failed to update preferences');
     } finally {
       setSaving(false);
     }
@@ -282,10 +283,10 @@ const ProfileSettings = ({ onBack }) => {
       if (!res.ok) throw new Error('Notification update failed');
       const data = await res.json();
       if (data.notificationSettings) updateNotifications(data.notificationSettings);
-      alert('Notification settings updated');
+      toast.success('Notification settings updated');
     } catch (err) {
       console.error(err);
-      alert('Failed to update notifications');
+      toast.error('Failed to update notifications');
     } finally {
       setSaving(false);
     }
@@ -302,10 +303,10 @@ const ProfileSettings = ({ onBack }) => {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Change password failed');
       }
-      alert('Password changed');
+      toast.success('Password changed');
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Failed to change password');
+      toast.error(err.message || 'Failed to change password');
     }
   };
 
@@ -320,11 +321,11 @@ const ProfileSettings = ({ onBack }) => {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Change email failed');
       }
-      alert('Email changed — verify your new email');
+      toast.success('Email changed — verify your new email');
       // optionally refresh profile
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Failed to change email');
+      toast.error(err.message || 'Failed to change email');
     }
   };
 
@@ -340,11 +341,11 @@ const ProfileSettings = ({ onBack }) => {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.message || 'Delete account failed');
       }
-      alert('Account deletion submitted');
+      toast.success('Account deletion submitted');
       // optionally redirect / logout
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Failed to delete account');
+      toast.error(err.message || 'Failed to delete account');
     }
   };
 
@@ -356,10 +357,10 @@ const ProfileSettings = ({ onBack }) => {
     else if (activeSection === 'notifications') await saveNotificationSettings();
     else if (activeSection === 'accountSecurity') {
       // no-op here; password/email/delete use their own buttons inside section
-      alert('Use the specific actions inside Account & Security to update password/email/delete account.');
+      toast.info('Use the specific actions inside Account & Security to update password/email/delete account.');
     } else {
       // other sections - no server persistence currently
-      alert('Nothing to save for this section (handled locally).');
+      toast.info('Nothing to save for this section (handled locally).');
     }
   };
 
@@ -587,7 +588,7 @@ const AccountSecurity = ({ formData, onChange, changePassword, changeEmail, dele
           </div>
 
           <div className="flex items-end">
-            <button type="button" onClick={() => alert('Password reset email (server) required')} className="text-blue-400 underline text-sm">Forgot password?</button>
+            <button type="button" onClick={() => toast.info('Password reset email (server) required')} className="text-blue-400 underline text-sm">Forgot password?</button>
           </div>
 
           <div>
@@ -631,7 +632,7 @@ const AccountSecurity = ({ formData, onChange, changePassword, changeEmail, dele
       <div className="space-y-6 pt-10">
         <h3 className="text-xl font-semibold text-red-400">Danger Zone</h3>
         <div className="bg-gray-800/40 border border-red-700 rounded-lg p-6 space-y-4">
-          <button onClick={() => alert('Export endpoint not implemented on backend')} className="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg">Export My Data</button>
+          <button onClick={() => toast.info('Export endpoint not implemented on backend')} className="w-full px-4 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg">Export My Data</button>
 
           <div className="space-y-2">
             <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="Enter password to confirm" className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />

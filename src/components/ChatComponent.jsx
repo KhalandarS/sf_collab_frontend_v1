@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
+import { toast } from 'react-toastify';
 import ChatWebSocketClient from '../services/websocket/ChatWebSocketClient';
 import TimeAwareMessageInput from './TimeAwareMessageInput';
 // import Alert from './sections/Alert';
@@ -1497,8 +1498,8 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
         });
   
         if (response.ok) {
-          const result = await response.json();
-          // alert('✅notification created successfully')
+        const result = await response.json();
+          // toast.success('notification created successfully')
 
           
         } else {
@@ -1507,7 +1508,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
       } catch (error) {
         console.error("Failed to create notification:", error);
         // Fallback to local creation
-        alert('notification not created')
+        toast.error('notification not created')
       }
     };
     
@@ -1629,7 +1630,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     //! handle create conversation:
     const handleCreateConversation = async () => {
         if (selectedParticipants.length === 0) {
-            alert('Please select at least one participant');
+            toast.error('Please select at least one participant');
             return;
         }
         
@@ -1646,7 +1647,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
             const participantIds = selectedParticipants.map(p => p.id);
             
             if (conversationType === 'direct' && participantIds.length !== 1) {
-                alert('Direct messages can only have one other participant');
+                toast.error('Direct messages can only have one other participant');
                 setLoading(false);
                 return;
             }
@@ -1704,7 +1705,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
             }
         } catch (error) {
             console.error('Error creating conversation:', error);
-            alert(error.message || 'Failed to create conversation. Please try again.');
+            toast.error(error.message || 'Failed to create conversation. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -2664,14 +2665,14 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                             </Tooltip>
                             
                             <button 
-                              onClick={() => alert('Voice call coming soon!')}
+                              onClick={() => toast.info('Voice call coming soon!')}
                               className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 cursor-not-allowed"
                               title="Voice call (Coming soon)"
                             >
                               <Phone size={20} />
                             </button>
                             <button 
-                              onClick={() => alert('Video call coming soon!')}
+                              onClick={() => toast.info('Video call coming soon!')}
                               className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-400 transition-all duration-200 cursor-not-allowed"
                               title="Video call (Coming soon)"
                             >

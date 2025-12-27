@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
+const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+
 const SocketContext = createContext(null);
 export const useSocket = () => useContext(SocketContext);
 
@@ -19,7 +21,7 @@ export const SocketProvider = ({ children }) => {
     const token = localStorage.getItem("authToken");
     if (!token) return;
 
-    const s = io("https://sfcolab-backend.onrender.com", {
+    const s = io(SOCKET_API_URL, {
       auth: { token },
       transports: ["websocket"],
       reconnection: true,

@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { Search, Plus, X, Filter, Tag } from "lucide-react";
 import Swal from "sweetalert2";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const NewKnowledgeForm = ({
   setShowNewKnowledgeForm,
   selectedCategory,
@@ -50,7 +52,7 @@ const NewKnowledgeForm = ({
       try {
         setCategoryLoading(true);
         const response = await fetch(
-          "https://sfcolab-backend.onrender.com/api/knowledge/predefined-categories"
+          `${API_URL}/knowledge/predefined-categories`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch categories");
@@ -193,7 +195,7 @@ const NewKnowledgeForm = ({
       }
 
       const response = await fetch(
-        "https://sfcolab-backend.onrender.com/api/knowledge",
+        `${API_URL}/knowledge`,
         {
           method: "POST",
           headers: {

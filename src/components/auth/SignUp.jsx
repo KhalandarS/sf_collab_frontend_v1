@@ -660,11 +660,11 @@ export default function SignUp() {
               />
               <label htmlFor="agreeToTerms" className="text-sm text-gray-300">
                 I agree to the{" "}
-                <a href="#" className="text-blue-400 hover:text-blue-300">
+                <a href="/terms-and-conditions" className="text-blue-400 hover:text-blue-300">
                   Terms and Conditions
                 </a>{" "}
                 and{" "}
-                <a href="#" className="text-blue-400 hover:text-blue-300">
+                <a href="/privacy-policy" className="text-blue-400 hover:text-blue-300">
                   Privacy Policy
                 </a>
               </label>

@@ -1,8 +1,7 @@
+// landingpage/navbar.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-
-import { Linkedin, Instagram, Menu, X } from 'lucide-react';
-
+import { Facebook, Instagram, Linkedin, Menu, X, Youtube } from 'lucide-react';
 import gsap from 'gsap';
 import { heroAssest, mainsong } from './utils';
 
@@ -121,7 +120,7 @@ const Navbar = () => {
                   key={index}
                   to={link.href}
                   ref={(el) => (linksRef.current[index] = el)}
-                  className='lg:text-4xl md:text-3xl text-2xl font-medium Messina hover:text-zinc-200 hover:underline transition-all'
+                  className='lg:text-6xl md:text-5xl text-2xl font-medium Messina hover:text-zinc-400 transition-all'
                   onClick={() => setIsOpen(false)}
                 >
                   {link.name}
@@ -142,7 +141,10 @@ const Navbar = () => {
 
             <div className='px-3 lg:px-8 flex items-center gap-12'>
               <div className='flex gap-2'>
-                <Facebook /><Instagram /><Linkedin /><Youtube />
+                {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Facebook /></a>*/}
+                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
+                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
+                {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Youtube /></a>*/}
               </div>
             </div>
           </div>
@@ -168,11 +170,49 @@ const Navbar = () => {
 
         </div>
       </div>
+      <div 
+        ref={navbarRef}
+        className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform  '
+      >
+        <div className="md:pt-0 pt-4 h-full flex items-center">
+            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
+        </div>
 
-      {/* Top Navbar */}
-      <div ref={navbarRef} className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20'>
-        <div className="text-xl font-bold flex items-center gap-2">
-          <img src="/logo_white.png" className="w-10" alt="sf collab" /> SF COLLAB
+        <div className="flex-1 flex justify-center pl-8 md:pl-0 items-center">
+          <button
+            onClick={toggleMusic}
+            className="flex items-end justify-center gap-1 h-8 hover:opacity-80 transition-opacity group"
+            aria-label={isPlaying ? 'Pause music' : 'Play music'}
+          >
+            <span 
+              ref={el => barRefs.current[0] = el}
+              className="w-1 -mt-1 bg-[#fff] h-3 origin-bottom transform transition-all group-hover:bg-zinc-900"
+            />
+            <span 
+              ref={el => barRefs.current[1] = el}
+              className="w-1 bg-[#fff] h-4 origin-bottom transform transition-all group-hover:bg-zinc-700"
+            />
+            <span 
+              ref={el => barRefs.current[2] = el}
+              className="w-1 bg-[#fff] h-2 origin-bottom transform transition-all group-hover:bg-zinc-700"
+            />
+            
+            {!userInteracted && (
+              <div className="absolute -top-1 -right-1 w-2 h-2  rounded-full animate-pulse"></div>
+            )}
+          </button>
+        </div>
+
+        <div className="flex-1 flex justify-end pt-4 md:pt-0">
+          <button
+            onClick={toggleMenu}
+            className='flex gap-2 items-center justify-center rounded-full transition-all duration-300 hover:scale-105'
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
+          >
+            <span className='bg-[#2A2725] p-2 rounded-full hover:bg-zinc-900 transition-colors'>
+              {isOpen ? <X className='text-white size-5' /> : <Menu className='text-white size-5' />}
+            </span>
+          </button>
         </div>
 
         <button onClick={toggleMusic} className="flex items-end gap-1 h-8">

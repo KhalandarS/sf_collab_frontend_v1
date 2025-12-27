@@ -21,22 +21,20 @@ import {
   WifiOff,
   RefreshCw,
 } from "lucide-react";
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import IdeationHeader from "../headers/IdeationHeader";
 import ScrollToTop from "../sections/ScrollToTop";
 
 // API Configuration - Single base URL for all ideation API calls
-const BASE_URL =
-  window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:5000/api/ideas"
-    : "https://sfcolab-backend.onrender.com/api/ideation";
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = `${API_URL}/ideas`;
 
 // Helper to decode JWT and get user ID
 const parseJwt = (token) => {
   try {
     return JSON.parse(atob(token.split(".")[1]));
-  } catch (e) {
+  } catch {
     return null;
   }
 };

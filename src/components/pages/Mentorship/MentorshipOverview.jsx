@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Users, Layers, ArrowUpRight, UserCheck } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const mockMentorshipOverview = {
   programsCount: 3,
   mentorsCount: 12,
@@ -22,7 +24,7 @@ const MentorshipOverview = () => {
       setError(null);
 
       const res = await fetch(
-        `https://sfcolab-backend.onrender.com/api/startups/${startupId}/mentorship/overview`
+        `${API_URL}/startups/${startupId}/mentorship/overview`
       );
 
       if (!res.ok) throw new Error("API failed");

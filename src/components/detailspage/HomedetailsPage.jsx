@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { toast } from 'react-toastify'
 import { BriefcaseBusiness, CheckCheck, LocateIcon, User, Calendar, Clock, ArrowLeft, Share2, BookmarkPlus, Users, Bookmark } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -74,7 +75,7 @@ const HomedetailsPage = () => {
         });
       } else {
         await navigator.clipboard.writeText(url);
-        alert('Link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
       }
     } catch (e) {
       console.error('Share failed:', e);

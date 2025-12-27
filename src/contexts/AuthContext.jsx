@@ -3,6 +3,8 @@ import { SimpleOAuthService } from "../services/simpleOAuthService";
 import { useSocket } from "./SocketContext";
 import axios from "axios";
 
+const API_URL_AUTH = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5000/api/auth';
+
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -41,7 +43,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await fetch(
-        "https://sfcolab-backend.onrender.com/api/auth/login",
+        `${API_URL_AUTH}/login`,
         {
           method: "POST",
           headers: {
@@ -84,7 +86,7 @@ export const AuthProvider = ({ children }) => {
     try {
       // POST to your backend
       const response = await axios.post(
-        "https://sfcolab-backend.onrender.com/api/auth/signup",
+        `${API_URL_AUTH}/signup`,
         userData,
         { withCredentials: true } // ensure cookies allowed if backend sets them
       );

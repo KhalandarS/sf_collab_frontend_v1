@@ -190,17 +190,11 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
 
 
       {/* Logo */}
-      <div className="logo  z-50">
-        <button onClick={()=>navigate('/dashboard')} className="group cursor-pointer flex items-center  gap-3">
-          <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.png" className="w-11" alt="sf collab" />
-          <DrawLineText
-            className="font-medium"
-            fontSize={30}
-            strokeWidth={1}
-            text="SFCOLLAB"
-            color="white"
-          />
-        </button>
+      <div className="logo z-50">
+        <Link to={user?.id ? `/dashboard` : '/' } className="group cursor-pointer flex items-center"> 
+
+          <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
+        </Link>
       </div>
 
       {/* Main content */}

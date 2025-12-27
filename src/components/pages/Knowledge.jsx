@@ -19,6 +19,8 @@ import {
   X
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const ShinyText = ({ text, className = "" }) => (
   <span className={`inline-block bg-gradient-to-r from-blue-300 via-purple-300 to-blue-300 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%] ${className}`}>
     {text}
@@ -105,7 +107,7 @@ const Knowledge = () => {
       setNetworkError(false);
 
       const response = await fetch(
-        "https://sfcolab-backend.onrender.com/api/knowledge?page=1&per_page=200"
+        `${API_URL}/knowledge?page=1&per_page=200`
       );
 
       if (!response.ok) throw new Error("API error");

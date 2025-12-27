@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { 
+import { toast } from 'react-toastify'
+import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, 
   Filter, Search, X, Trash2, Building2, 
   Bell, MapPin, 
@@ -212,18 +213,16 @@ export default function Calendar() {
   }
 
   const handleDateClick = (date) => {
-    setSelectedDate(date)
-    alert(date)
+    setSelectedDate(date);
     setEventForm({
       ...eventForm,
       start_date: format(date, "dd/MM/yyyy'T'HH:mm"),
       end_date: format(new Date(date.getTime() + 60 * 60 * 1000), "dd/MM/yyyy'T'HH:mm") // +1 hour
-    })
-    alert(JSON.stringify(eventForm))
+    });
     
-    setShowEventModal(true)
-    setSelectedEvent(null)
-  }
+    setShowEventModal(true);
+    setSelectedEvent(null);
+  };
 
   const handleEventClick = (event) => {
     setSelectedEvent(event)
@@ -376,7 +375,7 @@ export default function Calendar() {
         days.push(
           <div
             key={day.toISOString()}
-            onClick={() =>{ handleDateClick(day);alert(day)}}
+            onClick={() => handleDateClick(day)}
             className={`
               min-h-32 border border-gray-700/50 p-2 cursor-pointer transition-all
               ${isCurrentMonth ? 'bg-gray-800/30 hover:bg-gray-700/50' : 'bg-gray-900/20 text-gray-600'}

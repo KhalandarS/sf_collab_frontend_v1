@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { toast } from 'react-toastify';
 import axios from "axios";
 import {
   ArrowLeft,
@@ -22,6 +22,8 @@ import {
 } from "lucide-react";
 import { allimg } from "../../utils";
 import { useLocation } from "react-router-dom";
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const StartUpdetails = () => {
   const [isJoined, setIsJoined] = useState(false);
@@ -46,7 +48,7 @@ const StartUpdetails = () => {
         if (!token) return;
 
         const response = await fetch(
-          `https://sfcolab-backend.onrender.com/api/startup/bookmarks`,
+          `${API_URL}/startup/bookmarks`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -121,7 +123,7 @@ const StartUpdetails = () => {
 
     try {
       const response = await fetch(
-        `https://sfcolab-backend.onrender.com/api/startup/${startupIdStr}/bookmark`,
+        `${API_URL}/startup/${startupIdStr}/bookmark`,
         {
           method: "POST",
           headers: {
@@ -185,7 +187,7 @@ const StartUpdetails = () => {
       setLoading(true);
       const token = localStorage.getItem("authToken");
       const res = await axios.get(
-        `https://sfcolab-backend.onrender.com/api/startup/${startupId}`,
+        `${API_URL}/startup/${startupId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -228,7 +230,7 @@ const StartUpdetails = () => {
         });
       } else {
         await navigator.clipboard.writeText(url);
-        alert("Link copied to clipboard!");
+        toast.success("Link copied to clipboard!");
       }
     } catch (e) {
       console.error("Share failed:", e);
@@ -242,7 +244,7 @@ const StartUpdetails = () => {
       const token = localStorage.getItem("authToken");
 
       const res = await axios.post(
-        `https://sfcolab-backend.onrender.com/api/startup/${startupId}/join-request`,
+        `${API_URL}/startup/${startupId}/join-request`,
         {
           message: "Hi, I would like to join.",
           role: "member",

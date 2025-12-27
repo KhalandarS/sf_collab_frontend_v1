@@ -66,22 +66,27 @@ const Footer = () => {
           <h3 className="text-xl font-semibold text-white mb-4">Resources</h3>
           <ul className="space-y-2">
             <li>
-              <Link to="" className="hover:text-white">
-                Request Access
+              <Link to="/waitlist" className="hover:text-white">
+                Join Waitlist
               </Link>
             </li>
             <li>
-              <Link to="" className="hover:text-white">
+              <Link to="/privacy-policy" className="hover:text-white">
                 Privacy Policy
               </Link>
             </li>
             <li>
-              <Link to="" className="hover:text-white">
+              <Link to="/terms-and-conditions" className="hover:text-white">
                 Terms of Service
               </Link>
             </li>
             <li>
-              <Link to="" className="hover:text-white">
+              <Link to="/data-collection-and-tracking" className="hover:text-white">
+                Data Collection Policy
+              </Link>
+            </li>
+            <li>
+              <Link to="/contact" className="hover:text-white">
                 Help & Support
               </Link>
             </li>
@@ -102,8 +107,7 @@ const Footer = () => {
               </a>
             ))}
           </div>
-          <p className="text-sm text-gray-400">hello@sfcollab.io</p>
-          <p className="text-sm text-gray-400 mt-1">New Delhi, India</p>
+          <p className="text-sm text-gray-400">support@sforger.com</p>
         </div>
       </div>
       <div className="border-t border-white/10 mt-10 pt-6 text-center text-gray-500 text-sm">
