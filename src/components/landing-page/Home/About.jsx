@@ -142,7 +142,7 @@ const About = () => {
   const contentData = [
     {
       title: 'Execution, Not Just Ideation',
-      text: 'Sf Collab is a startup operating system. Ship work faster with tasks, docs, chat, and operations in one continuous environment.',
+      text: 'SFCollab is a startup operating system. Ship work faster with tasks, docs, chat, and operations in one continuous environment.',
       image: `${AboutAssets.aboutimgOne}`,
     },
     {
