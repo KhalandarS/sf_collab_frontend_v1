@@ -698,7 +698,7 @@ const getAccentBorder = (color) => {
             Ready to Build Your Startup's Foundation?
           </h2>
           <p className="text-lg text-white/70 mb-8 leading-relaxed">
-            Join thousands of founders who use Sf Collab to execute faster, collaborate better, and scale smarter.
+            Join thousands of founders who use SFCollab to execute faster, collaborate better, and scale smarter.
           </p>
           
           <motion.button 
