@@ -141,10 +141,14 @@ const Navbar = () => {
 
             <div className='px-3 lg:px-8 flex items-center gap-12'>
               <div className='flex gap-2'>
+<<<<<<< HEAD
+                <Facebook /><Instagram /><Linkedin /><Youtube />
+=======
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Facebook /></a>*/}
                 <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
                 <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Youtube /></a>*/}
+>>>>>>> main
               </div>
             </div>
           </div>
@@ -170,6 +174,15 @@ const Navbar = () => {
 
         </div>
       </div>
+<<<<<<< HEAD
+
+      {/* Top Navbar */}
+      <div ref={navbarRef} className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20'>
+        <div className="text-xl font-bold flex items-center gap-2">
+          <img src="/logo_white.png" className="w-10" alt="sf collab" /> SF COLLAB
+        </div>
+
+=======
       <div 
         ref={navbarRef}
         className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform  '
@@ -215,6 +228,7 @@ const Navbar = () => {
           </button>
         </div>
 
+>>>>>>> main
         <button onClick={toggleMusic} className="flex items-end gap-1 h-8">
           <span ref={el => barRefs.current[0] = el} className="w-1 bg-white h-3" />
           <span ref={el => barRefs.current[1] = el} className="w-1 bg-white h-4" />
