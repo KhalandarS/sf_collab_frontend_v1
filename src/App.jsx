@@ -634,7 +634,7 @@ import MentorshipPrograms from "./components/pages/Mentorship/MentorshipPrograms
 import MentorshipRequests from "./components/pages/Mentorship/MentorshipRequests.jsx";
 import MentorshipProgramDetails from "./components/pages/Mentorship/MentorshipProgramDetails.jsx";
 import Waitlist from "./components/waitlist/Waitlist.jsx";
-import Refer from "./components/waitlist/refer.jsx";
+import Refer from "./components/waitlist/Refer.jsx";
 
 function App() {
   return (

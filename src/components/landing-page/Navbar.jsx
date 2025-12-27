@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Linkedin, Instagram, Menu } from 'lucide-react';
+import { Linkedin, Instagram, Menu, X } from 'lucide-react';
 import gsap from 'gsap';
 import { heroAssest, mainsong } from './utils';
 
