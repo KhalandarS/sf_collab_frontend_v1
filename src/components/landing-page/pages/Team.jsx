@@ -2,8 +2,6 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Linkedin, Instagram } from "lucide-react";
-import Navbar from "../Navbar";
-import Footer from "../Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -65,37 +63,50 @@ const Team = () => {
     const ctx = gsap.context((self) => {
       const cards = self.selector(".team-card");
       const grid = self.selector(".team-grid");
+      const header = self.selector(".team-header");
 
-      // Set initial state for a more subtle entrance
+      // Animate header first
+      gsap.from(header, {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: header,
+          start: "top 80%",
+          toggleActions: "play none none none"
+        }
+      });
+
+      // Set initial state for team cards
       gsap.set(cards, { opacity: 0, y: 50, scale: 0.95 });
 
-      // Create a timeline for the pinned animation
+      // Create a timeline for the pinned animation with 0.2s delay after header
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: grid,
           start: "top top",
-          end: () => "+=" + (cards.length * 200), // Increase scroll distance for a slower, smoother feel
+          end: () => "+=" + (cards.length * 120), // Reduced scroll distance for faster animation
           pin: true,
-          scrub: 1.5, // Increase scrub value for more smoothing
+          scrub: 0.8, // Reduced scrub value for faster response
           anticipatePin: 1,
         },
       });
 
-      // Animate each card into view sequentially
+      // Add 0.2s delay, then animate each card into view sequentially with faster timing
+      tl.to({}, { duration: 0.2 }); // 0.2s delay
       cards.forEach((card) => {
-        tl.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" }, "-=0.5");
+        tl.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }, "-=0.3");
       });
     }, main); // scope the context to the main ref
     return () => ctx.revert();
   }, []);
 
   return (
-    <>
-      <Navbar />
     <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-16">
+        <div className="team-header text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-gray-900 to-white bg-clip-text text-transparent">
             Meet Our Team
           </h1>
@@ -123,9 +134,7 @@ const Team = () => {
           ))}
         </div>
       </div>
-      </div>
-      <Footer />
-      </>
+    </div>
   );
 };
 

@@ -47,28 +47,29 @@ const Hero = () => {
           opacity: 1,
         },
         {
-          scale: 4,
+          scale: 1.5,
           opacity: 0,
-          ease: "power4.inOut",
+          ease: "power2.inOut",
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top top",
-            end: "bottom+=50% top",
-            scrub: 1.2,
+            end: "bottom top",
+            scrub: 1,
             pin: true,
-            pinSpacing: false,
+            pinSpacing: true,
+            anticipatePin: 1,
             onUpdate: (self) => {
               // Parallax background metrics
               gsap.to(backgroundMetricsRef.current, {
-                y: self.progress * -60,
-                opacity: 0.03 + (self.progress * 0.01),
+                y: self.progress * -40,
+                opacity: 0.06 - (self.progress * 0.06),
                 ease: "none"
               });
 
               // Fade out live stats
               gsap.to(liveStatsRef.current, {
-                opacity: 1 - (self.progress * 2),
-                y: self.progress * 30,
+                opacity: 1 - (self.progress * 1.5),
+                y: self.progress * 20,
                 ease: "none"
               });
             }
@@ -78,13 +79,13 @@ const Hero = () => {
 
       // Background video scroll scale
       gsap.to(imageRef.current, {
-        scale: 1.3,
-        opacity: 0.4,
+        scale: 1.2,
+        opacity: 0.3,
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "bottom+=50% top",
-          scrub: 1.5,
+          end: "bottom top",
+          scrub: 1,
         },
       });
 
@@ -230,7 +231,7 @@ const Hero = () => {
         <div className="absolute bottom-4 md:bottom-8 left-4 md:right-0 px-4">
           <div className="flex items-center justify-center gap-4 md:gap-8 lg:gap-12 opacity-80">
             <ShineButton
-            onClick={()=>navigate('/waitlist')}
+            onClick={()=>window.location.href='https://sfcollab.com/waitlist'}
             label='Join Waitlist'
             icon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               className="group cursor-pointer relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 transition-all duration-300 font-medium text-lg overflow-hidden"

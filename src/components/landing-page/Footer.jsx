@@ -1,10 +1,23 @@
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Instagram, Linkedin } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Custom TikTok Icon Component
+const TikTokIcon = ({ size = 18 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z" />
+  </svg>
+);
 
 const Footer = () => {
   const footerRef = useRef(null);
@@ -66,9 +79,9 @@ const Footer = () => {
           <h3 className="text-xl font-semibold text-white mb-4">Resources</h3>
           <ul className="space-y-2">
             <li>
-              <Link to="/waitlist" className="hover:text-white">
+              <a href="https://sfcollab.com/waitlist" className="hover:text-white">
                 Join Waitlist
-              </Link>
+              </a>
             </li>
             <li>
               <Link to="/privacy-policy" className="hover:text-white">
@@ -97,15 +110,28 @@ const Footer = () => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-4">Connect</h3>
           <div className="flex items-center gap-4 mb-4">
-            {[Instagram, Linkedin, Tiktok].map((Icon, i) => (
-              <a
-                key={i}
-                href="#"
-                className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
-              >
-                <Icon size={18} />
-              </a>
-            ))}
+            <a
+              href="https://www.instagram.com/sfcollab_official/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
+            >
+              <Instagram size={18} />
+            </a>
+            <a
+              href="https://www.linkedin.com/company/sfcollab"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
+            >
+              <Linkedin size={18} />
+            </a>
+            <a
+              href="#"
+              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
+            >
+              <TikTokIcon size={18} />
+            </a>
           </div>
           <p className="text-sm text-gray-400">hello@sfcollab.com</p>
         </div>

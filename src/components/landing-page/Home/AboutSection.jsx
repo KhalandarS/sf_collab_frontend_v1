@@ -41,15 +41,7 @@ const AboutSection = () => {
       accent: "emerald",
       video: AboutItems.aboutVideoThree,
     },
-    {
-      id: 4,
-      title: "Live Team Presence",
-      stat: "Always online",
-      description: "See who's working, where, and on what — in real time, across timezones.",
-      tag: "Presence",
-      accent: "cyan",
-      video: AboutItems.aboutVideoFour,
-    },
+  
     {
       id: 5,
       title: "AI-Assisted Momentum",
@@ -57,6 +49,15 @@ const AboutSection = () => {
       description: "AI helps summarize, prioritize, and unblock execution without noise.",
       tag: "AI Layer",
       accent: "pink",
+      video: AboutItems.aboutVideoFive,
+    },
+    {
+      id: 6,
+      title: "Scale Without Limits",
+      stat: "Infinite growth",
+      description: "Built to scale from MVP to unicorn with infrastructure that grows with your ambition.",
+      tag: "Scale",
+      accent: "amber",
       video: AboutItems.aboutVideoFive,
     },
   ];
@@ -177,12 +178,12 @@ const getTextGradient = (color) => {
       gsap.from(".rail-card", {
         opacity: 0,
         y: 40,
-        stagger: 0.12,
-        duration: 1,
-        ease: "power3.out",
+        stagger: 0.08,
+        duration: 0.6,
+        ease: "power2.out",
         scrollTrigger: {
           trigger: containerRef.current,
-          start: "top 70%",
+          start: "top 75%",
           end: "bottom 20%",
           toggleActions: "play none none reverse",
         }
@@ -218,19 +219,7 @@ const getTextGradient = (color) => {
         }
       });
 
-      // Update active rail index on scroll
-      if (containerRef.current) {
-        ScrollTrigger.create({
-          trigger: containerRef.current,
-          start: "top center",
-          end: "bottom center",
-          onUpdate: (self) => {
-            const progress = self.progress;
-            const index = Math.min(Math.floor(progress * aboutRail.length), aboutRail.length - 1);
-            setActiveRailIndex(index);
-          }
-        });
-      }
+      // Note: Active rail index is only updated by dragging, not by page scroll
 
     }, sectionRef);
 
@@ -239,33 +228,72 @@ const getTextGradient = (color) => {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || window.innerWidth < 768) return;
+    if (!container) return;
+
+    let rafId;
+    
+    // Smoother index calculation with reduced blinking
+    const updateActiveIndex = (position) => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+      if (maxScroll === 0) return;
+      
+      const progress = Math.abs(position) / maxScroll;
+      // Add slight offset to reduce flickering at boundaries
+      const adjustedProgress = Math.min(Math.max(progress + 0.05, 0), 1);
+      const rawIndex = adjustedProgress * aboutRail.length;
+      const index = Math.min(Math.floor(rawIndex), aboutRail.length - 1);
+      
+      setActiveRailIndex(Math.max(0, index));
+    };
+
+    // Handle horizontal scroll within the carousel container only (not page scroll)
+    const handleScroll = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        // Only update when scrolling horizontally within the container
+        updateActiveIndex(container.scrollLeft);
+      });
+    };
+
+    // Only listen to scroll events on the container itself
+    container.addEventListener('scroll', handleScroll, { passive: true });
 
     // Desktop draggable with improved UX
-    const draggable = Draggable.create(container, {
-      type: "x",
-      bounds: {
-        minX: -(container.scrollWidth - container.clientWidth),
-        maxX: 0
-      },
-      edgeResistance: 0.9,
-      inertia: true,
-      onPress() {
-        gsap.to(container, { scale: 0.98, duration: 0.2 });
-      },
-      onRelease() {
-        gsap.to(container, { scale: 1, duration: 0.3 });
-      },
-      onDrag() {
-        // Update active index based on drag position
-        const progress = Math.abs(this.x) / (container.scrollWidth - container.clientWidth);
-        const index = Math.min(Math.floor(progress * aboutRail.length), aboutRail.length - 1);
-        setActiveRailIndex(index);
-      }
-    });
+    if (window.innerWidth >= 768) {
+      const draggable = Draggable.create(container, {
+        type: "x",
+        bounds: {
+          minX: -(container.scrollWidth - container.clientWidth),
+          maxX: 0
+        },
+        edgeResistance: 0.9,
+        inertia: true,
+        onPress() {
+          gsap.to(container, { scale: 0.98, duration: 0.2 });
+        },
+        onRelease() {
+          gsap.to(container, { scale: 1, duration: 0.3 });
+        },
+        onDrag() {
+          updateActiveIndex(this.x);
+        },
+        onThrowUpdate() {
+          updateActiveIndex(this.x);
+        }
+      });
 
-    return () => draggable[0]?.kill();
-  }, []);
+      return () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        draggable[0]?.kill();
+        container.removeEventListener('scroll', handleScroll);
+      };
+    }
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      container.removeEventListener('scroll', handleScroll);
+    };
+  }, [aboutRail.length]);
 
   const getAccentColor = (color) => {
     const colors = {
@@ -274,6 +302,7 @@ const getTextGradient = (color) => {
       emerald: "from-emerald-500/20 to-emerald-600/20",
       cyan: "from-cyan-500/20 to-cyan-600/20",
       pink: "from-pink-500/20 to-pink-600/20",
+      amber: "from-amber-500/20 to-amber-600/20",
     };
     return colors[color] || colors.violet;
   };
@@ -295,10 +324,11 @@ const getAccentBorder = (color) => {
     <section 
       ref={sectionRef}
       className="relative w-full min-h-screen text-white overflow-hidden"
+      style={{ marginTop: '0', paddingTop: '0' }}
     >
       {/* Background */}
-      {/* <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black" />
-      <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:80px_80px]" /> */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black" />
+      <div className="absolute inset-0 opacity-[0.02] bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:80px_80px]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:py-32">
         {/* Hero section */}
@@ -331,16 +361,16 @@ const getAccentBorder = (color) => {
         </motion.div>
 
         {/* Feature sections - alternating layout */}
-        <div className="space-y-40 mb-32">
+        <div className="space-y-24 md:space-y-40 mb-32">
           {featureSections.map((section) => (
             <div
               key={section.id}
-              className={`feature-section-${section.id} flex flex-col lg:flex-row items-center gap-16 lg:gap-32 ${
+              className={`feature-section-${section.id} flex flex-col lg:flex-row items-center gap-8 md:gap-16 lg:gap-32 ${
                 section.position === 'right' ? 'lg:flex-row-reverse' : ''
               }`}
             >
               {/* Text content */}
-              <div className="lg:w-1/2 space-y-8">
+              <div className="w-full lg:w-1/2 space-y-6 md:space-y-8 px-4 md:px-0">
                 <motion.div 
                   initial={{ opacity: 0, x: -30 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -348,10 +378,10 @@ const getAccentBorder = (color) => {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="flex items-center gap-4"
                 >
-                  <div className={`p-3 rounded-xl bg-gradient-to-br ${getAccentGradient(section.color)} shadow-lg border ${getAccentBorder(section.color)}`}>
-                    {React.cloneElement(section.icon, { className: "w-7 h-7 text-gray-900" })}
+                  <div className={`p-2 md:p-3 rounded-xl bg-gradient-to-br ${getAccentGradient(section.color)} shadow-lg border ${getAccentBorder(section.color)}`}>
+                    {React.cloneElement(section.icon, { className: "w-5 h-5 md:w-7 md:h-7 text-gray-900" })}
                   </div>
-                  <span className="text-sm font-semibold tracking-widest text-gray-400 uppercase">
+                  <span className="text-xs md:text-sm font-semibold tracking-widest text-gray-400 uppercase">
                     Feature {section.id.toString().padStart(2, '0')}
                   </span>
                 </motion.div>
@@ -361,7 +391,7 @@ const getAccentBorder = (color) => {
                   animate={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="text-4xl lg:text-5xl font-bold leading-tight"
+                  className="text-2xl md:text-4xl lg:text-5xl font-bold leading-tight"
                 >
                   <span className={`bg-clip-text text-transparent ${getTextGradient(section.color)}`}>
                     {section.title}
@@ -373,7 +403,7 @@ const getAccentBorder = (color) => {
                   animate={{ opacity: 1 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: 0.4 }}
-                  className="text-xl text-gray-400 leading-relaxed"
+                  className="text-base md:text-xl text-gray-400 leading-relaxed"
                 >
                   {section.description}
                 </motion.p>
@@ -383,7 +413,7 @@ const getAccentBorder = (color) => {
                   animate={{ opacity: 1, y: 0 }}
                   // viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.5 }}
-                  className="grid grid-cols-2 gap-4 pt-6"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 pt-4 md:pt-6"
                 >
                   {section.stats.map((stat, index) => (
                     <motion.div
@@ -393,7 +423,7 @@ const getAccentBorder = (color) => {
                       viewport={{ once: true }}
                       transition={{ duration: 0.4, delay: 0.5 + index * 0.1 }}
                       whileHover={{ scale: 1.05, transition: { duration: 0.2 } }}
-                      className="group relative p-4 rounded-xl backdrop-blur-sm border border-gray-800/50 bg-gradient-to-b from-gray-900/30 to-gray-900/10 hover:border-gray-700/50 transition-all duration-300"
+                      className="group relative p-3 md:p-4 rounded-xl backdrop-blur-sm border border-gray-800/50 bg-gradient-to-b from-gray-900/30 to-gray-900/10 hover:border-gray-700/50 transition-all duration-300"
                     >
                       <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
                       <div className="relative">
@@ -416,7 +446,7 @@ const getAccentBorder = (color) => {
                 animate={{ opacity: 1, scale: 1 }}
                 // viewport={{ once: true }}
                 transition={{ duration: 0.7, delay: 0.6 }}
-                className="lg:w-1/2 relative"
+                className="w-full lg:w-1/2 relative px-4 md:px-0"
               >
                 <div className="relative">
                   {/* Background gradient effect */}
@@ -563,21 +593,29 @@ const getAccentBorder = (color) => {
           {/* Progress Indicator */}
           <div className="progress-container mb-12">
             <div className="mt-10 flex justify-center text-xs text-white/40 tracking-widest space-x-8">
-              {["EXECUTION", "COLLABORATION", "OPERATIONS", "AI", "SCALE"].map((item, index) => (
+              {["EXECUTION", "WORKSPACE", "OPERATIONS", "AI", "SCALE"].map((item, index) => (
                 <motion.div
                   key={index}
-                  className="progress-item relative"
+                  className="progress-item relative cursor-pointer"
                   animate={{ 
                     color: index === activeRailIndex ? "#ffffff" : "rgba(255,255,255,0.4)",
                     scale: index === activeRailIndex ? 1.1 : 1
                   }}
-                  transition={{ duration: 0.3 }}
+                  transition={{ 
+                    duration: 0.2,
+                    ease: "easeOut"
+                  }}
                 >
                   {item}
                   {index === activeRailIndex && (
                     <motion.div
                       layoutId="activeIndicator"
                       className="absolute -bottom-2 left-0 right-0 h-0.5 bg-gradient-to-r from-gray-500 to-white"
+                      transition={{
+                        type: "spring",
+                        stiffness: 380,
+                        damping: 30
+                      }}
                     />
                   )}
                 </motion.div>
@@ -702,6 +740,7 @@ const getAccentBorder = (color) => {
           </p>
           
           <motion.button 
+            onClick={() => window.location.href = 'https://sfcollab.com/waitlist'}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-gray-600 to-white-600 hover:from-white-500 hover:to-gray-500 transition-all duration-300 font-medium text-lg overflow-hidden"

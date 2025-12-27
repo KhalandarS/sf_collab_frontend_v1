@@ -111,7 +111,7 @@ export default function Roadmap() {
           },
         });
 
-        // 1. First card appears, then moves left
+        // 1. Phase 0 (First card) appears, then moves left
         tl.to(cards[0], {
           opacity: 1,
           scale: 1,
@@ -120,17 +120,7 @@ export default function Roadmap() {
           ease: "power2.out",
         }).to(cards[0], { x: 0, duration: 0.6, ease: "power3.inOut" });
 
-        // 2. Third card appears, then moves right
-        tl.to(cards[2], {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          duration: 0.4,
-          ease: "power2.out",
-        }, "-=0.5")
-        .to(cards[2], { x: 0, duration: 0.6, ease: "power3.inOut" });
-
-        // 3. Second card appears and stays in the center
+        // 2. Phase 1 (Second card) appears and stays in the center
         tl.to(cards[1], {
           opacity: 1,
           scale: 1,
@@ -138,7 +128,17 @@ export default function Roadmap() {
           y: 0,
           duration: 0.6,
           ease: "back.out(1.5)",
-        }, "-=0.5");
+        }, "-=0.3");
+
+        // 3. Phase 2 (Third card) appears, then moves right
+        tl.to(cards[2], {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power2.out",
+        }, "-=0.3")
+        .to(cards[2], { x: 0, duration: 0.6, ease: "power3.inOut" });
       }
     }, el);
     return () => ctx.revert();

@@ -6,7 +6,7 @@ export default function JoinSection({ title, text, ref }) {
           {text}
       </p>
       <a
-        href="/waitlist"
+        href="https://sfcollab.com/waitlist"
         className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
       >
         Join Waitlist →

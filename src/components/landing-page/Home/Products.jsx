@@ -22,7 +22,7 @@ const Products = () => {
       year: "System",
       title: "Execution Engine",
       desc: "Tasks, docs, and decisions in one place. Real-time updates across teams.",
-      img: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800&q=80",
+      img: "/producsjsx_images/execution-engine.png",
     },
     {
       id: 2,

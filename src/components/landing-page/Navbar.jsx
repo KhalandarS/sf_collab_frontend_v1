@@ -142,8 +142,8 @@ const Navbar = () => {
             <div className='px-3 lg:px-8 flex items-center gap-12'>
               <div className='flex gap-2'>
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Facebook /></a>*/}
-                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
-                <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
+                <a href="https://www.instagram.com/sfcollab_official/" target="_blank" rel="noopener noreferrer" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
+                <a href="https://www.linkedin.com/company/sfcollab" target="_blank" rel="noopener noreferrer" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Youtube /></a>*/}
               </div>
             </div>

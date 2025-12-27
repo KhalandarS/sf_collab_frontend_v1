@@ -1,8 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
-import Navbar from "../Navbar";
-import Footer from "../Footer";
 
 const Contact = () => {
   const main = useRef();
@@ -25,8 +23,6 @@ const Contact = () => {
   }, []);
 
   return (
-    <>
-      <Navbar />
     <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 min-h-screen">
       
       <div className="max-w-6xl mx-auto">
@@ -64,8 +60,8 @@ const Contact = () => {
             <div className="contact-animate">
               <h2 className="text-2xl font-semibold text-white mb-4">Follow Us</h2>
               <div className="flex items-center gap-6">
-                <a href="https://www.linkedin.com/company/sfcollab/about/" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
-                <a href="#" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
+                <a href="https://www.linkedin.com/company/sfcollab" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
+                <a href="https://www.instagram.com/sfcollab_official/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
               </div>
             </div>
           </div>
@@ -101,10 +97,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
-      </div>
-      <Footer />
-      
-      </>
+    </div>
   );
 };
 

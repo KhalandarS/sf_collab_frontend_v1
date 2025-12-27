@@ -46,7 +46,7 @@ const Home = () => {
     <div className="overflow-y-hidden md:w-full w-screen">
         <Navbar/>
 
-      <section className='flex w-full flex-col overflow-x-hidden space-y-24 scrollbar-hide scroll-smooth'>
+      <section className='flex w-full flex-col overflow-x-hidden scrollbar-hide scroll-smooth'>
         <Hero/>
         <AboutSection/>
         <Explore/>
