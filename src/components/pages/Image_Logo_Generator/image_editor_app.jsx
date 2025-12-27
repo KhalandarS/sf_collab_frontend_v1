@@ -1,21 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { fabric } from 'fabric';
 import { 
   Upload, Download, Trash2, RotateCw, RotateCcw, 
-  Crop, Type, PenTool, Circle, Square, Eraser,
-  ZoomIn, ZoomOut, Eye, EyeOff, Settings, Filter,
-  Image as ImageIcon, Save, RefreshCw, Check, X,
-  Palette, Contrast, Sun, Moon, Droplets,
+  Type, PenTool, Circle, Square, Eraser,
+  ZoomIn, ZoomOut, Eye, Filter,
+  Image as ImageIcon, RefreshCw, 
+  Palette, Contrast, Sun, 
   Loader2
 } from 'lucide-react';
 import { MdBlurOn } from "react-icons/md";
 import { Button } from '../../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
+import { Card, CardContent } from '../../ui/card';
 import { Alert, AlertDescription } from '../../ui/alert';
 import { Label } from '../../ui/label';
 import { Slider } from '../../ui/slider';
 import { Input } from '../../ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Switch } from '../../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';

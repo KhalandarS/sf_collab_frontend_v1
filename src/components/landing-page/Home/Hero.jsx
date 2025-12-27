@@ -1,3 +1,4 @@
+// landingpages/home/hero.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -199,7 +200,7 @@ const Hero = () => {
                   text="without" 
                   // disabled={false} 
                   speed={3} 
-                  className='custom-title opacity-95 text-7xl ' 
+                  className='custom-title opacity-95 md:text-7xl text-5xl'
                 />
               
             <br />
@@ -207,17 +208,17 @@ const Hero = () => {
                   text="friction" 
                   // disabled={false} 
                   speed={3} 
-                  className='custom-title opacity-95 text-7xl ' 
+                  className='custom-title opacity-95 md:text-7xl text-4xl' 
                 />
               
           </h1>
         </div>
 
         {/* Layer 3 — Proof-Driven Subline */}
-        <div className="relative z-10 mt-4 md:mt-6 max-w-xl md:max-w-2xl px-4 text-center">
+        <div className="relative z-10 mt-4 md:mt-6 max-w-xl md:max-w-2xl px-4 md:text-auto text- text-center">
           <p className="text-base md:text-lg lg:text-xl text-white/85 font-light tracking-wide leading-relaxed">
             The real-time canvas where distributed teams build, think, and create in sync.
-            <span className="block mt-2 text-sm md:text-base text-white/50 font-normal">
+            <span className="block mt-2 text-sm md:text-base text-white/50 md:pt-0 pt-6 font-normal">
               Sub-50ms sync • Infinite workspace • Enterprise-grade
             </span>
           </p>
@@ -226,7 +227,7 @@ const Hero = () => {
         
 
         {/* Animated Metric Ticker */}
-        <div className="absolute bottom-4 md:bottom-8 left-0 right-0 px-4">
+        <div className="absolute bottom-4 md:bottom-8 left-4 md:right-0 px-4">
           <div className="flex items-center justify-center gap-4 md:gap-8 lg:gap-12 opacity-80">
             <ShineButton
             onClick={()=>navigate('/waitlist')}
@@ -239,17 +240,20 @@ const Hero = () => {
         </div>
 
         {/* Interactive CTA */}
-        <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20">
+            <div className="absolute bottom-4 right-4 md:bottom-6 md:right-6 z-20">
           <button
             onClick={openPopup}
-            className="group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 rounded-full bg-white/3 backdrop-blur-sm border border-white/10 font-medium cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg"
+            className=" group flex items-center justify-center gap-2 w-12 h-12 md:w-auto md:h-auto px-0 py-0 md:px-5 md:py-2.5 rounded-full bg-transparent md:bg-transparent backdrop-blur-sm border border-white/20 font-medium cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg"
           >
-            <span className="text-sm md:text-base">Experience Live</span>
-            <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-white  flex items-center justify-center">
-              <Play className="w-3 h-3 md:w-4 md:h-4 fill-black text-black" />
+            <span className="hidden md:inline text-sm md:text-base">
+              Experience Live
+              </span>
+            <div
+              className="w-10 h-10 md:w-7 md:h-7 rounded-full bg-black md:bg-white flex items-center justify-center"
+            >
+              <Play className="w-4 h-4 md:w-4 md:h-4 fill-white md:fill-black text-white md:text-black" />
             </div>
           </button>
-
         </div>
       </div>
 

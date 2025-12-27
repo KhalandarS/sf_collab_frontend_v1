@@ -9,58 +9,63 @@ gsap.registerPlugin(ScrollTrigger);
 const phases = [
   {
     icon: Rocket,
-    phase: "PHASE 0",
-    title: "MVP – Essential Core",
-    gradient: "from-gray-900 to-black-500",
+    phase: "🧬 PHASE 0 — MVP",
+    title: "Community-Driven Foundation (SFCollab)",
+    gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
     items: [
-      "3d Landing",
-      "Auto Time Connecting",
-      "Business Plan",
-      "Social Media Basic",
-      "Equity access for founders",
-      "Security basics",
-      "Flexible access options",
+      "Community-Powered Idea Battles & Validation",
+      "Startup Creation, Joining & Creative Spaces",
+      "Vision Shaping & Early Pitch Creation",
+      "Team Building & Creative Collaboration",
+      "Founder Social Network",
+      "Knowledge Hub & Lightweight Tools",
+      "Contribution Points & Gamified Progress",
+      "Basic Payments & Community Support",
+      "Unified Startup Ecosystem",
     ],
     description:
-      "Launch-ready, lean, and powerful. Focus on usability and essential features for early users.",
+      "Validate ideas, connect builders, and enable early-stage startup creation inside one unified creative ecosystem.",
   },
   {
     icon: Target,
-    phase: "PHASE 1",
-    title: "Core Functionalities & Monetization",
-    gradient: "from-gray-900 to-black-500",
+    phase: "⚙️ PHASE 1 — CORE PLATFORM",
+    title: "Creation, Growth & Execution Bridge",
+    gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
     items: [
-      "Google Meet and Drive Replacement",
-      "Advanced",
-      "Sfmanager",
-      "AI Assistent",
-      "AI task assignment",
-      "Custom triggers",
-      "Knowledge base / wiki",
+      "Advanced Business Plan & Pitch Deck Creation",
+      "Mentor Registration & Mentorship Ecosystem",
+      "AI Interaction & Voice Control Layer",
+      "Advanced Team Collaboration & Shared Spaces",
+      "Smart Meetings & Activity Tracking",
+      "Enhanced Social Experience",
+      "Payments, Rewards & Mentor Incentives",
+      "Connected Apps & Integrations",
+      "SFManagers Integration for Execution",
     ],
     description:
-      "Focus on engagement, retention, and revenue generation to create a sustainable platform.",
+      "Move startups from validated ideas to structured execution with intelligence, collaboration, and clear ownership.",
   },
   {
     icon: Brain,
-    phase: "PHASE 2",
-    title: "Advanced AI Features & Global Expansion",
-    gradient: "from-gray-900 to-black-500",
+    phase: "🧠 PHASE 2 — INVESTOR-READY & SCALABLE ECOSYSTEM",
+    title: "Intelligence, Capital & Long-Term Infrastructure",
+    gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
     items: [
-      "AI chat summaries",
-      "Gamification pro mode",
-      "AI skill challenges",
-      "Virtual whiteboard",
-      "Advanced team insights",
-      "Auto productivity monitoring",
-      "AI-powered recommendations",
-      "Randomized startup join",
+      "Investor Access & Startup Discovery",
+      "Secure Funding, Escrow & Milestone Enforcement",
+      "Advanced AI Research & Creation Tools",
+      "Sustainable Crypto & Token Infrastructure",
+      "Startup Infrastructure & Services",
+      "Automation & Intelligent Workflows",
+      "Global Collaboration & Community Events",
+      "Proprietary AI & Platform Intelligence",
+      "SFCollab × SFManagers Unified Operating System"
     ],
     description:
-      "AI-powered intelligence, automation, and a dynamic ecosystem for global reach.",
+      "Enable funding readiness, secure capital flows, advanced intelligence, and sustainable ecosystem growth.",
   },
 ];
 
@@ -69,24 +74,72 @@ export default function Roadmap() {
 
   useEffect(() => {
     const el = sectionRef.current;
-    const ctx = gsap.context(() => {
+    if (!el) return;
+
+    const ctx = gsap.context((self) => {
+      const cards = self.selector(".phase-card");
+      const grid = self.selector(".phases-grid")[0];
+
       gsap.fromTo(
         ".roadmap-title",
         { opacity: 0, y: 30 },
         { opacity: 1, y: 0, duration: 0.8, ease: "power3.out", scrollTrigger: { trigger: el, start: "top 85%" } }
       );
-      gsap.fromTo(
-        ".phase-card",
-        { opacity: 0, y: 40 },
-        {
+
+      if (cards.length === 3 && grid) {
+        gsap.set(cards, {
+          x: (i, target) => {
+            const gridRect = grid.getBoundingClientRect();
+            const targetRect = target.getBoundingClientRect();
+            const gridCenter = gridRect.left + gridRect.width / 2;
+            const targetCenter = targetRect.left + targetRect.width / 2;
+            return gridCenter - targetCenter;
+          },
+          y: -50,
+          opacity: 0,
+          scale: 0.8,
+        });
+
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: grid,
+            start: "center center",
+            end: "+=800", // Controls the duration of the pin and scrub
+            pin: true,
+            scrub: 1,
+            anticipatePin: 1,
+          },
+        });
+
+        // 1. First card appears, then moves left
+        tl.to(cards[0], {
           opacity: 1,
+          scale: 1,
           y: 0,
-          duration: 0.8,
+          duration: 0.4,
           ease: "power2.out",
-          stagger: 0.12,
-          scrollTrigger: { trigger: ".phases-grid", start: "top 85%" },
-        }
-      );
+        }).to(cards[0], { x: 0, duration: 0.6, ease: "power3.inOut" });
+
+        // 2. Third card appears, then moves right
+        tl.to(cards[2], {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: 0.4,
+          ease: "power2.out",
+        }, "-=0.5")
+        .to(cards[2], { x: 0, duration: 0.6, ease: "power3.inOut" });
+
+        // 3. Second card appears and stays in the center
+        tl.to(cards[1], {
+          opacity: 1,
+          scale: 1,
+          x: 0,
+          y: 0,
+          duration: 0.6,
+          ease: "back.out(1.5)",
+        }, "-=0.5");
+      }
     }, el);
     return () => ctx.revert();
   }, []);
@@ -94,7 +147,7 @@ export default function Roadmap() {
   return (
     <div ref={sectionRef} className="h-auto p-6">
       <div className="w-full mx-auto">
-        <div className="mb-12 h-[350px] flex flex-col items-center justify-center w-full text-center">
+        <div className="mb-16 flex flex-col items-center justify-center w-full text-center">
           <h2 className="roadmap-title text-4xl md:text-5xl font-bold text-white mb-4">
             Momentum Roadmap
           </h2>
