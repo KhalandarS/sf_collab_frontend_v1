@@ -109,11 +109,11 @@ const Navbar = () => {
   return (
     <>
       {/* Menu Overlay */}
-      <div ref={overlayRef} className='fixed inset-0 z-[40] hidden bg-[#0f0f0f] text-white items-center justify-center'>
+      <div ref={overlayRef} className='fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
         <div className='w-full h-full flex items-center lg:pt-5 pt-10 justify-between p-4'>
 
           {/* Left Menu */}
-          <div className='lg:w-1/2 h-full w-full flex flex-col gap-10 lg:justify-between py-5'>
+          <div className='lg:w-1/2 h-full w-full flex flex-col gap-10 lg:justify-between py-10'>
             <div className='flex flex-col gap-4 px-3 lg:px-8'>
               {navlink.map((link, index) => (
                 <Link
@@ -141,14 +141,10 @@ const Navbar = () => {
 
             <div className='px-3 lg:px-8 flex items-center gap-12'>
               <div className='flex gap-2'>
-<<<<<<< HEAD
-                <Facebook /><Instagram /><Linkedin /><Youtube />
-=======
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Facebook /></a>*/}
                 <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Instagram /></a>
                 <a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Linkedin /></a>
                 {/*<a href="#" className='p-2 border border-white rounded-full hover:bg-white hover:text-black transition-all'><Youtube /></a>*/}
->>>>>>> main
               </div>
             </div>
           </div>
@@ -174,44 +170,35 @@ const Navbar = () => {
 
         </div>
       </div>
-<<<<<<< HEAD
-
-      {/* Top Navbar */}
-      <div ref={navbarRef} className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20'>
-        <div className="text-xl font-bold flex items-center gap-2">
-          <img src="/logo_white.png" className="w-10" alt="sf collab" /> SF COLLAB
-        </div>
-
-=======
       <div 
         ref={navbarRef}
-        className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform  '
+        className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform'
       >
         <div className="md:pt-0 pt-4 h-full flex items-center">
             <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
         </div>
 
-        <div className="flex-1 flex justify-center pl-8 md:pl-0 items-center">
+        <div className="flex-1 flex justify-center items-center">
           <button
             onClick={toggleMusic}
-            className="flex items-end justify-center gap-1 h-8 hover:opacity-80 transition-opacity group"
+            className="flex items-center justify-center gap-1 h-8 hover:opacity-80 transition-opacity group"
             aria-label={isPlaying ? 'Pause music' : 'Play music'}
           >
             <span 
               ref={el => barRefs.current[0] = el}
-              className="w-1 -mt-1 bg-[#fff] h-3 origin-bottom transform transition-all group-hover:bg-zinc-900"
+              className="w-1 bg-white h-3 origin-bottom transform transition-all group-hover:bg-zinc-900"
             />
             <span 
               ref={el => barRefs.current[1] = el}
-              className="w-1 bg-[#fff] h-4 origin-bottom transform transition-all group-hover:bg-zinc-700"
+              className="w-1 bg-white h-4 origin-bottom transform transition-all group-hover:bg-zinc-700"
             />
             <span 
               ref={el => barRefs.current[2] = el}
-              className="w-1 bg-[#fff] h-2 origin-bottom transform transition-all group-hover:bg-zinc-700"
+              className="w-1 bg-white h-2 origin-bottom transform transition-all group-hover:bg-zinc-700"
             />
             
             {!userInteracted && (
-              <div className="absolute -top-1 -right-1 w-2 h-2  rounded-full animate-pulse"></div>
+              <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full animate-pulse"></div>
             )}
           </button>
         </div>
@@ -228,16 +215,6 @@ const Navbar = () => {
           </button>
         </div>
 
->>>>>>> main
-        <button onClick={toggleMusic} className="flex items-end gap-1 h-8">
-          <span ref={el => barRefs.current[0] = el} className="w-1 bg-white h-3" />
-          <span ref={el => barRefs.current[1] = el} className="w-1 bg-white h-4" />
-          <span ref={el => barRefs.current[2] = el} className="w-1 bg-white h-2" />
-        </button>
-
-        <button onClick={toggleMenu} className='rounded-full p-2 bg-[#2A2725] hover:bg-zinc-900'>
-          {isOpen ? <X className='text-white' /> : <Menu className='text-white' />}
-        </button>
       </div>
     </>
   );

@@ -41,10 +41,12 @@ import ReferPage from "./components/waitlist/refer.jsx";
 import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
 import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
-
+import LandingPage from "./components/landing-page/pages/Home.jsx";
 function App() {
   return (
     <Routes>
+      <Route path="/" element={<LandingPage />} />
+      
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
