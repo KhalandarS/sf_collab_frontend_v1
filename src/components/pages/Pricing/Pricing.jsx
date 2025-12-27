@@ -1,15 +1,13 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
-import CollaboratorPricing from "./CollaboratorPricing";
-import FounderPricing from "./FounderPricing";
+import CollaboratorPricing from "../Pricing/CollaboratorPricing";
+import FounderPricing from "../Pricing/FounderPricing";
 import EquityAccess from "./EquityAccess";
-import InvestorPricing from "./InvestorPricing";
-import RoleBasedPricing from "./RoleBasedPricing";
-import ComparePlans from "./ComparePlans";
-import FAQSection from "./FAQSection";
-import NavBar from '../../landing-page/Navbar';
-import Footer from '../../landing-page/Footer';
+import InvestorPricing from "../Pricing/InvestorPricing";
+import RoleBasedPricing from "../Pricing/RoleBasedPricing";
+import ComparePlans from "../Pricing/ComparePlans";
+import FAQSection from "../Pricing/FAQSection";
 
 const Pricing = () => {
   const { ref, inView } = useInView({
@@ -18,13 +16,11 @@ const Pricing = () => {
   });
 
   return (
-    <>
-      <NavBar />
     <motion.main 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="w-full bg-linear-to-b from-stone-800 to-black"
+      className="w-full bg-gradient-to-b from-slate-50 to-white"
     >
       {/* Hero Section */}
       <motion.section 
@@ -75,9 +71,7 @@ const Pricing = () => {
 
       {/* FAQ Section */}
       <FAQSection />
-      </motion.main>
-      <Footer />
-      </>
+    </motion.main>
   );
 };
 

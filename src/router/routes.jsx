@@ -8,6 +8,7 @@ import Ideation from "../components/pages/Ideation.jsx";
 import Knowledge from "../components/pages/Knowledge.jsx";
 import Setting from "../components/pages/Setting.jsx";
 import ProfileSetting from "../components/pages/ProfileSetting.jsx";
+import Pricing from "../components/pages/pricing.jsx";
 import Preferences from "../components/pages/Preferences.jsx";
 import AccountandSecurity from "../components/pages/AccountandSecurity.jsx";
 import Login from "../components/auth/Login.jsx";
@@ -55,6 +56,7 @@ export const router = createBrowserRouter([
         <SignUp />
      ,
   },
+
   // OAuth callback route
   // {
   //   path: "/auth/callback",
@@ -70,7 +72,6 @@ export const router = createBrowserRouter([
     ),
     // element: <Layout />,
     children: [
-    
       {
         path: "/projects",
         element: <Project />,
@@ -90,6 +91,12 @@ export const router = createBrowserRouter([
         path: "/Test",
         element: <Test />,
       },
+
+      {
+        path: "/pricing",    
+        element: <Pricing />,
+      },
+      
       
       //todo: need to be fixed it's working but slow
       {
@@ -204,7 +211,7 @@ export const router = createBrowserRouter([
       //   path: "/messages",
       //   element: <ChatPage />,
       // },
-      
+
       {
         path: "/getting-started",
         element: <GettingStarted/>
