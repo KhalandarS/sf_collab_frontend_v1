@@ -97,7 +97,7 @@ const Footer = () => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-4">Connect</h3>
           <div className="flex items-center gap-4 mb-4">
-            {[Facebook, Instagram, Linkedin, Youtube].map((Icon, i) => (
+            {[Instagram, Linkedin, Tiktok].map((Icon, i) => (
               <a
                 key={i}
                 href="#"
@@ -107,11 +107,11 @@ const Footer = () => {
               </a>
             ))}
           </div>
-          <p className="text-sm text-gray-400">support@sforger.com</p>
+          <p className="text-sm text-gray-400">hello@sfcollab.com</p>
         </div>
       </div>
       <div className="border-t border-white/10 mt-10 pt-6 text-center text-gray-500 text-sm">
-        © {new Date().getFullYear()} Sf Collab. Built for founders.
+        © {new Date().getFullYear()} SFCollab. Built for founders.
       </div>
     </footer>
   );
