@@ -4,6 +4,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
 import JoinSection from "../../../components/JoinSection";
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration,
+  setupScrollTriggerRefresh,
+  isMobile 
+} from '../utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,24 +21,24 @@ const Startup = () => {
   const bgRef = useRef(null);
 
   useEffect(() => {
+    const mobile = isMobile();
     const sections = [heroRef.current, stepsRef.current, toolsRef.current, joinRef.current];
 
     sections.forEach((section) => {
       if (!section) return;
       gsap.fromTo(
         section,
-        { opacity: 0, y: 60 },
+        { opacity: 0, y: mobile ? 30 : 60 },
         {
           opacity: 1,
           y: 0,
-          duration: 1.2,
+          duration: getResponsiveDuration(1.2),
           ease: "power3.out",
-          scrollTrigger: {
+          scrollTrigger: getResponsiveScrollTrigger({
             trigger: section,
-            start: "top 85%",
-            end: "bottom 45%",
-            toggleActions: "play none none reverse",
-          },
+            start: mobile ? "top 90%" : "top 85%",
+            end: mobile ? "bottom 60%" : "bottom 45%",
+          }),
         }
       );
     });
@@ -45,6 +51,11 @@ const Startup = () => {
       duration: 5,
       ease: "sine.inOut",
     });
+
+    // Setup refresh on resize/orientation change
+    const cleanup = setupScrollTriggerRefresh();
+
+    return () => cleanup();
   }, []);
 
   return (

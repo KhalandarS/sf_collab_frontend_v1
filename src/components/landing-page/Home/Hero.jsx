@@ -9,6 +9,12 @@ import ShinyText from '../../ui/ShinyText';
 import { motion } from 'framer-motion';
 import { ShineButton } from '../../lightswind/shine-button';
 import { useNavigate } from 'react-router-dom';
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration, 
+  setupScrollTriggerRefresh,
+  isMobile 
+} from '../utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -28,70 +34,90 @@ const Hero = () => {
   useEffect(() => {
     if (!contentRef.current || !sectionRef.current) return;
 
+    const mobile = isMobile();
     const ctx = gsap.context(() => {
       // Initial entrance animations (staggered)
       gsap.from([mainHeadingRef.current, backgroundMetricsRef.current, liveStatsRef.current], {
         opacity: 0,
-        y: 40,
-        duration: 1.2,
+        y: mobile ? 20 : 40,
+        duration: getResponsiveDuration(1.2),
         ease: "power3.out",
-        stagger: 0.2,
+        stagger: mobile ? 0.1 : 0.2,
         delay: 0.3
       });
 
-      // Scroll-triggered hero transformation
-      gsap.fromTo(
-        contentRef.current,
-        {
-          scale: 1,
-          opacity: 1,
-        },
-        {
-          scale: 1.5,
-          opacity: 0,
-          ease: "power2.inOut",
+      // Scroll-triggered hero transformation - disable pin on mobile
+      if (!mobile) {
+        gsap.fromTo(
+          contentRef.current,
+          {
+            scale: 1,
+            opacity: 1,
+          },
+          {
+            scale: 1.5,
+            opacity: 0,
+            ease: "power2.inOut",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top top",
+              end: "bottom top",
+              scrub: 1,
+              pin: true,
+              pinSpacing: true,
+              anticipatePin: 1,
+              onUpdate: (self) => {
+                // Parallax background metrics
+                gsap.to(backgroundMetricsRef.current, {
+                  y: self.progress * -40,
+                  opacity: 0.06 - (self.progress * 0.06),
+                  ease: "none"
+                });
+
+                // Fade out live stats
+                gsap.to(liveStatsRef.current, {
+                  opacity: 1 - (self.progress * 1.5),
+                  y: self.progress * 20,
+                  ease: "none"
+                });
+              }
+            }
+          }
+        );
+
+        // Background video scroll scale - desktop only
+        gsap.to(imageRef.current, {
+          scale: 1.2,
+          opacity: 0.3,
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top top",
             end: "bottom top",
             scrub: 1,
-            pin: true,
-            pinSpacing: true,
-            anticipatePin: 1,
-            onUpdate: (self) => {
-              // Parallax background metrics
-              gsap.to(backgroundMetricsRef.current, {
-                y: self.progress * -40,
-                opacity: 0.06 - (self.progress * 0.06),
-                ease: "none"
-              });
-
-              // Fade out live stats
-              gsap.to(liveStatsRef.current, {
-                opacity: 1 - (self.progress * 1.5),
-                y: self.progress * 20,
-                ease: "none"
-              });
-            }
-          }
-        }
-      );
-
-      // Background video scroll scale
-      gsap.to(imageRef.current, {
-        scale: 1.2,
-        opacity: 0.3,
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "bottom top",
-          scrub: 1,
-        },
-      });
+          },
+        });
+      } else {
+        // Simple fade animation for mobile
+        gsap.to(contentRef.current, {
+          opacity: 0.8,
+          scrollTrigger: getResponsiveScrollTrigger({
+            trigger: sectionRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: 0.5,
+          }),
+        });
+      }
 
     }, sectionRef);
 
-    return () => ctx.revert();
+    // Setup refresh on resize/orientation change
+    const cleanup = setupScrollTriggerRefresh();
+
+    return () => {
+      ctx.revert();
+      cleanup();
+    };
   }, []);
 
   const openPopup = () => {

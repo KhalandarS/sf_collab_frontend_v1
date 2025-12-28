@@ -22,21 +22,21 @@ const Products = () => {
       year: "System",
       title: "Execution Engine",
       desc: "Tasks, docs, and decisions in one place. Real-time updates across teams.",
-      img: "/landing_page/1.1.png",
+      img: "/landing_page/1.2.png",
     },
     {
       id: 2,
       year: "System",
       title: "Collaboration Infrastructure",
       desc: "Live presence, async workflows, timezone-aware. Built for distributed teams.",
-      img: "/landing_page/2.1.png",
+      img: "/landing_page/2.5 (2).png",
     },
     {
       id: 3,
       year: "System",
       title: "Operational Layer",
       desc: "Permissions, governance, and continuity across projects without friction.",
-      img: "/landing_page/3.1.png",
+      img: "/landing_page/3.1 (2).png",
     },
     {
       id: 4,
@@ -51,7 +51,7 @@ const Products = () => {
       year: "System",
       title: "AI Workflows",
       desc: "Summaries, prioritization, and unblockers woven into real work, not popups.",
-      img: "/landing_page/5.5.png",
+      img: "/landing_page/5.5 (2).png",
     },
     {
       id: 6,

@@ -4,6 +4,12 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import NavBar from "../Navbar";
 import Footer from "../Footer";
 import JoinSection from "../../../components/JoinSection";
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration,
+  setupScrollTriggerRefresh,
+  isMobile 
+} from '../utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -11,6 +17,8 @@ const About = () => {
   const main = useRef();
 
   useEffect(() => {
+    const mobile = isMobile();
+    
     const ctx = gsap.context(() => {
       // Select all sections with a common class for the fade-in animation
       const sections = gsap.utils.toArray(".animated-section");
@@ -18,33 +26,34 @@ const About = () => {
       sections.forEach((sec) => {
         gsap.fromTo(
           sec,
-          { opacity: 0, y: 60 },
+          { opacity: 0, y: mobile ? 30 : 60 },
           {
             opacity: 1,
             y: 0,
-            duration: 1.2,
+            duration: getResponsiveDuration(1.2),
             ease: "power3.out",
-            scrollTrigger: {
+            scrollTrigger: getResponsiveScrollTrigger({
               trigger: sec,
-              start: "top 85%",
-              end: "bottom 45%",
-              toggleActions: "play none none reverse",
-            },
+              start: mobile ? "top 90%" : "top 85%",
+              end: mobile ? "bottom 60%" : "bottom 45%",
+            }),
           }
         );
       });
 
-      // Parallax background motion
-      gsap.to(".parallax-bg", {
-        yPercent: 20,
-        ease: "none",
-        scrollTrigger: {
-          trigger: main.current, // Use the main container as the trigger
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
+      // Parallax background motion - desktop only
+      if (!mobile) {
+        gsap.to(".parallax-bg", {
+          yPercent: 20,
+          ease: "none",
+          scrollTrigger: {
+            trigger: main.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      }
 
       // Floating blob animations
       gsap.to(".blob", {
@@ -54,9 +63,15 @@ const About = () => {
         duration: 5,
         ease: "sine.inOut",
       });
-    }, main); // scope the context to the main ref
+    }, main);
 
-    return () => ctx.revert(); // cleanup!
+    // Setup refresh on resize/orientation change
+    const cleanup = setupScrollTriggerRefresh();
+
+    return () => {
+      ctx.revert();
+      cleanup();
+    };
   }, []);
 
   return (

@@ -135,7 +135,7 @@ const Explore = () => {
             Sf Collab unifies execution, real-time collaboration, operations, and AI-assisted workflows. It’s infrastructure for building, not a chat app.
           </p>
           <Link
-            to="https://bright-bunny-ceef3b.netlify.app/login"
+            to="https://sfcollab.com/login"
             className="inline-block mt-4 text-lg font-medium border-b border-white hover:text-white/80 transition-all"
           >
             See The Platform →

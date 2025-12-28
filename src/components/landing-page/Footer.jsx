@@ -3,6 +3,11 @@ import { Link } from "react-router-dom";
 import { Instagram, Linkedin } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration,
+  isMobile 
+} from './utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -24,18 +29,20 @@ const Footer = () => {
 
   useEffect(() => {
     const el = footerRef.current;
+    const mobile = isMobile();
+    
     gsap.fromTo(
       el,
-      { opacity: 0, y: 60 },
+      { opacity: 0, y: mobile ? 30 : 60 },
       {
         opacity: 1,
         y: 0,
-        duration: 1.2,
+        duration: getResponsiveDuration(1.2),
         ease: "power3.out",
-        scrollTrigger: {
+        scrollTrigger: getResponsiveScrollTrigger({
           trigger: el,
-          start: "top bottom",
-        },
+          start: mobile ? "top 95%" : "top bottom",
+        }),
       }
     );
   }, []);
@@ -110,7 +117,7 @@ const Footer = () => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-4">Connect</h3>
           <div className="flex items-center gap-4 mb-4">
-            {[Instagram, Linkedin, Tiktok].map((Icon, i) => (
+            {[Instagram, Linkedin, TikTokIcon].map((Icon, i) => (
               <a
                 key={i}
                 href="#"

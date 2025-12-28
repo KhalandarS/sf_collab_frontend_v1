@@ -42,10 +42,22 @@ import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms
 import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
 import LandingPage from "./components/landing-page/pages/Home.jsx";
+import AboutPage from "./components/landing-page/pages/About.jsx";
+import TeamPage from "./components/landing-page/pages/Team.jsx";
+import ContactPage from "./components/landing-page/pages/Contact.jsx";
+import StartupPage from "./components/landing-page/pages/StartupPage.jsx";
+import ProductsPage from "./components/landing-page/pages/Products.jsx";
+
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/team" element={<TeamPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/startuppage" element={<StartupPage />} />
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/explore" element={<ProductsPage />} />
       
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />

@@ -2,6 +2,12 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Linkedin, Instagram } from "lucide-react";
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration,
+  setupScrollTriggerRefresh,
+  isMobile 
+} from '../utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -60,6 +66,8 @@ const Team = () => {
   const main = useRef();
 
   useEffect(() => {
+    const mobile = isMobile();
+    
     const ctx = gsap.context((self) => {
       const cards = self.selector(".team-card");
       const grid = self.selector(".team-grid");
@@ -68,38 +76,59 @@ const Team = () => {
       // Animate header first
       gsap.from(header, {
         opacity: 0,
-        y: 30,
-        duration: 0.8,
+        y: mobile ? 20 : 30,
+        duration: getResponsiveDuration(0.8),
         ease: "power2.out",
-        scrollTrigger: {
+        scrollTrigger: getResponsiveScrollTrigger({
           trigger: header,
-          start: "top 80%",
-          toggleActions: "play none none none"
-        }
+          start: mobile ? "top 90%" : "top 80%",
+        })
       });
 
       // Set initial state for team cards
-      gsap.set(cards, { opacity: 0, y: 50, scale: 0.95 });
+      gsap.set(cards, { opacity: 0, y: mobile ? 30 : 50, scale: 0.95 });
 
-      // Create a timeline for the pinned animation with 0.2s delay after header
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: grid,
-          start: "top top",
-          end: () => "+=" + (cards.length * 120), // Reduced scroll distance for faster animation
-          pin: true,
-          scrub: 0.8, // Reduced scrub value for faster response
-          anticipatePin: 1,
-        },
-      });
+      // Mobile: simple stagger animation without pin
+      if (mobile) {
+        gsap.to(cards, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          ease: "power2.out",
+          scrollTrigger: getResponsiveScrollTrigger({
+            trigger: grid,
+            start: "top 80%",
+          })
+        });
+      } else {
+        // Desktop: pinned animation timeline
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: grid,
+            start: "top top",
+            end: () => "+=" + (cards.length * 120),
+            pin: true,
+            scrub: 0.8,
+            anticipatePin: 1,
+          },
+        });
 
-      // Add 0.2s delay, then animate each card into view sequentially with faster timing
-      tl.to({}, { duration: 0.2 }); // 0.2s delay
-      cards.forEach((card) => {
-        tl.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }, "-=0.3");
-      });
-    }, main); // scope the context to the main ref
-    return () => ctx.revert();
+        tl.to({}, { duration: 0.2 });
+        cards.forEach((card) => {
+          tl.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }, "-=0.3");
+        });
+      }
+    }, main);
+
+    // Setup refresh on resize/orientation change
+    const cleanup = setupScrollTriggerRefresh();
+
+    return () => {
+      ctx.revert();
+      cleanup();
+    };
   }, []);
 
   return (

@@ -5,6 +5,13 @@ import { Draggable } from "gsap/Draggable";
 import { motion } from "framer-motion";
 import { AboutItems } from "../utils";
 import { ArrowRight, Sparkles, Zap, Users, CheckCircle, Cpu, Layout, Clock, Brain ,TrendingUp, Building2, Palette} from "lucide-react";
+import { 
+  getResponsiveScrollTrigger, 
+  getResponsiveDuration,
+  getResponsiveStagger,
+  setupScrollTriggerRefresh,
+  isMobile 
+} from '../utils/scrollTriggerConfig';
 
 gsap.registerPlugin(ScrollTrigger, Draggable);
 
@@ -72,7 +79,7 @@ const featureSections = [
     icon: <Zap className="w-6 h-6" />,
     position: "left",
     color: "gradient",
-    img:<img src="/f1.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f1.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   },
   {
     id: 2,
@@ -82,7 +89,7 @@ const featureSections = [
     icon: <Brain className="w-6 h-6" />,
     position: "right",
     color: "silver",
-    img:<img src="/f2.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f2.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   },
   {
     id: 3,
@@ -92,7 +99,7 @@ const featureSections = [
     icon: <TrendingUp className="w-6 h-6" />,
     position: "left",
     color: "platinum",
-    img:<img src="/f3.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f3.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   },
   {
     id: 4,
@@ -102,7 +109,7 @@ const featureSections = [
     icon: <Building2 className="w-6 h-6" />,
     position: "right",
     color: "carbon",
-    img:<img src="/f4.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f4.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   },
   {
     id: 5,
@@ -112,7 +119,7 @@ const featureSections = [
     icon: <Palette className="w-6 h-6" />,
     position: "left",
     color: "graphite",
-    img:<img src="/f5.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f5.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   },
   {
     id: 6,
@@ -122,7 +129,7 @@ const featureSections = [
     icon: <Users className="w-6 h-6" />,
     position: "right",
     color: "titanium",
-    img:<img src="/f6.png" alt="" srcset=""  className=" absolute object-fill h-full" />
+    img:<img src="/f6.png" alt="" srcSet=""  className=" absolute object-fill h-full" />
   }
 ];
 
@@ -154,6 +161,8 @@ const getTextGradient = (color) => {
   return gradients[color] || "bg-gradient-to-r from-white to-gray-200";
 };
   useEffect(() => {
+    const mobile = isMobile();
+    
     // GSAP animations for all elements
     const ctx = gsap.context(() => {
       // Feature sections animations
@@ -162,68 +171,70 @@ const getTextGradient = (color) => {
         
         gsap.from(selector, {
           opacity: 0,
-          y: 60,
-          duration: 1.2,
+          y: mobile ? 30 : 60,
+          duration: getResponsiveDuration(1.2),
           ease: "power3.out",
-          scrollTrigger: {
+          scrollTrigger: getResponsiveScrollTrigger({
             trigger: selector,
-            start: "top 80%",
-            end: "top 50%",
-            toggleActions: "play none none reverse",
-          }
+            start: mobile ? "top 90%" : "top 80%",
+            end: mobile ? "top 60%" : "top 50%",
+          })
         });
       });
 
       // Rail cards animation
       gsap.from(".rail-card", {
         opacity: 0,
-        y: 40,
-        stagger: 0.08,
-        duration: 0.6,
+        y: mobile ? 20 : 40,
+        stagger: getResponsiveStagger(0.08),
+        duration: getResponsiveDuration(0.6),
         ease: "power2.out",
-        scrollTrigger: {
+        scrollTrigger: getResponsiveScrollTrigger({
           trigger: containerRef.current,
-          start: "top 75%",
-          end: "bottom 20%",
-          toggleActions: "play none none reverse",
-        }
+          start: mobile ? "top 85%" : "top 75%",
+          end: mobile ? "bottom 30%" : "bottom 20%",
+        })
       });
 
       // Progress indicator animation
       gsap.from(".progress-item", {
         opacity: 0,
-        x: -20,
-        stagger: 0.15,
-        duration: 0.8,
+        x: mobile ? -10 : -20,
+        stagger: getResponsiveStagger(0.15),
+        duration: getResponsiveDuration(0.8),
         ease: "power2.out",
-        scrollTrigger: {
+        scrollTrigger: getResponsiveScrollTrigger({
           trigger: ".progress-container",
-          start: "top 85%",
-          end: "top 60%",
-          toggleActions: "play none none reverse",
-        }
+          start: mobile ? "top 90%" : "top 85%",
+          end: mobile ? "top 70%" : "top 60%",
+        })
       });
 
       // Stats animation
       gsap.from(".stat-item", {
         opacity: 0,
-        y: 30,
-        stagger: 0.1,
-        duration: 0.8,
+        y: mobile ? 15 : 30,
+        stagger: getResponsiveStagger(0.1),
+        duration: getResponsiveDuration(0.8),
         ease: "power2.out",
-        scrollTrigger: {
+        scrollTrigger: getResponsiveScrollTrigger({
           trigger: ".stats-container",
-          start: "top 85%",
-          end: "top 60%",
-          toggleActions: "play none none reverse",
-        }
+          start: mobile ? "top 90%" : "top 85%",
+          end: mobile ? "top 70%" : "top 60%",
+        })
       });
 
       // Note: Active rail index is only updated by dragging, not by page scroll
 
     }, sectionRef);
 
-    return () => ctx.revert();
+    // Setup refresh on resize/orientation change
+    const cleanup = setupScrollTriggerRefresh();
+
+    return () => {
+      ctx.revert();
+      cleanup();
+    };
   }, []);
 
   useEffect(() => {

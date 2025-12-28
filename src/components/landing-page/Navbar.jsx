@@ -101,6 +101,7 @@ const Navbar = () => {
     { href: '/', name: 'Home' },
     { href: '/about', name: 'Platform' },
     { href: '/pricing', name: 'Pricing' },
+    { href: '/explore', name: 'Explore' },
     { href: '/startuppage', name: 'Startups' },
     { href: '/team', name: 'Team' },
     { href: '/contact', name: 'Contact' },
