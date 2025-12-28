@@ -46,7 +46,7 @@ const FAQSection = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8 }}
-      className="py-20 bg-gradient-to-b from-white to-slate-50"
+      className="py-20 "
     >
       <div className="mx-auto max-w-4xl px-4">
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">

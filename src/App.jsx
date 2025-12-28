@@ -70,6 +70,7 @@ function App() {
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/data-collection-and-tracking" element={<DataCollection />} />
+       <Route path="pricing"  element={<Pricing />} />
       {/* Protected Routes */}
       <Route 
         path="/" 
@@ -125,7 +126,7 @@ function App() {
         <Route path="Test" element={<Test />} />
 
         {/* pricing */}
-        <Route path="pricing"  element={<Pricing />} />
+       
         
         {/* Settings - Nested Routes */}
         <Route path="setting" element={<Setting />}>
