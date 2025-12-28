@@ -49,7 +49,7 @@ const Contact = () => {
                 </p> */}
                 <p className="flex items-center gap-4">
                   <Mail className="w-5 h-5 text-gray-400" />
-                  <a href="mailto:hello@sfcollab.com" className="hover:text-white transition">sfcollab333@gmail.com</a>
+                  <a href="hello@sfcollab.com" className="hover:text-white transition">hello@sfcollab.com</a>
                 </p>
                 {/* <p className="flex items-center gap-4">
                   <Phone className="w-5 h-5 text-gray-400" />
