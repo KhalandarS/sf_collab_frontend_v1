@@ -8,7 +8,8 @@ import {
   setupScrollTriggerRefresh,
   isMobile 
 } from '../utils/scrollTriggerConfig';
-
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 // Images
 import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
 import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
@@ -113,7 +114,7 @@ const Team = () => {
 
   return (
     <>
-      <NavBar />  
+      <Navbar />
     <section
       ref={main}
       className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20"
@@ -162,9 +163,9 @@ const Team = () => {
           ))}
         </div>
       </div>
-      </section>
-      <Footer />
-      </>
+    </section>
+    <Footer />
+    </>
   );
 };
 

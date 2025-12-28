@@ -9,7 +9,7 @@ import Products from '../Home/Products'
 import StartUp from '../Home/StartUp'
 import Contact from './Contact'
 import Team from './Team'
-import Navbar from '../Navbar'
+import NavBar from '../NavBar'
 import Footer from '../Footer'
 import 'lenis/dist/lenis.css'
 
@@ -44,7 +44,7 @@ const Home = () => {
 
   return (
     <div className="overflow-y-hidden md:w-full w-screen">
-        <Navbar/>
+        <NavBar/>
 
       <section className='flex w-full flex-col overflow-x-hidden scrollbar-hide scroll-smooth'>
         <Hero/>

@@ -47,6 +47,9 @@ import TeamPage from "./components/landing-page/pages/Team.jsx";
 import ContactPage from "./components/landing-page/pages/Contact.jsx";
 import StartupPage from "./components/landing-page/pages/StartupPage.jsx";
 import ProductsPage from "./components/landing-page/pages/Products.jsx";
+import MembershipBenefits from "./components/landing-page/pages/MembershipBenefits.jsx";
+import ImplementationPlans from "./components/landing-page/pages/ImplementationPlans.jsx";
+import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
 
 function App() {
   return (
@@ -65,7 +68,20 @@ function App() {
       {/* Refer and Waitlist */}
       <Route path="/waitlist" element={<Waitlist />} />
       <Route path="/refer" element={<ReferPage />} />
+      {/*   const navlink = [
+    { href: '/', name: 'Home' },
+    { href: '/about', name: 'Platform' },
+    { href: '/membership-benefits', name: 'Membership benefits' },
+    { href: '/implementation-plans', name: 'Implementation Plans' },
+    { href: '/featured-projects', name: 'Featured Projects' },
+    { href: '/team', name: 'Our Team' },
+    { href: '/contact', name: 'Contact' },
+  ]; */}
       
+      <Route path='membership-benefits' element={<MembershipBenefits />} />
+      <Route path='implementation-plans' element={<ImplementationPlans />} />
+      <Route path='featured-projects' element={<FeaturedProjects />} />
+
       {/* Terms and conditions and privacy policy */}
       <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />

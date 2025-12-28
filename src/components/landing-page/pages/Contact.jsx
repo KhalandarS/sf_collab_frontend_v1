@@ -2,7 +2,8 @@ import React, { useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
 import MediaLinks from "../../../utils/MediaLinks";
-
+import NavBar from "../Navbar";
+import Footer from "../Footer";
 const Contact = () => {
   const main = useRef();
 
@@ -24,6 +25,8 @@ const Contact = () => {
   }, []);
 
   return (
+    <>
+      <NavBar />
     <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20 min-h-screen">
       
       <div className="max-w-6xl mx-auto">
@@ -98,7 +101,9 @@ const Contact = () => {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      <Footer />
+    </>
   );
 };
 
