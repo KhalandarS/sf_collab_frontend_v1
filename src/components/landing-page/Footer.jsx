@@ -110,28 +110,15 @@ const Footer = () => {
         <div>
           <h3 className="text-xl font-semibold text-white mb-4">Connect</h3>
           <div className="flex items-center gap-4 mb-4">
-            <a
-              href="https://www.instagram.com/sfcollab_official/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
-            >
-              <Instagram size={18} />
-            </a>
-            <a
-              href="https://www.linkedin.com/company/sfcollab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
-            >
-              <Linkedin size={18} />
-            </a>
-            <a
-              href="#"
-              className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
-            >
-              <TikTokIcon size={18} />
-            </a>
+            {[Instagram, Linkedin, Tiktok].map((Icon, i) => (
+              <a
+                key={i}
+                href="#"
+                className="p-2 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all duration-300"
+              >
+                <Icon size={18} />
+              </a>
+            ))}
           </div>
           <p className="text-sm text-gray-400">hello@sfcollab.com</p>
         </div>
