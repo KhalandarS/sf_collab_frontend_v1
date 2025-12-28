@@ -20,6 +20,14 @@ const AboutSection = () => {
   const sectionRef = useRef(null);
   const [activeRailIndex, setActiveRailIndex] = useState(0);
 
+  // Use images instead of videos for the draggable rail
+  const aboutRailImages = [
+    "/landing_page/features_dragimages/1.png",
+    "/landing_page/features_dragimages/4.2.png",
+    "/landing_page/features_dragimages/Image 4.3.png",
+    "/landing_page/features_dragimages/Version 2.5.png",
+    "/landing_page/features_dragimages/Version 4.1.png"
+  ];
   const aboutRail = [
     {
       id: 1,
@@ -28,7 +36,7 @@ const AboutSection = () => {
       description: "Every action syncs instantly across teams, boards, and workflows. No refresh. No delay.",
       tag: "Core Engine",
       accent: "violet",
-      video: AboutItems.aboutVideoOne,
+      image: aboutRailImages[0],
     },
     {
       id: 2,
@@ -37,7 +45,7 @@ const AboutSection = () => {
       description: "Tasks, collaboration, planning, and communication live in one continuous system.",
       tag: "Workspace",
       accent: "blue",
-      video: AboutItems.aboutVideoTwo,
+      image: aboutRailImages[1],
     },
     {
       id: 3,
@@ -46,9 +54,8 @@ const AboutSection = () => {
       description: "Designed for founders who execute fast without juggling disconnected tools.",
       tag: "Operations",
       accent: "emerald",
-      video: AboutItems.aboutVideoThree,
+      image: aboutRailImages[2],
     },
-  
     {
       id: 5,
       title: "AI-Assisted Momentum",
@@ -56,7 +63,7 @@ const AboutSection = () => {
       description: "AI helps summarize, prioritize, and unblock execution without noise.",
       tag: "AI Layer",
       accent: "pink",
-      video: AboutItems.aboutVideoFive,
+      image: aboutRailImages[3],
     },
     {
       id: 6,
@@ -65,7 +72,7 @@ const AboutSection = () => {
       description: "Built to scale from MVP to unicorn with infrastructure that grows with your ambition.",
       tag: "Scale",
       accent: "amber",
-      video: AboutItems.aboutVideoFive,
+      image: aboutRailImages[4],
     },
   ];
 
@@ -654,14 +661,12 @@ const getAccentBorder = (color) => {
                 }}
               >
                 <div className="relative h-full">
-                  {/* Video background */}
-                  <video
-                    src={item.video}
+                  {/* Image background (replaces video) */}
+                  <img
+                    src={item.image}
+                    alt={item.title}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
+                    draggable={false}
                   />
                   
                   {/* Gradient overlay */}
