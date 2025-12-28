@@ -68,6 +68,7 @@ const Contact = () => {
 
           {/* Contact Form */}
           <div className="bg-[#111111] p-8 rounded-2xl shadow-lg border border-gray-800 contact-animate">
+            <h2 className="text-2xl font-bold text-white mb-6">Contact Form</h2>
             <form className="space-y-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">Full Name</label>
