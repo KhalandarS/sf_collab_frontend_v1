@@ -20,7 +20,6 @@ const About = () => {
     const mobile = isMobile();
     
     const ctx = gsap.context(() => {
-      // Select all sections with a common class for the fade-in animation
       const sections = gsap.utils.toArray(".animated-section");
 
       sections.forEach((sec) => {
@@ -65,7 +64,6 @@ const About = () => {
       });
     }, main);
 
-    // Setup refresh on resize/orientation change
     const cleanup = setupScrollTriggerRefresh();
 
     return () => {
@@ -77,139 +75,224 @@ const About = () => {
   return (
     <>
       <NavBar />
-    <div ref={main} className="bg-[#0b0b0b] text-white relative overflow-hidden">
-      {/* Floating Blobs Background */}
-      <div className="parallax-bg absolute inset-0 -z-10">
-        <div className="blob absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl"></div>
-        <div className="blob absolute bottom-10 right-10 w-72 h-72 bg-gradient-to-r from-pink-600/20 to-blue-600/20 rounded-full blur-3xl"></div>
-        <div className="blob absolute top-1/2 right-1/4 w-56 h-56 bg-gradient-to-r from-yellow-600/20 to-red-500/20 rounded-full blur-3xl"></div>
-      </div>
-
-      {/*Hero Section */}
-      <section
-        className="animated-section flex flex-col justify-center items-center text-center py-32 px-6 lg:px-20 relative z-10"
-      >
-        <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-          The Startup Operating System
-        </h1>
-        <p className="text-gray-300 max-w-2xl leading-relaxed text-lg">
-          SFCollab unifies execution, real-time collaboration, operations, and AI-assisted workflows into one calm, continuous platform built for founders.
-        </p>
-      </section>
-
-      {/*Mission & Vision */}
-      <section
-        className="animated-section flex flex-col lg:flex-row items-center gap-12 py-20 px-6 lg:px-20 relative z-10"
-      >
-        <div className="flex-1">
-          <img
-            src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
-            alt="Innovation"
-            className="rounded-2xl shadow-2xl w-full object-cover hover:scale-105 transition-transform duration-500"
-          />
+      <div ref={main} className="bg-[#0b0b0b] text-white relative overflow-hidden">
+        {/* Floating Blobs Background */}
+        <div className="parallax-bg absolute inset-0 -z-10">
+          <div className="blob absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-indigo-600/30 to-purple-700/30 rounded-full blur-3xl"></div>
+          <div className="blob absolute bottom-10 right-10 w-72 h-72 bg-gradient-to-r from-pink-600/20 to-blue-600/20 rounded-full blur-3xl"></div>
+          <div className="blob absolute top-1/2 right-1/4 w-56 h-56 bg-gradient-to-r from-yellow-600/20 to-red-500/20 rounded-full blur-3xl"></div>
         </div>
-        <div className="flex-1 space-y-6">
-          <h2 className="text-3xl lg:text-4xl font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-            Mission & Operating Principles
+
+        {/* Hero Section */}
+        <section className="animated-section flex flex-col justify-center items-center text-center py-32 px-6 lg:px-20 relative z-10">
+          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            Where Builders Create Real Products Together
+          </h1>
+          <p className="text-gray-300 max-w-2xl leading-relaxed text-lg">
+            SFcollab is where builders, operators, and founders come together to create real products — with clarity, fairness, and shared upside.
+          </p>
+        </section>
+
+        {/* The SF Way */}
+        <section className="animated-section flex flex-col lg:flex-row items-center gap-12 py-20 px-6 lg:px-20 relative z-10">
+          <div className="flex-1">
+            <img
+              src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80"
+              alt="Collaboration"
+              className="rounded-2xl shadow-2xl w-full object-cover hover:scale-105 transition-transform duration-500"
+            />
+          </div>
+          <div className="flex-1 space-y-6">
+            <h2 className="text-3xl lg:text-4xl font-semibold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              The SF Way
+            </h2>
+            <p className="text-gray-300 leading-relaxed">
+              SFcollab changes how work comes together.
+            </p>
+            <ul className="space-y-4 text-gray-300">
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400 mt-1">→</span>
+                <span>Instead of temporary gigs, you build <strong className="text-white">long-term collaborations</strong>.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400 mt-1">→</span>
+                <span>Instead of scattered tools, everything lives in <strong className="text-white">one shared system</strong>.</span>
+              </li>
+              <li className="flex items-start gap-3">
+                <span className="text-indigo-400 mt-1">→</span>
+                <span>Instead of working for someone, you work <strong className="text-white">with them</strong>.</span>
+              </li>
+            </ul>
+            <p className="text-gray-300 leading-relaxed">
+              SFcollab is built for people who want to build, not just deliver.
+            </p>
+          </div>
+        </section>
+
+        {/* How It Works - 3 Steps */}
+        <section className="animated-section py-24 px-6 lg:px-20 bg-[#111111]/60 backdrop-blur-md relative z-10">
+          <h2 className="text-center text-3xl lg:text-4xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            How It Works
           </h2>
-          <p className="text-gray-300 leading-relaxed">
-            Execution over ideation. Replace scattered tools with a single source of truth where tasks, docs, chat, and decisions live together.
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Simple, not technical. Three steps to building something real.
           </p>
-          <p className="text-gray-300 leading-relaxed">
-            Built founder-first. Real-time by default. AI that summarizes, prioritizes, and unblocks without noise.
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                step: "01",
+                title: "Start with People",
+                desc: "Share an idea or join one. Meet founders, builders, designers, and thinkers — all in one place. No pitching. No pressure. Just collaboration.",
+              },
+              {
+                step: "02",
+                title: "Do the Work",
+                desc: "Tasks are clear. Progress is visible. Effort is tracked. You always know what needs to be done, who's doing it, and how value is created.",
+              },
+              {
+                step: "03",
+                title: "Get Rewarded Fairly",
+                desc: "Work turns into value. That value turns into pay, ownership, reputation, and opportunity. No empty promises. It's built into the system.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-[#1a1a1a] p-8 rounded-2xl hover:scale-105 transition-transform duration-500 shadow-xl border border-gray-800"
+              >
+                <span className="text-5xl font-bold text-indigo-500/30">{item.step}</span>
+                <h3 className="text-2xl font-semibold mb-4 mt-2 text-white">{item.title}</h3>
+                <p className="text-gray-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Platform Features */}
+        <section className="animated-section py-24 px-6 lg:px-20 relative z-10">
+          <h2 className="text-center text-3xl lg:text-4xl font-semibold mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            What You Get
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Benefits built for builders.
           </p>
-        </div>
-      </section>
 
-      {/*Timeline Section */}
-      <section
-        className="animated-section py-24 px-6 lg:px-20 bg-[#111111]/60 backdrop-blur-md relative z-10"
-      >
-        <h2 className="text-center text-3xl lg:text-4xl font-semibold mb-16 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
-          Building The Operating System
-        </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 max-w-6xl mx-auto">
+            {[
+              {
+                title: "Clarity",
+                desc: "Always know what you're building and why.",
+              },
+              {
+                title: "Fair Ownership",
+                desc: "Your effort translates into real upside.",
+              },
+              {
+                title: "Strong Teams",
+                desc: "Work with people who are aligned, not random.",
+              },
+              {
+                title: "Less Noise",
+                desc: "Everything in one place, nothing scattered.",
+              },
+              {
+                title: "Momentum",
+                desc: "Build once, grow continuously.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-[#111111] p-6 rounded-2xl text-center hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-500 border border-gray-800"
+              >
+                <span className="text-4xl mb-4 block">{item.icon}</span>
+                <h3 className="text-lg font-semibold mb-2 text-indigo-300">{item.title}</h3>
+                <p className="text-gray-400 text-sm">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        <div className="relative border-l border-gray-700 max-w-3xl mx-auto">
-          {[
-            {
-              year: "2023",
-              title: "Unified Execution",
-              text: "First core: tasks, docs, and presence in one system. Real-time foundation < 50ms.",
-            },
-            {
-              year: "2024",
-              title: "Operational Layer",
-              text: "Permissions, governance, and continuity across teams without friction.",
-            },
-            {
-              year: "2025",
-              title: "AI-Assisted Workflows",
-              text: "Summaries, prioritization, and unblockers integrated into the flow of work.",
-            },
-            {
-              year: "Next",
-              title: "Momentum at Scale",
-              text: "A calm, deliberate system for teams with velocity. Integrations without context loss.",
-            },
-          ].map((item, i) => (
-            <div key={i} className="mb-12 pl-8 relative">
-              <span className="absolute left-0 top-2 w-3 h-3 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full shadow-lg"></span>
-              <h3 className="text-xl font-semibold">{item.year}</h3>
-              <h4 className="text-lg text-gray-200 mt-1">{item.title}</h4>
-              <p className="text-gray-400 mt-2">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        {/* AI Tools */}
+        <section className="animated-section py-24 px-6 lg:px-20 bg-[#111111]/60 backdrop-blur-md relative z-10">
+          <h2 className="text-center text-3xl lg:text-4xl font-semibold mb-6 bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            AI-Powered Tools
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Let AI handle the busy work so you can focus on building.
+          </p>
 
-      {/*Team Section */}
-      {/* <section
-        className="animated-section py-24 px-6 lg:px-20 text-center bg-[#0b0b0b]/80 relative z-10"
-      >
-        <h2 className="text-3xl lg:text-4xl font-semibold mb-12 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
-          Meet Our Team
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[
-            {
-              name: "Oskar",
-              role: "CEO",
-              img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=500&q=80",
-            },
-            {
-              name: "Suhail",
-              role: "Full Stack Developer",
-              img: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=500&q=80",
-            },
-            {
-              name: "Emmanuel",
-              role: "Backend Developer",
-              img: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=500&q=80",
-            },
-          ].map((person, i) => (
-            <div
-              key={i}
-              className="bg-[#111111] rounded-2xl p-6 flex flex-col items-center hover:scale-105 hover:shadow-[0_0_40px_rgba(139,92,246,0.3)] transition-all duration-500"
-            >
-              <img
-                src={person.img}
-                alt={person.name}
-                className="w-32 h-32 rounded-full object-cover mb-4 border-2 border-purple-400/50"
-              />
-              <h3 className="text-xl font-semibold">{person.name}</h3>
-              <p className="text-gray-400">{person.role}</p>
-            </div>
-          ))}
-        </div>
-      </section> */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              {
+                title: "Generate Logos",
+                desc: "Create professional brand assets in seconds.",
+              },
+              {
+                title: "Draft Pitch Decks",
+                desc: "Build investor-ready presentations with AI assistance.",
+              },
+              {
+                title: "Market Research",
+                desc: "Run competitive analysis and market insights automatically.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-[#1a1a1a] p-8 rounded-2xl text-center hover:scale-105 transition-transform duration-500 shadow-xl border border-gray-800"
+              >
+                <span className="text-5xl mb-4 block">{item.icon}</span>
+                <h3 className="text-xl font-semibold mb-2 text-white">{item.title}</h3>
+                <p className="text-gray-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        {/*Call to Action */}
-        <JoinSection text="Use Sf Collab to execute faster, collaborate better, and scale smarter — without switching tools."
-        title='Operate Your Startup In One Place' ref={null} />
-      
+        {/* Trust & Security */}
+        <section className="animated-section py-24 px-6 lg:px-20 relative z-10">
+          <h2 className="text-center text-3xl lg:text-4xl font-semibold mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            Trust & Security
+          </h2>
+          <p className="text-center text-gray-400 mb-16 max-w-2xl mx-auto">
+            Built on simple principles: Transparency over hype. Long-term value over short-term wins. People over platforms.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            {[
+              {
+                title: "Enterprise-Grade Encryption",
+                desc: "Your data is protected with industry-leading security standards.",
+              },
+              {
+                title: "Proof of Collaboration",
+                desc: "Blockchain-backed verification of your contributions and ownership.",
+              },
+              {
+                title: "You Own Your IP",
+                desc: "Always. No exceptions. What you create belongs to you.",
+              },
+            ].map((item, i) => (
+              <div
+                key={i}
+                className="bg-[#111111] p-8 rounded-2xl text-center hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-500 border border-gray-800"
+              >
+                <span className="text-5xl mb-4 block">{item.icon}</span>
+                <h3 className="text-xl font-semibold mb-2 text-indigo-300">{item.title}</h3>
+                <p className="text-gray-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Call to Action */}
+        <JoinSection 
+          text="Your first project is waiting to be born. Start for free. Build with AI. Win together."
+          title="The world has enough talkers. It needs more builders."
+          ref={null} 
+        />
       </div>
       <Footer />
-      </>
+    </>
   );
 };
 
