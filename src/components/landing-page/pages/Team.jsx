@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Linkedin, Instagram } from "lucide-react";
+import { Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
 import { 
   getResponsiveScrollTrigger, 
   getResponsiveDuration,
@@ -17,6 +17,8 @@ import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecuri
 import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
 import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
 import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+import NavBar from "../NavBar";
+import Footer from "../Footer";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -110,6 +112,8 @@ const Team = () => {
   }, []);
 
   return (
+    <>
+      <NavBar />  
     <section
       ref={main}
       className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20"
@@ -158,7 +162,9 @@ const Team = () => {
           ))}
         </div>
       </div>
-    </section>
+      </section>
+      <Footer />
+      </>
   );
 };
 

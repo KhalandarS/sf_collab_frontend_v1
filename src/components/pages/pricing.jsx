@@ -3,11 +3,15 @@ import CollaboratorPricing from "./Pricing/collaboratorPricing";
 import FounderPricing from "./Pricing/founderPricing";
 import EquityAccess from "./Pricing/equityAccess";
 import InvestorPricing from "./Pricing/investorPricing";
+import NavBar from "../landing-page/NavBar";
+import Footer from "../landing-page/Footer";
 
 
 
 const Pricing = () => {
   return (
+    <>
+      <NavBar />
     <main className="w-full">
       {/* Collaborators (Talent) */}
       <CollaboratorPricing />
@@ -20,7 +24,9 @@ const Pricing = () => {
 
       {/* Investors, Advisors & Accelerators */}
       <InvestorPricing />
-    </main>
+      </main>
+      <Footer />
+      </>
   );
 };
 

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Mail, Phone, MapPin, Linkedin, Github ,Instagram} from "lucide-react";
 import gsap from "gsap";
+import MediaLinks from "../../../utils/MediaLinks";
 
 const Contact = () => {
   const main = useRef();
@@ -60,8 +61,7 @@ const Contact = () => {
             <div className="contact-animate">
               <h2 className="text-2xl font-semibold text-white mb-4">Follow Us</h2>
               <div className="flex items-center gap-6">
-                <a href="https://www.linkedin.com/company/sfcollab" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition"><Linkedin className="w-6 h-6" /></a>
-                <a href="https://www.instagram.com/sfcollab_official/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition"><Instagram className="w-6 h-6" /></a>
+                <MediaLinks />
               </div>
             </div>
           </div>
