@@ -257,7 +257,7 @@ const Hero = () => {
         <div className="absolute bottom-4 md:bottom-8 left-4 md:right-0 px-4">
           <div className="flex items-center justify-center gap-4 md:gap-8 lg:gap-12 opacity-80">
             <ShineButton
-            onClick={()=>window.location.href='https://sfcollab.com/waitlist'}
+            onClick={()=>navigate('/waitlist')}
             label='Join Waitlist'
             icon={<ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />}
               className="group cursor-pointer relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 transition-all duration-300 font-medium text-lg overflow-hidden"
