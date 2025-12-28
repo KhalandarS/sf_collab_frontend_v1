@@ -9,61 +9,72 @@ import {
   isMobile 
 } from '../utils/scrollTriggerConfig';
 
+// Images
+import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
+import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
+import ChinmayImg from "../../../assets/imgs/Chinmay Bharadwaj (Developer).jpg";
+import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
+import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
+import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
+import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+
 gsap.registerPlugin(ScrollTrigger);
 
+// Team Data
 const teamMembers = [
   {
-    name: "Oskar",
-    role: "CEO & Visionary",
-    img: "https://images.unsplash.com/photo-1607746882042-944635dfe10e?w=500&q=80",
+    name: "Oskar K",
+    role: "Founder & CEO",
+    img: OskarImg,
     desc: "Driving the company's vision and strategy with a passion for innovation.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "Suhail",
-    role: "Lead Full Stack Developer",
-    img: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=500&q=80",
-    desc: "Architecting robust and scalable solutions that power our platform.",
+    name: "Fatima Abba",
+    role: "Backend Developer",
+    img: FatimaImg,
+    desc: "Architecting robust and scalable backend solutions.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "Emmanuel",
-    role: "Backend & DevOps Engineer",
-    img: "https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=500&q=80",
-    desc: "Ensuring our infrastructure is reliable, secure, and performs at scale.",
+    name: "Chinmay Bharadwaj",
+    role: "Full Stack Developer",
+    img: ChinmayImg,
+    desc: "Building performant and scalable web applications.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "Jane Doe",
-    role: "Lead UI/UX Designer",
-    img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=500&q=80",
-    desc: "Crafting intuitive and beautiful user experiences that delight our users.",
+    name: "Krystian Śledziewski",
+    role: "Cybersecurity Specialist",
+    img: KrystianImg,
+    desc: "Ensuring system security, privacy, and resilience.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "John Smith",
-    role: "Frontend Developer",
-    img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=500&q=80",
-    desc: "Bringing designs to life with clean, efficient, and interactive code.",
-  },
-  {
-    name: "Emily White",
+    name: "Razeen Iqbal",
     role: "Product Manager",
-    img: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=500&q=80",
-    desc: "Guiding product development from concept to launch with a user-centric approach.",
+    img: RazeenImg,
+    desc: "Aligning product vision with user and business needs.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "Michael Brown",
-    role: "Marketing & Growth",
-    img: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=500&q=80",
-    desc: "Expanding our reach and building a community of passionate innovators.",
+    name: "Shrey Dikshant",
+    role: "AI / ML Engineer",
+    img: ShreyImg,
+    desc: "Designing intelligent systems powered by machine learning.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
-    name: "Sarah Green",
-    role: "3D & Motion Graphics Artist",
-    img: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&q=80",
-    desc: "Creating stunning visuals and animations that define our brand's identity.",
+    name: "Varun",
+    role: "Frontend Developer & AI Researcher",
+    img: VarunImg,
+    desc: "Crafting intuitive interfaces and researching AI-driven solutions.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
 ];
 
 const Team = () => {
-  const main = useRef();
+  const main = useRef(null);
 
   useEffect(() => {
     const mobile = isMobile();
@@ -73,74 +84,44 @@ const Team = () => {
       const grid = self.selector(".team-grid");
       const header = self.selector(".team-header");
 
-      // Animate header first
-      gsap.from(header, {
-        opacity: 0,
-        y: mobile ? 20 : 30,
-        duration: getResponsiveDuration(0.8),
-        ease: "power2.out",
-        scrollTrigger: getResponsiveScrollTrigger({
-          trigger: header,
-          start: mobile ? "top 90%" : "top 80%",
-        })
+      gsap.set(cards, { opacity: 0, y: 50, scale: 0.95 });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: grid,
+          start: "top top",
+          end: () => "+=" + cards.length * 200,
+          pin: true,
+          scrub: 1.5,
+          anticipatePin: 1,
+        },
       });
 
-      // Set initial state for team cards
-      gsap.set(cards, { opacity: 0, y: mobile ? 30 : 50, scale: 0.95 });
-
-      // Mobile: simple stagger animation without pin
-      if (mobile) {
-        gsap.to(cards, {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.1,
-          ease: "power2.out",
-          scrollTrigger: getResponsiveScrollTrigger({
-            trigger: grid,
-            start: "top 80%",
-          })
-        });
-      } else {
-        // Desktop: pinned animation timeline
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: grid,
-            start: "top top",
-            end: () => "+=" + (cards.length * 120),
-            pin: true,
-            scrub: 0.8,
-            anticipatePin: 1,
-          },
-        });
-
-        tl.to({}, { duration: 0.2 });
-        cards.forEach((card) => {
-          tl.to(card, { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "power2.out" }, "-=0.3");
-        });
-      }
+      cards.forEach((card) => {
+        tl.to(
+          card,
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power3.out" },
+          "-=0.5"
+        );
+      });
     }, main);
 
-    // Setup refresh on resize/orientation change
-    const cleanup = setupScrollTriggerRefresh();
-
-    return () => {
-      ctx.revert();
-      cleanup();
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20">
+    <section
+      ref={main}
+      className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20"
+    >
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="team-header text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold leading-tight mb-4 bg-gradient-to-r from-gray-900 to-white bg-clip-text text-transparent">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-gray-400 to-white bg-clip-text text-transparent">
             Meet Our Team
           </h1>
-          <p className="text-gray-300 max-w-2xl mx-auto leading-relaxed text-lg">
-            The creative minds and technical wizards behind SFCollab, dedicated to building the future of digital innovation.
+          <p className="text-gray-300 max-w-2xl mx-auto text-lg">
+            The people behind SFCollab building the future of digital innovation.
           </p>
         </div>
 
@@ -149,21 +130,35 @@ const Team = () => {
           {teamMembers.map((person, i) => (
             <div
               key={i}
-              className="team-card bg-[#111111] rounded-2xl p-6 flex flex-col items-center text-center border border-transparent hover:border-gray-500/50 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300"
+              className="team-card bg-[#111] rounded-2xl p-6 flex flex-col items-center text-center border border-transparent hover:border-purple-500/40 hover:shadow-[0_0_40px_rgba(139,92,246,0.2)] transition-all duration-300"
             >
               <img
                 src={person.img}
                 alt={person.name}
                 className="w-32 h-32 rounded-full object-cover mb-5 border-2 border-purple-400/30"
               />
-              <h3 className="text-xl font-semibold text-white">{person.name}</h3>
-              <p className="text-gray-400 font-medium mb-2">{person.role}</p>
+              <h3 className="text-xl font-semibold">{person.name}</h3>
+              <p className="text-purple-400 font-medium mb-2">
+                {person.role}
+              </p>
               <p className="text-gray-400 text-sm">{person.desc}</p>
+
+              <div className="flex gap-4 mt-4">
+                <a className="text-gray-500 hover:text-white" href={person.socials.linkedin}>
+                  <Linkedin size={20} />
+                </a>
+                <a className="text-gray-500 hover:text-white" href={person.socials.twitter}>
+                  <Twitter size={20} />
+                </a>
+                <a className="text-gray-500 hover:text-white" href={person.socials.facebook}>
+                  <Facebook size={20} />
+                </a>
+              </div>
             </div>
           ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
