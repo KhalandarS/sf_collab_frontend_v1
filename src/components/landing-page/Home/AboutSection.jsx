@@ -22,11 +22,11 @@ const AboutSection = () => {
 
   // Use images instead of videos for the draggable rail
   const aboutRailImages = [
-    "/landing_page/features_dragimages/1.png",
-    "/landing_page/features_dragimages/4.2.png",
-    "/landing_page/features_dragimages/Image 4.3.png",
-    "/landing_page/features_dragimages/Version 2.5.png",
-    "/landing_page/features_dragimages/Version 4.1.png"
+    "/features_dragimages/1.png",
+    "/features_dragimages/4.2.png",
+    "/features_dragimages/Image 4.3.png",
+    "/features_dragimages/Version 2.5.png",
+    "/features_dragimages/Version 4.1.png"
   ];
   const aboutRail = [
     {

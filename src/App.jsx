@@ -42,7 +42,7 @@ import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.js
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
 import LandingPage from "./components/landing-page/pages/Home.jsx";
 import AboutPage from "./components/landing-page/pages/About.jsx";
-import TeamPage from "./components/landing-page/pages/Team.jsx";
+import TeamPage from "./components/landing-page/pages/TeamPage.jsx";
 import ContactPage from "./components/landing-page/pages/Contact.jsx";
 import StartupPage from "./components/landing-page/pages/StartupPage.jsx";
 import ProductsPage from "./components/landing-page/pages/Products.jsx";
