@@ -21,6 +21,15 @@ import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI re
 import NavBar from "../NavBar";
 import Footer from "../Footer";
 
+// Images
+import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
+import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
+import ChinmayImg from "../../../assets/imgs/Chinmay Bharadwaj (Developer).jpg";
+import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
+import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
+import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
+import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+
 gsap.registerPlugin(ScrollTrigger);
 
 // Team Data
@@ -30,6 +39,7 @@ const teamMembers = [
     role: "Founder & CEO",
     img: OskarImg,
     desc: "Driving the company's vision and strategy with a passion for innovation.",
+    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
     name: "Fatima Abba",
