@@ -756,7 +756,7 @@ const getAccentBorder = (color) => {
           </p>
           
           <motion.button 
-            onClick={() => window.location.href = 'https://sfcollab.com/waitlist'}
+            onClick={() => window.location.href = '/waitlist'}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-full bg-gradient-to-r from-gray-600 to-white-600 hover:from-white-500 hover:to-gray-500 transition-all duration-300 font-medium text-lg overflow-hidden"

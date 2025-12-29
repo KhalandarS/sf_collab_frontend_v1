@@ -128,8 +128,8 @@ const Footer = () => {
               >
                 sfcollab333@gmail.com
               </a>
-            ))}
-          </div>
+          </p>
+
           <p className="text-sm text-gray-400">sfcollab333@gmail.com</p>
         </div>
       </div>
