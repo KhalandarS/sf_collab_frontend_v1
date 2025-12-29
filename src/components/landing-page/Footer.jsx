@@ -120,7 +120,15 @@ const Footer = () => {
           <div className="flex items-center gap-4 mb-4">
             <MediaLinks />
           </div>
-          <p className="text-sm text-gray-400">sfcollab333@gmail.com</p>
+          <p className="flex items-center gap-4 text-sm text-gray-400">
+            <Mail className="w-5 h-5 text-gray-400" />
+              <a
+                href="mailto:sfcollab333@gmail.com"
+                className="hover:text-white transition"
+              >
+                sfcollab333@gmail.com
+              </a>
+          </p>
         </div>
       </div>
       <div className="border-t border-white/10 mt-10 pt-6 text-center text-gray-500 text-sm">
