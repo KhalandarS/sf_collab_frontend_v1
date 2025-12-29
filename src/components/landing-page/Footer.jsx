@@ -128,7 +128,9 @@ const Footer = () => {
               >
                 sfcollab333@gmail.com
               </a>
-          </p>
+            ))}
+          </div>
+          <p className="text-sm text-gray-400">sfcollab333@gmail.com</p>
         </div>
       </div>
       <div className="border-t border-white/10 mt-10 pt-6 text-center text-gray-500 text-sm">
