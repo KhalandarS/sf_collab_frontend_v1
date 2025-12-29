@@ -12,7 +12,7 @@ import NavBar from "../sections/NavBar";
 import MobileNavBar from "../sections/MobileNavBar";
 import StarBorder from '../ui/StarBorder'
 import { setUser,setToken } from "../../services/auth/authSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import '../style/Login.css';
 import LoadingSpinner from "../LoadingSpinner";
 
@@ -31,7 +31,12 @@ export default function Login() {
   // const { login, loginWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
-  
+  const { user } = useSelector((state) => state.auth);
+  useEffect(() => {
+    if (user && user.id) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   const [alertConf, setAlertConf] = useState({title:"", message:""});
   
   const [formData, setFormData] = useState({
