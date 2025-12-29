@@ -36,7 +36,7 @@ import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerat
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 import QwenChat from './components/pages/QwenChat/QwenChat';
 import Waitlist from "./components/waitlist/Waitlist.jsx";
-import ReferPage from "./components/waitlist/refer.jsx";
+import ReferPage from "./components/referAndRanking/refer.jsx";
 import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
 import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
@@ -66,8 +66,7 @@ function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
       {/* Refer and Waitlist */}
-      <Route path="/waitlist" element={<Waitlist />} />
-      <Route path="/refer" element={<ReferPage />} />
+      
       {/*   const navlink = [
     { href: '/', name: 'Home' },
     { href: '/about', name: 'Platform' },
@@ -98,7 +97,8 @@ function App() {
       >
         {/* Dashboard */}
         <Route path="dashboard" element={<Dashboard />} />
-        
+        <Route path="waitlist" element={<Waitlist />} />
+      <Route path="refer" element={<ReferPage />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />
