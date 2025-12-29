@@ -177,44 +177,7 @@ const Navbar = () => {
             <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
         </div>
 
-        <div className="flex-1 flex justify-center pl-8 md:pl-0 items-center">
-          <button
-            onClick={toggleMusic}
-            className="flex items-end justify-center gap-1 h-8 hover:opacity-80 transition-opacity group"
-            aria-label={isPlaying ? 'Pause music' : 'Play music'}
-          >
-            <span 
-              ref={el => barRefs.current[0] = el}
-              className="w-1 -mt-1 bg-[#fff] h-3 origin-bottom transform transition-all group-hover:bg-zinc-900"
-            />
-            <span 
-              ref={el => barRefs.current[1] = el}
-              className="w-1 bg-[#fff] h-4 origin-bottom transform transition-all group-hover:bg-zinc-700"
-            />
-            <span 
-              ref={el => barRefs.current[2] = el}
-              className="w-1 bg-[#fff] h-2 origin-bottom transform transition-all group-hover:bg-zinc-700"
-            />
-            
-            {!userInteracted && (
-              <div className="absolute -top-1 -right-1 w-2 h-2  rounded-full animate-pulse"></div>
-            )}
-          </button>
-        </div>
-
-        <div className="flex-1 flex justify-end pt-4 md:pt-0">
-          <button
-            onClick={toggleMenu}
-            className='flex gap-2 items-center justify-center rounded-full transition-all duration-300 hover:scale-105'
-            aria-label={isOpen ? 'Close menu' : 'Open menu'}
-          >
-            <span className='bg-[#2A2725] p-2 rounded-full hover:bg-zinc-900 transition-colors'>
-              {isOpen ? <X className='text-white size-5' /> : <Menu className='text-white size-5' />}
-            </span>
-          </button>
-        </div>
-
-        <div className="flex-1 flex justify-center items-center">
+         <div className="flex-1 flex justify-center items-center">
           <button
             onClick={toggleMusic}
             className="flex items-center justify-center gap-1 h-8 hover:opacity-80 transition-opacity group"
@@ -250,6 +213,8 @@ const Navbar = () => {
             </span>
           </button>
         </div>
+
+
 
       </div>
     </>
