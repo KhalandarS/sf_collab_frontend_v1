@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { Instagram, Tiktok, Linkedin } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { 
@@ -9,6 +8,7 @@ import {
   isMobile 
 } from './utils/scrollTriggerConfig';
 import MediaLinks from "../../utils/MediaLinks";
+import { Mail } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 

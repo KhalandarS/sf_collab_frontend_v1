@@ -1,6 +1,6 @@
 // src/components/pages/Pricing.jsx
 import React from "react";
-import NavBar from "../landing-page/NavBar";
+import NavBar from "../landing-page/Navbar";
 import Footer from "../landing-page/Footer";
 
 const Pricing = () => {

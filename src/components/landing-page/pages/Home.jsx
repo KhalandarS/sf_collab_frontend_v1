@@ -9,7 +9,7 @@ import Products from '../Home/Products'
 import StartUp from '../Home/StartUp'
 import Contact from './Contact'
 import Team from './Team'
-import NavBar from '../NavBar'
+import NavBar from '../Navbar'
 import Footer from '../Footer'
 import 'lenis/dist/lenis.css'
 

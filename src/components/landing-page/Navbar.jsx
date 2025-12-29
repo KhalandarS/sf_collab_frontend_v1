@@ -6,7 +6,7 @@ import gsap from 'gsap';
 import { heroAssest, mainsong } from './utils';
 import MediaLinks from '../../utils/MediaLinks';
 
-export default function MVPNavBar() {
+const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const overlayRef = useRef(null);
   const linksRef = useRef([]);
@@ -101,10 +101,10 @@ export default function MVPNavBar() {
   const navlink = [
     { href: '/', name: 'Home' },
     { href: '/about', name: 'Platform' },
-    { href: '/membership-benefits', name: 'Membership benefits' },
-    { href: '/implementation-plans', name: 'Implementation Plans' },
-    { href: '/featured-projects', name: 'Featured Projects' },
-    { href: '/team', name: 'Our Team' },
+    { href: '/pricing', name: 'Pricing' },
+    { href: '/explore', name: 'Explore' },
+    { href: '/startuppage', name: 'Startups' },
+    { href: '/team', name: 'Team' },
     { href: '/contact', name: 'Contact' },
   ];
 
@@ -130,9 +130,9 @@ export default function MVPNavBar() {
               ))}
 
               <div className='flex gap-2'>
-                <Link to="/waitlist" onClick={() => setIsOpen(false)}
+                <Link to="/signup" onClick={() => setIsOpen(false)}
                   className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
-                  Join Waitlist
+                  Get Started
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}
                   className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
@@ -219,3 +219,4 @@ export default function MVPNavBar() {
   );
 };
 
+export default Navbar;

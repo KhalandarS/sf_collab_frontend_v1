@@ -6,7 +6,7 @@ import gsap from 'gsap';
 import { heroAssest, mainsong } from './utils';
 import MediaLinks from '../../utils/MediaLinks';
 
-const Navbar = () => {
+export default function MVPNavBar() {
   const [isOpen, setIsOpen] = useState(false);
   const overlayRef = useRef(null);
   const linksRef = useRef([]);
@@ -101,10 +101,10 @@ const Navbar = () => {
   const navlink = [
     { href: '/', name: 'Home' },
     { href: '/about', name: 'Platform' },
-    { href: '/pricing', name: 'Pricing' },
-    { href: '/explore', name: 'Explore' },
-    { href: '/startuppage', name: 'Startups' },
-    { href: '/team', name: 'Team' },
+    { href: '/membership-benefits', name: 'Membership benefits' },
+    { href: '/implementation-plans', name: 'Implementation Plans' },
+    { href: '/featured-projects', name: 'Featured Projects' },
+    { href: '/team', name: 'Our Team' },
     { href: '/contact', name: 'Contact' },
   ];
 
@@ -130,9 +130,9 @@ const Navbar = () => {
               ))}
 
               <div className='flex gap-2'>
-                <Link to="/signup" onClick={() => setIsOpen(false)}
+                <Link to="/waitlist" onClick={() => setIsOpen(false)}
                   className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
-                  Get Started
+                  Join Waitlist
                 </Link>
                 <Link to="/login" onClick={() => setIsOpen(false)}
                   className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
@@ -173,9 +173,12 @@ const Navbar = () => {
         ref={navbarRef}
         className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform'
       >
+        
         <div className="md:pt-0 pt-4 h-full flex items-center">
-            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
-        </div>
+          <Link to="/" className='w-full h-full'>
+            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab" />
+            </Link>
+          </div>
 
         <div className="flex-1 flex justify-center items-center">
           <button
@@ -219,4 +222,3 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;

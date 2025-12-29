@@ -6,16 +6,21 @@ import InvestorPricing from "../Pricing/InvestorPricing";
 import RoleBasedPricing from "../Pricing/RoleBasedPricing";
 import ComparePlans from "../Pricing/ComparePlans";
 import FAQSection from "../Pricing/FAQSection";
-import NavBar from '../../../components/sections/NavBar';
-import Footer from '../../../components/sections/NavBar';
-
+import Footer from '../../../components/landing-page/Footer';
+import NavBar from '../../landing-page/Navbar';
+import { motion } from 'framer-motion';
 const Pricing = () => {
   return (
     <>
       <NavBar />
-      <main className="w-full bg-[#0b0b0b]">
-        {/* Hero Section */}
-        
+    <motion.main 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="w-full bg-[#0b0b0b]"
+    >
+      {/* Hero Section */}
+     
 
         {/* Interactive Role Selector */}
         <RoleBasedPricing />
@@ -35,11 +40,11 @@ const Pricing = () => {
         {/* Compare All Plans */}
         <ComparePlans />
 
-        {/* FAQ Section */}
-        <FAQSection />
-      </main>
+      {/* FAQ Section */}
+      <FAQSection />
+      </motion.main>
       <Footer />
-    </>
+      </>
   );
 };
 

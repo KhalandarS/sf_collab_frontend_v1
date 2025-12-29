@@ -2,7 +2,7 @@ import { useInView } from "framer-motion";
 import { Building2, LineChart, Rocket, Star, Target, TrendingUp, Users, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { Check } from "lucide-react";
-import NavBar from "../../../components/landing-page/Navbar";
+import NavBar from "../../landing-page/Navbar";
 import Footer from "../../../components/landing-page/Footer";
 const FounderPricing = () => {
   const { ref, inView } = useInView({

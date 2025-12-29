@@ -18,18 +18,7 @@ import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecuri
 import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
 import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
 import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
-import NavBar from "../NavBar";
-import Footer from "../Footer";
-
-// Images
-import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
-import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
-import ChinmayImg from "../../../assets/imgs/Chinmay Bharadwaj (Developer).jpg";
-import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
-import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
-import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
-import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
-
+import IvanImg from "../../../assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
 gsap.registerPlugin(ScrollTrigger);
 
 // Team Data
@@ -39,7 +28,6 @@ const teamMembers = [
     role: "Founder & CEO",
     img: OskarImg,
     desc: "Driving the company's vision and strategy with a passion for innovation.",
-    socials: { linkedin: "#", twitter: "#", facebook: "#" },
   },
   {
     name: "Fatima Abba",
@@ -58,6 +46,12 @@ const teamMembers = [
     role: "Cybersecurity Specialist",
     img: KrystianImg,
     desc: "Ensuring system security, privacy, and resilience.",
+  },
+    {
+    name: "Ivan Gomez",
+    role: "Cloud & Software Developer",
+    img: IvanImg,
+    desc: "Building scalable cloud solutions and robust software applications.",
   },
   {
     name: "Razeen Iqbal",
@@ -150,18 +144,19 @@ const Team = () => {
                 {person.role}
               </p>
               <p className="text-gray-400 text-sm">{person.desc}</p>
-
-              <div className="flex gap-4 mt-4">
-                <a className="text-gray-500 hover:text-white" href={person.socials.linkedin}>
-                  <Linkedin size={20} />
-                </a>
-                <a className="text-gray-500 hover:text-white" href={person.socials.twitter}>
-                  <Twitter size={20} />
-                </a>
-                <a className="text-gray-500 hover:text-white" href={person.socials.facebook}>
-                  <Facebook size={20} />
-                </a>
-              </div>
+              {person.socials &&
+                <div className="flex gap-4 mt-4">
+                  <a className="text-gray-500 hover:text-white" href={person.socials.linkedin}>
+                    <Linkedin size={20} />
+                  </a>
+                  <a className="text-gray-500 hover:text-white" href={person.socials.twitter}>
+                    <Twitter size={20} />
+                  </a>
+                  <a className="text-gray-500 hover:text-white" href={person.socials.facebook}>
+                    <Facebook size={20} />
+                  </a>
+                </div>
+              }
             </div>
           ))}
         </div>
