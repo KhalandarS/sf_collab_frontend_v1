@@ -31,12 +31,12 @@ import GettingStarted from "../components/pages/QucikGuides/gettingStarted.jsx";
 import TeamCollaboration from "../components/pages/QucikGuides/teamCollaboration.jsx";
 import { ProtectedRoute, AuthRoute } from "../components/ProtectedRoute.jsx";
 import SavedList from "../components/pages/SavedIdeaList.jsx";
-import ChatPage from "../components/pages/ChatPage.jsx";
+import ChatPage from "../components/pages/chat/ChatPage.jsx";
 import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/premium-business-generator.jsx";
 import Test from "../components/pages/Test.jsx";
 import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
-import ChatComponent from "../components/ChatComponent.jsx";
+import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
 
 import DiscoverStartups from "../components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "../components/pages/StartupDetailPage.jsx";

@@ -214,8 +214,6 @@ export default function SignUp() {
     e.preventDefault();
     if (!validateForm()) return;
     
-    alert(JSON.stringify(formData));
-    
     setIsLoading(true);
     try {
       const response = await fetch(`${API_URL}/register`, {

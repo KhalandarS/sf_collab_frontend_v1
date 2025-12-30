@@ -28,7 +28,6 @@ import SavedList from "./components/pages/SavedIdeaList.jsx";
 import BusinessIdeaGenerator from "./components/pages/Business_plan_generator/premium-business-generator.jsx";
 import Test from "./components/pages/Test.jsx";
 import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
-import ChatComponent from "./components/ChatComponent.jsx";
 import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/Profile.jsx";
@@ -50,6 +49,8 @@ import Pricing from "./components/pages/Pricing/Pricing.jsx";
 import MembershipBenefits from "./components/landing-page/pages/MembershipBenefits.jsx";
 import ImplementationPlans from "./components/landing-page/pages/ImplementationPlans.jsx";
 import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
+import ConnectWithUsers from "./components/pages/connect_with_users/ConnectWithUsers.jsx";
+import ChatComponent from "./components/chat/ChatComponent.jsx";
 import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 
 function App() {
@@ -130,6 +131,8 @@ function App() {
         <Route path="qwen-chat" element={<QwenChat />} />
         
         {/* User */}
+        <Route path="discover-users" element={<ConnectWithUsers />} />
+
         <Route path="user-profile" element={<Profile />} />
         <Route path="saved" element={<SavedList />} />
         <Route path="home-details" element={<HomedetailsPage />} />

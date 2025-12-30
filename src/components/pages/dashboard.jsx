@@ -77,6 +77,7 @@ const Dashboard = () => {
 
         {/* Welcome Banner */}
         <div className="w-full mb-6">
+          
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-white/20 backdrop-blur-sm p-6">
             {/* Animated Background */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
@@ -88,15 +89,15 @@ const Dashboard = () => {
                 <p className="text-white/70">Join our waitlist for anticipated access to premium features. Be among the first to unlock exclusive benefits.</p>
               </div>
               
-              <div className="flex gap-4 flex-shrink-0">
-                <a href="https://sfcollab.com/waitlist" className="group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
+              <div className="flex flex-wrap gap-4 flex-shrink-0">
+                <a href="https://sfcollab.com/waitlist" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
                   <span className="relative flex items-center gap-2">
                     Join Waitlist
                     <span className="text-xs bg-blue-400/40 px-2 py-1 rounded-full ml-2">Anticipated</span>
                   </span>
                 </a>
                 
-                <a href="/refer" className="group relative px-6 py-3 bg-purple-500/80 hover:bg-purple-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-purple-400/50 hover:border-purple-300">
+                <a href="/refer" className="w-full sm:w-auto group relative px-6 py-3 bg-purple-500/80 hover:bg-purple-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-purple-400/50 hover:border-purple-300">
                   <span className="relative flex items-center gap-2">
                     Refer & Earn
                     <span className="text-xs bg-purple-400/40 px-2 py-1 rounded-full ml-2">Premium</span>
