@@ -50,6 +50,7 @@ import Pricing from "./components/pages/Pricing/Pricing.jsx";
 import MembershipBenefits from "./components/landing-page/pages/MembershipBenefits.jsx";
 import ImplementationPlans from "./components/landing-page/pages/ImplementationPlans.jsx";
 import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
+import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 
 function App() {
   return (
@@ -60,7 +61,7 @@ function App() {
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/startuppage" element={<StartupPage />} />
       <Route path="/products" element={<ProductsPage />} />
-      <Route path="/explore" element={<ProductsPage />} />
+      <Route path="/explore_section" element={<Explore_Section/>} />
       
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />

@@ -68,7 +68,7 @@ const Footer = () => {
               { name: "Home", href: "/" },
               { name: "Platform", href: "/about" },
               { name: "Startups", href: "/startuppage" },
-              { name: "Explore", href: "/explore" },
+              { name: "Explore", href: "/explore_section" },
               { name: "Team", href: "/team" },
               { name: "Contact", href: "/contact" },
             ].map((link, i) => (

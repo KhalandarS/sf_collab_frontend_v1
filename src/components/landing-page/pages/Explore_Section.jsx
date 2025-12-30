@@ -1,18 +1,9 @@
+import React from "react";
+import { motion } from "framer-motion";
+import Navbar from "../Navbar";
+import Footer from "../Footer";
 
-import CollaboratorPricing from "../Pricing/CollaboratorPricing";
-import FounderPricing from "../Pricing/FounderPricing";
-import EquityAccess from "./EquityAccess";
-import InvestorPricing from "../Pricing/InvestorPricing";
-import RoleBasedPricing from "../Pricing/RoleBasedPricing";
-import ComparePlans from "../Pricing/ComparePlans";
-import FAQSection from "../Pricing/FAQSection";
-import React from 'react';
-import Footer from '../../../components/landing-page/Footer';
-import NavBar from '../../landing-page/Navbar';
-import { motion } from 'framer-motion';
-
-const Pricing = () => {
-  // Letter animation for "UPCOMING"
+const Products = () => {
   const letterVariants = {
     hidden: { 
       opacity: 0, 
@@ -38,8 +29,8 @@ const Pricing = () => {
 
   return (
     <>
-      <NavBar />
-      <motion.main 
+      <Navbar />
+      <motion.section 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
@@ -80,7 +71,6 @@ const Pricing = () => {
 
           {/* Coming Soon Content */}
           <div className="text-center px-6">
-            {/* Magical letter-by-letter title */}
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent flex justify-center">
               {title.split("").map((letter, i) => (
                 <motion.span
@@ -96,17 +86,15 @@ const Pricing = () => {
               ))}
             </h1>
 
-            {/* Subtitle with blur reveal */}
             <motion.p 
               className="text-gray-400 text-lg md:text-xl max-w-md mx-auto"
               initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               transition={{ duration: 1, delay: 1 }}
             >
-              We're crafting the perfect pricing plans for you. Stay tuned!
+              Core Systems coming soon. Stay tuned!
             </motion.p>
 
-            {/* Optional: Glowing line under text */}
             <motion.div
               className="h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent mx-auto mt-8"
               initial={{ width: 0, opacity: 0 }}
@@ -115,10 +103,10 @@ const Pricing = () => {
             />
           </div>
         </div>
-      </motion.main>
+      </motion.section>
       <Footer />
     </>
   );
 };
 
-export default Pricing;
+export default Products;
