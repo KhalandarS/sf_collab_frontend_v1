@@ -64,16 +64,13 @@ const Dashboard = () => {
       
 
       {/* Main Content */}
-      <div className="relative w-full mx-auto py-4 mb-4 overflow-x-hidden">
-        
-{/* 
-    <GravityStarsBackground
-    starsCount={200}
-    
-  starsOpacity={0.3}
-
-  className="absolute inset-0 h-full w-full flex items-center justify-center rounded-xl"
-/> */}
+        <div className="w-full p-4 mb-6 text-center">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-500 to-blue-500 border border-white/20 backdrop-blur-sm p-6">
+            <h2 className="text-2xl font-bold text-white mb-2">OVERVIEW WEBSITE UNTIL 10TH OF JANUARY</h2>
+            <p className="text-white/70">Stay updated with the latest features and improvements!</p>
+          </div>
+        </div>
+        <div className="relative w-full mx-auto p-4 mb-4 overflow-x-hidden">
 
         {/* Welcome Banner */}
         <div className="w-full mb-6">
@@ -83,20 +80,21 @@ const Dashboard = () => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
             
             {/* Content */}
-            <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="relative mx-8 z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-white mb-2">Get Early Access</h2>
                 <p className="text-white/70">Join our waitlist for anticipated access to premium features. Be among the first to unlock exclusive benefits.</p>
               </div>
               
               <div className="flex flex-wrap gap-4 flex-shrink-0">
+{/*                 
                 <a href="/waitlist" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
                   <span className="relative flex items-center gap-2">
                     Join Waitlist
                     <span className="text-xs bg-blue-400/40 px-2 py-1 rounded-full ml-2">Anticipated</span>
                   </span>
                 </a>
-                
+                 */}
                 <a href="/refer" className="w-full sm:w-auto group relative px-6 py-3 bg-purple-500/80 hover:bg-purple-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-purple-400/50 hover:border-purple-300">
                   <span className="relative flex items-center gap-2">
                     Refer & Earn

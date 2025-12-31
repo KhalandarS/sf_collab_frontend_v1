@@ -332,7 +332,7 @@ const IdeationHeader = ({
         {/* <div className="flex items-center gap-4"> */}
         {/* <div className="flex items-center gap-3"> */}
         <div>
-          <h1 className="text-2xl font-bold">Ideation Hub</h1>
+          <h1 className="text-2xl font-bold">SF Idea Incubator</h1>
           <p className="text-xs text-gray-400">
             Share, discover, and collaborate on innovative ideas
           </p>

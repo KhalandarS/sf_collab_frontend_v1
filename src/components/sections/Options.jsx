@@ -34,7 +34,7 @@ const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
           } flex items-center gap-1`}
           to="/ideation"
         >
-          <Lightbulb size={21}/> Ideation
+          <Lightbulb size={21}/> Idea Incubator
         </Link>
         <Link
           className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${

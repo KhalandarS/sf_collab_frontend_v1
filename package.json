@@ -63,6 +63,7 @@
     "pdfjs-dist": "^5.4.449",
     "radix-ui": "^1.4.3",
     "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.1",
     "react-doc-viewer": "^0.1.15",
     "react-dom": "^18.2.0",
     "react-flip-toolkit": "^7.2.4",

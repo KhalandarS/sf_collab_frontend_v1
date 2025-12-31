@@ -191,7 +191,7 @@
 
 // Layout.jsx (updated)
 import React, { useState, useRef, useEffect } from "react";
-import { Outlet, useLocation, Link } from "react-router-dom"; // Added Link import
+import { Outlet, useLocation, Link, useNavigate } from "react-router-dom"; // Added Link import
 import NavBar from "../components/sections/NavBar";
 import SideBar from "../components/sections/sidebar/SideBar";
 import MobileNavBar from "../components/sections/MobileNavBar";
@@ -207,6 +207,8 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { hasPermission } from "../utils/permissionCheck"; // Import permission check utility
 import { useActivityHeartbeat } from "./useActivityHearbeat";
+import { waitlistAPI } from "@/components/waitlist/components/lib/api";
+import { toast } from "react-toastify";
 
 const Layout = () => {
   const location = useLocation();
@@ -216,7 +218,7 @@ const Layout = () => {
     deltaThreshold: 4,
     topReveal: 10,
   });
-  
+  const navigate = useNavigate();
   const {user,access_token,refreshToken} = useSelector((state) => state.auth);
   
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -253,7 +255,7 @@ const Layout = () => {
       mirror: false        
     });
   }, []);
-  useActivityHeartbeat(user, access_token);
+  // useActivityHeartbeat(user, access_token);
   useEffect(()=>{
     if (!isRootPath) {
       setIsOptionsVisible(true);
@@ -261,8 +263,23 @@ const Layout = () => {
         setIsOptionsVisible(false);
       },1000);
     }
-  },[]);
-  
+  },[isRootPath]);
+  useEffect(() => {
+    async function fetchIsOnWaitlist() {
+      if (user && access_token) {
+        try {
+          const result = await waitlistAPI.isOnWaitlist(user.email, access_token)
+          if (!result.on_waitlist && window.location.pathname !== '/waitlist' && window.location.pathname !== '/waitlist-terms') {
+            toast.info('You should join the waitlist to access this section.');
+            navigate('/waitlist');
+          }
+        } catch (error) {
+          console.error("Error fetching waitlist status:", error);
+        }
+      }
+    }
+  fetchIsOnWaitlist();
+}, [user, access_token, navigate]);
   // Handle mouse leave with proper event delegation
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;
@@ -340,7 +357,7 @@ const Layout = () => {
       <div className="relative flex-1 w-full flex overflow-hidden">
         {/* Desktop Sidebar - Hidden on root path and mobile */}
         {!isRootPath && (
-          <div className="hidden sm:block">
+          <div className="block">
             {/* Pass isAdmin prop to SideBar */}
             <SideBar 
               unreadMessagesCount={unreadMessagesCount} 
@@ -393,7 +410,7 @@ const Layout = () => {
       </div>
 
       {/* Mobile Navigation Bar - Only visible on mobile and hidden on root path */}
-      {!isRootPath && <MobileNavBar isHidden={isNavHidden} isAdmin={isAdmin} />}
+      {/* {!isRootPath && <MobileNavBar isHidden={isNavHidden} isAdmin={isAdmin} />} */}
     </div>
   );
 };

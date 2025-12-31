@@ -159,7 +159,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     
     window.open(
-      `${API_URL}/google/login?ref=${referralCode ?? ""}`,
+      `${API_URL}/auth/google/login?ref=${referralCode ?? ""}`,
       'Google Sign Up',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -173,7 +173,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     // setAlertConf({title:"Authenticating with GitHub ....", message:"This will only take a moment. Please follow the GitHub sign-in window."});
     window.open(
-      `${API_URL}/github/login?ref=${referralCode ?? ""}`,
+      `${API_URL}/auth/github/login?ref=${referralCode ?? ""}`,
       'Github Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );

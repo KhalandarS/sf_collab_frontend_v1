@@ -106,7 +106,21 @@ export const waitlistAPI = {
       }
     );
     return response.data.data;
-  }
+  },
+  sendPhoneVerificationCode: async (userId, email, phone, extension, accessToken) => {
+
+    const response = await api.post("/waitlist/send-verification-code", {
+      email,
+      phone,
+      extension,
+      user_id: userId,
+    }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
+  },
 };
 
 

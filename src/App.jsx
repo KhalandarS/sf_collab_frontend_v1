@@ -54,6 +54,8 @@ import ChatComponent from "./components/chat/ChatComponent.jsx";
 import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
 import { ToastContainer } from "react-toastify";
+import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";
+import AdminPage from "./components/pages/admin/admin.jsx";
 
 function App() {
 
@@ -104,7 +106,9 @@ function App() {
         {/* Dashboard */}
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="waitlist" element={<Waitlist />} />
-      <Route path="refer" element={<ReferPage />} />
+        <Route path="waitlist-terms" element={<WaitlistTerms />} />
+        <Route path="admin" element={<AdminPage />} />
+        <Route path="refer" element={<ReferPage />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />

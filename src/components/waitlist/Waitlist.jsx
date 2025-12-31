@@ -43,7 +43,7 @@ export default function Waitlist() {
                   Waitlist System
                 </h3>
                 <p className="text-neutral-400 text-sm">
-                  Early access before Feb 1st
+                  Early access before Feb 7th
                 </p>
               </div>
 

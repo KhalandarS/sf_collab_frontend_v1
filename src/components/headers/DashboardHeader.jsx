@@ -33,7 +33,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
             </h1>
           </div>
   
-          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto z-100'>
             {/* Search Bar with Glassmorphism */}
             <div className="relative w-full sm:w-auto">
               <div className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-full border border-white/20 shadow-lg"></div>
@@ -48,13 +48,13 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
             </div>
   
             {/* Optional: Glassmorphism Button */}
-            {/* <Link 
+            <Link 
               to="/register-startup"
               className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-md hover:bg-white/20 rounded-lg transition-all duration-200 border border-white/20 text-white shadow-lg hover:shadow-xl w-full sm:w-auto"
             >
               <Plus className="h-4 w-4" />
               <span>Register Startup</span>
-            </Link> */}
+            </Link>
           </div>
         </div>
       </div>

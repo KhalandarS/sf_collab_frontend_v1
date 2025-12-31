@@ -16,9 +16,9 @@ import { LoadingSpinner } from './ui/loading-spinner'
 
 
 // Smooth prompt input (inspired by Claude Style Chat Input)
-function PromptInput({ value, onChange, placeholder, ...props }) {
+function PromptInput({ value, onChange, placeholder, wFull, includeLogo, ...props }) {
   return (
-    <div className="relative group">
+    <div className={`relative group ${wFull ? 'w-full' : ''}`}>
       <Input
         value={value}
         onChange={onChange}
@@ -26,7 +26,9 @@ function PromptInput({ value, onChange, placeholder, ...props }) {
         className="pl-10 pr-4 py-2 bg-b/80 border border-primary/30 rounded-lg shadow-md focus:ring-2 focus:ring-primary/40 transition-all duration-300 group-hover:scale-105 group-hover:shadow-lg"
         {...props}
       />
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/70 text-lg transition-transform duration-300 group-hover:scale-110">✉️</span>
+      {includeLogo &&
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/70 text-lg transition-transform duration-300 group-hover:scale-110">✉️</span>
+      }
     </div>
   )
 }
@@ -34,20 +36,36 @@ function PromptInput({ value, onChange, placeholder, ...props }) {
 export function WaitlistSignup() {
   const [email, setEmail] = useState('')
   const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [extension, setExtension] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [truthyVerificationCode, setTruthyVerificationCode] = useState('')
+  const [verified, setVerified] = useState(false)
+
+  useEffect(() => {
+    
+    if (verificationCode === truthyVerificationCode && verificationCode.length === 6) {
+      setVerified(true)
+      toast.success('Phone number verified successfully!')
+    }
+
+  }, [verificationCode, truthyVerificationCode]);
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(false)
   const [isOnWaitlist, setIsOnWaitlist] = useState(false)
   const [totalCount, setTotalCount] = useState(600)
   const [maxCount, setMaxCount] = useState(1000)
+  const [expiresAt] = useState(null) // in seconds
   const navigate = useNavigate()
   const { user, access_token } = useSelector((state) => state.auth);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   useEffect(() => {
     if (user && user.email) {
       setEmail(user.email)
       setName((user.fullName || user.firstName || '').trim())
     }
   }, [user]);
-  const secondsLeft = useCountdown(5, result, () => {
+  const secondsLeft = useCountdown(expiresAt || 5, result, () => {
     navigate(`/refer`)
   })
   useEffect(() => {
@@ -80,6 +98,44 @@ export function WaitlistSignup() {
       setLoading(false)
       return
     }
+    if (!acceptedTerms) {
+      toast.error('You must accept the terms and conditions to join the waitlist.')
+      setLoading(false)
+      return
+    }
+    if (!verified) {
+      try {
+        if (truthyVerificationCode.length === 6) {
+          toast.error('Please enter the verification code sent to your phone.')
+          setLoading(false)
+          return
+        }
+        const response = await waitlistAPI.sendPhoneVerificationCode(user.id, email, phone, extension, access_token)
+        if (response?.verified) {  
+          setVerified(true)
+          toast.success('Phone number verified successfully!')
+          setLoading(false)
+        }
+        else { 
+           setTruthyVerificationCode(String(response.verification_code))
+        
+        toast.info('Verification code sent to your phone. Please enter the code to verify.')
+        return
+        }
+        
+       
+      } catch (err) {
+        if (err.status === 401) {
+          toast.error('Phone number already in use. Please check and try again.')
+          return
+        }
+        console.log('Response:',err);
+        toast.error('Failed to send verification code. Please check your phone number and try again.')
+        return
+      } finally {
+        setLoading(false)
+      }
+    }
     try {
       const response = await waitlistAPI.register(email, name || undefined, user.id, access_token)
 
@@ -91,6 +147,10 @@ export function WaitlistSignup() {
     } catch (error) {
       if (error.response && error.response.status === 409) {
         toast.error('The waitlist is full. We are no longer accepting new signups.')
+        return
+      }
+      if (error.response && error.response.status === 400) {
+        toast.error('This phone number is already registered.')
         return
       }
       toast.error(error.response?.data?.error || 'Failed to join the waitlist')
@@ -190,6 +250,120 @@ export function WaitlistSignup() {
                   <Label>Name</Label>
                   <p className="text-sm text-slate-300">{name || 'Not provided'}</p>
                 </div>
+                <div className="space-y-2 text-white">
+                  <Label htmlFor="phone">Phone Number *</Label>
+
+                  <div className="flex gap-2 w-full text-black">
+                    <PromptInput
+                      id="extension"
+                      type="text"
+                      placeholder="Ext"
+                      value={extension}
+                      onChange={(e) => setExtension(e.target.value)}
+                      className="w-20"
+                    />
+
+                    <PromptInput
+                      id="phone"
+                      type="tel"
+                      placeholder="123-456-7890"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                      className="flex-1"
+                      wFull={true}
+                    />
+                  </div>
+                  </div>
+                <div className="space-y-2 text-white">
+                  <Label htmlFor="terms">Terms & Conditions</Label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="terms"
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="w-4 h-4 rounded border-primary/30 bg-b/80 cursor-pointer"
+                    />
+                    <label htmlFor="terms" className="text-sm text-slate-300 cursor-pointer">
+                      I accept the <a href="/waitlist-terms" target="_blank" rel="noopener noreferrer" className="underline">waitlist terms and conditions</a>
+                    </label>
+                  </div>
+                </div>
+
+                {
+                  !verified && truthyVerificationCode.length === 6 && (
+                    <div className="space-y-2 text-white">
+                      <Label htmlFor="verificationCode">Verification Code</Label>
+                      <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
+                      <div className="flex gap-1 justify-center">
+                        {[...Array(6)].map((_, i) => (
+                          <Input
+                            key={i}
+                            type="text"
+                            maxLength="1"
+                            placeholder="0"
+                            onPaste={(e) => {
+                              const paste = e.clipboardData.getData('text').slice(0, 6)
+                              const newCode = paste.split('')
+                              setVerificationCode(newCode.join(''))
+                            }}
+                            value={verificationCode[i] || ''}
+                            onChange={(e) => {
+                              const newCode = verificationCode.split('')
+                              newCode[i] = e.target.value
+                              setVerificationCode(newCode.join(''))
+                              if (e.target.value.length === 0) {
+                                e.target.previousElementSibling?.focus()
+                                return
+                              }
+                              if (e.target.value && i < 5) {
+                                e.target.nextElementSibling?.focus()
+                              }
+                            }}
+                            className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )
+                }{
+                      !verified && truthyVerificationCode.length === 6 && (
+                      <div className="space-y-2 text-white">
+                        <Label htmlFor="verificationCode">Verification Code</Label>
+                        <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
+                        <div className="flex gap-1 justify-center">
+                          {[...Array(6)].map((_, i) => (
+                            <Input
+                              key={i}
+                              type="text"
+                              maxLength="1"
+                              placeholder="0"
+                              onPaste={(e) => {
+                                const paste = e.clipboardData.getData('text').slice(0, 6)
+                                const newCode = paste.split('')
+                                setVerificationCode(newCode.join(''))
+                              }}
+
+                              value={verificationCode[i] || ''}
+                              onChange={(e) => {
+                                const newCode = verificationCode.split('')
+                                newCode[i] = e.target.value
+                                setVerificationCode(newCode.join(''))
+                                if (e.target.value.length === 0) {
+                                  e.target.previousElementSibling?.focus()
+                                  return
+                                } 
+                                if (e.target.value && i < 5) {
+                                  e.target.nextElementSibling?.focus()
+                                }
+                              }}
+                              className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 <Button
                   type="submit"
                   disabled={loading}
@@ -197,6 +371,7 @@ export function WaitlistSignup() {
       hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
       hover:bg-purple-600 cursor-pointer"
                 >
+                    
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <LoadingSpinner size="sm" />
@@ -219,55 +394,12 @@ export function WaitlistSignup() {
                 </div>
               </form>
             </CardContent>
-            {/* Form Content, dont want to edit it */}
-            {/* <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animate-stagger-1">
-                <div className="space-y-2 text-white">
-                  <Label htmlFor="email">Email *</Label>
-                  <PromptInput
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2 text-white">
-                  <Label htmlFor="name">Name</Label>
-                  <PromptInput
-                    id="name"
-                    type="text"
-                    placeholder="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
-                </div>
-                <Button
-                  type="submit"
-                    disabled={loading}
-                    className="group w-full transition-all duration-300 hover:scale-105 
-                  hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
-                  hover:bg-purple-600 cursor-pointer"
-                >
-                  {loading ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <LoadingSpinner size="sm" />
-                      Joining...
-                    </span>
-                  ) : (
-                    'Join Waitlist'
-                  )}
-                </Button>
-                
-              </form>
-            </CardContent> */}
           </Card>
         </motion.div>
       )}
     </div>
-  );
-}
+  )
+};
 
 
   // ...existing code up to the first return statement...
