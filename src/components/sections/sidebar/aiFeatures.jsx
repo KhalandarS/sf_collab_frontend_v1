@@ -12,40 +12,40 @@ export const aiFeatures = [
       href: "/multimodal-images",
       label: "Multimodal AI (coming soon)"
     },
-    {
-      id: 2,
-      type: "Images",
-      description: "Edit and enhance your images",
-      icon: <RiAiGenerate2 size={23}/>,
-      href: "/image-editor",
-      label: "Image editor"
-    },
+    // {
+    //   id: 2,
+    //   type: "Images",
+    //   description: "Edit and enhance your images",
+    //   icon: <RiAiGenerate2 size={23}/>,
+    //   href: "/image-editor",
+    //   label: "Image editor"
+    // },
+    // {
+    //   id: 2,
+    //   type: "Images",
+    //   description: "Remove backgrounds from images",
+    //   icon: <FaImage size={20} />,
+    //   href: "/background-remover",
+    //   label: "Background Remover"
+    // },
     {
       id: 3,
-      type: "Images",
-      description: "Remove backgrounds from images",
-      icon: <FaImage size={20} />,
-      href: "/background-remover",
-      label: "Background Remover"
-    },
-    {
-      id: 4,
       type: "Business Plans & Pitch Decks", 
       description: "Generate business plans and pitch decks",
       icon: <RiGeminiFill size={20} />,
       href: "/qwen-chat",
       label: "AI Chat / Business plan generator / Pitch deck creator"
     },
+    // {
+    //   id: 5,
+    //   type: "Images",
+    //   description: "Convert photos to anime style",
+    //   icon: <FaMagic size={20} />,
+    //   href: "/anime-converter",
+    //   label: "Anime Converter (coming soon)"
+    // },
     {
-      id: 5,
-      type: "Images",
-      description: "Convert photos to anime style",
-      icon: <FaMagic size={20} />,
-      href: "/anime-converter",
-      label: "Anime Converter (coming soon)"
-    },
-    {
-      id: 6,
+      id: 4,
       type: "Documents",
       description: "Sign PDF documents digitally",
       icon: <BsFilePdf size={20} />,
@@ -53,7 +53,7 @@ export const aiFeatures = [
       label: "PDF Signing"
     },
     {
-      id: 7,
+      id: 5,
       type: "Data",
       description: "Extract data from websites",
       icon: <BsDatabaseFillDown size={23}/>,

@@ -161,19 +161,19 @@ const ImageGenerator = () => {
 
   return (
     <TooltipProvider>
-      <div className="min-h-screen bg-gradient-to-br from-white via-gray-50 to-gray-100 py-8 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <div className="p-3 bg-black rounded-2xl shadow-lg">
+              <div className="p-3 bg-gray-800 rounded-2xl shadow-lg">
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-black to-gray-800 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-300 to-gray-100 bg-clip-text text-transparent">
                 AI Content Generator
               </h1>
             </div>
-            <p className="text-gray-600 text-lg mb-6">
+            <p className="text-gray-400 text-lg mb-6">
               Generate text, images, or transform images with FREE AI models
             </p>
           </div>
@@ -181,24 +181,24 @@ const ImageGenerator = () => {
           {/* Tabs */}
           <div className="mb-8">
             <Tabs defaultValue="text-to-text" value={activeTab} onValueChange={handleTabChange}>
-              <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-100 p-1 rounded-xl">
-                <TabsTrigger value="text-to-text" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <Type className="h-4 w-4 mr-2" />
+              <TabsList className="grid w-full grid-cols-3 mb-8 bg-gray-800 p-1 rounded-xl">
+                <TabsTrigger value="text-to-text" className="data-[state=active]:bg-gray-700 text-white data-[state=active]:shadow-sm">
+                  <Type className="h-4 w-4 mr-2 text-white" />
                   Text to Text
                 </TabsTrigger>
-                <TabsTrigger value="text-to-image" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <ImageLucide className="h-4 w-4 mr-2" />
+                <TabsTrigger value="text-to-image" className="data-[state=active]:bg-gray-700 text-white data-[state=active]:shadow-sm">
+                  <ImageLucide className="h-4 w-4 mr-2 text-white" />
                   Text to Image
                 </TabsTrigger>
-                <TabsTrigger value="image-to-image" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                  <FileImage className="h-4 w-4 mr-2" />
+                <TabsTrigger value="image-to-image" className="data-[state=active]:bg-gray-700 text-white data-[state=active]:shadow-sm">
+                  <FileImage className="h-4 w-4 mr-2 text-white" />
                   Image to Image
                 </TabsTrigger>
               </TabsList>
 
               {/* Text to Text Tab */}
               <TabsContent value="text-to-text" className="mt-0">
-                <Card className="mb-8 bg-blue-50 border-blue-200">
+                <Card className="mb-8 bg-gray-800 border-gray-700">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -206,8 +206,8 @@ const ImageGenerator = () => {
                           1
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-900">Enter Text Prompt</h3>
-                          <p className="text-blue-700 text-sm">Ask questions or request content</p>
+                          <h3 className="font-semibold text-white">Enter Text Prompt</h3>
+                          <p className="text-gray-300 text-sm">Ask questions or request content</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-blue-600" />
@@ -216,8 +216,8 @@ const ImageGenerator = () => {
                           2
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-900">AI Generates Text</h3>
-                          <p className="text-blue-700 text-sm">Get detailed written responses</p>
+                          <h3 className="font-semibold text-white">AI Generates Text</h3>
+                          <p className="text-gray-300 text-sm">Get detailed written responses</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-blue-600" />
@@ -226,8 +226,8 @@ const ImageGenerator = () => {
                           3
                         </div>
                         <div>
-                          <h3 className="font-semibold text-blue-900">Use Generated Text</h3>
-                          <p className="text-blue-700 text-sm">Copy, edit, or save the response</p>
+                          <h3 className="font-semibold text-white">Use Generated Text</h3>
+                          <p className="text-gray-300 text-sm">Copy, edit, or save the response</p>
                         </div>
                       </div>
                     </div>
@@ -237,7 +237,7 @@ const ImageGenerator = () => {
 
               {/* Text to Image Tab */}
               <TabsContent value="text-to-image" className="mt-0">
-                <Card className="mb-8 bg-purple-50 border-purple-200">
+                <Card className="mb-8 bg-gray-800 border-gray-700">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -245,8 +245,8 @@ const ImageGenerator = () => {
                           1
                         </div>
                         <div>
-                          <h3 className="font-semibold text-purple-900">Describe Your Image</h3>
-                          <p className="text-purple-700 text-sm">Be specific about what you want</p>
+                          <h3 className="font-semibold text-white">Describe Your Image</h3>
+                          <p className="text-gray-300 text-sm">Be specific about what you want</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-purple-600" />
@@ -255,8 +255,8 @@ const ImageGenerator = () => {
                           2
                         </div>
                         <div>
-                          <h3 className="font-semibold text-purple-900">AI Creates Image</h3>
-                          <p className="text-purple-700 text-sm">Generates unique artwork</p>
+                          <h3 className="font-semibold text-white">AI Creates Image</h3>
+                          <p className="text-gray-300 text-sm">Generates unique artwork</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-purple-600" />
@@ -265,8 +265,8 @@ const ImageGenerator = () => {
                           3
                         </div>
                         <div>
-                          <h3 className="font-semibold text-purple-900">Download Image</h3>
-                          <p className="text-purple-700 text-sm">Save and use your creation</p>
+                          <h3 className="font-semibold text-white">Download Image</h3>
+                          <p className="text-gray-300 text-sm">Save and use your creation</p>
                         </div>
                       </div>
                     </div>
@@ -276,7 +276,7 @@ const ImageGenerator = () => {
 
               {/* Image to Image Tab */}
               <TabsContent value="image-to-image" className="mt-0">
-                <Card className="mb-8 bg-green-50 border-green-200">
+                <Card className="mb-8 bg-gray-800 border-gray-700">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
@@ -284,8 +284,8 @@ const ImageGenerator = () => {
                           1
                         </div>
                         <div>
-                          <h3 className="font-semibold text-green-900">Upload Image</h3>
-                          <p className="text-green-700 text-sm">Provide a source image</p>
+                          <h3 className="font-semibold text-white">Upload Image</h3>
+                          <p className="text-gray-300 text-sm">Provide a source image</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-green-600" />
@@ -294,8 +294,8 @@ const ImageGenerator = () => {
                           2
                         </div>
                         <div>
-                          <h3 className="font-semibold text-green-900">Add Instructions</h3>
-                          <p className="text-green-700 text-sm">Describe desired transformation</p>
+                          <h3 className="font-semibold text-white">Add Instructions</h3>
+                          <p className="text-gray-300 text-sm">Describe desired transformation</p>
                         </div>
                       </div>
                       <ArrowRight className="h-5 w-5 text-green-600" />
@@ -304,8 +304,8 @@ const ImageGenerator = () => {
                           3
                         </div>
                         <div>
-                          <h3 className="font-semibold text-green-900">Get Transformed Image</h3>
-                          <p className="text-green-700 text-sm">Download transformed version</p>
+                          <h3 className="font-semibold text-white">Get Transformed Image</h3>
+                          <p className="text-gray-300 text-sm">Download transformed version</p>
                         </div>
                       </div>
                     </div>
@@ -318,9 +318,9 @@ const ImageGenerator = () => {
           <div className="grid gap-8 lg:grid-cols-3">
             {/* Input Section */}
             <div className="lg:col-span-2">
-              <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-xl">
+              <Card className="bg-gray-800 border-gray-700 shadow-xl">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-2xl">
+                  <CardTitle className="flex items-center gap-2 text-2xl text-white">
                     {activeTab === 'text-to-text' && <Type className="h-6 w-6" />}
                     {activeTab === 'text-to-image' && <ImageLucide className="h-6 w-6" />}
                     {activeTab === 'image-to-image' && <FileImage className="h-6 w-6" />}
@@ -328,7 +328,7 @@ const ImageGenerator = () => {
                     {activeTab === 'text-to-image' && 'Image Generation'}
                     {activeTab === 'image-to-image' && 'Image Transformation'}
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="text-gray-300">
                     {activeTab === 'text-to-text' && 'Enter text prompt to generate AI-written content'}
                     {activeTab === 'text-to-image' && 'Describe the image you want to create'}
                     {activeTab === 'image-to-image' && 'Upload an image and describe how to transform it'}
@@ -340,12 +340,12 @@ const ImageGenerator = () => {
                     {(activeTab === 'text-to-text' || activeTab === 'text-to-image' || activeTab === 'image-to-image') && (
                       <div className="space-y-3">
                         <div className="flex items-center gap-2">
-                          <Label htmlFor="text-input" className="text-base font-semibold">
+                          <Label htmlFor="text-input" className="text-base font-semibold text-white">
                             {activeTab === 'image-to-image' ? 'Transformation Instructions *' : 'Text Prompt *'}
                           </Label>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-200 transition-colors">
+                              <button type="button" className="rounded-full p-1 hover:bg-gray-700 transition-colors">
                                 <InfoIcon className="size-4 text-gray-400" />
                               </button>
                             </TooltipTrigger>
@@ -368,7 +368,7 @@ const ImageGenerator = () => {
                               : "How would you like to transform the image? (e.g., 'Make it look like a Picasso painting', 'Convert to black and white', 'Add fantasy elements like magic sparkles')"
                           }
                           rows={activeTab === 'image-to-image' ? 3 : 4}
-                          className="resize-none border-gray-300 focus:border-black transition-colors bg-white/50"
+                          className="resize-none border-gray-600 focus:border-white transition-colors bg-gray-700 text-white"
                         />
                       </div>
                     )}
@@ -379,12 +379,12 @@ const ImageGenerator = () => {
                         {/* File Upload */}
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
-                            <Label htmlFor="file-upload" className="text-base font-semibold">
+                            <Label htmlFor="file-upload" className="text-base font-semibold text-white">
                               Upload Image *
                             </Label>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button type="button" className="rounded-full p-1 hover:bg-gray-200 transition-colors">
+                                <button type="button" className="rounded-full p-1 hover:bg-gray-700 transition-colors">
                                   <InfoIcon className="size-4 text-gray-400" />
                                 </button>
                               </TooltipTrigger>
@@ -394,7 +394,7 @@ const ImageGenerator = () => {
                             </Tooltip>
                           </div>
                           <div className="space-y-3">
-                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
+                            <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
                               <Input
                                 id="file-upload"
                                 type="file"
@@ -402,19 +402,19 @@ const ImageGenerator = () => {
                                 onChange={handleFileChange}
                                 className="hidden"
                               />
-                              <Label htmlFor="file-upload" className="cursor-pointer">
+                              <Label htmlFor="file-upload" className="cursor-pointer text-white">
                                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                                <p className="text-sm font-medium text-gray-700">Click to upload image</p>
+                                <p className="text-sm font-medium text-gray-300">Click to upload image</p>
                                 <p className="text-xs text-gray-500 mt-1">PNG, JPG, WebP up to 10MB</p>
                               </Label>
                             </div>
                             
                             {selectedFile && (
-                              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                              <div className="flex items-center justify-between p-3 bg-gray-700 rounded-lg border border-gray-600">
                                 <div className="flex items-center gap-3">
-                                  <ImageIcon className="h-5 w-5 text-gray-600" />
+                                  <ImageIcon className="h-5 w-5 text-gray-300" />
                                   <div>
-                                    <span className="text-sm font-medium text-gray-800 block">
+                                    <span className="text-sm font-medium text-gray-200 block">
                                       {selectedFile.name}
                                     </span>
                                     <span className="text-xs text-gray-500">
@@ -427,9 +427,9 @@ const ImageGenerator = () => {
                                   variant="ghost"
                                   size="sm"
                                   onClick={removeSelectedFile}
-                                  className="h-8 w-8 p-0 hover:bg-gray-200"
+                                  className="h-8 w-8 p-0 hover:bg-gray-600"
                                 >
-                                  <X className="h-4 w-4" />
+                                  <X className="h-4 w-4 text-gray-300" />
                                 </Button>
                               </div>
                             )}
@@ -439,22 +439,22 @@ const ImageGenerator = () => {
                         {/* OR Separator */}
                         <div className="relative">
                           <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-300"></div>
+                            <div className="w-full border-t border-gray-600"></div>
                           </div>
                           <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white text-gray-500">OR</span>
+                            <span className="px-2 bg-gray-800 text-gray-500">OR</span>
                           </div>
                         </div>
 
                         {/* Image URL Input */}
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
-                            <Label htmlFor="image-url" className="text-base font-semibold">
+                            <Label htmlFor="image-url" className="text-base font-semibold text-white">
                               Image URL
                             </Label>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <button type="button" className="rounded-full p-1 hover:bg-gray-200 transition-colors">
+                                <button type="button" className="rounded-full p-1 hover:bg-gray-700 transition-colors">
                                   <InfoIcon className="size-4 text-gray-400" />
                                 </button>
                               </TooltipTrigger>
@@ -469,7 +469,7 @@ const ImageGenerator = () => {
                             value={imageUrl}
                             onChange={(e) => setImageUrl(e.target.value)}
                             placeholder="https://example.com/your-image.jpg"
-                            className="border-gray-300 focus:border-black transition-colors bg-white/50"
+                            className="border-gray-600 focus:border-white transition-colors bg-gray-700 text-white"
                           />
                         </div>
                       </>
@@ -480,7 +480,7 @@ const ImageGenerator = () => {
                       <Button
                         type="submit"
                         disabled={loading}
-                        className="flex-1 bg-black hover:bg-gray-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold"
+                        className="flex-1 bg-blue-600 hover:bg-blue-500 text-white shadow-lg hover:shadow-xl transition-all duration-200 h-12 text-base font-semibold"
                       >
                         {loading ? (
                           <>
@@ -503,7 +503,7 @@ const ImageGenerator = () => {
                         type="button"
                         variant="outline"
                         onClick={clearAll}
-                        className="h-12 border-gray-300 hover:bg-gray-50 hover:border-gray-400 transition-colors"
+                        className="h-12 border-gray-600 hover:bg-gray-700 hover:border-gray-500 transition-colors"
                       >
                         Clear All
                       </Button>
@@ -511,20 +511,20 @@ const ImageGenerator = () => {
                   </form>
 
                   {error && (
-                    <Alert variant="destructive" className="mt-6 bg-red-50 border-red-200">
-                      <AlertDescription className="text-red-800 font-medium">
+                    <Alert variant="destructive" className="mt-6 bg-red-600 border-red-500">
+                      <AlertDescription className="text-red-200 font-medium">
                         {error}
                       </AlertDescription>
                     </Alert>
                   )}
 
                   {/* Tips Section */}
-                  <div className="mt-8 pt-6 border-t border-gray-200">
-                    <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                  <div className="mt-8 pt-6 border-t border-gray-600">
+                    <h4 className="font-semibold text-gray-300 mb-3 flex items-center gap-2">
                       <InfoIcon className="h-4 w-4" />
                       Tips for Better Results:
                     </h4>
-                    <ul className="space-y-2 text-sm text-gray-600">
+                    <ul className="space-y-2 text-sm text-gray-400">
                       {activeTab === 'text-to-text' && (
                         <>
                           <li className="flex items-start gap-2">
@@ -581,9 +581,9 @@ const ImageGenerator = () => {
 
             {/* Output Section */}
             <div className="lg:col-span-1">
-              <Card className="bg-white/80 backdrop-blur-sm border-gray-200 shadow-xl h-fit sticky top-8">
+              <Card className="bg-slate-800 backdrop-blur-sm border-white shadow-xl h-fit sticky top-8">
                 <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-2xl">
+                  <CardTitle className="flex items-center gap-2 text-2xl text-white">
                     {activeTab === 'text-to-text' && <TextIcon className="h-6 w-6" />}
                     {activeTab === 'text-to-image' && <ImageIcon className="h-6 w-6" />}
                     {activeTab === 'image-to-image' && <FileImage className="h-6 w-6" />}

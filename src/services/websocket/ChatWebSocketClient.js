@@ -13,12 +13,44 @@ class ChatWebSocketClient {
     this.options = options;
     this.activeWhiteboards = new Set(); // Track active whiteboard sessions
   }
+  startHeartbeat(interval = 25000) {
+    this.stopHeartbeat();
+
+    this.heartbeatInterval = setInterval(() => {
+      if (this.isConnected()) {
+        this.socket.emit('ping_alive', { t: Date.now() });
+      };
+    }, interval);
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+      };
+  };
+  startConnectionWatchdog(timeout = 60000) {
+    this.lastPong = Date.now();
+
+    this.socket.on('pong_alive', () => {
+      this.lastPong = Date.now();
+    });
+
+    this.watchdogInterval = setInterval(() => {
+      if (Date.now() - this.lastPong > timeout) {
+        console.warn('Socket stale, forcing reconnect');
+        this.socket.disconnect();
+        this.socket.connect();
+      }
+    }, 10000);
+  }
 
   // Initialize and connect to WebSocket server
   connect() {
     const defaultOptions = {
       query: { user_id: this.userId },
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
+      upgrade: false,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
@@ -41,7 +73,8 @@ class ChatWebSocketClient {
       console.log('Connected to chat server');
       this.reconnectAttempts = 0;
       this.trigger('connected');
-      
+      this.startHeartbeat();
+      this.startConnectionWatchdog();
       // IMPORTANT: Wait a bit before joining conversations to ensure socket is fully registered
       setTimeout(() => {
         // Join all user's conversation rooms
@@ -52,7 +85,7 @@ class ChatWebSocketClient {
     this.socket.on('disconnect', (reason) => {
       console.log('Disconnected from chat server:', reason);
       this.trigger('disconnected', reason);
-      
+      this.stopHeartbeat();
       // Leave all whiteboards on disconnect
       this.activeWhiteboards.forEach(conversationId => {
         this.leaveWhiteboard(conversationId);
@@ -66,16 +99,17 @@ class ChatWebSocketClient {
     });
 
     // Reconnection events
-    this.socket.on('reconnect', (attemptNumber) => {
-      console.log('Reconnected to chat server, attempt:', attemptNumber);
-      this.trigger('reconnected', attemptNumber);
-      
-      // Re-join conversations and whiteboards
+    this.socket.on('reconnect', () => {
       this.joinUserConversations();
-      this.activeWhiteboards.forEach(conversationId => {
-        this.joinWhiteboard(conversationId);
+
+      // Rejoin whiteboards safely
+      [...this.activeWhiteboards].forEach(id => {
+        this.joinWhiteboard(id).catch(() => {
+          this.activeWhiteboards.delete(id);
+        });
       });
     });
+
 
     this.socket.on('reconnect_attempt', (attemptNumber) => {
       console.log('Reconnection attempt:', attemptNumber);

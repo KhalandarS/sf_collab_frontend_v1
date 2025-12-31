@@ -90,7 +90,7 @@ const Dashboard = () => {
               </div>
               
               <div className="flex flex-wrap gap-4 flex-shrink-0">
-                <a href="https://sfcollab.com/waitlist" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
+                <a href="/waitlist" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
                   <span className="relative flex items-center gap-2">
                     Join Waitlist
                     <span className="text-xs bg-blue-400/40 px-2 py-1 rounded-full ml-2">Anticipated</span>

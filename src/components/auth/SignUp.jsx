@@ -1,6 +1,6 @@
 import { useState, useEffect,useRef } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useSearchParams } from "react-router-dom"
 import { setUser,setToken } from "../../services/auth/authSlice";
 import { useDispatch } from "react-redux";
 import NavBar from "../sections/NavBar";
@@ -12,14 +12,14 @@ import ShinyText from "../ui/ShinyText";
 import { PasswordStrengthIndicator } from "../lightswind/password-strength-indicator";
 import {Button} from '../ui/button';
 import LoadingSpinner from "../LoadingSpinner";
-
-const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5000/api/auth';
-const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+import { API_URL } from "@/utils/config";
 
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch=useDispatch();
-  
+  const [searchParams] = useSearchParams();
+
+  const referralCode = searchParams.get("ref");
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
@@ -159,7 +159,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     
     window.open(
-      `${API_URL}/google/login`,
+      `${API_URL}/google/login?ref=${referralCode ?? ""}`,
       'Google Sign Up',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -173,7 +173,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     // setAlertConf({title:"Authenticating with GitHub ....", message:"This will only take a moment. Please follow the GitHub sign-in window."});
     window.open(
-      `${API_URL}/github/login`,
+      `${API_URL}/github/login?ref=${referralCode ?? ""}`,
       'Github Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -216,7 +216,7 @@ export default function SignUp() {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch(`${API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,6 +226,7 @@ export default function SignUp() {
           last_name: formData.lastName,
           email: formData.email,
           password: formData.password,
+          referralCode: referralCode,
           // profile_company: formData.profile_company,
           // profile_country: formData.profile_country,
           // profile_city: formData.profile_city,

@@ -19,27 +19,57 @@ import {
 } from "../ui/tooltip"; 
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { FcAbout } from "react-icons/fc";
+import { useSelector } from 'react-redux';
+import { waitlistAPI } from '../waitlist/components/lib/api';
+import { toast } from 'react-toastify';
+import axios from 'axios';
+import { API_BASE_URL } from '@/utils/config';
 
 const CompactFeedbackCard = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
+  const [feedbackContent, setFeedbackContent] = useState('');
+  const { access_token, user } = useSelector((state) => state.auth);
+  
+  const MIN_FEEDBACK_LENGTH = 20;
+  const isValidFeedback = feedbackContent.trim().length >= MIN_FEEDBACK_LENGTH;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!isValidFeedback) {
+      toast.warn(`Feedback must be at least ${MIN_FEEDBACK_LENGTH} characters long.`);
+      return;
+    }
+
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
-    console.log('Feedback submitted:', data);
-    setIsOpen(false);
+    const response = await axios.post(`${API_BASE_URL}/feedback`, {
+      userId: user.id,
+      content: data.feedback,
+    }, {
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
+    console.log(response);
+    if (response.status === 201) {
+      toast.success('Thank you for your feedback!');
+      waitlistAPI.addPoints({ userId: user.id, category: 'contribution' }, access_token);
+      setFeedbackContent('');
+      e.target.reset();
+      setIsOpen(false);
+    } else {
+      toast.error('Failed to submit feedback. Please try again later.');
+      return;
+    }
   };
 
   const handleDialogOpenChange = (open) => {
     setIsOpen(open);
-    // Close tooltip when dialog opens
     if (open) {
       setTooltipOpen(false);
     }
@@ -88,7 +118,7 @@ const CompactFeedbackCard = () => {
                   className={cn(
                     "w-full mb-2 cursor-pointer",
                     "transition-all duration-700",
-                    "bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600",
+                    "bg-linear-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600",
                     "border-none",
                     "text-white text-sm"
                   )}
@@ -105,7 +135,6 @@ const CompactFeedbackCard = () => {
         </Tooltip>
       </TooltipProvider>
 
-      {/* Dialog is now separate from Tooltip */}
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent 
           className={cn(
@@ -114,7 +143,7 @@ const CompactFeedbackCard = () => {
             "border border-gray-700/50",
             "shadow-2xl shadow-black/40"
           )}
-          onMouseEnter={() => setTooltipOpen(false)} // Ensure tooltip stays closed
+          onMouseEnter={() => setTooltipOpen(false)}
         >
           <form onSubmit={handleSubmit}>
             <DialogHeader>
@@ -124,58 +153,31 @@ const CompactFeedbackCard = () => {
               </DialogDescription>
             </DialogHeader>
 
-            <Tabs defaultValue="quick" className="mt-4">
-              <TabsList className="grid w-full grid-cols-2 bg-gray-800/50">
-                <TabsTrigger 
-                  value="quick"
-                  className="text-sm data-[state=active]:text-black text-gray-400 data-[state=active]:bg-white"
-                >
-                  Quick +10pt
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="detailed"
-                  className="text-sm data-[state=active]:text-black text-gray-400 data-[state=active]:bg-white"
-                >
-                  Detailed +15pt
-                </TabsTrigger>
-              </TabsList>
+            {/* Warning Banner */}
+            <div className="mt-4 flex items-start gap-3 p-3 bg-red-900/20 border border-red-700/30 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-red-400">
+                Please provide genuine feedback only. Spam or nonsense suggestions may result in account suspension or ban.
+              </p>
+            </div>
 
-              <TabsContent value="quick" className="pt-4">
-                <div className="space-y-3">
-                  <Label className="text-white text-sm">Your feedback</Label>
-                  <Textarea 
-                    name="quickFeedback"
-                    placeholder="What can we improve?"
-                    className="min-h-[100px] bg-gray-800/50 border-gray-700 text-white text-sm"
-                    required
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="detailed" className="pt-4">
-                <div className="space-y-3">
-                  <Label className="text-white text-sm">Type</Label>
-                  <Select name="feedbackType">
-                    <SelectTrigger className="w-full bg-gray-800/50 border-gray-700 text-white text-sm">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-gray-700">
-                      <SelectItem className="text-white hover:text-black" value="bug">Bug</SelectItem>
-                      <SelectItem className="text-white hover:text-black" value="feature">Feature</SelectItem>
-                      <SelectItem className="text-white hover:text-black" value="improvement">Improvement</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  
-                  <Label className="text-white text-sm">Details</Label>
-                  <Textarea 
-                    name="detailedFeedback"
-                    placeholder="Describe in detail..."
-                    className="min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
-                    required
-                  />
-                </div>
-              </TabsContent>
-            </Tabs>
+            <div className="mt-4 space-y-3">
+              <Label className="text-white text-sm">Your feedback</Label>
+              <Textarea 
+                name="feedback"
+                placeholder="What can we improve?"
+                className="min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
+                value={feedbackContent}
+                onChange={(e) => setFeedbackContent(e.target.value)}
+                required
+              />
+              <p className={cn(
+                "text-xs",
+                feedbackContent.length >= MIN_FEEDBACK_LENGTH ? "text-green-400" : "text-gray-500"
+              )}>
+                {feedbackContent.length}/{MIN_FEEDBACK_LENGTH} characters
+              </p>
+            </div>
 
             <DialogFooter className="mt-4">
               <DialogClose asChild>
@@ -191,7 +193,8 @@ const CompactFeedbackCard = () => {
               <Button 
                 type="submit"
                 size="sm"
-                className="bg-white text-black hover:bg-white/90 cursor-pointer hover:scale-102 hover:shadow-[0px_0px_10px_white]"
+                disabled={!isValidFeedback}
+                className="bg-white text-black hover:bg-white/90 cursor-pointer hover:scale-102 hover:shadow-[0px_0px_10px_white] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Send className="w-3 h-3 mr-2" />
                 Submit

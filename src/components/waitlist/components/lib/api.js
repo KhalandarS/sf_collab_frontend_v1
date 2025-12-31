@@ -1,8 +1,9 @@
+import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
 
-console.log('API Base URL:', API_BASE_URL) // Debug: Check API URL
+
+
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -43,58 +44,72 @@ api.interceptors.response.use(
 
 // Waitlist API
 export const waitlistAPI = {
-  signup: async (email, name) => {
-    const response = await api.post('/waitlist/signup', { email, name })
-    return response.data
+  register: async (email, name, id, accessToken) => {
+    const response = await api.post("/waitlist/register", { email, name, id }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
   },
 
-  getPosition: async (email) => {
-    const response = await api.get(`/waitlist/position/${email}`)
-    return response.data
+  getTotalCount: async () => {
+    const response = await api.get("/waitlist/count");
+    return response.data.data;
   },
 
-  getStats: async () => {
-    const response = await api.get('/waitlist/stats')
-    return response.data
+  isOnWaitlist: async (email) => {
+    const response = await api.post("/waitlist/check", { email });
+    return {
+      on_waitlist: response.data.data.is_on_waitlist,
+      position: response.data.data.position,
+    };
   },
 
-  getAll: async () => {
-    const response = await api.get('/waitlist/all')
-    return response.data
+  getLeaderboard: async (limit = 10) => {
+    const response = await api.get(
+      `/waitlist/leaderboard?limit=${limit}`
+    );
+    return response.data.data;
   },
-}
+  getMyRanking: async (userId, accessToken) => {
+    const response = await api.get(`/waitlist/me/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
+  },
 
-// Referral API
-export const referralAPI = {
-  register: async (email, name) => {
-    const response = await api.post('/referral/register', { email, name })
-    return response.data
+  addPoints: async ({ userId, category }, accessToken) => {
+    const response = await api.post(
+      "/waitlist/add-points",
+      {
+        user_id: userId,
+        category, // referral | contribution | activity
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data.data;
   },
-  
-  invite: async (referrerEmail, contactEmail, contactName) => {
-    const response = await api.post('/referral/invite', {
-      referrer_email: referrerEmail,
-      contact_email: contactEmail,
-      contact_name: contactName,
-    })
-    return response.data
-  },
-  
-  getUserReferrals: async (email) => {
-    const response = await api.get(`/referral/user/${email}`)
-    return response.data
-  },
-  
-  claimReward: async (email, weeks) => {
-    const response = await api.post('/referral/claim', { email, weeks })
-    return response.data
-  },
-  
-  getStats: async () => {
-    const response = await api.get('/referral/stats')
-    return response.data
-  },
-}
+  heartbeat: async (userId, accessToken) => {
+    const response = await api.get(
+      `/waitlist/heartbeat/${userId}`,
+      {
+        headers: {  
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data.data;
+  }
+};
+
+
 
 export default api
 

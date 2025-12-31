@@ -35,7 +35,7 @@ import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerat
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 import QwenChat from './components/pages/QwenChat/QwenChat';
 import Waitlist from "./components/waitlist/Waitlist.jsx";
-import ReferPage from "./components/referAndRanking/refer.jsx";
+import ReferPage from "./components/waitlist/referAndRanking/refer.jsx";
 import TermsAndConditions from "./components/pages/termsAndConditions/legalTerms.jsx";
 import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.jsx";
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
@@ -52,9 +52,13 @@ import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.j
 import ConnectWithUsers from "./components/pages/connect_with_users/ConnectWithUsers.jsx";
 import ChatComponent from "./components/chat/ChatComponent.jsx";
 import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
+import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
+import { ToastContainer } from "react-toastify";
 
 function App() {
-  return (
+
+  return (<>
+  
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutPage />} />
@@ -129,7 +133,7 @@ function App() {
         <Route path="data-scraper" element={<ScraperForm />} />
         <Route path="chat" element={<ChatComponent />} />
         <Route path="qwen-chat" element={<QwenChat />} />
-        
+        <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}
         <Route path="discover-users" element={<ConnectWithUsers />} />
 
@@ -159,6 +163,21 @@ function App() {
       {/* Catch all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
+    <ToastContainer />
+  <ToastContainer
+    position="bottom-center"
+    autoClose={5000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="dark"
+    style={{ bottom: '20px' }}
+  />
+  </>
   );
 }
 

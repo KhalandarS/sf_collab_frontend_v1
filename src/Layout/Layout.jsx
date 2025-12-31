@@ -206,6 +206,7 @@ import GlassmorphismFeedbackCard from '../components/sections/CompactFeedbackCar
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { hasPermission } from "../utils/permissionCheck"; // Import permission check utility
+import { useActivityHeartbeat } from "./useActivityHearbeat";
 
 const Layout = () => {
   const location = useLocation();
@@ -252,7 +253,7 @@ const Layout = () => {
       mirror: false        
     });
   }, []);
-  
+  useActivityHeartbeat(user, access_token);
   useEffect(()=>{
     if (!isRootPath) {
       setIsOptionsVisible(true);
