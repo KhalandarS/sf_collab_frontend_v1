@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useLayoutEffect } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
@@ -8,91 +8,67 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 gsap.registerPlugin(ScrollTrigger);
 
 const StartUp = () => {
-  const imageRef = useRef(null);
+  
+  // const [isMobile, setIsMobile] = useState(false);
+
   const sectionRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const imageRef = useRef(null);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  useLayoutEffect(() => {
+    if (!sectionRef.current || !imageRef.current) return;
 
-  useEffect(() => {
-    const el = sectionRef.current;
     const ctx = gsap.context(() => {
-      // Desktop parallax effect, lighter on mobile
-      gsap.to(imageRef.current, {
-        y: isMobile ? 60 : 120,
-        scale: isMobile ? 1.15 : 1.25,
-        ease: "none",
+      const mm = gsap.matchMedia();
+
+      mm.add("(min-width: 768px)", () => {
+        gsap.to(imageRef.current, {
+          y: 120,
+          scale: 1.25,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      });
+
+      mm.add("(max-width: 767px)", () => {
+        gsap.to(imageRef.current, {
+          y: 60,
+          scale: 1.15,
+          ease: "none",
+          scrollTrigger: {
+            trigger: sectionRef.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.5,
+          },
+        });
+      });
+
+      /* -------------------------
+         CONTENT ENTRANCE
+      -------------------------- */
+      const contentTl = gsap.timeline({
         scrollTrigger: {
-          trigger: el,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: isMobile ? 0.5 : true,
+          trigger: sectionRef.current,
+          start: "top 80%",
         },
       });
-      
-      // Staggered content animation
-      gsap.fromTo(
-        ".startup-tagline",
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.6,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 80%" },
-        }
-      );
-      
-      gsap.fromTo(
-        ".startup-title",
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          delay: 0.2,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 80%" },
-        }
-      );
-      
-      gsap.fromTo(
-        ".startup-description",
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          delay: 0.4,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 80%" },
-        }
-      );
-      
-      gsap.fromTo(
-        ".startup-cta",
-        { opacity: 0, y: 20 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          delay: 0.6,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 80%" },
-        }
-      );
-    }, el);
+
+      contentTl
+        .from(".startup-tagline", { opacity: 0, y: 20, duration: 0.5 })
+        .from(".startup-title", { opacity: 0, y: 30, duration: 0.6 }, "-=0.3")
+        .from(".startup-description", { opacity: 0, y: 20, duration: 0.6 }, "-=0.3")
+        .from(".startup-cta", { opacity: 0, y: 20, duration: 0.6 }, "-=0.3");
+    }, sectionRef);
+
+    ScrollTrigger.refresh();
+
     return () => ctx.revert();
-  }, [isMobile]);
+  }, []);
 
   return (
     <>

@@ -18,7 +18,7 @@ const roleCategories = [
     name: 'Founders & Leadership',
     roles: ['founder', 'advisor', 'partner'],
     icon: Briefcase,
-    color: 'from-blue-500 to-cyan-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   },
   {
     id: 'technical',
@@ -29,7 +29,7 @@ const roleCategories = [
       'cloud_engineer', 'sre', 'cybersecurity_engineer'
     ],
     icon: Code,
-    color: 'from-green-500 to-emerald-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   },
   {
     id: 'data',
@@ -39,7 +39,7 @@ const roleCategories = [
       'ai_engineer', 'mlops_engineer', 'data_analyst'
     ],
     icon: Database,
-    color: 'from-purple-500 to-pink-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   },
   {
     id: 'product',
@@ -49,7 +49,7 @@ const roleCategories = [
       'ui_designer', 'product_designer', 'ux_researcher'
     ],
     icon: Palette,
-    color: 'from-orange-500 to-yellow-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   },
   {
     id: 'growth',
@@ -59,14 +59,14 @@ const roleCategories = [
       'content_strategist'
     ],
     icon: TrendingUp,
-    color: 'from-red-500 to-rose-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   },
   {
     id: 'investor',
     name: 'Investors & Advisors',
     roles: ['investor', 'advisor', 'mentor'],
     icon: BarChart3,
-    color: 'from-indigo-500 to-violet-400'
+    color: 'hover:from-indigo-700 hover:to-purple-700'
   }
 ];
 
@@ -85,10 +85,10 @@ const RoleBasedPricing = () => {
       className="py-16 px-4"
     >
       <div className="mx-auto max-w-7xl">
-        <h2 className="text-3xl font-bold text-white text-center mb-2">
+        <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-gray-200 text-center mb-2">
           Find Your Perfect Plan
         </h2>
-        <p className="text-white/80 text-center mb-12">
+        <p className="text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-gray-200 text-center mb-12">
           Select your role to see recommended features and pricing
         </p>
 
@@ -126,14 +126,14 @@ const RoleBasedPricing = () => {
         >
           <div className="grid md:grid-cols-2 gap-8">
             <div>
-              <h3 className="text-xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-gray-400 mb-4">
                 Recommended for {currentCategory?.name}
               </h3>
               <div className="space-y-4">
-                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-4 rounded-xl">
-                  <h4 className="font-semibold text-gray-900">Team Lead Plan</h4>
-                  <p className="text-gray-600 text-sm mt-1">$29.99/month</p>
-                  <ul className="mt-3 space-y-2 text-sm text-gray-700">
+                <div className="bg-gray-900 p-4 rounded-xl">
+                  <h4 className="font-semibold text-gray-200">Team Lead Plan</h4>
+                  <p className="text-gray-200 text-sm mt-1">$29.99/month</p>
+                  <ul className="mt-3 space-y-2 text-sm text-gray-200">
                     <li className="flex items-center">
                       <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                       Team management (up to 25 members)
@@ -178,19 +178,19 @@ const RoleBasedPricing = () => {
             </div>
 
             <div>
-              <h4 className="font-semibold text-white mb-3">Virtual Currency Benefits</h4>
+              <h4 className="font-semibold text-gray-400 mb-3">Virtual Currency Benefits</h4>
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-lg">
-                  <span className="font-medium text-amber-800">XP Multiplier</span>
-                  <span className="font-bold text-amber-600">1.5x</span>
+                <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
+                  <span className="font-medium text-gray-200">XP Multiplier</span>
+                  <span className="font-bold text-gray-200">1.5x</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-50 to-green-50 rounded-lg">
-                  <span className="font-medium text-emerald-800">Exchange Bonus</span>
-                  <span className="font-bold text-emerald-600">25%</span>
+                <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
+                  <span className="font-medium text-gray-200">Exchange Bonus</span>
+                  <span className="font-bold text-gray-200">25%</span>
                 </div>
-                <div className="flex items-center justify-between p-3 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg">
-                  <span className="font-medium text-purple-800">Monthly Coins</span>
-                  <span className="font-bold text-purple-600">200 SF Coins</span>
+                <div className="flex items-center justify-between p-3 bg-gray-900 rounded-lg">
+                  <span className="font-medium text-gray-200">Monthly Coins</span>
+                  <span className="font-bold text-gray-200">200 SF Coins</span>
                 </div>
               </div>
 
@@ -198,7 +198,7 @@ const RoleBasedPricing = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-purple-600 to-black text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   Start 7-Day Free Trial
                 </motion.button>

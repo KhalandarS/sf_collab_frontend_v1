@@ -1,5 +1,5 @@
 // landingpages/home/hero.jsx
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Play, X ,ArrowRight} from 'lucide-react';
@@ -31,94 +31,105 @@ const Hero = () => {
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   // Main scroll animation controller
-  useEffect(() => {
-    if (!contentRef.current || !sectionRef.current) return;
+ useLayoutEffect(() => {
+  if (!contentRef.current || !sectionRef.current) return;
 
-    const mobile = isMobile();
-    const ctx = gsap.context(() => {
-      // Initial entrance animations (staggered)
-      gsap.from([mainHeadingRef.current, backgroundMetricsRef.current, liveStatsRef.current], {
-        opacity: 0,
-        y: mobile ? 20 : 40,
-        duration: getResponsiveDuration(1.2),
-        ease: "power3.out",
-        stagger: mobile ? 0.1 : 0.2,
-        delay: 0.3
-      });
+  const mobile = isMobile();
 
-      // Scroll-triggered hero transformation - disable pin on mobile
-      if (!mobile) {
-        gsap.fromTo(
-          contentRef.current,
-          {
-            scale: 1,
-            opacity: 1,
-          },
-          {
-            scale: 1.5,
-            opacity: 0,
-            ease: "power2.inOut",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top top",
-              end: "bottom top",
-              scrub: 1,
-              pin: true,
-              pinSpacing: true,
-              anticipatePin: 1,
-              onUpdate: (self) => {
-                // Parallax background metrics
-                gsap.to(backgroundMetricsRef.current, {
-                  y: self.progress * -40,
-                  opacity: 0.06 - (self.progress * 0.06),
-                  ease: "none"
-                });
+  const ctx = gsap.context(() => {
 
-                // Fade out live stats
-                gsap.to(liveStatsRef.current, {
-                  opacity: 1 - (self.progress * 1.5),
-                  y: self.progress * 20,
-                  ease: "none"
-                });
-              }
-            }
-          }
-        );
+    const introTargets = [
+      mainHeadingRef.current,
+      backgroundMetricsRef.current,
+      liveStatsRef.current,
+    ].filter(Boolean);
 
-        // Background video scroll scale - desktop only
-        gsap.to(imageRef.current, {
-          scale: 1.2,
-          opacity: 0.3,
+    gsap.from(introTargets, {
+      opacity: 0,
+      y: mobile ? 20 : 40,
+      duration: getResponsiveDuration(1.2),
+      ease: "power3.out",
+      stagger: mobile ? 0.1 : 0.2,
+      delay: 0.3,
+    });
+
+    if (!mobile) {
+      gsap.fromTo(
+        contentRef.current,
+        { scale: 1, opacity: 1 },
+        {
+          scale: 1.5,
+          opacity: 0,
+          ease: "power2.inOut",
           scrollTrigger: {
             trigger: sectionRef.current,
             start: "top top",
             end: "bottom top",
-            scrub: 1,
+            scrub: true,
+            pin: true,
+            pinSpacing: true,
+            anticipatePin: 1,
           },
-        });
-      } else {
-        // Simple fade animation for mobile
-        gsap.to(contentRef.current, {
-          opacity: 0.8,
-          scrollTrigger: getResponsiveScrollTrigger({
-            trigger: sectionRef.current,
-            start: "top top",
-            end: "bottom top",
-            scrub: 0.5,
-          }),
-        });
-      }
+        }
+      );
 
-    }, sectionRef);
+     
+      gsap.to(backgroundMetricsRef.current, {
+        y: -40,
+        opacity: 0,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
 
-    // Setup refresh on resize/orientation change
-    const cleanup = setupScrollTriggerRefresh();
+      gsap.to(liveStatsRef.current, {
+        opacity: 0,
+        y: 20,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
 
-    return () => {
-      ctx.revert();
-      cleanup();
-    };
-  }, []);
+      gsap.to(imageRef.current, {
+        scale: 1.2,
+        opacity: 0.3,
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: true,
+        },
+      });
+    } else {
+      
+      gsap.to(contentRef.current, {
+        opacity: 0.8,
+        scrollTrigger: getResponsiveScrollTrigger({
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "bottom top",
+          scrub: 0.5,
+        }),
+      });
+    }
+
+  }, sectionRef);
+
+  const cleanup = setupScrollTriggerRefresh();
+
+  return () => {
+    ctx.revert();
+    cleanup();
+  };
+}, []);
 
   const openPopup = () => {
     setIsPopupOpen(true);
@@ -254,7 +265,9 @@ const Hero = () => {
         
 
         {/* Animated Metric Ticker */}
-        <div className="absolute bottom-4 md:bottom-8 left-4 md:right-0 px-4">
+        <div 
+        ref={liveStatsRef}
+        className="absolute bottom-4 md:bottom-8 left-4 md:right-0 px-4">
           <div className="flex items-center justify-center gap-4 md:gap-8 lg:gap-12 opacity-80">
             <ShineButton
             onClick={()=>navigate('/waitlist')}

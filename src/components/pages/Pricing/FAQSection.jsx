@@ -49,7 +49,7 @@ const FAQSection = () => {
       className="py-20 "
     >
       <div className="mx-auto max-w-4xl px-4">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+        <h2 className="text-3xl font-bold text-center text-transparent bg-gradient-to-r bg-clip-text from-gray-500 to-gray-300 mb-12">
           Frequently Asked Questions
         </h2>
         
@@ -60,17 +60,17 @@ const FAQSection = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm"
+              className="bg-gray-900 rounded-xl border border-gray-200 overflow-hidden shadow-sm"
             >
               <button
                 onClick={() => setOpenIndex(openIndex === idx ? null : idx)}
-                className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition-colors"
+                className="w-full p-6 text-left flex justify-between items-center hover:bg-gray-800 transition-colors"
               >
-                <span className="font-semibold text-gray-900">{faq.question}</span>
+                <span className="font-semibold text-gray-200">{faq.question}</span>
                 {openIndex === idx ? (
-                  <ChevronUp className="w-5 h-5 text-gray-500" />
+                  <ChevronUp className="w-5 h-5 text-gray-300" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-500" />
+                  <ChevronDown className="w-5 h-5 text-gray-200" />
                 )}
               </button>
               
@@ -81,7 +81,7 @@ const FAQSection = () => {
                 className="overflow-hidden"
               >
                 <div className="p-6 pt-0">
-                  <p className="text-gray-600">{faq.answer}</p>
+                  <p className="text-gray-300">{faq.answer}</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -95,25 +95,25 @@ const FAQSection = () => {
           transition={{ delay: 0.8 }}
           className="mt-12 text-center"
         >
-          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl p-8 border border-blue-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">
+          <div className="bg-gradient-to-r from-purple-900 to-black rounded-2xl p-8 border border-blue-200">
+            <h3 className="text-2xl font-bold text-gray-200 mb-4">
               Still have questions?
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-300 mb-6">
               Our team is here to help you choose the right plan for your needs.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all duration-300"
+                className="px-6 py-3 bg-gradient-to-r from-gray-600 to-black hover:from-black hover:to-gray-600 text-white rounded-xl font-semibold transition-all duration-300"
               >
                 Chat with Sales
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-300"
+                className="px-6 py-3 bg-gray-800 border border-gray-300 text-gray-200 rounded-xl font-semibold hover:bg-gray-400 hover:text-black transition-all duration-300"
               >
                 Schedule a Demo
               </motion.button>

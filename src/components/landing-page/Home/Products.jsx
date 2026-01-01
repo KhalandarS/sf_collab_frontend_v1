@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useLayoutEffect, useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
@@ -6,15 +6,9 @@ import { motion } from "framer-motion";
 gsap.registerPlugin(ScrollTrigger);
 
 const Products = () => {
-  const imgRefs = useRef([]);
   const sectionRef = useRef(null);
-
-  const handleHover = (index, scale) => {
-    const img = imgRefs.current[index];
-    if (img) {
-      img.style.transform = `scale(${scale})`;
-    }
-  };
+  const imageRefs = useRef([]);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
 
   const projects = [
     {
@@ -40,7 +34,6 @@ const Products = () => {
     },
     {
       id: 4,
-      tag: "Landing Page",
       year: "System",
       title: "Founder Dashboard",
       desc: "Momentum metrics, priorities, and decisions — surfaced when they matter.",
@@ -63,64 +56,227 @@ const Products = () => {
   ];
 
   useEffect(() => {
-    const el = sectionRef.current;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(
-        ".products-title",
-        { opacity: 0, y: 30 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power3.out",
-          scrollTrigger: { trigger: el, start: "top 85%" },
+    let mounted = true;
+    const loadImages = async () => {
+      try {
+        const loadPromises = projects.map((project) => {
+          return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = project.img;
+            img.onload = resolve;
+            img.onerror = reject;
+            img.decoding = "async";
+          });
+        });
+
+        // Load images in batches to prevent network congestion
+        const batchSize = 2;
+        for (let i = 0; i < projects.length; i += batchSize) {
+          const batch = loadPromises.slice(i, i + batchSize);
+          await Promise.all(batch);
+          if (!mounted) return;
         }
-      );
-      gsap.fromTo(
-        ".product-card",
-        { opacity: 0, y: 40 },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-          stagger: 0.12,
-          scrollTrigger: { trigger: ".products-grid", start: "top 85%" },
+
+        if (mounted) {
+          setImagesLoaded(true);
+          
+          setTimeout(() => {
+            ScrollTrigger.refresh();
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
+          }, 100);
         }
-      );
-    }, el);
-    return () => ctx.revert();
+      } catch (error) {
+        console.warn("Some images failed to load:", error);
+        if (mounted) {
+          setImagesLoaded(true);
+          setTimeout(() => ScrollTrigger.refresh(), 100);
+        }
+      }
+    };
+
+    loadImages();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  useLayoutEffect(() => {
+    if (!imagesLoaded) return;
+
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const ctx = gsap.context(() => {
+      gsap.from(".products-title", {
+        opacity: 0,
+        y: 30,
+        duration: 0.8,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: el,
+          start: "top 85%",
+          end: "top 60%",
+          once: true,
+        },
+      });
+
+      // Card animations with staggered timing
+      const cards = gsap.utils.toArray(".product-card");
+      
+      cards.forEach((card, index) => {
+        requestAnimationFrame(() => {
+          gsap.from(card, {
+            opacity: 0,
+            y: 60,
+            duration: 1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 85%",
+              end: "top 50%",
+              once: true,
+              markers: false, 
+            },
+            onStart: () => {
+              gsap.set(card, { 
+                willChange: "transform, opacity",
+                backfaceVisibility: "hidden",
+                WebkitBackfaceVisibility: "hidden"
+              });
+            },
+          });
+        });
+      });
+
+      cards.forEach((card, index) => {
+        const img = card.querySelector("img");
+        if (img) {
+          gsap.set(img, {
+            scale: 1.05,
+            transformOrigin: "center center"
+          });
+          
+          gsap.to(img, {
+            scale: 1,
+            duration: 1.2,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: card,
+              start: "top 80%",
+              end: "top 30%",
+              scrub: 0.5,
+              once: true,
+            }
+          });
+        }
+      });
+
+    }, el);
+
+    return () => {
+      ctx.revert();
+      ScrollTrigger.getAll().forEach(trigger => {
+        if (trigger.trigger && trigger.trigger.closest(".product-card")) {
+          trigger.kill();
+        }
+      });
+    };
+  }, [imagesLoaded]);
+
   return (
-    <section ref={sectionRef} className="w-full h-auto p-4 lg:p-8 space-y-10">
+    <section
+      ref={sectionRef}
+      className="relative w-full h-auto p-4 lg:p-8 space-y-10 overflow-hidden"
+      style={{
+        transform: 'translate3d(0,0,0)',
+        willChange: 'transform',
+      }}
+    >
+      {!imagesLoaded && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/50">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-white"></div>
+        </div>
+      )}
+
       <div className="text-center space-y-2">
         <h2 className="products-title text-2xl lg:text-4xl font-semibold text-white tracking-wide">
           Core Systems
         </h2>
         <p className="text-gray-400 text-sm lg:text-base">
-          The operating system that replaces fragmented tools with a single, continuous platform.
+          The operating system that replaces fragmented tools with a single,
+          continuous platform.
         </p>
       </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {projects.map((project, index) => (
-          <motion.div
+          <div
             key={project.id}
-            className="product-card relative group rounded-xl overflow-hidden bg-[#111] shadow-lg transition-all duration-300 hover:shadow-2xl"
-            whileHover={{ y: -6 }}
+            className="product-card relative rounded-xl overflow-hidden bg-[#111] shadow-lg will-change-transform"
+            style={{
+              aspectRatio: "16/10",
+              transform: 'translate3d(0,0,0)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+            }}
+            ref={el => imageRefs.current[index] = el}
           >
-            <img
-              ref={(el) => (imgRefs.current[index] = el)}
-              src={project.img}
-              alt={project.title}
-              className="w-full h-64 lg:h-80 object-cover transition-transform duration-500 ease-in-out"
-              onMouseEnter={() => handleHover(index, 1.08)}
-              onMouseLeave={() => handleHover(index, 1)}
-            />
+            <div 
+              className="relative w-full h-full overflow-hidden"
+              style={{
+                willChange: 'transform',
+                transform: 'translate3d(0,0,0)',
+              }}
+            >
+              <motion.img
+                src={project.img}
+                alt={project.title}
+                className="absolute inset-0 w-full h-full object-cover"
+                initial={{ scale: 1.05 }}
+                whileHover={{ 
+                  scale: 1.1,
+                  transition: { 
+                    duration: 0.6,
+                    ease: [0.25, 0.1, 0.25, 1] 
+                  } 
+                }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                loading={imagesLoaded ? "eager" : "lazy"}
+                draggable={false}
+                decoding="async"
+                style={{
+                  imageRendering: 'auto',
+                  willChange: 'transform',
+                  transform: 'translate3d(0,0,0)',
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden',
+                  WebkitTransform: 'translate3d(0,0,0)',
+                  transformStyle: 'preserve-3d',
+                }}
+              />
+              
+              <div 
+                className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none"
+                style={{
+                  willChange: 'opacity',
+                  transform: 'translate3d(0,0,0)',
+                }}
+              />
+            </div>
 
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
-            <div className="absolute bottom-4 left-4 right-4 text-white space-y-1">
-              <span className="text-sm text-gray-300">{project.year}</span>
+            <div 
+              className="absolute bottom-4 left-4 right-4 text-white space-y-1 z-10"
+              style={{
+                willChange: 'transform',
+                transform: 'translate3d(0,0,0)',
+              }}
+            >
+              <span className="text-sm text-gray-300 block">
+                {project.year}
+              </span>
               <h3 className="text-lg lg:text-xl font-medium">
                 {project.title}
               </h3>
@@ -128,9 +284,53 @@ const Products = () => {
                 {project.desc}
               </p>
             </div>
-          </motion.div>
+
+            <div className="absolute inset-0 z-0 md:hidden" />
+          </div>
         ))}
       </div>
+
+      <style jsx global>{`
+        /* Enable smooth scrolling on the whole page */
+        html {
+          scroll-behavior: smooth;
+        }
+        
+        /* Optimize scrolling performance */
+        .product-card {
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+          contain: layout style paint; /* CSS containment */
+        }
+        
+        /* Prevent iOS rubber band effect */
+        .product-card img {
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+        
+        /* Optimize paint performance */
+        @media (prefers-reduced-motion: no-preference) {
+          .product-card {
+            animation: none; /* Prevent conflicting animations */
+          }
+        }
+        
+        /* Fix for WebKit browsers */
+        @supports (-webkit-overflow-scrolling: touch) {
+          .product-card {
+            -webkit-overflow-scrolling: touch;
+          }
+        }
+        
+        /* Prevent tap highlights on mobile */
+        @media (max-width: 768px) {
+          .product-card {
+            -webkit-tap-highlight-color: transparent;
+          }
+        }
+      `}</style>
     </section>
   );
 };

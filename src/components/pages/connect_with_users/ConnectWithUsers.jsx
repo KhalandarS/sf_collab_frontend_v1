@@ -22,7 +22,7 @@ const ConnectWithUsers = () => {
   const navigate = useNavigate();
   const { user, access_token } = useSelector((state) => state.auth);
 
-  const [users, setUsers] = useState(mockUsers);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);

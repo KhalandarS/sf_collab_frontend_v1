@@ -23,9 +23,9 @@ const Home = () => {
       lenis = new Lenis();
       
       // Optional: Log scroll events for debugging
-      // lenis.on('scroll', (e) => {
-      //   console.log(e);
-      // });
+      lenis.on('scroll', (e) => {
+        console.log(e);
+      });
       
       const raf = (time) => {
         lenis.raf(time);
