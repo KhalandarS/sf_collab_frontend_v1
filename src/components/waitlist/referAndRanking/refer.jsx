@@ -1,10 +1,10 @@
-import React, { useState, useEffect, use } from "react";
-// eslint-disable-next-line no-unused-vars
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { waitlistAPI } from "../../../utils/APIs/waitlistAPI";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
+import { Copy, Trophy, TrendingUp, Users, Zap, Target, Share2 } from "lucide-react";
 
 const card = {
   hidden: { opacity: 0, y: 20 },
@@ -13,378 +13,405 @@ const card = {
 
 const ReferPage = () => {
   const [isOnWaitlist, setIsOnWaitlist] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { user, access_token } = useSelector((state) => state.auth);
+
+  const [userRankInfo, setUserRankInfo] = useState({
+    position: 0,
+    points: { total: 0, referral: 0, contribution: 0, activity: 0 },
+  });
+  const [referralLink] = useState(
+    `${window.location.origin}/signup?ref=${user?.id || ""}`
+  );
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [mvpDeadline] = useState(new Date("2026-01-10"));
+
+  // Fetch waitlist status
   useEffect(() => {
-    async function checkUserWaitlistStatus() {
+    const checkWaitlistStatus = async () => {
       try {
-        const response = await waitlistAPI.isOnWaitlist(user.email)
+        const response = await waitlistAPI.isOnWaitlist(user?.email);
         setIsOnWaitlist(response.on_waitlist);
       } catch (error) {
         console.error("Error checking waitlist status:", error);
         setIsOnWaitlist(false);
       }
-      
-    }
-    if (user && user.email) {
-      checkUserWaitlistStatus();
-    }
-  }, [user]);
-  const [userRankInfo, setUserRankInfo] = useState({ position: 0, points: { total: 0, referral: 0, contribution: 0, activity: 0 } });
-  const [referralLink] = useState(`${window.location.origin}/signup?ref=${user?.id || ""}`);
+    };
 
-  /*
-  [
-    {
-      "created_at": datetime,
-      "email": string,
-      "id": number,
-      "name": string,
-      "points": {
-        "activity": 0,
-        "contribution": 0,
-        "referral": 0,
-        "total": 0
-      },
-      "position": number,
-                "rank": number,
-                "isYou": boolean
+    if (user?.email) {
+      checkWaitlistStatus();
     }
-  ]
-  */
-  const [leaderboard, setLeaderboard] = useState([]);
+  }, [user?.email]);
+
+  // Fetch leaderboard
   useEffect(() => {
-    async function fetchLeaderboard() {
+    const fetchLeaderboard = async () => {
       if (!user?.id) return;
-      const data = await waitlistAPI.getLeaderboard();
-      const dataWithYouFlag = data.map((userEntry) => ({
-        ...userEntry,
-        isYou: userEntry.id === user.id,
-      }));
-      setLeaderboard(dataWithYouFlag);
-    }
+      try {
+        const data = await waitlistAPI.getLeaderboard();
+        const dataWithYouFlag = data.map((userEntry) => ({
+          ...userEntry,
+          isYou: userEntry.id === user.id,
+        }));
+        setLeaderboard(dataWithYouFlag);
+      } catch (error) {
+        console.error("Error fetching leaderboard:", error);
+      }
+    };
+
     fetchLeaderboard();
-  }, [user.id]);
+  }, [user?.id]);
 
-
-  const [mvpDeadline] = useState(new Date("2026-01-10"));
+  // Fetch user ranking
   useEffect(() => {
-    // mock fetch for now
-    async function fetchData() {
-      // Fetch user rank
-      const userRankInfo = await waitlistAPI.getMyRanking(user.id, access_token);
-      console.log(userRankInfo);
-      setUserRankInfo(userRankInfo);
+    const fetchUserRank = async () => {
+      if (!user?.id || !access_token) return;
+      try {
+        setLoading(true);
+        const rankInfo = await waitlistAPI.getMyRanking(user.id, access_token);
+        setUserRankInfo(rankInfo);
+      } catch (error) {
+        console.error("Error fetching user rank:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    if (isOnWaitlist) {
+      fetchUserRank();
     }
-    if (user?.id) {
-      fetchData();
-    }
-  }, [user, access_token]);
+  }, [user?.id, access_token, isOnWaitlist]);
 
   const daysRemaining = Math.max(
     0,
     Math.ceil((mvpDeadline - new Date()) / (1000 * 60 * 60 * 24))
   );
 
+  // Not on waitlist - show redirect prompt
   if (!isOnWaitlist) {
     return (
-      <Link to="/waitlist">
-        <div className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-neutral-900 border border-neutral-800 p-10 rounded-2xl text-center max-w-md"
-          >
-            <h2 className="text-2xl font-semibold">Join the waitlist</h2>
-            <p className="text-neutral-400 mt-2">
-              You need to join before accessing rankings.
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white px-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-md w-full"
+        >
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center shadow-xl">
+            <div className="mb-4 flex justify-center">
+              <Trophy className="h-12 w-12 text-yellow-400" />
+            </div>
+            <h2 className="text-2xl font-bold mb-3">Join the Competition</h2>
+            <p className="text-neutral-400 text-sm mb-6">
+              You need to join the waitlist first to see rankings and compete for exclusive rewards.
             </p>
-            <button className="mt-6 px-6 py-2 rounded-xl bg-white text-black font-medium">
-              Join waitlist
-            </button>
-          </motion.div>
-        </div>
-      </Link>
+            <Link to="/waitlist" className="w-full">
+              <button className="w-full px-6 py-3 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:shadow-lg transition-all duration-300 hover:scale-105">
+                Join Waitlist Now
+              </button>
+            </Link>
+          </div>
+        </motion.div>
+      </div>
     );
   }
 
-  if (!userRankInfo) {
+  // Loading state
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-950 text-white">
-        <p>Loading your ranking...</p>
+        <motion.div
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ duration: 2, repeat: Infinity }}
+        >
+          <p className="text-lg">Loading your ranking...</p>
+        </motion.div>
       </div>
     );
   }
+
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-6 md:p-10">
-      <div className="container mx-auto px-4 py-12 max-w-6xl relative z-10">
-        <div className="text-center mb-12 animate-fade-in-down">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Ranking & Competition
-            </h1>
-          </div>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
-            MVP launches in <span className="text-white font-semibold">{daysRemaining} days</span>. Climb the ranks and earn exclusive rewards!
-          </p>
-        </div>
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Rank */}
-        <motion.div
-          variants={card}
-          initial="hidden"
-          animate="visible"
-          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
-        >
-          <p className="text-neutral-400">Your Rank</p>
-          <h2 className="text-5xl font-bold mt-2">#{userRankInfo.position}</h2>
-        </motion.div>
-
-        {/* Points */}
-        <motion.div
-          variants={card}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.1 }}
-          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
-        >
-          <p className="text-neutral-400">Total Points</p>
-          <h2 className="text-5xl font-bold mt-2">{userRankInfo.points.total}</h2>
-        </motion.div>
-
-        {/* Referral */}
-        <motion.div
-          variants={card}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.2 }}
-          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
-        >
-          <p className="text-neutral-400 mb-2">Referral Link</p>
-          <div className="flex">
-            <input
-              readOnly
-              value={referralLink}
-              className="flex-1 bg-neutral-800 border border-neutral-700 rounded-l-xl px-3 py-2 text-sm"
-            />
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(referralLink)
-                toast.success("Referral link copied to clipboard!")
-              }
-              }
-              className="px-4 rounded-r-xl bg-white text-black text-sm font-medium cursor-pointer"
-            >
-              Copy
-            </button>
-          </div>
-        </motion.div>
-
-        {/* Breakdown */}
-        <motion.div
-          variants={card}
-          initial="hidden"
-          animate="visible"
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-3 bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
-        >
-          <h3 className="text-lg font-semibold mb-4">Points Breakdown</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries({
-              Referral: userRankInfo.points.referral,
-              Contribution: userRankInfo.points.contribution,
-              Activity: userRankInfo.points.activity,
-            }).map(([key, value]) => (
-              <div
-                key={key}
-                className="bg-neutral-800 rounded-xl p-4"
-              >
-                <p className="text-neutral-400 capitalize">{key}</p>
-                <p className="text-2xl font-semibold mt-1">+{value}</p>
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Footer */}
-      <p className="mt-10 text-sm text-neutral-500">
-        Rankings update every 24h. Stay active.
-      </p>
-
-      {/* ================= RANKING ================= */}
-      {/* ================= TOP RANKING ================= */}
+    <div className="min-h-screen bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-6 md:p-10">
+      <div className="max-w-7xl mx-auto">
+      {/* HEADER SECTION */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        className="mt-12 bg-neutral-900 border border-neutral-800 rounded-2xl p-6"
+        className="text-center mb-16"
       >
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-semibold">Top Ranked Users</h3>
-          <span className="text-sm text-neutral-400">Live leaderboard</span>
+        <div className="flex items-center justify-center gap-2 mb-4">
+        <Zap className="h-6 w-6 text-yellow-400" />
+        <h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+          Ranking & Competition
+        </h1>
+        <Zap className="h-6 w-6 text-yellow-400" />
         </div>
+        <p className="text-xl text-neutral-300 max-w-2xl mx-auto">
+        MVP launches in{" "}
+        <span className="font-bold text-yellow-400">{daysRemaining} days</span>
+        . Climb the ranks to earn exclusive rewards!
+        </p>
+      </motion.div>
 
-        <div className="space-y-3">
-          {leaderboard.map((user, index) => (
-            <motion.div
-              key={user.position}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className={`flex items-center justify-between rounded-xl px-4 py-3
-          ${user.isYou
-                  ? "bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30"
-                  : "bg-neutral-800"
-                }`}
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`w-8 h-8 flex items-center justify-center rounded-lg font-semibold
-              ${user.position === 1
-                      ? "bg-yellow-500/20 text-yellow-400"
-                      : user.position === 2
-                        ? "bg-gray-400/20 text-gray-300"
-                        : user.position === 3
-                          ? "bg-orange-500/20 text-orange-400"
-                          : "bg-neutral-700 text-neutral-300"
-                    }`}
-                >
-                  #{user.position}
-                </div>
+      {/* STATS CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        {/* Rank Card */}
+        <motion.div
+        variants={card}
+        initial="hidden"
+        animate="visible"
+        className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-blue-500/30 rounded-2xl p-8 hover:border-blue-500/60 transition-all duration-300"
+        >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-neutral-400 text-sm font-medium">Your Rank</p>
+          <Trophy className="h-5 w-5 text-yellow-400" />
+        </div>
+        <h2 className="text-5xl md:text-6xl font-bold text-blue-400 mb-2">
+          #{userRankInfo.position}
+        </h2>
+        <p className="text-xs text-neutral-500">
+          out of {leaderboard.length} competitors
+        </p>
+        </motion.div>
 
-                <div>
-                  <p className="font-medium">
-                    {user.name}
-                    {user.isYou && (
-                      <span className="ml-2 text-xs text-blue-400">(You)</span>
-                    )}
-                  </p>
-                  <p className="text-xs text-neutral-400">
-                    {user.points.total} points
-                  </p>
-                </div>
-              </div>
+        {/* Points Card */}
+        <motion.div
+        variants={card}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.1 }}
+        className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-purple-500/30 rounded-2xl p-8 hover:border-purple-500/60 transition-all duration-300"
+        >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-neutral-400 text-sm font-medium">Total Points</p>
+          <TrendingUp className="h-5 w-5 text-purple-400" />
+        </div>
+        <h2 className="text-5xl md:text-6xl font-bold text-purple-400 mb-2">
+          {userRankInfo.points.total}
+        </h2>
+        <p className="text-xs text-neutral-500">
+          {leaderboard[0]?.points?.total
+          ? `${userRankInfo.points.total} of ${leaderboard[0].points.total} (leader)`
+          : "accumulating"}
+        </p>
+        </motion.div>
 
-              {user.position <= 3 && (
-                <span className="text-xs font-medium bg-neutral-700 px-2 py-1 rounded-full">
-                  Top {user.position}
-                </span>
-              )}
-            </motion.div>
-          ))}
+        {/* Referral Card */}
+        <motion.div
+        variants={card}
+        initial="hidden"
+        animate="visible"
+        transition={{ delay: 0.2 }}
+        className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-green-500/30 rounded-2xl p-8 hover:border-green-500/60 transition-all duration-300"
+        >
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-neutral-400 text-sm font-medium">Share & Earn</p>
+          <Users className="h-5 w-5 text-green-400" />
+        </div>
+        <button
+          onClick={() => {
+          navigator.clipboard.writeText(referralLink);
+          toast.success("Referral link copied! 🎉");
+          }}
+          className="w-full px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
+        >
+          <Copy className="h-4 w-4" />
+          Copy Link
+        </button>
+        <div className="mt-4 pt-4 border-t border-neutral-700">
+          <p className="text-xs text-neutral-400 mb-3">Referral Points: {userRankInfo.points.referral}</p>
+          <button
+          onClick={() => {
+            if (navigator.share) {
+            navigator.share({
+              title: "Join SFCollab Waitlist",
+              text: "Join me on the SFCollab waitlist!",
+              url: referralLink,
+            });
+            } else {
+            navigator.clipboard.writeText(referralLink);
+            toast.info("Link copied to clipboard!");
+            }
+          }}
+          className="w-full px-4 py-2 bg-green-500/20 hover:bg-green-500/30 border border-green-500/50 rounded-lg text-green-400 text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2"
+          >
+          <Share2 className="h-4 w-4" />
+          Share Referral
+          </button>
+        </div>
+        </motion.div>
+      </div>
+
+      {/* POINTS BREAKDOWN */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+      >
+        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <Target className="h-6 w-6 text-orange-400" />
+        Points Breakdown
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {[
+          {
+          label: "Referrals",
+          value: userRankInfo.points.referral,
+          color: "from-green-500 to-green-600",
+          icon: Users,
+          },
+          {
+          label: "Contributions",
+          value: userRankInfo.points.contribution,
+          color: "from-blue-500 to-blue-600",
+          icon: Zap,
+          },
+          {
+          label: "Activity",
+          value: userRankInfo.points.activity,
+          color: "from-purple-500 to-purple-600",
+          icon: TrendingUp,
+          }
+        ].map(({ label, value, color, icon: Icon }, idx) => (
+          <div key={idx} className="bg-neutral-900 rounded-xl p-4 border border-neutral-700">
+          <div className="flex items-center justify-between mb-2">
+            <Icon className="h-6 w-6 text-neutral-400" />
+            <p className="text-neutral-400 text-xs font-medium">{label}</p>
+          </div>
+          <p className={`text-3xl font-bold bg-linear-to-r ${color} bg-clip-text text-transparent`}>
+            {value}
+          </p>
+          </div>
+        ))}
         </div>
       </motion.div>
 
-      {/* ================= HOW THE SYSTEM WORKS ================= */}
+      {/* LEADERBOARD */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+      >
+        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+        <Trophy className="h-6 w-6 text-yellow-400" />
+        Top Ranked Users
+        </h3>
+        <div className="space-y-3">
+        {leaderboard.slice(0, 10).map((leaderUser, index) => (
+          <motion.div
+          key={leaderUser.id}
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: index * 0.05 }}
+          className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+            leaderUser.isYou
+            ? "bg-linear-to-r from-blue-500/20 to-purple-500/20 border-blue-500/50"
+            : "bg-neutral-900 border-neutral-700 hover:border-neutral-600"
+          }`}
+          >
+          <div className="flex items-center gap-4 flex-1">
+            <div
+            className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm ${
+              leaderUser.position === 1
+              ? "bg-yellow-500/30 text-yellow-400"
+              : leaderUser.position === 2
+                ? "bg-gray-400/30 text-gray-300"
+                : leaderUser.position === 3
+                ? "bg-orange-500/30 text-orange-400"
+                : "bg-neutral-700 text-neutral-300"
+            }`}
+            >
+            #{leaderUser.position}
+            </div>
+            <div>
+            <p className="font-semibold text-white">
+              {leaderUser.name || leaderUser.email}
+              {leaderUser.isYou && (
+              <span className="ml-2 text-xs bg-blue-500/30 text-blue-300 px-2 py-1 rounded-full">
+                You
+              </span>
+              )}
+            </p>
+            <p className="text-xs text-neutral-400">{leaderUser.email}</p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="font-bold text-lg text-purple-400">
+            {leaderUser.points.total}
+            </p>
+            <p className="text-xs text-neutral-400">points</p>
+          </div>
+          </motion.div>
+        ))}
+        </div>
+      </motion.div>
+
+      {/* HOW IT WORKS */}
       <motion.section
         initial={{ opacity: 0, y: 40 }}
         whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        transition={{ duration: 0.6 }}
         viewport={{ once: true }}
-        className="mt-24 max-w-6xl mx-auto relative"
+        className="mb-12"
       >
-        {/* Section Header */}
-        <div className="text-center mb-14 relative">
-          {/* Gradient glow */}
-          <div className="absolute inset-0 flex justify-center">
-            <div className="w-64 h-64 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl" />
-          </div>
-
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="relative text-4xl sm:text-5xl font-bold mb-4"
-          >
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              How the ranking system works
-            </span>
-          </motion.h2>
-
-          <p className="relative text-gray-400 max-w-2xl mx-auto text-lg">
-            Your position is earned through contribution, consistency, and impact — not
-            just referrals.
-          </p>
+        <div className="text-center mb-12">
+        <h2 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
+          How the Ranking System Works
+        </h2>
+        <p className="text-neutral-300 max-w-2xl mx-auto text-lg">
+          Your rank is earned through contribution, consistency, and impact — not just referrals.
+        </p>
         </div>
 
-        {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Card 1 */}
+        {[
+          {
+          icon: Target,
+          title: "Rank Score",
+          desc: "Transparent scoring combining referrals, contributions, engagement & commitment.",
+          color: "border-blue-500/30",
+          },
+          {
+          icon: Zap,
+          title: "Contributions",
+          desc: "Feedback, testing, ideas & improvements earn the highest value points.",
+          color: "border-purple-500/30",
+          },
+          {
+          icon: Users,
+          title: "Referrals",
+          desc: "+2 points each. Optional boost—they accelerate progress but don't guarantee rewards.",
+          color: "border-green-500/30",
+          },
+          {
+          icon: TrendingUp,
+          title: "Snapshots",
+          desc: "At MVP & V1, rankings freeze. Rewards assigned based on your rank then.",
+          color: "border-yellow-500/30",
+          },
+        ].map(({ icon: Icon, title, desc, color }, idx) => (
           <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-gray-800/60 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-6"
+          key={idx}
+          whileHover={{ y: -6 }}
+          className={`bg-neutral-900 border ${color} rounded-xl p-6 hover:shadow-lg transition-all duration-300`}
           >
-            <h3 className="text-lg font-semibold text-blue-400 mb-2">
-              Rank Score
-            </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Your rank is based on a transparent score that combines referrals,
-              contributions, engagement, and early commitment.
-            </p>
+          <Icon className="h-8 w-8 mb-3 text-neutral-400" />
+          <h4 className="text-lg font-bold mb-2">{title}</h4>
+          <p className="text-sm text-neutral-400">{desc}</p>
           </motion.div>
-
-          {/* Card 2 */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-gray-800/60 backdrop-blur-sm border border-purple-500/20 rounded-2xl p-6"
-          >
-            <h3 className="text-lg font-semibold text-purple-400 mb-2">
-              Contributions
-            </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Helping build the product matters most. Feedback, testing, ideas and
-              improvements earn the highest value points.
-            </p>
-          </motion.div>
-
-          {/* Card 3 */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-gray-800/60 backdrop-blur-sm border border-green-500/20 rounded-2xl p-6"
-          >
-            <h3 className="text-lg font-semibold text-green-400 mb-2">
-              Referrals
-            </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              Referrals accelerate progress (+2 points each), but they are optional and
-              never guarantee rewards.
-            </p>
-          </motion.div>
-
-          {/* Card 4 */}
-          <motion.div
-            whileHover={{ y: -6 }}
-            className="bg-gray-800/60 backdrop-blur-sm border border-yellow-500/20 rounded-2xl p-6"
-          >
-            <h3 className="text-lg font-semibold text-yellow-400 mb-2">
-              Snapshots
-            </h3>
-            <p className="text-sm text-gray-300 leading-relaxed">
-              At key milestones (MVP, V1), rankings are frozen. Rewards and access are
-              assigned based on your rank at that moment.
-            </p>
-          </motion.div>
+        ))}
         </div>
 
-        {/* Footer Note */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-12 text-center"
-        >
-          <p className="text-gray-400 text-sm">
-            There are multiple paths to the top. You do not need referrals to succeed —
-            consistent contribution always wins.
-          </p>
-        </motion.div>
+        <div className="mt-12 bg-linear-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6 text-center">
+        <p className="text-neutral-300">
+          ⭐ <strong>Multiple paths to the top.</strong> You don't need referrals to succeed — consistent
+          contribution always wins.
+        </p>
+        </div>
       </motion.section>
-
-  
+      </div>
     </div>
   );
 };

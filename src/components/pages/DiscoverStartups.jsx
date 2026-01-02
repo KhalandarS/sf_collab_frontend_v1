@@ -498,7 +498,10 @@ const DiscoverStartups = () => {
               ) : (
                 <motion.div 
                   layout
-                  className="flex flex-wrap gap-6"
+                className="grid gap-6 w-full"
+                style={{
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))'
+                }}
                 >
                   {startups.map((startup, index) => (
                     <StartupCard
@@ -852,7 +855,7 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ delay: index * 0.05 }}
-    className="flex-1"
+    className="flex-1 "
   >
     <Card 
       className="group h-full flex flex-col p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"

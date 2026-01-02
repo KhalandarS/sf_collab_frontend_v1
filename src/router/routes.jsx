@@ -39,7 +39,7 @@ import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
 
 import DiscoverStartups from "../components/pages/DiscoverStartups.jsx";
-import StartupDetailPage from "../components/pages/StartupDetailPage.jsx";
+import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "../components/pages/Profile/Profile.jsx";
 
 export const router = createBrowserRouter([

@@ -14,26 +14,28 @@ import {
     Alert,
     AlertDescription,
     AlertTitle,
-  } from "../ui/alert"
+  } from "../../ui/alert"
   
 // shadcn/ui components
-import { Button } from '../ui/button';
-import { Badge } from '../ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/dialog';
-import { Input } from '../ui/input';
-import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Progress } from '../ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { AvatarGroup,AvatarGroupTooltip } from '../ui/shadcn-io/avatar-group/index';
-import { Separator } from '../ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
-import ShinyText from '../ui/ShinyText';
+import { Button } from '../../ui/button';
+import { Badge } from '../../ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../ui/dialog';
+import { Input } from '../../ui/input';
+import { Textarea } from '../../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { Progress } from '../../ui/progress';
+import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
+import { AvatarGroup,AvatarGroupTooltip } from '../../ui/shadcn-io/avatar-group/index';
+import { Separator } from '../../ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../ui/accordion';
+import ShinyText from '../../ui/ShinyText';
 
 import { useSelector } from 'react-redux';
+import { startupAPI } from './startUpAPI';
+import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -50,8 +52,6 @@ const StartupDetailPage = () => {
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
   const [isFavorited, setIsFavorited] = useState(false);
   
   const [alertDescription, setAlertDescription] = useState("");
@@ -100,138 +100,47 @@ const StartupDetailPage = () => {
         return;
       }
   
-      const [startupRes, membersRes, documentsRes, statsRes] = await Promise.all([
-        fetch(`${API_URL}/startups/${id}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_URL}/startups/${id}/members`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_URL}/startups/${id}/documents`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_URL}/startups/${id}/stats`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-      ]);
-  
-      const startupData = await startupRes.json();
-      const membersData = await membersRes.json();
-      const documentsData = await documentsRes.json();
-      const statsData = await statsRes.json();
-  
+      const args = {
+        startup_id: id,
+        user_id: user?.id
+      }
+      const startupResult = await startupAPI.getStartup(id, token).catch(err => ({ success: false, error: err }));
+      const membersResult = await startupAPI.getMembers(token, args).catch(err => ({ success: false, error: err }));
+      const documentsResult = await startupAPI.getDocuments(id, token).catch(err => ({ success: false, error: err }));
+      const statsResult = await startupAPI.getStats(id, token).catch(err => ({ success: false, error: err }));
+
+      const startupData = startupResult.success ? startupResult : { success: false, data: null };
+      const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
+      const documentsData = documentsResult.success ? documentsResult : { success: false, data: { documents: [] } };
+      const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
+      console.log(startupData);
+
+      console.log(membersData);
+      console.log(documentsData);
+      console.log(statsData);
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) setMembers(membersData.data.members);
       if (documentsData.success) setDocuments(documentsData.data.documents);
-      if (statsData.success) setStats(statsData.data.stats);
+      if (statsData.success) setStats(statsData.data.stats || {});
       
     } catch (error) {
       console.error('Error fetching startup data:', error);
-      showToastMessage('Error loading startup data');
+      toast.error('Error loading startup data');
+
     } finally {
       setLoading(false);
     }
   };
 
 
-  // Load mock data for new tabs
-  const loadMockData = () => {
-    // Mock Project Goals
-    const mockGoals = [
-      {
-        id: 1,
-        title: "Launch MVP",
-        description: "Complete and launch the minimum viable product",
-        progress_percentage: 78,
-        milestones_completed: 8,
-        milestones_total: 10,
-        is_on_track: true,
-        next_milestone: "User Testing",
-        target_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        status: "active",
-        milestones: [
-          { id: 1, title: "Design System", is_completed: true, order: 1 },
-          { id: 2, title: "Backend API", is_completed: true, order: 2 },
-          { id: 3, title: "User Authentication", is_completed: true, order: 3 },
-          { id: 4, title: "Core Features", is_completed: false, order: 4 }
-        ]
-      },
-      {
-        id: 2,
-        title: "User Acquisition",
-        description: "Reach 10,000 active users",
-        progress_percentage: 45,
-        milestones_completed: 3,
-        milestones_total: 6,
-        is_on_track: true,
-        next_milestone: "Marketing Campaign",
-        target_date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000),
-        status: "active",
-        milestones: [
-          { id: 5, title: "Social Media Setup", is_completed: true, order: 1 },
-          { id: 6, title: "SEO Optimization", is_completed: true, order: 2 },
-          { id: 7, title: "Content Strategy", is_completed: false, order: 3 }
-        ]
-      }
-    ];
-
-    // Mock Calendar Events
-    const mockEvents = [
-      {
-        id: 1,
-        title: "Team Standup",
-        description: "Daily team synchronization",
-        start_date: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        end_date: new Date(Date.now() + 24 * 60 * 60 * 1000 + 30 * 60 * 1000),
-        category: "meeting",
-        color: "#3B82F6"
-      },
-      {
-        id: 2,
-        title: "Product Demo",
-        description: "Demo for potential investors",
-        start_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-        end_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 60 * 60 * 1000),
-        category: "event",
-        color: "#8B5CF6"
-      }
-    ];
-
-    setProjectGoals(mockGoals);
-    setCalendarEvents(mockEvents);
-  };
-
   useEffect(() => {
     if (id) {
       fetchStartupData();
-      loadMockData();
+
     }
   }, [id]);
 
-  useEffect(() => {
-    if (startup) {
-      const creatorId = parseInt(startup.creator.id);
-      setIsCreator(creatorId === 11);
-    }
-  }, [startup]);
 
-  const showToastMessage = (message) => {
-    setToastMessage(message);
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
-  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -271,7 +180,7 @@ const StartupDetailPage = () => {
       const data = await response.json();
       
       if (response.ok) {
-        showToastMessage('Document uploaded successfully');
+        toast.success('Document uploaded successfully');
         setIsUploadDocModalOpen(false);
         setDocumentForm({ document: null, document_type: 'general' });
         fetchStartupData();
@@ -279,7 +188,7 @@ const StartupDetailPage = () => {
         throw new Error(data.error || 'Upload failed');
       }
     } catch (error) {
-      showToastMessage(error.message);
+      toast.error('Error uploading document');
     }
   };
 
@@ -287,20 +196,18 @@ const StartupDetailPage = () => {
     if (!window.confirm('Are you sure you want to delete this document?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/startups/${id}/documents/${documentId}`, {
-        method: 'DELETE',
-      });
+      const response = await startupAPI.deleteDocument(id, documentId, access_token);
 
-      const data = await response.json();
+
       
-      if (response.ok) {
-        showToastMessage('Document deleted successfully');
+      if (response.success) {
+        toast.success('Document deleted successfully');
         fetchStartupData();
       } else {
-        throw new Error(data.error || 'Delete failed');
+        throw new Error('Delete failed');
       }
     } catch (error) {
-      showToastMessage(error.message);
+      toast.error('Error deleting document');
     }
   };
 
@@ -321,7 +228,7 @@ const StartupDetailPage = () => {
         throw new Error('Download failed');
       }
     } catch (error) {
-      showToastMessage('Error downloading document');
+      toast.error('Error downloading document');
     }
   };
 
@@ -329,26 +236,20 @@ const StartupDetailPage = () => {
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${API_URL}/startups/${id}/members`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(memberForm),
-      });
+      const response = await startupAPI.addMember(id, memberForm, access_token);
 
-      const data = await response.json();
+
       
-      if (response.ok) {
-        showToastMessage('Member added successfully');
+      if (response.success) {
+        toast.success('Member added successfully');
         setIsAddMemberModalOpen(false);
         setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
         fetchStartupData();
       } else {
-        throw new Error(data.error || 'Failed to add member');
+        throw new Error('Failed to add member');
       }
     } catch (error) {
-      showToastMessage(error.message);
+      toast.error('Error adding member');
     }
   };
 
@@ -356,40 +257,39 @@ const StartupDetailPage = () => {
     if (!window.confirm('Are you sure you want to remove this member?')) return;
 
     try {
-      const response = await fetch(`${API_URL}/startups/${id}/members/${memberId}`, {
-        method: 'DELETE',
-      });
+      const response = await startupAPI.removeMember(id, memberId, access_token);
 
-      const data = await response.json();
       
-      if (response.ok) {
-        showToastMessage('Member removed successfully');
+      if (response.success) {
+        toast.success('Member removed successfully');
         fetchStartupData();
       } else {
-        throw new Error(data.error || 'Failed to remove member');
+        throw new Error('Failed to remove member');
       }
     } catch (error) {
-      showToastMessage(error.message);
+      toast.error('Error removing member');
     }
   };
+  useEffect(() => {
 
+    if (user && members.length > 0) {
+      console.log(members);
+      setIsCreator(members.find(m => m.userId === user?.id && ['creator', 'founder'].includes(m.role)) !== undefined);
+    }
+  }, [members, user]);
   // Delete startup
   const handleDeleteStartup = async () => {
     try {
-      const response = await fetch(`${API_URL}/startups/${id}`, {
-        method: 'DELETE',
-      });
+      const response = await startupAPI.deleteStartup(id, access_token);
 
-      const data = await response.json();
       
-      if (response.ok) {
-        showToastMessage('Startup deleted successfully');
+      if (response.success) {
+        toast.success('Startup deleted successfully');
         navigate('/discover');
-      } else {
-        throw new Error(data.error || 'Failed to delete startup');
-      }
+      } 
     } catch (error) {
-      showToastMessage(error.message);
+      toast.error('Error deleting startup');
+      console.error('Error deleting startup:', error);
     }
   };
 
@@ -603,7 +503,8 @@ const StartupDetailPage = () => {
         onClose={() => setIsJoinModalOpen(false)}
         startupName={startup.name}
       />
-
+      {isCreator &&
+        <>
       <AddMemberModal
         isOpen={isAddMemberModalOpen}
         onClose={() => setIsAddMemberModalOpen(false)}
@@ -628,6 +529,8 @@ const StartupDetailPage = () => {
         onConfirm={handleDeleteStartup}
         startupName={startup.name}
       />
+      </>
+      }
         {
             showAlert&&(
                 <div className="w-full max-w-lg fixed top-46 right-6">
@@ -646,24 +549,7 @@ const StartupDetailPage = () => {
               </div>
             )
         }
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div
-            initial={{ opacity: 0, y: 50, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 50, scale: 0.9 }}
-            className="fixed bottom-6 right-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 z-50"
-          >
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <Check className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="font-semibold">{toastMessage}</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+
     </div>
   );
 };
@@ -672,7 +558,7 @@ const StartupDetailPage = () => {
 const HeroSection = ({ startup, onJoinClick, formatCurrency, getStageBadgeVariant,setAlertDescription,setShowAlert,setAlertTitle,setAlertVariant }) => (
   <div className="relative ">
     {/* Banner */}
-    <div className="h-64 rounded-lg mx-auto max-w-7xl bg-gradient-to-r from-blue-600/40 via-purple-600/40 to-blue-800/40 relative overflow-hidden">
+    <div className="h-64 rounded-lg mx-auto w-full object-fit bg-gradient-to-r from-blue-600/40 via-purple-600/40 to-blue-800/40 relative overflow-hidden">
       {startup.banner_url && (
         <img 
           src={`${API_URL}${startup.banner_url}`}

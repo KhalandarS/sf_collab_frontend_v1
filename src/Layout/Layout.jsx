@@ -209,6 +209,8 @@ import { hasPermission } from "../utils/permissionCheck"; // Import permission c
 import { useActivityHeartbeat } from "./useActivityHearbeat";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { toast } from "react-toastify";
+import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
+import { SOCKET_API_URL } from "@/utils/config";
 
 const Layout = () => {
   const location = useLocation();
@@ -279,7 +281,42 @@ const Layout = () => {
       }
     }
   fetchIsOnWaitlist();
-}, [user, access_token, navigate]);
+  }, [user, access_token, navigate]);
+    const [wsClient, setWsClient] = useState(null);
+  useEffect(() => {
+  const userId = user?.id;
+  if (!userId || wsClient) return;
+
+  const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
+
+  client.on('new_message', (data) => {
+    // 🔔 Always toast
+    toast.info(`New message received`);
+
+    // 📣 Dispatch global event
+    window.dispatchEvent(
+      new CustomEvent('chat:new_message', { detail: data })
+    );
+  });
+
+  client.on('user_online', (data) => {
+    toast.success(`${data.user_name || 'User'} is online`);
+  });
+
+  client.on('user_offline', (data) => {
+    toast.info(`${data.user_name || 'User'} went offline`);
+  });
+
+  client.on('error', () => {
+    toast.error('Realtime connection error');
+  });
+
+  client.connect();
+  setWsClient(client);
+
+  return () => client.disconnect();
+}, [user?.id, wsClient]);
+
   // Handle mouse leave with proper event delegation
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;

@@ -45,7 +45,7 @@ const DiscoverUsers = () => {
       if (selectedStatus) params.append('status', selectedStatus);
 
       const response = await usersAPI.getAll(access_token, params);
-
+      console.log("Fetch Users Response:", response);
       if (response.success) {
         setUsers(
           response.data.users.filter(u => u.id !== user?.id) || []

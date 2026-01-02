@@ -29,7 +29,7 @@ import BusinessIdeaGenerator from "./components/pages/Business_plan_generator/pr
 import Test from "./components/pages/Test.jsx";
 import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
 import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
-import StartupDetailPage from "./components/pages/StartupDetailPage.jsx";
+import StartupDetailPage from "./components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/Profile.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";

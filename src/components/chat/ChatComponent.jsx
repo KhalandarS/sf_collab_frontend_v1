@@ -675,47 +675,47 @@ const ChatComponent = () => {
       console.log('WebSocket connected');
       setIsConnected(true);
       loadConversations();
-      toast.success('Connected to chat server');
+      // toast.success('Connected to chat server');
     });
   
     client.on('disconnected', () => {
       console.log('WebSocket disconnected');
       setIsConnected(false);
-      toast.error('Disconnected from chat server');
+      // toast.error('Disconnected from chat server');
     });
   
     client.on('connection_error', (error) => {
       console.error('Connection error:', error);
-      toast.error('Connection error occurred');
+      // toast.error('Connection error occurred');
     });
   
     client.on('reconnected', (attemptNumber) => {
       console.log('Reconnected after attempt:', attemptNumber);
-      toast.success(`Reconnected after ${attemptNumber} attempts`);
+      // toast.success(`Reconnected after ${attemptNumber} attempts`);
     });
   
     client.on('reconnect_failed', () => {
       // console.error('Reconnection failed');
-      toast.error('Failed to reconnect to chat server');
+      // toast.error('Failed to reconnect to chat server');
     });
   
     // Message events
-    client.on('new_message', (data) => {
-      // console.log('New message received via WebSocket:', data);
+    // client.on('new_message', (data) => {
+    //   // console.log('New message received via WebSocket:', data);
       
-      // Check if this message is for the current conversation
-      const isCurrentConversation = selectedConversation?.id === data.conversation_id;
+    //   // Check if this message is for the current conversation
+    //   const isCurrentConversation = selectedConversation?.id === data.conversation_id;
       
-      // Always handle the message
-      handleNewMessage(data);
+    //   // Always handle the message
+    //   handleNewMessage(data);
       
-      // Show notification only if not in the current conversation
-      if (!isCurrentConversation) {
-        const conversation = conversations.find(c => c.id === data.conversation_id);
-        const conversationName = getConversationName(conversation) || 'Unknown conversation';
-        toast.info(`New message in ${conversationName}`);
-      }
-    });
+    //   // Show notification only if not in the current conversation
+    //   if (!isCurrentConversation) {
+    //     const conversation = conversations.find(c => c.id === data.conversation_id);
+    //     const conversationName = getConversationName(conversation) || 'Unknown conversation';
+    //     toast.info(`New message in ${conversationName}`);
+    //   }
+    // });
   
     client.on('message_edited', (data) => {
       // console.log('Message edited:', data);
