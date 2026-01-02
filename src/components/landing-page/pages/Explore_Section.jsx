@@ -92,7 +92,7 @@ const Products = () => {
               animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
               transition={{ duration: 1, delay: 1 }}
             >
-              Core Systems coming soon. Stay tuned!
+              Explore page coming soon. Stay tuned!
             </motion.p>
 
             <motion.div
