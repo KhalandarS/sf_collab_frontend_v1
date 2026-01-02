@@ -3,7 +3,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Zap, Target, Rocket, Users, Star, TrendingUp } from 'lucide-react';
 
-const ProfileStats = ({ userData, streakDays, activeStartups }) => {
+const ProfileStats = ({ user, streakDays, activeStartups }) => {
+  console.log(user);
   const stats = [
     {
       icon: Zap,
@@ -16,7 +17,7 @@ const ProfileStats = ({ userData, streakDays, activeStartups }) => {
     {
       icon: Target,
       label: 'Tasks Completed',
-      value: userData.statistics.completed_tasks,
+      value: user?.statistics?.completed_tasks,
       suffix: 'tasks',
       color: 'text-green-400',
       bgColor: 'bg-green-400/10'
@@ -32,7 +33,7 @@ const ProfileStats = ({ userData, streakDays, activeStartups }) => {
     {
       icon: Users,
       label: 'Community Impact',
-      value: userData.statistics.total_likes_received,
+      value: user?.statistics?.total_likes_received,
       suffix: 'likes',
       color: 'text-purple-400',
       bgColor: 'bg-purple-400/10'
@@ -40,7 +41,7 @@ const ProfileStats = ({ userData, streakDays, activeStartups }) => {
     {
       icon: Star,
       label: 'Achievements',
-      value: userData.statistics.total_achievements,
+      value: user?.statistics?.total_achievements,
       suffix: 'unlocked',
       color: 'text-orange-400',
       bgColor: 'bg-orange-400/10'
@@ -48,7 +49,7 @@ const ProfileStats = ({ userData, streakDays, activeStartups }) => {
     {
       icon: TrendingUp,
       label: 'Engagement Score',
-      value: userData.statistics.engagement_score,
+      value: user?.statistics?.engagement_score,
       suffix: '%',
       color: 'text-cyan-400',
       bgColor: 'bg-cyan-400/10'

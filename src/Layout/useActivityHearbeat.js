@@ -1,4 +1,4 @@
-import { waitlistAPI } from "@/components/waitlist/components/lib/api";
+import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { useEffect } from "react";
 
 const HEARTBEAT_THROTTLE = 5 * 60 * 1000; // 5 min

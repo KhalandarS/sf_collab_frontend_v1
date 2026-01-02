@@ -48,6 +48,7 @@ import PaintingBoard from '../collaboration-canvas/PaintingBoard';
 import { fetchUserProfile } from '../../services/auth/authThunks';
 import { ConversationsCardSkeleton, MessagesSkeleton } from './Skeletons';
 import { API_BASE_URL, SOCKET_API_URL } from '@/utils/config';
+import { chatAPI } from '@/utils/APIs/chatApi';
 
 
 
@@ -105,7 +106,7 @@ const RightSidebarContent = ({
               <div key={participant.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-900 transition-all">
                 <div className="relative">
                   <Avatar className="size-10 bg-linear-to-br from-blue-300 to-purple-300 text-black font-bold flex items-center justify-center">
-                    <AvatarImage src={participant?.profilePicture} alt="@shadcn" />
+                    <AvatarImage src={participant?.profilePicture || '/default-user.jpeg'} alt="@shadcn" />
                     <AvatarFallback>
                       {(participant?.firstName || participant?.first_name)?.[0]}
                       {(participant?.lastName || participant?.last_name)?.[0]}
@@ -250,424 +251,416 @@ const RightSidebarContent = ({
   
 const ChatComponent = () => {
     
-    const dispatch=useDispatch();
+  const dispatch = useDispatch();
+  const { user, access_token } = useSelector((state) => state.auth);
+  const [userId, setUserId] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [mockUsers] = useState([]);
+  const [notification, setNotification] = useState({ show: false, type: '', message: '' })
+
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState({});
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
+  const [isConnected, setIsConnected] = useState(false);
     
-    const [userId, setUserId] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [mockUsers] = useState([
-      {
-        id: 1,
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john.doe@example.com',
-        profilePicture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John',
-        timezone: 'America/New_York',
-        role: 'Developer'
-      },
-      {
-        id: 2,
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane.smith@example.com',
-        profilePicture: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jane',
-        timezone: 'Europe/London',
-        role: 'Designer'
+  // Add these state variables
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+  const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
+
+  // Modal states
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletedMessage, setDeletedMessage] = useState(null);
+  const [newConversationName, setNewConversationName] = useState('');
+  const conversationId = new URLSearchParams(window.location.search).get('conversationId');
+  useEffect(() => {
+    async function fetchInitialData() {
+      if (!conversationId || !access_token) return;
+      const conversation = await chatAPI.getConversationById(conversationId, access_token);
+      if (conversation) {
+        setSelectedConversation(conversation);
       }
-    ]);
-    const [notification, setNotification] = useState({ show: false, type: '', message: '' })
-
-    const [conversations, setConversations] = useState([]);
-    const [selectedConversation, setSelectedConversation] = useState(null);
-    const [messages, setMessages] = useState([]);
-    const [isTyping, setIsTyping] = useState({});
-    const [onlineUsers, setOnlineUsers] = useState(new Set());
-    const [isConnected, setIsConnected] = useState(false);
-    
-    // Add these state variables
-const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
-
-    // Modal states
-    const [showCreateModal, setShowCreateModal] = useState(false);
-    const [showDeleteModal, setShowDeleteModal] = useState(false);
-    const [deletedMessage, setDeletedMessage] = useState(null);
-    const [newConversationName, setNewConversationName] = useState('');
-    const [selectedParticipants, setSelectedParticipants] = useState([]);
-    const [conversationType, setConversationType] = useState('direct');
-
-    
-    const [currentPage, setCurrentPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
-    const itemsPerPage = 30;
-    
-    // Edit message states
-    const [editingMessageId, setEditingMessageId] = useState(null);
-    const [editingContent, setEditingContent] = useState('');
-    const [hoveredMessageId, setHoveredMessageId] = useState(null);
-    
-    // File states
-    const [conversationFiles, setConversationFiles] = useState([]);
-    const [showFilesExpanded, setShowFilesExpanded] = useState(false);
-    const [showLinksExpanded, setShowLinksExpanded] = useState(false);
-    
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    
-    const [readConversations, setReadConversations] = useState(new Set());
-    
-    const [wsClient, setWsClient] = useState(null);
-    const messagesEndRef = useRef(null);
-
-    const [loading, setLoading] = useState(true);
-    const [loadingMessages, setLoadingMessages] = useState(true);
-    
-    const [initialConversationsLoad, setInitialConversationsLoad] = useState(true);
-    const [initialMessagesLoad, setInitialMessagesLoad] = useState(true);
-
-    const { user, access_token } = useSelector((state) => state.auth);
-    
-    const [searchQuery, setSearchQuery] = useState("");
-    const [selectedRole, setSelectedRole] = useState("");
-    const [selectedStatus, setSelectedStatus] = useState("");
+    }
+    fetchInitialData();
+  }, [conversationId, access_token]);
   
-    // Add this with your other state variables
-    const [showWhiteboardModal, setShowWhiteboardModal] = useState(false);
-    // Add to your state variables
-    const [hoveredConversationId, setHoveredConversationId] = useState(null);
+  const [selectedParticipants, setSelectedParticipants] = useState([]);
+  const [conversationType, setConversationType] = useState('direct');
+
     
-    const [likedMessages, setLikedMessages] = useState(new Set());
-    const [dislikedMessages, setDislikedMessages] = useState(new Set());
-    const [copiedMessage, setCopiedMessage] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 30;
     
-    //! Like message function
-    const handleLike = (messageId) => {
-      const newLiked = new Set(likedMessages);
-      if (newLiked.has(messageId)) {
-        newLiked.delete(messageId);
-        toast.info('Removed like from message');
+  // Edit message states
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [hoveredMessageId, setHoveredMessageId] = useState(null);
+    
+  // File states
+  const [conversationFiles, setConversationFiles] = useState([]);
+  const [showFilesExpanded, setShowFilesExpanded] = useState(false);
+  const [showLinksExpanded, setShowLinksExpanded] = useState(false);
+    
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+    
+  const [readConversations, setReadConversations] = useState(new Set());
+    
+  const [wsClient, setWsClient] = useState(null);
+  const messagesEndRef = useRef(null);
+
+  const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(true);
+    
+  const [initialConversationsLoad, setInitialConversationsLoad] = useState(true);
+  const [initialMessagesLoad, setInitialMessagesLoad] = useState(true);
+
+    
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("");
+  
+  // Add this with your other state variables
+  const [showWhiteboardModal, setShowWhiteboardModal] = useState(false);
+  // Add to your state variables
+  const [hoveredConversationId, setHoveredConversationId] = useState(null);
+    
+  const [likedMessages, setLikedMessages] = useState(new Set());
+  const [dislikedMessages, setDislikedMessages] = useState(new Set());
+  const [copiedMessage, setCopiedMessage] = useState(null);
+    
+  //! Like message function
+  const handleLike = (messageId) => {
+    const newLiked = new Set(likedMessages);
+    if (newLiked.has(messageId)) {
+      newLiked.delete(messageId);
+      toast.info('Removed like from message');
+    } else {
+      newLiked.add(messageId);
+      toast.success('Liked message');
+    }
+    setLikedMessages(newLiked);
+  };
+    
+  //! Dislike message function
+  const handleDislike = (messageId) => {
+    const newDisliked = new Set(dislikedMessages);
+    if (newDisliked.has(messageId)) {
+      newDisliked.delete(messageId);
+      toast.info('Removed dislike from message');
+    } else {
+      newDisliked.add(messageId);
+      toast.info('Disliked message');
+    }
+    setDislikedMessages(newDisliked);
+  };
+    
+  //! Copy message function
+  const handleCopy = async (message) => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopiedMessage(message.id);
+      toast.success('Message copied to clipboard');
+        
+      // Reset copied state after 2 seconds
+      setTimeout(() => setCopiedMessage(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+      toast.error('Failed to copy message');
+    }
+  };
+    
+  //! Share message function
+  const handleShare = async (message) => {
+    const shareData = {
+      title: `Message from ${message.sender?.firstName || message.sender?.first_name} ${message.sender?.lastName || message.sender?.last_name}`,
+      text: message.content,
+      url: window.location.href + `?message=${message.id}`
+    };
+    
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success('Message shared');
       } else {
-        newLiked.add(messageId);
-        toast.success('Liked message');
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
+        toast.success('Link copied to clipboard');
       }
-      setLikedMessages(newLiked);
-    };
-    
-    //! Dislike message function
-    const handleDislike = (messageId) => {
-      const newDisliked = new Set(dislikedMessages);
-      if (newDisliked.has(messageId)) {
-        newDisliked.delete(messageId);
-        toast.info('Removed dislike from message');
-      } else {
-        newDisliked.add(messageId);
-        toast.info('Disliked message');
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Share failed:', err);
+        toast.error('Failed to share message');
       }
-      setDislikedMessages(newDisliked);
-    };
-    
-    //! Copy message function
-    const handleCopy = async (message) => {
-      try {
-        await navigator.clipboard.writeText(message.content);
-        setCopiedMessage(message.id);
-        toast.success('Message copied to clipboard');
-        
-        // Reset copied state after 2 seconds
-        setTimeout(() => setCopiedMessage(null), 2000);
-      } catch (err) {
-        console.error('Failed to copy:', err);
-        toast.error('Failed to copy message');
-      }
-    };
-    
-    //! Share message function
-    const handleShare = async (message) => {
-      const shareData = {
-        title: `Message from ${message.sender?.firstName || message.sender?.first_name} ${message.sender?.lastName || message.sender?.last_name}`,
-        text: message.content,
-        url: window.location.href + `?message=${message.id}`
-      };
-    
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-          toast.success('Message shared');
-        } else {
-          // Fallback: copy to clipboard
-          await navigator.clipboard.writeText(`${shareData.text}\n\n${shareData.url}`);
-          toast.success('Link copied to clipboard');
-        }
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          console.error('Share failed:', err);
-          toast.error('Failed to share message');
-        }
-      }
-    };
+    }
+  };
     
     
-    const actions = [
-      {
-        icon: ThumbsUpIcon,
-        label: 'Like',
-        onClick: (message) => handleLike(message.id),
-      },
-      {
-        icon: ThumbsDownIcon,
-        label: 'Dislike',
-        onClick: (message) => handleDislike(message.id),
-      },
-      {
-        icon: CopyIcon,
-        label: 'Copy',
-        onClick: (message) => handleCopy(message),
-      },
-      {
-        icon: ShareIcon,
-        label: 'Share',
-        onClick: (message) => handleShare(message),
-      },
-      {
-        icon: Edit2,
-        label: 'Edit',
-        onClick: (message) => handleUpdate(message),
-      },
-      {
-        icon: RiDeleteBin6Line,
-        label: 'Delete',
-        onClick: (message) => handleDelete(message),
-      },
-    ];
+  const actions = [
+    {
+      icon: ThumbsUpIcon,
+      label: 'Like',
+      onClick: (message) => handleLike(message.id),
+    },
+    {
+      icon: ThumbsDownIcon,
+      label: 'Dislike',
+      onClick: (message) => handleDislike(message.id),
+    },
+    {
+      icon: CopyIcon,
+      label: 'Copy',
+      onClick: (message) => handleCopy(message),
+    },
+    {
+      icon: ShareIcon,
+      label: 'Share',
+      onClick: (message) => handleShare(message),
+    },
+    {
+      icon: Edit2,
+      label: 'Edit',
+      onClick: (message) => handleUpdate(message),
+    },
+    {
+      icon: RiDeleteBin6Line,
+      label: 'Delete',
+      onClick: (message) => handleDelete(message),
+    },
+  ];
     
-    //! Retry connection:
-    // Add retryConnection function:
-    const retryConnection = () => {
-      if (wsClient) {
-          wsClient.reconnect();
-      }
-    };
+  //! Retry connection:
+  // Add retryConnection function:
+  const retryConnection = () => {
+    if (wsClient) {
+      wsClient.reconnect();
+    }
+  };
 
     
-    const fetchUsers = async (page = 1) => {
-        try {
-            setLoading(true);
-            const token = access_token; 
+  const fetchUsers = async (page = 1) => {
+    try {
+      setLoading(true);
+      const token = access_token;
             
-            if (!token) {
-                console.error('No access token found');
-            return;
-            }
+      if (!token) {
+        console.error('No access token found');
+        return;
+      }
         
             
-            const params = new URLSearchParams({
-                page: page.toString(),
-                per_page: itemsPerPage.toString()
-            });
+      const params = new URLSearchParams({
+        page: page.toString(),
+        per_page: itemsPerPage.toString()
+      });
         
-            if (searchQuery) params.append('search', searchQuery);
-            if (selectedRole !== '') params.append('role', selectedRole);
-            if (selectedStatus !== '') params.append('status', selectedStatus);
+      if (searchQuery) params.append('search', searchQuery);
+      if (selectedRole !== '') params.append('role', selectedRole);
+      if (selectedStatus !== '') params.append('status', selectedStatus);
 
         
-            const response = await fetch(`${API_BASE_URL}/users?${params}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+      const response = await fetch(`${API_BASE_URL}/users?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
             
-            const data = await response.json();
+      const data = await response.json();
         
-            if (data.success) {
+      if (data.success) {
                 
-                // console.log(data.data.users);
+        // console.log(data.data.users);
                 
-                setUsers(data.data.users.map((u)=>({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, profilePicture: u.profile.picture, timezone: u.profile.timezone,role:u.role})));
-                setTotalPages(data.data.pagination.total);
-                setCurrentPage(data.data.pagination.page);
-            }
-        } catch (error) {
-            console.error('Error fetching users:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    
-    const clearFilters = () => {
-        setSearchQuery("");
-        setSelectedRole("");
-        setSelectedStatus("");
-    };
-    
-    //! Set userId when user changes
-    useEffect(() => {
-      if (user) {
-        fetchUsers();
-        setUserId(user?.id);
-        loadConversations().then(() => {
-            setInitialConversationsLoad(false);
-        }).catch(error => {
-            console.error('Failed to load conversations:', error);
-            setInitialConversationsLoad(false);
-        });
+        setUsers(data.data.users.map((u) => ({ id: u.id, firstName: u.firstName, lastName: u.lastName, email: u.email, profilePicture: u.profile.picture, timezone: u.profile.timezone, role: u.role })));
+        setTotalPages(data.data.pagination.total);
+        setCurrentPage(data.data.pagination.page);
       }
-    }, [user]);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+    
+    
+  const clearFilters = () => {
+    setSearchQuery("");
+    setSelectedRole("");
+    setSelectedStatus("");
+  };
+    
+  //! Set userId when user changes
+  useEffect(() => {
+    if (user) {
+      fetchUsers();
+      setUserId(user?.id);
+      loadConversations().then(() => {
+        setInitialConversationsLoad(false);
+      }).catch(error => {
+        console.error('Failed to load conversations:', error);
+        setInitialConversationsLoad(false);
+      });
+    }
+  }, [user]);
 
-    //! Initialize WebSocket connection
-    // useEffect(() => {
-    //   if (!userId) return;
+  //! Initialize WebSocket connection
+  // useEffect(() => {
+  //   if (!userId) return;
     
-    //   wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
+  //   wsClient.current = new ChatWebSocketClient(SOCKET_API_URL, userId);
       
-    //   // Connection events
-    //   wsClient.current.on('connected', () => {
-    //       console.log('WebSocket connected');
-    //       setIsConnected(true);
-    //       loadConversations();
-    //       toast.success('Connected to chat server');
-    //   });
+  //   // Connection events
+  //   wsClient.current.on('connected', () => {
+  //       console.log('WebSocket connected');
+  //       setIsConnected(true);
+  //       loadConversations();
+  //       toast.success('Connected to chat server');
+  //   });
     
-    //   wsClient.current.on('disconnected', () => {
-    //       console.log('WebSocket disconnected');
-    //       setIsConnected(false);
-    //       toast.error('Disconnected from chat server');
-    //   });
+  //   wsClient.current.on('disconnected', () => {
+  //       console.log('WebSocket disconnected');
+  //       setIsConnected(false);
+  //       toast.error('Disconnected from chat server');
+  //   });
     
-    //   wsClient.current.on('connection_error', (error) => {
-    //       console.error('Connection error:', error);
-    //       toast.error('Connection error occurred');
-    //   });
+  //   wsClient.current.on('connection_error', (error) => {
+  //       console.error('Connection error:', error);
+  //       toast.error('Connection error occurred');
+  //   });
     
-    //   wsClient.current.on('reconnected', (attemptNumber) => {
-    //       console.log('Reconnected after attempt:', attemptNumber);
-    //       toast.success(`Reconnected after ${attemptNumber} attempts`);
-    //   });
+  //   wsClient.current.on('reconnected', (attemptNumber) => {
+  //       console.log('Reconnected after attempt:', attemptNumber);
+  //       toast.success(`Reconnected after ${attemptNumber} attempts`);
+  //   });
     
-    //   wsClient.current.on('reconnect_failed', () => {
-    //       console.error('Reconnection failed');
-    //       toast.error('Failed to reconnect to chat server');
-    //   });
+  //   wsClient.current.on('reconnect_failed', () => {
+  //       console.error('Reconnection failed');
+  //       toast.error('Failed to reconnect to chat server');
+  //   });
     
-    //   // Message events
-    //   wsClient.current.on('new_message', (data) => {
-    //     console.log('New message received via WebSocket:', data);
+  //   // Message events
+  //   wsClient.current.on('new_message', (data) => {
+  //     console.log('New message received via WebSocket:', data);
         
-    //     // Check if this message is for the current conversation
-    //     const isCurrentConversation = selectedConversation?.id === data.conversation_id;
+  //     // Check if this message is for the current conversation
+  //     const isCurrentConversation = selectedConversation?.id === data.conversation_id;
         
-    //     // Always handle the message
-    //     handleNewMessage(data);
+  //     // Always handle the message
+  //     handleNewMessage(data);
         
-    //     // Show notification only if not in the current conversation
-    //     if (!isCurrentConversation) {
-    //         const conversation = conversations.find(c => c.id === data.conversation_id);
-    //         const conversationName = getConversationName(conversation) || 'Unknown conversation';
-    //         toast.info(`New message in ${conversationName}`);
-    //     }
-    //   });
+  //     // Show notification only if not in the current conversation
+  //     if (!isCurrentConversation) {
+  //         const conversation = conversations.find(c => c.id === data.conversation_id);
+  //         const conversationName = getConversationName(conversation) || 'Unknown conversation';
+  //         toast.info(`New message in ${conversationName}`);
+  //     }
+  //   });
     
-    //   wsClient.current.on('message_edited', (data) => {
-    //       console.log('Message edited:', data);
-    //       handleMessageEdited(data);
-    //       toast.info('Message was edited');
-    //   });
+  //   wsClient.current.on('message_edited', (data) => {
+  //       console.log('Message edited:', data);
+  //       handleMessageEdited(data);
+  //       toast.info('Message was edited');
+  //   });
     
-    //   wsClient.current.on('message_deleted', (data) => {
-    //       console.log('Message deleted:', data);
-    //       handleMessageDeleted(data);
-    //       toast.info('Message was deleted');
-    //   });
+  //   wsClient.current.on('message_deleted', (data) => {
+  //       console.log('Message deleted:', data);
+  //       handleMessageDeleted(data);
+  //       toast.info('Message was deleted');
+  //   });
     
-    //   wsClient.current.on('mark_message_read', (data) => {
-    //       console.log('Message read:', data);
-    //       // If someone else read messages in a conversation, update counts
-    //       if (data.conversation_id && data.user_id !== userId) {
-    //           toast.info('Messages marked as read');
-    //           loadConversations();
-    //       }
-    //   });
+  //   wsClient.current.on('mark_message_read', (data) => {
+  //       console.log('Message read:', data);
+  //       // If someone else read messages in a conversation, update counts
+  //       if (data.conversation_id && data.user_id !== userId) {
+  //           toast.info('Messages marked as read');
+  //           loadConversations();
+  //       }
+  //   });
     
-    //   // Typing events
-    //   wsClient.current.on('user_typing', (data) => {
-    //       console.log('User typing:', data);
-    //       handleUserTyping(data);
-    //   });
+  //   // Typing events
+  //   wsClient.current.on('user_typing', (data) => {
+  //       console.log('User typing:', data);
+  //       handleUserTyping(data);
+  //   });
     
-    //   // User status events
-    //   wsClient.current.on('user_online', (data) => {
-    //       console.log(`User ${data.user_id} is now online`);
-    //       handleUserOnline(data);
-    //       toast.success(`User ${data.user_name || data.user_id} is now online`);
-    //   });
+  //   // User status events
+  //   wsClient.current.on('user_online', (data) => {
+  //       console.log(`User ${data.user_id} is now online`);
+  //       handleUserOnline(data);
+  //       toast.success(`User ${data.user_name || data.user_id} is now online`);
+  //   });
     
-    //   wsClient.current.on('user_offline', (data) => {
-    //       console.log(`User ${data.user_id} is now offline`);
-    //       handleUserOffline(data);
-    //       toast.info(`User ${data.user_name || data.user_id} went offline`);
-    //   });
+  //   wsClient.current.on('user_offline', (data) => {
+  //       console.log(`User ${data.user_id} is now offline`);
+  //       handleUserOffline(data);
+  //       toast.info(`User ${data.user_name || data.user_id} went offline`);
+  //   });
     
-    //   wsClient.current.on('user_status_changed', (data) => {
-    //       console.log(`User ${data.user_id} status changed to ${data.status}`);
-    //       toast.info(`User ${data.user_name || data.user_id} is now ${data.status}`);
-    //   });
+  //   wsClient.current.on('user_status_changed', (data) => {
+  //       console.log(`User ${data.user_id} status changed to ${data.status}`);
+  //       toast.info(`User ${data.user_name || data.user_id} is now ${data.status}`);
+  //   });
     
-    //   // Conversation events
-    //   wsClient.current.on('conversation_created', (data) => {
-    //       console.log('New conversation created:', data);
-    //       handleConversationCreated(data);
-    //       toast.success('New conversation created');
-    //   });
+  //   // Conversation events
+  //   wsClient.current.on('conversation_created', (data) => {
+  //       console.log('New conversation created:', data);
+  //       handleConversationCreated(data);
+  //       toast.success('New conversation created');
+  //   });
     
-    //   wsClient.current.on('conversation_updated', (data) => {
-    //       console.log('Conversation updated:', data);
-    //       handleConversationUpdated(data);
-    //       toast.info('Conversation updated');
-    //   });
+  //   wsClient.current.on('conversation_updated', (data) => {
+  //       console.log('Conversation updated:', data);
+  //       handleConversationUpdated(data);
+  //       toast.info('Conversation updated');
+  //   });
     
-    //   // Participant events
-    //   wsClient.current.on('participant_added', (data) => {
-    //       console.log('Participant added:', data);
-    //       handleParticipantAdded(data);
-    //       toast.info(`User ${data.user_name} added to conversation`);
-    //   });
+  //   // Participant events
+  //   wsClient.current.on('participant_added', (data) => {
+  //       console.log('Participant added:', data);
+  //       handleParticipantAdded(data);
+  //       toast.info(`User ${data.user_name} added to conversation`);
+  //   });
     
-    //   wsClient.current.on('participant_removed', (data) => {
-    //       console.log('Participant removed:', data);
-    //       handleParticipantRemoved(data);
-    //       toast.info(`User ${data.user_name} removed from conversation`);
-    //   });
+  //   wsClient.current.on('participant_removed', (data) => {
+  //       console.log('Participant removed:', data);
+  //       handleParticipantRemoved(data);
+  //       toast.info(`User ${data.user_name} removed from conversation`);
+  //   });
     
-    //   wsClient.current.on('added_to_conversation', (data) => {
-    //       console.log('Added to conversation:', data);
-    //       handleAddedToConversation(data);
-    //       toast.success('You were added to a conversation');
-    //   });
+  //   wsClient.current.on('added_to_conversation', (data) => {
+  //       console.log('Added to conversation:', data);
+  //       handleAddedToConversation(data);
+  //       toast.success('You were added to a conversation');
+  //   });
     
-    //   wsClient.current.on('removed_from_conversation', (data) => {
-    //       console.log('Removed from conversation:', data);
-    //       handleRemovedFromConversation(data);
-    //       toast.error('You were removed from a conversation');
-    //   });
+  //   wsClient.current.on('removed_from_conversation', (data) => {
+  //       console.log('Removed from conversation:', data);
+  //       handleRemovedFromConversation(data);
+  //       toast.error('You were removed from a conversation');
+  //   });
     
-    //   // Error events
-    //   wsClient.current.on('error', (error) => {
-    //       console.error('Socket error:', error);
-    //       toast.error(`Chat error: ${error.message || 'Unknown error'}`);
-    //   });
+  //   // Error events
+  //   wsClient.current.on('error', (error) => {
+  //       console.error('Socket error:', error);
+  //       toast.error(`Chat error: ${error.message || 'Unknown error'}`);
+  //   });
     
-    //   wsClient.current.connect();
-    //   setWsClient(client);
+  //   wsClient.current.connect();
+  //   setWsClient(client);
       
-    //   return () => {
-    //       if (wsClient.current) {
-    //           wsClient.current.disconnect();
-    //           wsClient.current = null; 
-    //       }
-    //   };
-    // }, [userId]);
+  //   return () => {
+  //       if (wsClient.current) {
+  //           wsClient.current.disconnect();
+  //           wsClient.current = null; 
+  //       }
+  //   };
+  // }, [userId]);
     
     
-    //! Initialize WebSocket connection
+  //! Initialize WebSocket connection
   useEffect(() => {
     if (!userId || wsClient) return; // Don't reinitialize if client already exists
   
@@ -828,8 +821,8 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   // Debug: Log WebSocket state changes
   useEffect(() => {
     if (!wsClient) {
-        console.log('WebSocket client is null');
-        return;
+      console.log('WebSocket client is null');
+      return;
     }
     
     // console.log('WebSocket client state:', {
@@ -839,7 +832,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     // });
     
     const checkInterval = setInterval(() => {
-        console.log('Current WebSocket connection state:', wsClient.isConnected());
+      console.log('Current WebSocket connection state:', wsClient.isConnected());
     }, 10000); // Check every 10 seconds
     
     return () => clearInterval(checkInterval);
@@ -863,7 +856,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
       user_typing: handleUserTyping,
       user_online: handleUserOnline,
       user_offline: handleUserOffline,
-      user_status_changed: () => {}, // Empty handler as we just show notification
+      user_status_changed: () => { }, // Empty handler as we just show notification
       conversation_created: handleConversationCreated,
       conversation_updated: handleConversationUpdated,
       participant_added: handleParticipantAdded,
@@ -880,72 +873,72 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     
     // Re-attach all handlers
     Object.entries(eventHandlers).forEach(([event, handler]) => {
-        // Store the reference
-        handlerRefs[event] = handler;
-        // Remove any existing handler first
-        wsClient.off(event);
-        // Add new handler
-        wsClient.on(event, handler);
+      // Store the reference
+      handlerRefs[event] = handler;
+      // Remove any existing handler first
+      wsClient.off(event);
+      // Add new handler
+      wsClient.on(event, handler);
     });
     
     return () => {
-        // Clean up specific handlers when component unmounts or dependencies change
-        if (wsClient) {
-            Object.entries(handlerRefs).forEach(([event, handler]) => {
-                // Only remove the handler we registered
-                wsClient.off(event, handler);
-            });
-        }
+      // Clean up specific handlers when component unmounts or dependencies change
+      if (wsClient) {
+        Object.entries(handlerRefs).forEach(([event, handler]) => {
+          // Only remove the handler we registered
+          wsClient.off(event, handler);
+        });
+      }
     };
   }, [wsClient, userId]);
   
-    //!NEw Event handlers:
-    //! handle conversation created:
-    const handleConversationCreated = (data) => {
-        // If the new conversation includes the current user
-        if (data.conversation && data.conversation.participants?.some(p => p.id === userId)) {
-            // Add the new conversation to the list
-            setConversations(prev => {
-                if (prev.some(c => c.id === data.conversation.id)) {
-                    return prev;
-                }
-                return [data.conversation, ...prev];
-            });
+  //!NEw Event handlers:
+  //! handle conversation created:
+  const handleConversationCreated = (data) => {
+    // If the new conversation includes the current user
+    if (data.conversation && data.conversation.participants?.some(p => p.id === userId)) {
+      // Add the new conversation to the list
+      setConversations(prev => {
+        if (prev.some(c => c.id === data.conversation.id)) {
+          return prev;
+        }
+        return [data.conversation, ...prev];
+      });
             
-            // If this is the current user creating the conversation, select it
-            if (data.conversation.created_by_id === userId) {
-                setSelectedConversation(data.conversation);
-                loadMessages(data.conversation.id);
-                loadConversationFiles(data.conversation.id);
-            }
-        }
-    };
+      // If this is the current user creating the conversation, select it
+      if (data.conversation.created_by_id === userId) {
+        setSelectedConversation(data.conversation);
+        loadMessages(data.conversation.id);
+        loadConversationFiles(data.conversation.id);
+      }
+    }
+  };
     
-    //! handle conversation updated:
-    const handleConversationUpdated = (data) => {
-        if (data.conversation) {
-            // Update the conversation in the list
-            setConversations(prev => 
-                prev.map(c => c.id === data.conversation.id ? data.conversation : c)
-            );
+  //! handle conversation updated:
+  const handleConversationUpdated = (data) => {
+    if (data.conversation) {
+      // Update the conversation in the list
+      setConversations(prev =>
+        prev.map(c => c.id === data.conversation.id ? data.conversation : c)
+      );
             
-            // Update selected conversation if it's the current one
-            if (selectedConversation?.id === data.conversation.id) {
-                setSelectedConversation(data.conversation);
-            }
-        }
-    };
+      // Update selected conversation if it's the current one
+      if (selectedConversation?.id === data.conversation.id) {
+        setSelectedConversation(data.conversation);
+      }
+    }
+  };
     
-    //! handle participant added:
-    const handleParticipantAdded = (data) => {
-        if (selectedConversation?.id === data.conversation_id) {
-            // Reload conversation to get updated participant list
-          loadConversations();
-          toast.info(`${data.user_name} was added to the conversation`);
-        }
-    };
+  //! handle participant added:
+  const handleParticipantAdded = (data) => {
+    if (selectedConversation?.id === data.conversation_id) {
+      // Reload conversation to get updated participant list
+      loadConversations();
+      toast.info(`${data.user_name} was added to the conversation`);
+    }
+  };
     
-    //! handle participant removed:
+  //! handle participant removed:
   const handleParticipantRemoved = (data) => {
     if (selectedConversation?.id === data.conversation_id) {
       // If the current user was removed
@@ -961,462 +954,462 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     }
   };
     
-    //! handle added to conversation:
-    const handleAddedToConversation = (data) => {
-        if (data.conversation) {
-            // Add the conversation to the list
-            setConversations(prev => {
-                if (prev.some(c => c.id === data.conversation.id)) {
-                    return prev;
-                }
-                return [data.conversation, ...prev];
-            });
+  //! handle added to conversation:
+  const handleAddedToConversation = (data) => {
+    if (data.conversation) {
+      // Add the conversation to the list
+      setConversations(prev => {
+        if (prev.some(c => c.id === data.conversation.id)) {
+          return prev;
+        }
+        return [data.conversation, ...prev];
+      });
             
-            // Show notification with conversation name
-          const conversationName = getConversationName(data.conversation);
-          toast.success(`You were added to "${conversationName}"`);
-        }
-    };
+      // Show notification with conversation name
+      const conversationName = getConversationName(data.conversation);
+      toast.success(`You were added to "${conversationName}"`);
+    }
+  };
     
-    //! handle removed from conversation:
-    const handleRemovedFromConversation = (data) => {
-        // Remove the conversation from the list
-        setConversations(prev => 
-            prev.filter(c => c.id !== data.conversation_id)
-        );
+  //! handle removed from conversation:
+  const handleRemovedFromConversation = (data) => {
+    // Remove the conversation from the list
+    setConversations(prev =>
+      prev.filter(c => c.id !== data.conversation_id)
+    );
         
-        // If this was the selected conversation, clear it
-        if (selectedConversation?.id === data.conversation_id) {
-            setSelectedConversation(null);
-            setMessages([]);
-        }
+    // If this was the selected conversation, clear it
+    if (selectedConversation?.id === data.conversation_id) {
+      setSelectedConversation(null);
+      setMessages([]);
+    }
         
-        toast.error('You were removed from a conversation')
-    };
+    toast.error('You were removed from a conversation')
+  };
     
-    //! handle message deleted:
-    const handleMessageDeleted = (data) => {
-        if (data.message_id && selectedConversation && data.conversation_id === selectedConversation.id) {
-            // Remove the deleted message from the list
-            setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
+  //! handle message deleted:
+  const handleMessageDeleted = (data) => {
+    if (data.message_id && selectedConversation && data.conversation_id === selectedConversation.id) {
+      // Remove the deleted message from the list
+      setMessages(prev => prev.filter(msg => msg.id !== data.message_id));
             
-            // Reload files in case a file message was deleted
-            loadConversationFiles(selectedConversation.id);
+      // Reload files in case a file message was deleted
+      loadConversationFiles(selectedConversation.id);
+    }
+  };
+
+  //!END Event handlers:
+
+  //! LOAD USER CONVERSATIONS:
+  const loadConversations = async () => {
+    if (initialConversationsLoad) {
+      setLoading(true);
+    }
+      
+    const token = access_token;
+      
+    if (!token) {
+      console.error('No access token found');
+      setLoading(false);
+      if (initialConversationsLoad) {
+        setInitialConversationsLoad(false);
+      }
+      return;
+    }
+      
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-    };
-
-    //!END Event handlers:
-
-    //! LOAD USER CONVERSATIONS:
-    const loadConversations = async () => {
-      if(initialConversationsLoad){
-          setLoading(true);
       }
-      
-      const token = access_token; 
-      
-      if (!token) {
-          console.error('No access token found');
-          setLoading(false);
-          if(initialConversationsLoad){
-              setInitialConversationsLoad(false);
-          }
-          return;
+      );
+          
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
-      try {
-          const response = await fetch(
-              `${API_BASE_URL}/chat/conversations?user_id=${userId}`, {
-                  headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                  }
-              }
-          );
           
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
+      const data = await response.json();
           
-          const data = await response.json();
+      // console.log('Conversations response:', data);
           
-          // console.log('Conversations response:', data);
-          
-          if (data.success && data.data?.conversations) {
-              setConversations(prevConversations => {
-                  // Only update if conversations actually changed
-                  const newConversations = data.data.conversations;
-                  const hasChanged = JSON.stringify(prevConversations) !== JSON.stringify(newConversations);
-                  return hasChanged ? newConversations : prevConversations;
-              });
-          } else {
-              console.error('No conversations found or invalid response:', data);
-              setConversations([]);
-          }
-      } catch (error) {
-          console.error('Error loading conversations:', error);
-          // Don't reset conversations on error to keep existing data
-      } finally {
-          setLoading(false);
-          if(initialConversationsLoad){
-              setInitialConversationsLoad(false);
-          }
+      if (data.success && data.data?.conversations) {
+        setConversations(prevConversations => {
+          // Only update if conversations actually changed
+          const newConversations = data.data.conversations;
+          const hasChanged = JSON.stringify(prevConversations) !== JSON.stringify(newConversations);
+          return hasChanged ? newConversations : prevConversations;
+        });
+      } else {
+        console.error('No conversations found or invalid response:', data);
+        setConversations([]);
       }
-    };
+    } catch (error) {
+      console.error('Error loading conversations:', error);
+      // Don't reset conversations on error to keep existing data
+    } finally {
+      setLoading(false);
+      if (initialConversationsLoad) {
+        setInitialConversationsLoad(false);
+      }
+    }
+  };
     
-    //! LOAD USER MESSAGES FOR CHOSEN CONVERSATION:
-    const loadMessages = async (conversationId) => {
+  //! LOAD USER MESSAGES FOR CHOSEN CONVERSATION:
+  const loadMessages = async (conversationId) => {
+    if (initialMessagesLoad) {
+      setLoadingMessages(true);
+    }
+      
+    const token = access_token;
+      
+    if (!token) {
+      console.error('No access token found');
+      setLoadingMessages(false);
+      setInitialMessagesLoad(false);
+      return;
+    }
+      
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      }
+      );
+          
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+          
+      const data = await response.json();
+          
+      if (data.success && data.data?.messages) {
+        setMessages(data.data.messages);
+        // console.log('Loaded Messages:', data.data.messages);
+        loadConversationFiles(conversationId);
+      } else {
+        setMessages([]);
+      }
+    } catch (error) {
+      console.error('Error loading messages:', error);
+      setMessages([]);
+    } finally {
+      setLoadingMessages(false);
       if (initialMessagesLoad) {
-          setLoadingMessages(true);
+        setInitialMessagesLoad(false);
       }
-      
-      const token = access_token; 
-      
-      if (!token) {
-          console.error('No access token found');
-          setLoadingMessages(false);
-          setInitialMessagesLoad(false);
-          return;
-      }
-      
-      try {
-          const response = await fetch(
-              `${API_BASE_URL}/chat/conversations/${conversationId}/messages?user_id=${userId}&limit=50`, {
-                  headers: {
-                      'Authorization': `Bearer ${token}`,
-                      'Content-Type': 'application/json'
-                  }
-              }
-          );
-          
-          if (!response.ok) {
-              throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          
-          const data = await response.json();
-          
-          if (data.success && data.data?.messages) {
-              setMessages(data.data.messages);
-              // console.log('Loaded Messages:', data.data.messages);
-              loadConversationFiles(conversationId);
-          } else {
-              setMessages([]);
-          }
-      } catch (error) {
-          console.error('Error loading messages:', error);
-          setMessages([]);
-      } finally {
-          setLoadingMessages(false);
-          if (initialMessagesLoad) {
-              setInitialMessagesLoad(false);
-          }
-      }
-    };
+    }
+  };
 
     
-    //! LOAD FILES FOR CHOSEN CONVERSATION:
-    const loadConversationFiles = async (conversationId) => {
-        const token = access_token; 
+  //! LOAD FILES FOR CHOSEN CONVERSATION:
+  const loadConversationFiles = async (conversationId) => {
+    const token = access_token;
         
-        if (!token) {
-            console.error('No access token found');
-            return;
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations/${conversationId}/files`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations/${conversationId}/files`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+      }
+      );
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
             
-            const data = await response.json();
+      const data = await response.json();
             
-            if (data.success && data.data?.files) {
-                setConversationFiles(data.data.files);
-            } else {
-                setConversationFiles([]);
-            }
-        } catch (error) {
-            console.error('Error loading files:', error);
-            setConversationFiles([]);
-        }
-    };
+      if (data.success && data.data?.files) {
+        setConversationFiles(data.data.files);
+      } else {
+        setConversationFiles([]);
+      }
+    } catch (error) {
+      console.error('Error loading files:', error);
+      setConversationFiles([]);
+    }
+  };
 
     
-    //! load messages and files when selected conversation changes:
-    useEffect(() => {
-        if (selectedConversation) {
-            loadMessages(selectedConversation.id);
-            loadConversationFiles(selectedConversation.id);
-            if (wsClient) {
-                wsClient.joinConversation(selectedConversation.id);
-            }
-        }
-    }, [selectedConversation]);
+  //! load messages and files when selected conversation changes:
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id);
+      loadConversationFiles(selectedConversation.id);
+      if (wsClient) {
+        wsClient.joinConversation(selectedConversation.id);
+      }
+    }
+  }, [selectedConversation]);
     
-    //! scroll to bottom on new message:
-    useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+  //! scroll to bottom on new message:
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
     
-    //! Clean up all typing timeouts
-    useEffect(() => {
-      return () => {
-          if (window.typingTimeouts) {
-              Object.values(window.typingTimeouts).forEach(timeout => {
-                  clearTimeout(timeout);
-              });
-              window.typingTimeouts = {};
-          }
-      };
+  //! Clean up all typing timeouts
+  useEffect(() => {
+    return () => {
+      if (window.typingTimeouts) {
+        Object.values(window.typingTimeouts).forEach(timeout => {
+          clearTimeout(timeout);
+        });
+        window.typingTimeouts = {};
+      }
+    };
   }, []);
 
-    //! HANDLE NEW MESSAGE:
-    const handleNewMessage = (data) => {
+  //! HANDLE NEW MESSAGE:
+  const handleNewMessage = (data) => {
       
-      if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
-          setMessages(prev => {
-              // Check for duplicates more thoroughly
-              const isDuplicate = prev.some(msg => 
-                  msg.id === data.message.id || 
-                  (msg.content === data.message.content && 
-                   msg.sender_id === data.message.sender_id &&
-                   Math.abs(new Date(msg.created_at).getTime() - new Date(data.message.created_at).getTime()) < 1000)
-              );
+    if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
+      setMessages(prev => {
+        // Check for duplicates more thoroughly
+        const isDuplicate = prev.some(msg =>
+          msg.id === data.message.id ||
+          (msg.content === data.message.content &&
+            msg.sender_id === data.message.sender_id &&
+            Math.abs(new Date(msg.created_at).getTime() - new Date(data.message.created_at).getTime()) < 1000)
+        );
               
-              if (isDuplicate) {
-                  return prev;
-              }
-              return [...prev, data.message];
-          });
-          loadConversations();
+        if (isDuplicate) {
+          return prev;
+        }
+        return [...prev, data.message];
+      });
+      loadConversations();
           
           
-          // Load files if needed
-          if (data.message.file_url) {
-              loadConversationFiles(selectedConversation.id);
-          }
-      } else if (data.message && data.conversation_id !== selectedConversation?.id) {
-          // Message in another conversation
-          console.log('Message in other conversation, updating list');
-          loadConversations();
+      // Load files if needed
+      if (data.message.file_url) {
+        loadConversationFiles(selectedConversation.id);
       }
-    };
-    
-    //! handle message edited:
-    const handleMessageEdited = (data) => {
-        if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
-            setMessages(prev => 
-                prev.map(msg => msg.id === data.message.id ? data.message : msg)
-            );
-        }
-    };
-    
-    //! handle user typing:
-    const handleUserTyping = (data) => {
-        if (selectedConversation && data.conversation_id === selectedConversation.id && data.user_id !== userId) {
-            setIsTyping(prev => ({
-                ...prev,
-                [data.user_id]: {
-                    isTyping: data.is_typing,
-                    userName: data.user_name || `User ${data.user_id}`
-                }
-            }));
-    
-            const timeoutKey = `typing_${data.user_id}`;
-            if (window.typingTimeouts) {
-                clearTimeout(window.typingTimeouts[timeoutKey]);
-            } else {
-                window.typingTimeouts = {};
-            }
-        
-            if (data.is_typing) {
-                window.typingTimeouts[timeoutKey] = setTimeout(() => {
-                    setIsTyping(prev => ({
-                        ...prev,
-                        [data.user_id]: { ...prev[data.user_id], isTyping: false }
-                    }));
-                }, 3000);
-            }
-        }
-    };
-    
-    //! handle user online:
-    const handleUserOnline = (data) => {
-        setOnlineUsers(prev => new Set([...prev, data.user_id]));
-    };
-    
-    //! handle user offline:
-    const handleUserOffline = (data) => {
-        setOnlineUsers(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(data.user_id);
-            return newSet;
-        });
-    };
-    
-    //! delete message:
-    const deleteMessage=async(message)=>{
-        setDeletedMessage(message);
-        setShowDeleteModal(true);
-        
+    } else if (data.message && data.conversation_id !== selectedConversation?.id) {
+      // Message in another conversation
+      console.log('Message in other conversation, updating list');
+      loadConversations();
     }
+  };
     
-    //! handle delete message:
-    const handleDeleteMessage = async () => {
-        setLoading(true);
-        const token = access_token; 
-        
-        if (!token) {
-            console.error('No access token found');
-            return;
-        }
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations/${selectedConversation?.id}/messages/${deletedMessage?.id}?user_id=${userId}`,
-                {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                setMessages(prev => prev.filter(msg => msg.id !== deletedMessage.id));
-                loadConversations();
-                setShowDeleteModal(false);
-                toast.success('Message deleted successfully');
-
-            } else {
-                throw new Error(data.message || "Failed to delete message");
-            }
-        } catch (error) {
-          console.error('Error deleting message:', error);
-          toast.error('Failed to delete message');
-
-        } finally {
-            setLoading(false);
-        }
-    };
-
+  //! handle message edited:
+  const handleMessageEdited = (data) => {
+    if (data.message && selectedConversation && data.conversation_id === selectedConversation.id) {
+      setMessages(prev =>
+        prev.map(msg => msg.id === data.message.id ? data.message : msg)
+      );
+    }
+  };
     
-    //! mark conversation as read:
-    const markConversationAsRead = async (conversationId) => {
-        const token = access_token; 
-        
-        if (!token) {
-            console.error('No access token found');
-            return;
+  //! handle user typing:
+  const handleUserTyping = (data) => {
+    if (selectedConversation && data.conversation_id === selectedConversation.id && data.user_id !== userId) {
+      setIsTyping(prev => ({
+        ...prev,
+        [data.user_id]: {
+          isTyping: data.is_typing,
+          userName: data.user_name || `User ${data.user_id}`
         }
-        try {
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations/${conversationId}/mark-read?user_id=${userId}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            if (!data.success) {
-                throw new Error(data.message || "Failed to mark conversation as read");
-            }
-
-            
-        } catch (error) {
-            console.error('Error marking conversation as read:', error);
-            throw error;
-        }
-    };
-
+      }));
     
-    //! handle selected conversation:
-    const handleSelectConversation = async (conversation) => {
-      // Reset initial messages load when switching to a different conversation
-      if (selectedConversation?.id !== conversation.id) {
-          setInitialMessagesLoad(true);
+      const timeoutKey = `typing_${data.user_id}`;
+      if (window.typingTimeouts) {
+        clearTimeout(window.typingTimeouts[timeoutKey]);
+      } else {
+        window.typingTimeouts = {};
       }
-      
-      setSelectedConversation(conversation);
-      
-      // Mark conversation as read when selected
-      if (conversation && conversation.id) {
-          try {
-              await markConversationAsRead(conversation.id);
-                          // // Safely dispatch Redux action
-            // await dispatch(fetchUserProfile()).catch(err => {
-            //   console.error("Error updating user profile after marking read:", err);
-            // });
-              // Update local state to reflect read status
-              setReadConversations(prev => new Set([...prev, conversation.id]));
-              
-              // Reload conversations to update unread counts
-              loadConversations();
-          } catch (error) {
-              console.error('Error marking conversation as read:', error);
+        
+      if (data.is_typing) {
+        window.typingTimeouts[timeoutKey] = setTimeout(() => {
+          setIsTyping(prev => ({
+            ...prev,
+            [data.user_id]: { ...prev[data.user_id], isTyping: false }
+          }));
+        }, 3000);
+      }
+    }
+  };
+    
+  //! handle user online:
+  const handleUserOnline = (data) => {
+    setOnlineUsers(prev => new Set([...prev, data.user_id]));
+  };
+    
+  //! handle user offline:
+  const handleUserOffline = (data) => {
+    setOnlineUsers(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(data.user_id);
+      return newSet;
+    });
+  };
+    
+  //! delete message:
+  const deleteMessage = async (message) => {
+    setDeletedMessage(message);
+    setShowDeleteModal(true);
+        
+  }
+    
+  //! handle delete message:
+  const handleDeleteMessage = async () => {
+    setLoading(true);
+    const token = access_token;
+        
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations/${selectedConversation?.id}/messages/${deletedMessage?.id}?user_id=${userId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
           }
+        }
+      );
+            
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    };
+            
+      const data = await response.json();
+            
+      if (data.success) {
+        setMessages(prev => prev.filter(msg => msg.id !== deletedMessage.id));
+        loadConversations();
+        setShowDeleteModal(false);
+        toast.success('Message deleted successfully');
+
+      } else {
+        throw new Error(data.message || "Failed to delete message");
+      }
+    } catch (error) {
+      console.error('Error deleting message:', error);
+      toast.error('Failed to delete message');
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
     
-    //! handle notification:
-    const handleCreateNotification = async (title="",msg="",type="system",isRead=false,user_id=null) => {
-      const newNotification={
-        user_id:user_id,
-        title: title,
-        message: msg,
-        type: type,
-        isRead: isRead
-      };
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/notifications`, {
+  //! mark conversation as read:
+  const markConversationAsRead = async (conversationId) => {
+    const token = access_token;
+        
+    if (!token) {
+      console.error('No access token found');
+      return;
+    }
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations/${conversationId}/mark-read?user_id=${userId}`,
+        {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${access_token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(newNotification),
-        });
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+            
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+            
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.message || "Failed to mark conversation as read");
+      }
+
+            
+    } catch (error) {
+      console.error('Error marking conversation as read:', error);
+      throw error;
+    }
+  };
+
+    
+  //! handle selected conversation:
+  const handleSelectConversation = async (conversation) => {
+    // Reset initial messages load when switching to a different conversation
+    if (selectedConversation?.id !== conversation.id) {
+      setInitialMessagesLoad(true);
+    }
+      
+    setSelectedConversation(conversation);
+      
+    // Mark conversation as read when selected
+    if (conversation && conversation.id) {
+      try {
+        await markConversationAsRead(conversation.id);
+        // // Safely dispatch Redux action
+        // await dispatch(fetchUserProfile()).catch(err => {
+        //   console.error("Error updating user profile after marking read:", err);
+        // });
+        // Update local state to reflect read status
+        setReadConversations(prev => new Set([...prev, conversation.id]));
+              
+        // Reload conversations to update unread counts
+        loadConversations();
+      } catch (error) {
+        console.error('Error marking conversation as read:', error);
+      }
+    }
+  };
+    
+  //! handle notification:
+  const handleCreateNotification = async (title = "", msg = "", type = "system", isRead = false, user_id = null) => {
+    const newNotification = {
+      user_id: user_id,
+      title: title,
+      message: msg,
+      type: type,
+      isRead: isRead
+    };
+      
+    try {
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newNotification),
+      });
   
-        if (response.ok) {
+      if (response.ok) {
         const result = await response.json();
-          // toast.success('notification created successfully')
+        // toast.success('notification created successfully')
 
           
-        } else {
-          throw new Error('Failed to create notification');
-        }
-      } catch (error) {
-        console.error("Failed to create notification:", error);
-        // Fallback to local creation
-        toast.error('notification not created')
+      } else {
+        throw new Error('Failed to create notification');
       }
-    };
+    } catch (error) {
+      console.error("Failed to create notification:", error);
+      // Fallback to local creation
+      toast.error('notification not created')
+    }
+  };
     
     
-    //! handle send message:
+  //! handle send message:
   const handleSendMessage = async (messageContent, file = null) => {
     if ((!messageContent?.trim() && !file) || !selectedConversation) return;
         
@@ -1520,125 +1513,125 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
   };
 
 
-    //! handle typing:
-    const handleTyping = (conversationId) => {
-        if (wsClient && conversationId) {
-            wsClient.handleTyping(conversationId);
-        }
-    };
+  //! handle typing:
+  const handleTyping = (conversationId) => {
+    if (wsClient && conversationId) {
+      wsClient.handleTyping(conversationId);
+    }
+  };
     
-    //! handle create conversation:
-    const handleCreateConversation = async () => {
-        if (selectedParticipants.length === 0) {
-            toast.error('Please select at least one participant');
-            return;
+  //! handle create conversation:
+  const handleCreateConversation = async () => {
+    if (selectedParticipants.length === 0) {
+      toast.error('Please select at least one participant');
+      return;
+    }
+        
+    setLoading(true);
+    const token = access_token;
+        
+    if (!token) {
+      console.error('No access token found');
+      setLoading(false);
+      return;
+    }
+        
+    try {
+      const participantIds = selectedParticipants.map(p => p.id);
+            
+      if (conversationType === 'direct' && participantIds.length !== 1) {
+        toast.error('Direct messages can only have one other participant');
+        setLoading(false);
+        return;
+      }
+            
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            created_by_id: userId,
+            participant_ids: participantIds,
+            name: conversationType === 'group' ? newConversationName : null,
+            conversation_type: conversationType,
+            description: conversationType === 'group' ? newConversationName + ' group chat' : null
+          }),
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         }
-        
-        setLoading(true);
-        const token = access_token; 
-        
-        if (!token) {
-            console.error('No access token found');
-            setLoading(false);
-            return;
-        }
-        
-        try {
-            const participantIds = selectedParticipants.map(p => p.id);
+      );
             
-            if (conversationType === 'direct' && participantIds.length !== 1) {
-                toast.error('Direct messages can only have one other participant');
-                setLoading(false);
-                return;
-            }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
             
-            const response = await fetch(
-                `${API_BASE_URL}/chat/conversations`,
-                {
-                    method: 'POST',
-                    body: JSON.stringify({
-                        created_by_id: userId,
-                        participant_ids: participantIds,
-                        name: conversationType === 'group' ? newConversationName : null,
-                        conversation_type: conversationType,
-                        description: conversationType === 'group' ? newConversationName + ' group chat' : null
-                    }),
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+      const data = await response.json();
             
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            
-            if (data.success && data.data?.conversation) {
-                const newConversation = data.data.conversation;
-                const convName=getConversationName(data.data.conversation);
-                  handleCreateNotification(
-                    `New conversation was created by ${user?.firstName} ${user?.lastName}`,
-                    `You were added to a new conversation: ${convName} by ${user?.firstName} ${user?.lastName}.`,
-                    "system",
-                    false,
-                    selectedConversation.participants?.find(u => u.id !== userId)?.id
-                  );
-                setConversations(prev => [newConversation, ...prev]);
-                setSelectedConversation(newConversation);
-                setShowCreateModal(false);
-                resetModal();
+      if (data.success && data.data?.conversation) {
+        const newConversation = data.data.conversation;
+        const convName = getConversationName(data.data.conversation);
+        handleCreateNotification(
+          `New conversation was created by ${user?.firstName} ${user?.lastName}`,
+          `You were added to a new conversation: ${convName} by ${user?.firstName} ${user?.lastName}.`,
+          "system",
+          false,
+          selectedConversation.participants?.find(u => u.id !== userId)?.id
+        );
+        setConversations(prev => [newConversation, ...prev]);
+        setSelectedConversation(newConversation);
+        setShowCreateModal(false);
+        resetModal();
                 
-                // Load messages for the new conversation
-                await loadMessages(newConversation.id);
-                await loadConversationFiles(newConversation.id);
+        // Load messages for the new conversation
+        await loadMessages(newConversation.id);
+        await loadConversationFiles(newConversation.id);
                 
-              // Show success alert
-              toast.success('Conversation created successfully');
-            } else {
-                throw new Error(data.message || "Failed to create conversation");
-            }
-        } catch (error) {
-            console.error('Error creating conversation:', error);
-            toast.error(error.message || 'Failed to create conversation. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
+        // Show success alert
+        toast.success('Conversation created successfully');
+      } else {
+        throw new Error(data.message || "Failed to create conversation");
+      }
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      toast.error(error.message || 'Failed to create conversation. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const resetModal = () => {
-        setNewConversationName('');
-        setSelectedParticipants([]);
-        setConversationType('direct');
-    };
+  const resetModal = () => {
+    setNewConversationName('');
+    setSelectedParticipants([]);
+    setConversationType('direct');
+  };
     
     
-    const toggleParticipant = (usr) => {
-        setSelectedParticipants(prev => {
-            const isSelected = prev.some(p => p.id === usr.id);
-            if (isSelected) {
-            return prev.filter(p => p.id !== usr.id);
-            } else {
-            return [...prev, usr];
-            }
-        });
-    };
+  const toggleParticipant = (usr) => {
+    setSelectedParticipants(prev => {
+      const isSelected = prev.some(p => p.id === usr.id);
+      if (isSelected) {
+        return prev.filter(p => p.id !== usr.id);
+      } else {
+        return [...prev, usr];
+      }
+    });
+  };
 
-    const scrollToBottom = () => {
+  const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    };
+  };
 
-    const getTypingDisplay = () => {
-        const typingUsers = Object.entries(isTyping)
-          .filter(([uid, data]) => data.isTyping && parseInt(uid) !== userId)
-          .map(([uid, data]) => data.userName || `User ${uid}`);
+  const getTypingDisplay = () => {
+    const typingUsers = Object.entries(isTyping)
+      .filter(([uid, data]) => data.isTyping && parseInt(uid) !== userId)
+      .map(([uid, data]) => data.userName || `User ${uid}`);
         
-        if (typingUsers.length === 0) return null;
-        if (typingUsers.length === 1) return `${typingUsers[0]} is typing...`;
-        return `${typingUsers.length} people are typing...`;
-      };
+    if (typingUsers.length === 0) return null;
+    if (typingUsers.length === 1) return `${typingUsers[0]} is typing...`;
+    return `${typingUsers.length} people are typing...`;
+  };
 
   const getConversationName = (conversation) => {
     if (conversation.name) return conversation.name;
@@ -1649,255 +1642,255 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     return 'Group Chat';
   };
 
-    const formatMessageContent = (content) => {
-        if (!content) return '';
+  const formatMessageContent = (content) => {
+    if (!content) return '';
         
-        // Only process if content contains time placeholders like [14:30]
-        const timePattern = /\[(\d{1,2}:\d{2})\]/g;
+    // Only process if content contains time placeholders like [14:30]
+    const timePattern = /\[(\d{1,2}:\d{2})\]/g;
         
-        if (timePattern.test(content)) {
-            const convertToAmPm = (time24) => {
-                const [hours, minutes] = time24.split(':');
-                let hour = parseInt(hours, 10);
-                const minute = minutes;
+    if (timePattern.test(content)) {
+      const convertToAmPm = (time24) => {
+        const [hours, minutes] = time24.split(':');
+        let hour = parseInt(hours, 10);
+        const minute = minutes;
                 
-                const period = hour >= 12 ? 'PM' : 'AM';
-                hour = hour % 12 || 12;
+        const period = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
                 
-                return `${hour}:${minute} ${period}`;
-            };
+        return `${hour}:${minute} ${period}`;
+      };
             
-            let formattedContent = content.replace(/\[(\d{1,2}:\d{2})\]/g, (match, time24) => {
-                return convertToAmPm(time24);
-            });
+      let formattedContent = content.replace(/\[(\d{1,2}:\d{2})\]/g, (match, time24) => {
+        return convertToAmPm(time24);
+      });
             
-            formattedContent = formattedContent.replace(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/gi, '<span className="inline-block px-2 py-0.5 mx-1 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full border border-green-500/30">$1</span>');
+      formattedContent = formattedContent.replace(/(\d{1,2}:\d{2}\s*(?:AM|PM)?)/gi, '<span className="inline-block px-2 py-0.5 mx-1 text-xs font-semibold bg-green-500/20 text-green-400 rounded-full border border-green-500/30">$1</span>');
             
-            return <span dangerouslySetInnerHTML={{ __html: formattedContent }} />;
-        }
-        
-        // Return original content if no time placeholders found
-        return content;
-    };
-    
-    const formatT=(content)=>{
-      if (!content) return '';
-        
-        // Only process if content contains time placeholders like [14:30]
-        const timePattern = /\[(\d{1,2}:\d{2})\]/g;
-        
-        if (timePattern.test(content)) {
-            const convertToAmPm = (time24) => {
-                const [hours, minutes] = time24.split(':');
-                let hour = parseInt(hours, 10);
-                const minute = minutes;
-                
-                const period = hour >= 12 ? 'PM' : 'AM';
-                hour = hour % 12 || 12;
-                
-                return `${hour}:${minute} ${period}`;
-            };
-            
-            let formattedContent = content.replace(/\[(\d{1,2}:\d{2})\]/g, (match, time24) => {
-                return convertToAmPm(time24);
-            });
-            return formattedContent;
-          }
+      return <span dangerouslySetInnerHTML={{ __html: formattedContent }} />;
     }
-    
-    // Format timestamp based on sender's timezone and display in current user's timezone
-    const formatMessageTime = (timestamp, senderTimezone, currentUserTimezone = 'UTC') => {
-        if (!timestamp) return '';
         
-        try {
-            // Convert the timestamp from sender's timezone to current user's timezone
-            const date = new Date(timestamp);
-            
-            // Format in current user's local timezone
-            const now = new Date();
-            const isToday = date.toDateString() === now.toDateString();
-            
-            if (isToday) {
-                return date.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                });
-            } else {
-                return date.toLocaleDateString('en-US', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric'
-                }) + ' ' + date.toLocaleTimeString('en-US', { 
-                    hour: '2-digit', 
-                    minute: '2-digit',
-                    hour12: false 
-                });
-            }
-        } catch (error) {
-            console.error('Error formatting message time:', error);
-            return '';
-        }
-    };
+    // Return original content if no time placeholders found
+    return content;
+  };
     
-    // Get current user's timezone (you might want to get this from user settings)
-    const getCurrentUserTimezone = () => {
-        // You can get this from user profile, localStorage, or default to browser timezone
-        return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-    };
+  const formatT = (content) => {
+    if (!content) return '';
+        
+    // Only process if content contains time placeholders like [14:30]
+    const timePattern = /\[(\d{1,2}:\d{2})\]/g;
+        
+    if (timePattern.test(content)) {
+      const convertToAmPm = (time24) => {
+        const [hours, minutes] = time24.split(':');
+        let hour = parseInt(hours, 10);
+        const minute = minutes;
+                
+        const period = hour >= 12 ? 'PM' : 'AM';
+        hour = hour % 12 || 12;
+                
+        return `${hour}:${minute} ${period}`;
+      };
+            
+      let formattedContent = content.replace(/\[(\d{1,2}:\d{2})\]/g, (match, time24) => {
+        return convertToAmPm(time24);
+      });
+      return formattedContent;
+    }
+  }
+    
+  // Format timestamp based on sender's timezone and display in current user's timezone
+  const formatMessageTime = (timestamp, senderTimezone, currentUserTimezone = 'UTC') => {
+    if (!timestamp) return '';
+        
+    try {
+      // Convert the timestamp from sender's timezone to current user's timezone
+      const date = new Date(timestamp);
+            
+      // Format in current user's local timezone
+      const now = new Date();
+      const isToday = date.toDateString() === now.toDateString();
+            
+      if (isToday) {
+        return date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      } else {
+        return date.toLocaleDateString('en-US', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }) + ' ' + date.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false
+        });
+      }
+    } catch (error) {
+      console.error('Error formatting message time:', error);
+      return '';
+    }
+  };
+    
+  // Get current user's timezone (you might want to get this from user settings)
+  const getCurrentUserTimezone = () => {
+    // You can get this from user profile, localStorage, or default to browser timezone
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  };
 
-    const startEditMessage = (message) => {
-        setEditingMessageId(message.id);
-        setEditingContent(message.content);
-    };
+  const startEditMessage = (message) => {
+    setEditingMessageId(message.id);
+    setEditingContent(message.content);
+  };
 
-    const cancelEditMessage = () => {
+  const cancelEditMessage = () => {
+    setEditingMessageId(null);
+    setEditingContent('');
+  };
+    
+  //! Update message function
+  const handleUpdate = (message) => {
+    startEditMessage(message);
+  };
+    
+  //! Delete message function
+  const handleDelete = (message) => {
+    deleteMessage(message);
+  };
+
+  const saveEditMessage = async (messageId) => {
+    if (!editingContent.trim()) return;
+
+    try {
+      const data = await fetch(
+        `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages/${messageId}`,
+        {
+          method: 'PUT',
+          body: JSON.stringify({
+            content: editingContent,
+            user_id: userId
+          }),
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (data.success && data.data.message) {
+        setMessages(prev =>
+          prev.map(msg => msg.id === messageId ? data.data.message : msg)
+        );
         setEditingMessageId(null);
         setEditingContent('');
-    };
-    
-    //! Update message function
-    const handleUpdate = (message) => {
-      startEditMessage(message);
-    };
-    
-    //! Delete message function
-    const handleDelete = (message) => {
-      deleteMessage(message);
-    };
-
-    const saveEditMessage = async (messageId) => {
-        if (!editingContent.trim()) return;
-
-        try {
-            const data = await fetch(
-                `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages/${messageId}`,
-                {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        content: editingContent,
-                        user_id: userId
-                    }),
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            if (data.success && data.data.message) {
-                setMessages(prev => 
-                    prev.map(msg => msg.id === messageId ? data.data.message : msg)
-                );
-                setEditingMessageId(null);
-                setEditingContent('');
-            }
-        } catch (error) {
-            console.error('Error editing message:', error);
-        }
-    };
-
-    const getFileIcon = (fileType) => {
-        if (fileType?.startsWith('image/')) return <Image size={20} className="text-blue-400" />;
-        if (fileType === 'application/pdf') return <FileText size={20} className="text-red-400" />;
-        return <File size={20} className="text-gray-400" />;
-    };
-
-    const formatFileSize = (bytes) => {
-        if (!bytes) return '0 B';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
-    };
-
-    //! Whiteboard
-    const WhiteboardModal = () => {
-      
-      if (!showWhiteboardModal || !selectedConversation || !userId || !wsClient) {
-        // console.log('WhiteboardModal not showing due to missing:', {
-        //     showWhiteboardModal,
-        //     selectedConversation: !!selectedConversation,
-        //     userId,
-        //     wsClient: !!wsClient
-        // });
-        return null;
       }
+    } catch (error) {
+      console.error('Error editing message:', error);
+    }
+  };
+
+  const getFileIcon = (fileType) => {
+    if (fileType?.startsWith('image/')) return <Image size={20} className="text-blue-400" />;
+    if (fileType === 'application/pdf') return <FileText size={20} className="text-red-400" />;
+    return <File size={20} className="text-gray-400" />;
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  //! Whiteboard
+  const WhiteboardModal = () => {
       
-      const handleBackgroundClick = (e) => {
-        // Check if clicking on the background overlay
-        if (e.target.className?.includes && e.target.className.includes('fixed inset-0')) {
-          setShowWhiteboardModal(false);
-        }
-      };
-      return (
-        <div 
-          style={{zIndex: 99999999999999}}
-          className="fixed inset-0  bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center"
-          onClick={handleBackgroundClick}
+    if (!showWhiteboardModal || !selectedConversation || !userId || !wsClient) {
+      // console.log('WhiteboardModal not showing due to missing:', {
+      //     showWhiteboardModal,
+      //     selectedConversation: !!selectedConversation,
+      //     userId,
+      //     wsClient: !!wsClient
+      // });
+      return null;
+    }
+      
+    const handleBackgroundClick = (e) => {
+      // Check if clicking on the background overlay
+      if (e.target.className?.includes && e.target.className.includes('fixed inset-0')) {
+        setShowWhiteboardModal(false);
+      }
+    };
+    return (
+      <div
+        style={{ zIndex: 99999999999999 }}
+        className="fixed inset-0  bg-black/90 backdrop-blur-xl flex flex-col items-center justify-center"
+        onClick={handleBackgroundClick}
+      >
+        {/* Close Button */}
+        <button
+          onClick={() => setShowWhiteboardModal(false)}
+          className="absolute top-4 right-4 z-50 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 group"
         >
-          {/* Close Button */}
-          <button
-            onClick={() => setShowWhiteboardModal(false)}
-            className="absolute top-4 right-4 z-50 p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 group"
-          >
-            <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
-          </button>
+          <X size={24} className="group-hover:rotate-90 transition-transform duration-200" />
+        </button>
           
-          {/* Title */}
-          <div className="absolute top-4 left-4 z-50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
-                </span>
-              </div>
-              <div>
-                <h2 className="text-white font-bold text-xl">
-                  Whiteboard: {getConversationName(selectedConversation)}
-                </h2>
-                <p className="text-gray-400 text-sm">
-                  Real-time collaborative drawing with {selectedConversation.participants?.length} participants
-                </p>
-              </div>
+        {/* Title */}
+        <div className="absolute top-4 left-4 z-50">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">
+                {getConversationName(selectedConversation).split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+              </span>
             </div>
-          </div>
-          
-          {/* Painting Board */}
-          <div className="w-full h-full pt-16 pb-4 px-4">
-            <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-800 bg-[#0f0f0f]">
-              <PaintingBoard 
-                conversationId={selectedConversation.id}
-                currentUserId={userId}
-                wsClient={wsClient}
-              />
+            <div>
+              <h2 className="text-white font-bold text-xl">
+                Whiteboard: {getConversationName(selectedConversation)}
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Real-time collaborative drawing with {selectedConversation.participants?.length} participants
+              </p>
             </div>
-          </div>
-          
-          {/* Quick Actions Bar */}
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-gray-800">
-            <button
-              onClick={() => setShowWhiteboardModal(false)}
-              className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 flex items-center gap-2"
-            >
-              <X size={16} />
-              <span>Close</span>
-            </button>
-            <button
-              onClick={() => {
-                // You could add share functionality here
-                navigator.clipboard.writeText(window.location.href);
-                toast.success('Whiteboard link copied!');
-              }}
-              className="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 flex items-center gap-2"
-            >
-              <ShareIcon size={16} />
-              <span>Share</span>
-            </button>
           </div>
         </div>
-      );
-    };
+          
+        {/* Painting Board */}
+        <div className="w-full h-full pt-16 pb-4 px-4">
+          <div className="w-full h-full rounded-2xl overflow-hidden border border-gray-800 bg-[#0f0f0f]">
+            <PaintingBoard
+              conversationId={selectedConversation.id}
+              currentUserId={userId}
+              wsClient={wsClient}
+            />
+          </div>
+        </div>
+          
+        {/* Quick Actions Bar */}
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 p-2 bg-gray-900/80 backdrop-blur-lg rounded-2xl border border-gray-800">
+          <button
+            onClick={() => setShowWhiteboardModal(false)}
+            className="px-4 py-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-300 transition-all duration-200 flex items-center gap-2"
+          >
+            <X size={16} />
+            <span>Close</span>
+          </button>
+          <button
+            onClick={() => {
+              // You could add share functionality here
+              navigator.clipboard.writeText(window.location.href);
+              toast.success('Whiteboard link copied!');
+            }}
+            className="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-all duration-200 flex items-center gap-2"
+          >
+            <ShareIcon size={16} />
+            <span>Share</span>
+          </button>
+        </div>
+      </div>
+    );
+  };
     
     
   return (
@@ -1993,8 +1986,8 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                       <div
                         key={u.id}
                         className={`flex items-center p-4 cursor-pointer transition-all duration-300 border-b border-gray-800 last:border-b-0 hover:bg-gray-900 group ${selectedParticipants.some(p => p.id === u.id)
-                            ? 'bg-[#c1ff72]/10 border-l-4 border-l-[#c1ff72]'
-                            : ''
+                          ? 'bg-[#c1ff72]/10 border-l-4 border-l-[#c1ff72]'
+                          : ''
                           }`}
                         onClick={() => {
                           if (conversationType === 'direct') {
@@ -2009,11 +2002,8 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                             className="rounded-full h-full w-full"
                             alt="user"
                             src={
-                              u?.profilePicture
-                              //   ? u.profilePicture
-                              //     ? u.profilePicture
-                              //     : `${BASE_URL}/${u.profilePicture}`
-                              //   : "/default-avatar.png" // fallback image
+                              u?.profilePicture ? `${API_BASE_URL}/${u.profilePicture}`
+                                : "/default-user.jpeg"
                             }
                           />
                         </div>
@@ -2022,9 +2012,12 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                           <div className="text-sm text-gray-400">{u.email}</div>
                         </div>
                         <div className="text-xs px-3 py-1 flex flex-col">
-                          <div className="text-xs w-30 text-black bg-white px-3 flex items-center justify-center rounded-full mb-2">
-                            {u.timezone ? u.timezone : <small style={{ fontSize: '10px' }}>No timezone</small>}
-                          </div>
+                          {u.timezone && u.timezone === getCurrentUserTimezone() && (
+                            <div className="text-xs w-30 text-black bg-white px-3 flex items-center justify-center rounded-full mb-2">
+
+                              {u.timezone}
+                            </div>
+                          )}
                           <div className="text-xs w-30 text-black bg-white px-3 flex items-center justify-center rounded-full">
                             {u.role ? u.role : <small style={{ fontSize: '10px' }}>No role</small>}
                           </div>
@@ -2036,7 +2029,23 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
                             
             </div>
-
+            <div className="p-6 border-t border-gray-800">
+            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20 p-4">
+              <h3 className="text-white font-semibold mb-2">Discover New People</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                Expand your network and connect with amazing people.
+              </p>
+              <a
+                href="/discover-users"
+                className="inline-flex items-center justify-center w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25"
+              >
+                Explore Users
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </a>
+            </div>
+          </div>
             <div className="sticky bottom-0 bg-[#1a1a1a]/95 backdrop-blur-xl border-t border-gray-800 p-6 rounded-b-2xl flex gap-3 justify-end">
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -2052,7 +2061,9 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                 Create Conversation
               </button>
             </div>
+            
           </div>
+          
         </div>
       )}
             
@@ -2118,7 +2129,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                     <img
                       className="rounded-full h-full w-full object-cover"
                       alt="user"
-                      src={user?.profile?.picture || "/default-avatar.png"}
+                      src={user?.profile?.picture || "/default-user.jpeg"}
                     />
                   </div>
                   <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-[#0f0f0f]"></div>
@@ -2179,22 +2190,22 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                     <div
                       key={conversation.id}
                       className={`flex items-center p-3 cursor-pointer transition-all duration-200 rounded-lg hover:bg-gray-900 ${selectedConversation?.id === conversation.id
-                          ? 'bg-gray-900 border-l-4 border-l-blue-300'
-                          : ''
+                        ? 'bg-gray-900 border-l-4 border-l-blue-300'
+                        : ''
                         }`}
                       onClick={() => handleSelectConversation(conversation)}
                       onMouseEnter={() => setHoveredConversationId(conversation.id)}
                       onMouseLeave={() => setHoveredConversationId(null)}
                     >
                       <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${selectedConversation?.id === conversation.id
-                          ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
-                          : 'bg-gray-800 text-gray-300'
+                        ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                        : 'bg-gray-800 text-gray-300'
                         }`}>
                         <img
                           className="rounded-full border border-blue-300 h-full w-full object-cover"
                           alt="user"
                           src={
-                            conversation.participants.find((u) => u.id !== userId)?.profilePicture || "/default-avatar.png"
+                            conversation.participants.find((u) => u.id !== userId)?.profilePicture || "/default-user.jpeg"
                           }
                         />
                       </div>
@@ -2228,7 +2239,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                                   style={{ zIndex: 3 - index }} // Ensure proper stacking
                                 >
                                   <AvatarImage
-                                    src={participant.profilePicture || "/default-avatar.png"}
+                                    src={participant.profilePicture || "/default-user.jpeg"}
                                     alt={`${participant.firstName} ${participant.lastName}`}
                                     className="object-cover"
                                   />
@@ -2249,7 +2260,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                             {conversation.participants.filter(p => p.id !== userId).length === 0 && (
                               <Avatar className="size-6 border-2 border-[#0f0f0f]">
                                 <AvatarImage
-                                  src={user?.profile?.picture || "/default-avatar.png"}
+                                  src={user?.profile?.picture || "/default-user.jpeg"}
                                   alt="You"
                                 />
                                 <AvatarFallback>YOU</AvatarFallback>
@@ -2387,7 +2398,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                         <img
                           className="rounded-full h-full w-full object-cover"
                           alt="user"
-                          src={user?.profile?.picture || "/default-avatar.png"}
+                          src={user?.profile?.picture || "/default-user.jpeg"}
                         />
                       </div>
                     </div>
@@ -2426,8 +2437,8 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                   <div
                     key={conversation.id}
                     className={`flex items-center p-3 cursor-pointer transition-all duration-200 border-b border-gray-900 hover:bg-gray-900 ${selectedConversation?.id === conversation.id
-                        ? 'bg-gray-900 border-l-4 border-l-blue-300'
-                        : ''
+                      ? 'bg-gray-900 border-l-4 border-l-blue-300'
+                      : ''
                       }`}
                     onClick={() => {
                       handleSelectConversation(conversation);
@@ -2435,14 +2446,14 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                     }}
                   >
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm mr-3 ${selectedConversation?.id === conversation.id
-                        ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
-                        : 'bg-gray-800 text-gray-300'
+                      ? 'bg-linear-to-br from-blue-300 to-purple-300 text-black'
+                      : 'bg-gray-800 text-gray-300'
                       }`}>
                       <img
                         className="rounded-full border border-blue-300 h-full w-full object-cover"
                         alt="user"
                         src={
-                          conversation.participants.find((u) => u.id !== userId)?.profilePicture || "/default-avatar.png"
+                          conversation.participants.find((u) => u.id !== userId)?.profilePicture || "/default-user.jpeg"
                         }
                       />
                     </div>
@@ -2635,15 +2646,15 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                           ) : (
                             <div className={`${message.sender_id === userId ? 'flex-row-reverse flex gap-2' : 'flex gap-2'}`}>
                               <Avatar className="size-8 md:size-10 border border-blue-400 flex-shrink-0">
-                                <AvatarImage src={message?.sender?.profilePicture} alt="@shadcn" />
+                                <AvatarImage src={message?.sender?.profilePicture || "/default-user.jpeg"} alt="@shadcn" />
                                 <AvatarFallback>
                                   {(message.sender?.firstName || message.sender?.first_name)?.[0]}
                                   {(message.sender?.lastName || message.sender?.last_name)?.[0]}
                                 </AvatarFallback>
                               </Avatar>
                               <div className={`px-4 py-3 rounded-2xl shadow-lg max-w-full ${message.sender_id === userId
-                                  ? 'bg-white text-black'
-                                  : 'bg-[#1a1a1a] text-white border border-gray-800'
+                                ? 'bg-white text-black'
+                                : 'bg-[#1a1a1a] text-white border border-gray-800'
                                 }`}>
     
                                 {message.file_url && (
@@ -2841,7 +2852,7 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
                 </div>
             )} */}
     </div>
-  );
+  )
 };
 
 export default ChatComponent;

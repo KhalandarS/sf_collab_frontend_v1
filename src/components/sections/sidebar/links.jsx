@@ -2,6 +2,7 @@ import { Badge, BrainCircuit, BriefcaseBusiness, PlusSquare, Rocket } from "luci
 import { FaUsersViewfinder } from "react-icons/fa6";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
+import { MdAutoAwesome } from "react-icons/md";
 
 export function createLinks(unreadMessagesCount) {
   console.log("Creating links with unreadMessagesCount:", unreadMessagesCount);
@@ -30,19 +31,19 @@ export function createLinks(unreadMessagesCount) {
       href: "/knowledge",
       label: "Knowledge resources"
     },
-    {
-      id: 5,
-      icon: <PlusSquare size={22} />,
-      href: "/posts",
-      label: "Posts"
-    }
     // {
     //   id: 5,
-    //   icon: <MdAutoAwesome size={23}/>,
-    //   href: "/business-plan",
-    //   label: "A.I Business plan generator"
-    // }
-    ,
+    //   icon: <PlusSquare size={22} />,
+    //   href: "/posts",
+    //   label: "Posts"
+    // },
+    {
+      id: 5,
+      icon: <MdAutoAwesome size={23}/>,
+      href: "/business-plan",
+      label: "A.I Business plan generator"
+    },
+    
     {
       id: 6,
       icon: <IoChatbubbles size={23}/>,

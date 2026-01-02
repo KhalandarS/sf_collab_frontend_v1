@@ -207,7 +207,7 @@ import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { hasPermission } from "../utils/permissionCheck"; // Import permission check utility
 import { useActivityHeartbeat } from "./useActivityHearbeat";
-import { waitlistAPI } from "@/components/waitlist/components/lib/api";
+import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { toast } from "react-toastify";
 
 const Layout = () => {
@@ -369,14 +369,14 @@ const Layout = () => {
         )}
         
         {/* Main Content Area */}
-        <div className="text-white relative flex flex-col w-full max-sm:px-4 max-sm:py-0 overflow-hidden pb-16 sm:pb-0">
+        <div className="text-white relative flex flex-col items-center w-full max-sm:px-4 max-sm:py-0 overflow-hidden pb-16 sm:pb-0">
           {/* Options Panel - Hidden on root path */}
           {!isRootPath && (
             <div
               ref={optionsRef}
               onMouseEnter={handleOptionsEnter}
               onMouseLeave={handleOptionsLeave}
-              className={`transition-all duration-300 px-4 absolute z-50 w-full flex justify-center top-0 ${
+              className={`transition-all duration-300 px-4 absolute z-50  m-auto flex justify-center top-0 ${
                 isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
               }`}
               style={{ zIndex: 99999999 }}

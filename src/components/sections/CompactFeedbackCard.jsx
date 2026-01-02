@@ -23,7 +23,7 @@ import { Send, AlertCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { FcAbout } from "react-icons/fc";
 import { useSelector } from 'react-redux';
-import { waitlistAPI } from '../waitlist/components/lib/api';
+import { waitlistAPI } from '../../utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { API_BASE_URL } from '@/utils/config';
@@ -58,7 +58,7 @@ const CompactFeedbackCard = () => {
     console.log(response);
     if (response.status === 201) {
       toast.success('Thank you for your feedback!');
-      waitlistAPI.addPoints({ userId: user.id, category: 'contribution' }, access_token);
+      // waitlistAPI.addPoints({ userId: user.id, category: 'contribution' }, access_token);
       setFeedbackContent('');
       e.target.reset();
       setIsOpen(false);

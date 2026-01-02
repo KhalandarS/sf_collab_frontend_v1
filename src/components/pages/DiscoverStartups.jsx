@@ -197,7 +197,7 @@ const DiscoverStartups = () => {
   return (
     <div className="min-h-screen">
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
+      <div className="w-fullmx-auto px-4 sm:px-6 py-2">
         {/* Navigation */}
         <motion.nav 
         initial={{ y: -20, opacity: 0 }}
@@ -239,7 +239,6 @@ const DiscoverStartups = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          style={{minHeight:'70vh'}}
           className=" text-center  mb-2 pb-2 relative overflow-hidden"
         >
           {/* Background Elements */}
@@ -332,7 +331,7 @@ const DiscoverStartups = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8 max-w-2xl mx-auto"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-2xl mx-auto"
           >
             <div className="text-center">
               <div className="text-2xl font-bold text-white mb-1">1.2K+</div>
@@ -456,7 +455,7 @@ const DiscoverStartups = () => {
             </div>
         </motion.div>
 
-        <div className="flex relative  gap-8">
+        <div className="flex flex-wrap relative  gap-8">
         
           {/* Startup Grid */}
           <div className="flex-1">
@@ -499,7 +498,7 @@ const DiscoverStartups = () => {
               ) : (
                 <motion.div 
                   layout
-                  className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+                  className="flex flex-wrap gap-6"
                 >
                   {startups.map((startup, index) => (
                     <StartupCard
@@ -853,14 +852,15 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ delay: index * 0.05 }}
+    className="flex-1"
   >
     <Card 
-      className="group p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"
+      className="group h-full flex flex-col p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-linear-to-br from-blue-500/0 via-blue-600/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:via-blue-600/5 group-hover:to-purple-500/5 transition-all duration-300" />
       
-      <div className="relative">
+      <div className="relative flex flex-col flex-1">
         <div className="flex items-start gap-4 mb-4">
           {startup.logo_url ? (
             <motion.div 
@@ -902,7 +902,7 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
           </Badge>
         </div>
 
-        <p className="text-gray-300 text-sm mb-4 line-clamp-2">
+        <p className="text-gray-300 text-sm mb-4 line-clamp-2 flex-1">
           {startup.description || "No description provided"}
         </p>
 

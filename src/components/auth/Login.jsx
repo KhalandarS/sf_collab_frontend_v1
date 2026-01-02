@@ -315,7 +315,6 @@ export default function Login() {
         
         {/* Right side - Login Form */}
         <div style={{ 
-        height: '800px', 
         position: 'relative', 
         overflow: 'hidden',
         backgroundColor: '#060010',
@@ -338,7 +337,7 @@ export default function Login() {
           el.style.setProperty('--my', '-9999px');
         }
       }}
-      className="w-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
+      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
         <img
           ref={revealImgRef}
           src="/shiny_logo.png"

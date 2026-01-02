@@ -2,11 +2,13 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Camera, Edit, Settings, MapPin, Calendar, Mail, Sparkles, Trophy } from 'lucide-react';
+import './background.css';
+import { Link } from 'react-router-dom';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 
 const ProfileHeader = ({ 
-  userData, 
+  user, 
   level, 
   levelProgress, 
   xpToNextLevel, 
@@ -52,11 +54,11 @@ const ProfileHeader = ({
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-black/80 to-gray-900/80 backdrop-blur-xl" />
 
       {/* Cover Photo */}
-      <div className="relative h-48">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20" />
+      <div className="relative h-48 dashboard-bg">
+        {/* <div className="absolute inset-0 bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20" />
         <button className="absolute top-4 right-4 p-2 bg-black/50 rounded-lg hover:bg-black/70 transition-colors backdrop-blur-sm">
           <Camera className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
 
       {/* Profile Info */}
@@ -65,22 +67,23 @@ const ProfileHeader = ({
         <div className="relative -top-12">
           <motion.div 
             whileHover={{ scale: 1.05 }}
-            className="relative w-32 h-32 rounded-2xl border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 overflow-hidden group/picture"
+            className="relative w-32 h-32  rounded-full border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
           >
             <img 
-              src={`${API_BASE_URL}/users/avatars/${userData?.profile?.picture?.replace(/^\/?uploads\//, "")}`}
-              alt={userData?.firstName}
-              className="w-full h-full object-cover group-hover/picture:scale-110 transition-transform duration-300"
+              src={user?.profile?.picture ?
+                `${API_BASE_URL}/users/avatars/${user?.profile?.picture?.replace(/^\/?uploads\//, "")}` : "/default-user.jpeg"}
+              alt={user?.firstName}
+              className="w-full h-full object-cover group-hover/picture:scale-110 rounded-full transition-transform duration-300"
             />
-            <motion.button 
+            {/* <motion.button 
               whileHover={{ scale: 1.1 }}
               className="absolute top-2 right-2 p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all backdrop-blur-sm"
             >
               <Camera className="w-3 h-3" />
-            </motion.button>
+            </motion.button> */}
             
             {/* Level Badge */}
-            <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full border-2 border-gray-800">
+            <div className="absolute z-100 -bottom-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full border-2 border-gray-800">
               <Trophy className="w-3 h-3 inline mr-1" />
               Lvl {level}
             </div>
@@ -92,7 +95,7 @@ const ProfileHeader = ({
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-2">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-                {userData.firstName} {userData.lastName}
+                {user?.firstName} {user?.lastName}
               </h1>
               <motion.div 
                 whileHover={{ scale: 1.05 }}
@@ -104,7 +107,7 @@ const ProfileHeader = ({
             </div>
             
             <p className="text-gray-300 mb-4 max-w-2xl">
-              {userData.profile.bio}
+              {user?.profile.bio}
             </p>
 
             {/* User Details */}
@@ -114,7 +117,12 @@ const ProfileHeader = ({
                 className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
               >
                 <MapPin className="w-4 h-4 text-blue-400" />
-                <span className="text-gray-300">{userData.profile.city}, {userData.profile.country}</span>
+                {user?.profile?.city ?
+                  
+                  < span className="text-gray-300">{user?.profile.city}, {user?.profile.country}</span>
+                  :
+                  <span className="text-gray-500">Location not set</span>
+                }
               </motion.div>
               
               <motion.div 
@@ -122,7 +130,7 @@ const ProfileHeader = ({
                 className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
               >
                 <Mail className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-300">{userData.email}</span>
+                <span className="text-gray-300">{user?.email}</span>
               </motion.div>
               
               <motion.div 
@@ -130,23 +138,44 @@ const ProfileHeader = ({
                 className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
               >
                 <Calendar className="w-4 h-4 text-green-400" />
-                <span className="text-gray-300">Joined {new Date(userData.createdAt).toLocaleDateString()}</span>
+                <span className="text-gray-300">Joined {new Date(user?.createdAt).toLocaleDateString()}</span>
               </motion.div>
               
-              {userData.profile.company && (
+              {user?.profile.company && (
                 <motion.div 
                   whileHover={{ scale: 1.05 }}
                   className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
                 >
                   <Sparkles className="w-4 h-4 text-yellow-400" />
-                  <span className="text-gray-300">{userData.profile.company}</span>
+                  <span className="text-gray-300">{user?.profile.company}</span>
                 </motion.div>
               )}
+              {(() => {
+                const emptyFields = [
+                  !user?.profile?.bio,
+                  !user?.profile?.city,
+                  !user?.profile?.country,
+                  !user?.profile?.company,
+                ].filter(Boolean).length;
+                
+                return emptyFields >= 3 && (
+                  
+                  <motion.div 
+                    whileHover={{ scale: 1.05 }}
+                    onClick={onSettingsClick}
+                    className="flex items-center gap-2 px-3 py-2 bg-orange-500/20 rounded-lg backdrop-blur-sm border border-orange-500/50"
+                  >
+                    <Sparkles className="w-4 h-4 text-red-400" />
+                    <span className="text-red-300">Complete your profile</span>
+                    </motion.div>
+
+                );
+              })()}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-4">
             {/* <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -163,7 +192,7 @@ const ProfileHeader = ({
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
             >
               <Settings className="w-4 h-4" />
-              Settings
+              Edit Profile
             </motion.button>
           </div>
         </div>

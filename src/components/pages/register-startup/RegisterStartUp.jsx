@@ -2,16 +2,16 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Upload, Plus, X, ChevronRight, Minus,ChevronLeft, FileText, Building2, MapPin, Globe, Users, Rocket, CheckCircle, Image, AlertCircle, User, Mail, Eye, Star, Target, Trophy, Zap, Lightbulb, TrendingUp, DollarSign, PieChart, Target as TargetIcon, Calendar, BarChart3, InfoIcon, Code } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Badge } from "../ui/badge";
-import { Progress } from "../ui/progress";
-import { Alert, AlertDescription } from "../ui/alert";
-import { Label } from "../ui/label";
-import { Separator } from "../ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../ui/card";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Textarea } from "../../ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../ui/select";
+import { Badge } from "../../ui/badge";
+import { Progress } from "../../ui/progress";
+import { Alert, AlertDescription } from "../../ui/alert";
+import { Label } from "../../ui/label";
+import { Separator } from "../../ui/separator";
 import { useDispatch, useSelector } from "react-redux";
 
 import {
@@ -19,7 +19,10 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../ui/tooltip"; 
+} from "../../ui/tooltip"; 
+import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
+import { toast } from "react-toastify";
+import { API_URL } from "@/utils/config";
 export default function RegisterStartUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -44,12 +47,24 @@ export default function RegisterStartUp() {
     
     tech_stack: []
   });
+  useEffect(() => {
+    // Retrieve form data from local storage
+    const savedFormData = localStorage.getItem('formData');
+    if (savedFormData) {
+      setFormData(JSON.parse(savedFormData));
+    }
+  }, []);
 
+  useEffect(() => {
+    // Save form data to local storage whenever it changes
+    localStorage.setItem('formData', JSON.stringify(formData));
+  }, [formData]);
+
+// ...existing code...
   const [roles, setRoles] = useState([{ title: "", roleType: "Full Time" }]);
   const [logoFile, setLogoFile] = useState(null);
   const [bannerFile, setBannerFile] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notification, setNotification] = useState({ show: false, type: '', message: '' });
   const [xpPoints, setXpPoints] = useState(0);
   const [techStack, setTechStack] = useState([]);
   const [techInput, setTechInput] = useState("");
@@ -86,9 +101,9 @@ export default function RegisterStartUp() {
       tooltip: "Just an idea on paper. No product built yet. Looking for co-founders and initial validation."
     },
     { 
-      value: "seed", 
+      value: "validation", 
       icon: <img src="/seed.png" className="w-14" alt="Initial funding"/>, 
-      label: "Seed", 
+      label: "Validation", 
       description: "Initial funding",
       tooltip: "Secured initial funding. Building MVP. Small team forming. Early customer validation."
     },
@@ -159,11 +174,6 @@ export default function RegisterStartUp() {
     setUploadedDocuments(prev => prev.filter((_, i) => i !== index));
   };
   
-  //! Show notification
-  const showNotification = (type, message) => {
-    setNotification({ show: true, type, message });
-    setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000);
-  };
 
   //! Get current user data from localStorage
   useEffect(() => {
@@ -191,56 +201,57 @@ export default function RegisterStartUp() {
     switch (step) {
       case 1:
         if (!formData.name.trim()) {
-          showNotification('error', 'Please enter a startup name');
+          
+          toast.error('Please enter a startup name');
           return false;
         }
         if (!formData.industry) {
-          showNotification('error', 'Please select an industry');
+          toast.error('Please select an industry');
           return false;
         }
         if (!formData.location.trim()) {
-          showNotification('error', 'Please enter a location');
+          toast.error('Please enter a location');
           return false;
         }
         return true;
       case 2:
         if (!formData.creator_first_name.trim()) {
-          showNotification('error', 'Please enter your first name');
+          toast.error('Please enter your first name');
           return false;
         }
         if (!formData.creator_last_name.trim()) {
-          showNotification('error', 'Please enter your last name');
+          toast.error('Please enter your last name');
           return false;
         }
         if (!formData.creator_email.trim()) {
-          showNotification('error', 'Please enter your email');
+          toast.error('Please enter your email');
           return false;
         }
         return true;
       case 3:
         if (!formData.description.trim()) {
-          showNotification('error', 'Please enter a startup description');
+          toast.error('Please enter a startup description');
           return false;
         }
         if (!formData.stage) {
-          showNotification('error', 'Please select a startup stage');
+          toast.error('Please select a startup stage');
           return false;
         }
         return true;
       case 4:
         // Financial step - all fields are optional but should be validated
         if (formData.burn_rate < 0) {
-          showNotification('error', 'Burn rate cannot be negative');
+          toast.error('Burn rate cannot be negative');
           return false;
         }
         if (formData.runway_months < 0) {
-          showNotification('error', 'Runway months cannot be negative');
+          toast.error('Runway months cannot be negative');
           return false;
         }
         return true;
       case 5:
         if (!logoFile) {
-          showNotification('error', 'Please upload a company logo');
+          toast.error('Please upload a company logo');
           return false;
         }
         return true;
@@ -250,12 +261,12 @@ export default function RegisterStartUp() {
       case 7:
         const invalidRoles = roles.filter(role => !role.title.trim() || !role.roleType);
         if (invalidRoles.length > 0) {
-          showNotification('error', 'Please fill in all role titles and types');
+          toast.error('Please fill in all role titles and types');
           return false;
         }
         
         if (techStack.length === 0) {
-          showNotification('warning', 'Consider adding your tech stack to attract relevant developers');
+          toast.warning('Consider adding your tech stack to attract relevant developers');
           // Don't return false - let them proceed without tech stack
         }
         
@@ -280,7 +291,7 @@ export default function RegisterStartUp() {
     if (roles.length < 10) {
       setRoles([...roles, { title: "", roleType: "Full Time" }]);
     } else {
-      showNotification('warning', 'You can add up to 10 roles maximum');
+      toast.warning('You can add up to 10 roles maximum');
     }
   };
 
@@ -374,7 +385,7 @@ export default function RegisterStartUp() {
         submitData.append("documents", doc);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:5000/api'}/startups/register`, {
+      const response = await fetch(`${API_URL}/startups/register`, {
         method: "POST",
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -386,7 +397,6 @@ export default function RegisterStartUp() {
       const data = await response.json();
 
       if (response.ok) {
-        showNotification('success', 'Your startup has been registered successfully!');
         setXpPoints(1200); // Complete all XP
         setCurrentStep(9); // Move to completion step
         setFormData({
@@ -411,11 +421,15 @@ export default function RegisterStartUp() {
           
           tech_stack: []
         })
+        localStorage.removeItem('formData');
+        toast.success("Startup registered successfully!");
+        const response = await waitlistAPI.addPoints({ userId: creator_id, category: 'new_startup' }, token);
+        toast.success(`You earned ${response.points} points for registering your startup!`);
       } else {
         throw new Error(data.error || data.message || "Registration failed");
       }
-    } catch (error) {
-      showNotification('error', error.message);
+    } catch{
+      toast.error('Internal server error. Please try again later.');
     } finally {
       setIsSubmitting(false);
     }
@@ -623,7 +637,9 @@ export default function RegisterStartUp() {
     <div className="flex items-center justify-center mb-8">
       {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
         <div key={step} className="flex items-center">
-          <div className={`flex flex-col items-center ${step < currentStep ? 'text-blue-400' : step === currentStep ? 'text-white' : 'text-gray-500'}`}>
+          <div
+            onClick={() => currentStep >= step && setCurrentStep(step)}
+            className={`flex flex-col cursor-pointer items-center ${step < currentStep ? 'text-blue-400' : step === currentStep ? 'text-white' : 'text-gray-500'}`}>
             <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
               step < currentStep 
                 ? 'bg-blue-400 border-blue-400 text-white shadow-lg shadow-blue-400/30' 
@@ -637,7 +653,7 @@ export default function RegisterStartUp() {
                 <span className="font-bold">{step}</span>
               )}
             </div>
-            <span className="text-xs mt-2 font-medium capitalize">
+            <span className="text-xs mt-2 font-medium capitalize" >
               {step === 1 && 'Company'}
               {step === 2 && 'Founder'}
               {step === 3 && 'Details'}
@@ -670,44 +686,10 @@ export default function RegisterStartUp() {
     }).format(amount);
   };
 
-  const Notification = () => {
-    if (!notification.show) return null;
-
-    const styles = {
-      error: 'border-red-400/30 bg-red-500/10 text-red-200 backdrop-blur-sm',
-      success: 'border-green-400/30 bg-green-500/10 text-green-200 backdrop-blur-sm',
-      warning: 'border-yellow-400/30 bg-yellow-500/10 text-yellow-200 backdrop-blur-sm'
-    };
-
-    const icons = {
-      error: <AlertCircle size={20} />,
-      success: <CheckCircle size={20} />,
-      warning: <AlertCircle size={20} />
-    };
-
-    return (
-      <div style={{zIndex:9999999}} className={`w-1/2 fixed top-20 right-4 z-50 ${styles[notification.type]}`}>
-        <Alert className="w-full border-none bg-transparent">
-          <div className="w-full flex items-center gap-3">
-            {icons[notification.type]}
-            <AlertDescription className="font-medium w-full">{notification.message}</AlertDescription>
-            <button 
-              onClick={() => setNotification({ show: false, type: '', message: '' })}
-              className="ml-2 hover:opacity-70 transition-opacity"
-            >
-              <X size={16} />
-            </button>
-          </div>
-        </Alert>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen">
-      <Notification />
 
-      <div className="container mx-auto px-0 py-8">
+      <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 bg-blue-400/10 border border-blue-400/30 rounded-full px-4 py-2 mb-4">
@@ -726,7 +708,7 @@ export default function RegisterStartUp() {
         <StepIndicator />
 
         {/* Three-Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full mx-auto">
           {/* Left Sidebar - Context & Benefits */}
           <div className="lg:col-span-3">
             <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm h-full">

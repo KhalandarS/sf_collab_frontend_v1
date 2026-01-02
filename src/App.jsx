@@ -10,7 +10,7 @@ import Preferences from "./components/pages/Preferences.jsx";
 import AccountandSecurity from "./components/pages/AccountandSecurity.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
-import RegisterStartUp from "./components/pages/RegisterStartUp.jsx";
+import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
 import HomedetailsPage from "./components/detailspage/HomedetailsPage.jsx";
 import Idationdetails from "./components/detailspage/Idationdetails.jsx";
 import Knowledgedetails from "./components/detailspage/Knowledgedetails.jsx";
@@ -41,7 +41,7 @@ import PrivacyPolicy from "./components/pages/termsAndConditions/legalPrivacy.js
 import DataCollection from "./components/pages/termsAndConditions/legalDataCollection.jsx";
 import LandingPage from "./components/landing-page/pages/Home.jsx";
 import AboutPage from "./components/landing-page/pages/About.jsx";
-import TeamPage from "./components/landing-page/pages/TeamPage.jsx";
+import TeamPage from "./components/landing-page/pages/team/TeamPage.jsx";
 import ContactPage from "./components/landing-page/pages/Contact.jsx";
 import StartupPage from "./components/landing-page/pages/StartupPage.jsx";
 import ProductsPage from "./components/landing-page/pages/Products.jsx";
@@ -56,6 +56,9 @@ import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
 import { ToastContainer } from "react-toastify";
 import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";
 import AdminPage from "./components/pages/admin/admin.jsx";
+import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
+import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
+import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 
 function App() {
 
@@ -73,6 +76,7 @@ function App() {
       {/* Public Authentication Routes */}
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<SignUp />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       {/* Refer and Waitlist */}
       
       {/*   const navlink = [
@@ -109,6 +113,7 @@ function App() {
         <Route path="waitlist-terms" element={<WaitlistTerms />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="refer" element={<ReferPage />} />
+        <Route path="join-sf" element={<JoinSF />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />
@@ -139,7 +144,7 @@ function App() {
         <Route path="qwen-chat" element={<QwenChat />} />
         <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}
-        <Route path="discover-users" element={<ConnectWithUsers />} />
+        <Route path="discover-users" element={<DiscoverUsers />} />
 
         <Route path="user-profile" element={<Profile />} />
         <Route path="saved" element={<SavedList />} />

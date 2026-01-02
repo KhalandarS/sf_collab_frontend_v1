@@ -150,20 +150,20 @@ const Navbar = () => {
 
           {/* Right Video */}
           {/* Right Video */}
-{/* Right Video */}
-<div className="w-[65%] h-full hidden md:flex lg:flex items-center justify-end pr-10">
-  <div className="relative w-full max-w-[800px] h-[450px] rounded-2xl overflow-hidden bg-black shadow-xl">
-    <video
-      muted
-      autoPlay
-      loop
-      playsInline
-      className="absolute inset-0 w-full h-full object-contain"
-    >
-      <source src={heroAssest.herovideoOne} type="video/mp4" />
-    </video>
-  </div>
-</div>
+      {/* Right Video */}
+      <div className="w-[65%] h-full hidden md:flex lg:flex items-center justify-end pr-10">
+        <div className="relative w-full max-w-[800px] h-[450px] rounded-2xl overflow-hidden bg-black shadow-xl">
+          <video
+            muted
+            autoPlay
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-contain"
+          >
+            <source src={heroAssest.herovideoOne} type="video/mp4" />
+          </video>
+        </div>
+      </div>
 
 
 
@@ -171,12 +171,13 @@ const Navbar = () => {
       </div>
       <div 
         ref={navbarRef}
-        className='fixed z-40 flex justify-between items-center w-full px-4 h-12 lg:h-20 transition-transform  '
+        className='fixed z-40 flex justify-between items-center w-full px-4 h-16 lg:h-20 transition-transform  '
       >
-        <div className="md:pt-0 pt-4 h-full flex items-center">
+        <Link to="/" className="flex-1 h-full flex items-center md:pl-0 ">
+        <div className="md:pt-0 h-full flex-1 items-center">
             <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
         </div>
-
+        </Link>
          <div className="flex-1 flex justify-center items-center">
           <button
             onClick={toggleMusic}

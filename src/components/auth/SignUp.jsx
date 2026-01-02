@@ -13,6 +13,9 @@ import { PasswordStrengthIndicator } from "../lightswind/password-strength-indic
 import {Button} from '../ui/button';
 import LoadingSpinner from "../LoadingSpinner";
 import { API_URL } from "@/utils/config";
+import { authAPI } from "@/services/auth/authAPI";
+import { toast } from "react-toastify";
+import MobileNavBar from "../sections/MobileNavBar";
 
 export default function SignUp() {
   const navigate = useNavigate();
@@ -226,7 +229,7 @@ export default function SignUp() {
           last_name: formData.lastName,
           email: formData.email,
           password: formData.password,
-          referralCode: referralCode,
+          referralCode: referralCode, // This for the waitlist
           // profile_company: formData.profile_company,
           // profile_country: formData.profile_country,
           // profile_city: formData.profile_city,
@@ -249,11 +252,13 @@ export default function SignUp() {
         dispatch(setUser(result.user));
         
         setLoaderState(false);
-  
         // Redirect to dashboard
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
+        if (!result.user.isEmailVerified) {
+          const response = await authAPI.sendVerificationCodeRequest(result.access_token);
+            navigate(`/verify-email?token=${response.verification_token}`);
+            toast.info("Verification code sent to your email, continue to verify.");
+        }
+        console.log(result);
       }else {
         setLoaderState(false);
       
@@ -298,50 +303,64 @@ export default function SignUp() {
 
   return (
   <div>
-    {/* Collapsible Top Nav Container */}
-    <div
+      {/* Collapsible Top Nav Container */}
+      <div
       ref={navContainerRef}
       onMouseEnter={handleNavAreaEnter}
       onMouseLeave={handleNavAreaLeave}
-      className={`w-full  overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+      className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
         isNavHidden ? "h-0" : "h-[60px]"
       } lg:h-[60px]`}
-      // style={{zIndex:9999}}
+      style={{zIndex:99999999}}
     >
       <NavBar isHidden={isNavHidden} />
     </div>
-    
-    {/* Dark Horizon Glow */}
-    <div
-      className="absolute inset-0 z-0"
-      style={{
-        background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-      }}
-    />
+  
+      {/* Dark Horizon Glow */}
+      <div
+          className="absolute inset-0 z-0"
+          style={{
+            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          }}
+        />
 
-    <div className="min-h-screen flex">
       {/* Loader Overlay */}
       {loaderState && (
-          <LoadingSpinner
-          title="Authenticating ..."
-          message="This will only take a moment."
+        <LoadingSpinner
+          title={"Authenticating..."}
+          message={"Please wait while we redirect you."}
         />
       )}
-      
-      {/* Left side - RECOLLAB Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-black">
-        {/* <img 
-          src="/collaboration.png"
-          className="w-full max-h-screen object-cover"
-          alt="Recollab Background" 
-        /> */}
-        <video src="/Futuristic_Office_Hologram_Animation.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
-      </div>
 
-      {/* Right side - Sign Up Form */}
-      <div 
-      style={{ 
-        height: '800px', 
+  
+      <MobileNavBar isHidden={isNavHidden} />
+      <div className="h-screen flex w-full">
+        {/* Left side - Image */}
+        {/* <div className="hidden lg:flex lg:w-1/2 relative ">
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <Beams
+              beamWidth={2}
+              beamHeight={15}
+              beamNumber={7}
+              lightColor="#E8E8E8"
+              speed={2}
+              noiseIntensity={1.75}
+              scale={0.2}
+              rotation={30}
+            />
+          </div>
+        </div> */}
+        <div className="hidden lg:flex lg:w-1/2 relative bg-black">
+          {/* <img 
+            src="/collaboration.png"
+            className="w-full max-h-screen object-cover"
+            alt="Recollab Background" 
+          /> */}
+          <video src="/Create_a_short_cinematic_intro.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
+        </div>
+        
+        {/* Right side - Login Form */}
+        <div style={{ 
         position: 'relative', 
         overflow: 'hidden',
         backgroundColor: '#060010',
@@ -364,7 +383,7 @@ export default function SignUp() {
           el.style.setProperty('--my', '-9999px');
         }
       }}
-      className="w-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
+      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
         <img
           ref={revealImgRef}
           src="/shiny_logo.png"

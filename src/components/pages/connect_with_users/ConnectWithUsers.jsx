@@ -63,7 +63,8 @@ const ConnectWithUsers = () => {
 
   useEffect(() => {
     fetchUsers(1);
-  }, [fetchUsers]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => {

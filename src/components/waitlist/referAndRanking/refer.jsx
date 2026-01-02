@@ -1,7 +1,7 @@
 import React, { useState, useEffect, use } from "react";
 // eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
-import { waitlistAPI } from "../components/lib/api";
+import { waitlistAPI } from "../../../utils/APIs/waitlistAPI";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";

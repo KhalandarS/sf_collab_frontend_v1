@@ -20,7 +20,7 @@ const GettingStarted = () => {
       icon: User,
       title: 'Creating Your Account',
       iconColor: 'from-blue-500 to-cyan-500',
-      description: 'To get started with SFcollab, you need to create an account. Follow these simple steps:',
+      description: 'To get started with SFCollab, you need to create an account. Follow these simple steps:',
       steps: [
         'Visit our signup page and enter your email address',
         'Check your email for a verification link',
@@ -196,7 +196,7 @@ const GettingStarted = () => {
           >
             <ShinyText text="Getting Started" />
             <br />
-            <ShinyText text="With SFcollab" className="custom-title" />
+            <ShinyText text="With SFCollab" className="custom-title" />
           </motion.h1>
 
           <motion.p
@@ -205,7 +205,7 @@ const GettingStarted = () => {
             transition={{ delay: 0.4 }}
             className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed"
           >
-            Welcome to SFcollab! This guide will help you set up your account and start 
+            Welcome to SFCollab! This guide will help you set up your account and start 
             collaborating with your team in no time. Follow our step-by-step instructions below.
           </motion.p>
 
@@ -238,7 +238,7 @@ const GettingStarted = () => {
         </motion.div>
 
         {/* Setup Progress Indicator */}
-        <motion.div
+        {/* <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.7 }}
@@ -259,7 +259,7 @@ const GettingStarted = () => {
               className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
             />
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Guide Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -379,7 +379,7 @@ const GettingStarted = () => {
         </motion.div>
 
         {/* Success Message */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 1.7 }}
@@ -402,9 +402,9 @@ const GettingStarted = () => {
           <h3 className="text-2xl font-bold text-white mb-2">You're All Set!</h3>
           <p className="text-gray-300 max-w-2xl mx-auto">
             Congratulations! You've completed the getting started guide. You're now ready to 
-            create amazing projects and collaborate with your team on SFcollab.
+            create amazing projects and collaborate with your team on SFCollab.
           </p>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       <style >{`

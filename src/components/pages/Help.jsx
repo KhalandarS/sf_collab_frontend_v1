@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
+import { usersAPI } from '@/utils/APIs/userApi';
+import { toast } from 'react-toastify';
+import ContactForm from './ContactForm';
 
 const ShinyText = ({ text, className = "" }) => (
   <span className={`inline-block bg-gradient-to-r from-blue-300 via-purple-300 to-blue-300 bg-clip-text text-transparent animate-shimmer bg-[length:200%_100%] ${className}`}>
@@ -15,7 +18,7 @@ const ShinyText = ({ text, className = "" }) => (
 
 const Help = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
+
   const [expandedFaq, setExpandedFaq] = useState(null);
 
   const faqs = [
@@ -110,11 +113,6 @@ const Help = () => {
     }
   ];
 
-  const handleSubmitContact = (e) => {
-    e.preventDefault();
-    console.log('Contact form submitted:', contactForm);
-    setContactForm({ name: '', email: '', message: '' });
-  };
 
   return (
     <div className="min-h-screen ">
@@ -331,10 +329,10 @@ const Help = () => {
                     >
                       <div className="px-6 pb-5 pt-0">
                         <p className="text-gray-300 leading-relaxed">{faq.answer}</p>
-                        <button className="mt-4 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1">
+                        {/* <button className="mt-4 text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center gap-1">
                           Read more about this topic
                           <ArrowRight className="w-4 h-4" />
-                        </button>
+                        </button> */}
                       </div>
                     </motion.div>
                   )}
@@ -351,7 +349,7 @@ const Help = () => {
           transition={{ delay: 1.1 }}
           className="mb-20"
         >
-          <h2 className="text-3xl font-bold text-white mb-2">Contact Support</h2>
+          {/* <h2 className="text-3xl font-bold text-white mb-2">Contact Support</h2>
           <p className="text-gray-400 mb-8">Get help from our dedicated support team</p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -388,74 +386,14 @@ const Help = () => {
                 </motion.div>
               );
             })}
-          </div>
+          </div> */}
 
           {/* Contact Form */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.5 }}
-            className="p-8 bg-gray-800/50 backdrop-blur-sm rounded-xl border border-gray-700"
-          >
-            <h3 className="text-2xl font-bold text-white mb-2">Send us a message</h3>
-            <p className="text-gray-400 mb-6">
-              Can't find what you're looking for? Send us a detailed message and we'll get back to you within 24 hours.
-            </p>
-
-            <form onSubmit={handleSubmitContact} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Full Name *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="John Doe"
-                    value={contactForm.name}
-                    onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="john@example.com"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
-                    required
-                    className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  How can we help you? *
-                </label>
-                <textarea
-                  placeholder="Describe your issue or question in detail..."
-                  rows={4}
-                  value={contactForm.message}
-                  onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
-                  required
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all resize-none"
-                />
-              </div>
-              <Button
-                type="submit"
-                className="px-6 py-3 hover:shadow-[0px_0px_8px_white] cursor-pointer bg-white text-black hover:bg-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105"
-              >
-                Submit Message
-              </Button>
-            </form>
-          </motion.div>
+          <ContactForm />
         </motion.section>
 
         {/* Alert Banner */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.6 }}
@@ -475,7 +413,7 @@ const Help = () => {
               </button>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       <style >{`

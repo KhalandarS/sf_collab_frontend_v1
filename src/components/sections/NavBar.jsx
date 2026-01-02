@@ -190,8 +190,8 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
 
 
       {/* Logo */}
-      <div className="logo z-50">
-        <Link to={user?.id ? `/dashboard` : '/' } className="group cursor-pointer flex items-center"> 
+      <div className="logo h-full z-50 scale-140">
+        <Link to={user?.id ? `/dashboard` : '/' } className="group h-full cursor-pointer flex items-center"> 
 
           <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
         </Link>
@@ -321,7 +321,7 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
                                 : user.profile.picture.startsWith("/uploads")
                                   ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
                                   : `${BASE_URL}/${user.profile.picture}`
-                              : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                              : "/default-user.jpeg"
                           }
                         />
                       </div>
@@ -341,11 +341,13 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
                     <Link to="/help" className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-all duration-200">
                       <HelpCircle />
                       <span className="text-sm font-medium">Help</span>
-                    </Link>
+                          </Link>
+                          <Link to="/user-profile?page=settings" className="mt-1 block">
                     <button className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-all duration-200">
                       <SettingsIcon />
                       <span className="text-sm font-medium">Settings</span>
-                    </button>
+                            </button>
+                          </Link>
                   </div>
     
                   {/* Logout */}
@@ -384,7 +386,7 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
                           : user.profile.picture.startsWith("/uploads")
                             ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
                             : `${BASE_URL}/${user.profile.picture}`
-                        : "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                        : "/default-user.jpeg"
                     }
                   />
                 </div>

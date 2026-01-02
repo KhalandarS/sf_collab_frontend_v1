@@ -14,7 +14,7 @@ import AccountandSecurity from "../components/pages/AccountandSecurity.jsx";
 import Login from "../components/auth/Login.jsx";
 import SignUp from "../components/auth/SignUp.jsx";
 import OAuthCallback from "../components/auth/OAuthCallback.jsx";
-import RegisterStartUp from "../components/pages/RegisterStartUp.jsx";
+import RegisterStartUp from "../components/pages/register-startup/RegisterStartUp.jsx";
 import StartUp from "../components/pages/StartUp.jsx";
 import HomedetailsPage from "../components/detailspage/HomedetailsPage.jsx";
 import Idationdetails from "../components/detailspage/Idationdetails.jsx";
