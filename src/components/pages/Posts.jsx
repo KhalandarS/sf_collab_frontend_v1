@@ -259,7 +259,7 @@ const LeftSidebar = () => {
             </div>
           </div>
 
-          <Button className="w-full bg-blue-500 hover:bg-blue-600">
+          <Button className="w-full bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer">
             Edit Profile
           </Button>
         </CardContent>
@@ -276,7 +276,7 @@ const LeftSidebar = () => {
                 variant="ghost"
                 className={`w-full justify-start mb-2 ${
                   item.active
-                    ? "bg-blue-500/20 text-blue-300 border-blue-500/30"
+                    ? "bg-gray-700 text-white border-blue-500/30"
                     : "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
                 }`}
               >
@@ -315,7 +315,7 @@ const LeftSidebar = () => {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="text-xs border-blue-400/50 text-blue-400 hover:bg-blue-500/20"
+                  className="text-xs border-blue-400/50 text-gray-200 bg-gray-900 hover:bg-gray-700 hover:text-white hover:cursor-pointer"
                 >
                   Follow
                 </Button>
@@ -376,7 +376,7 @@ const RightSidebar = () => {
                 className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 cursor-pointer transition-colors"
               >
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-black rounded-full flex items-center justify-center">
                     <span className="text-xs font-bold text-white">
                       #{index + 1}
                     </span>
@@ -402,7 +402,7 @@ const RightSidebar = () => {
         </CardHeader>
         <CardContent className="p-4">
           <div className="text-center mb-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-black rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl font-bold text-white">24.3K</span>
             </div>
             <p className="text-sm text-zinc-400">Follower</p>
@@ -1131,7 +1131,7 @@ const CreatePost = ({ currentUser, onPost }) => {
           <Button
             onClick={handlePost}
             disabled={!caption.trim() && !files.length}
-            className="bg-blue-500 hover:bg-blue-600 disabled:bg-zinc-800 disabled:text-zinc-600 gap-2 group relative overflow-hidden"
+            className="bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer disabled:bg-zinc-800 disabled:text-zinc-600 gap-2 group relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
               <Sparkles
@@ -1140,7 +1140,7 @@ const CreatePost = ({ currentUser, onPost }) => {
               />
               Post
             </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity bg-[length:200%_100%] animate-shimmer" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity bg-[length:200%_100%] animate-shimmer" />
           </Button>
         </div>
 
