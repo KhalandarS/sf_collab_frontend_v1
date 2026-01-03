@@ -34,6 +34,9 @@ import OverviewWebsite from "./OverviewWebsite";
 import DashboardSummaryCard from "./DashboardSummarySection";
 import WaitlistSection from "./WaitlistSection";
 import JoinSFSection from "./JoinSFSection";
+import InfluencerSection from "./InfluencerSection";
+import AdminSection from "./AdminSection";
+import Loader from "@/components/loader/loader";
 
 //!
 
@@ -47,7 +50,7 @@ const Dashboard = () => {
   
 
   const dispatch = useDispatch();
-  const { user, access_token, refreshToken, loading, error } = useSelector((state) => state.auth);
+  const { user, access_token, refreshToken, loading,error } = useSelector((state) => state.auth);
   
   
   // Search handler function
@@ -112,10 +115,9 @@ const Dashboard = () => {
     setSections(items => arrayMove(items, from, to));
   };
 
-
   return (
     <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
-      
+      {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
       
 
@@ -125,7 +127,16 @@ const Dashboard = () => {
 
         <WaitlistSection />
         <JoinSFSection />
-
+        {
+          userData && userData.role === "influencer"  && (
+            <InfluencerSection userData={userData} />
+          )
+        }
+        {
+          userData && userData.role === "admin"  && (
+            <AdminSection userData={userData} />
+          )
+        }
         <DashboardSummaryCard userData={userData} />
   
         {/* Original Dashboard Header */}

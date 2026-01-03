@@ -287,7 +287,7 @@ const QwenChat = () => {
               </div>
               <div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-2">
-                  AI Assistant
+                  AI Assistant (Coming Soon!)
                 </h1>
                 <p className="text-lg text-gray-300">
                   Your intelligent conversation partner powered by <span className="font-semibold text-blue-400">Qwen 2.5</span>

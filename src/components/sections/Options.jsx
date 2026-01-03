@@ -1,13 +1,11 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Badge } from "../ui/badge";
 import { IoChatbubbles } from "react-icons/io5";
 import { Crown, Lightbulb, Rocket} from "lucide-react";
 import { LuLayoutDashboard } from "react-icons/lu";
 
 const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
-  const location = useLocation();
-
   return (
     <div
       // style={{zIndex:999999999}}
