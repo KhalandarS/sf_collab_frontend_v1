@@ -35,6 +35,9 @@ import ChatPage from "../components/pages/chat/ChatPage.jsx";
 import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/premium-business-generator.jsx";
 import Test from "../components/pages/Test.jsx";
 import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
+import PDFSigningApp from "@/components/pages/PDF_Signing/PDFSigningApp.jsx";
+import ChatPage from "@/components/pages/ChatPage.jsx";
+
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
 

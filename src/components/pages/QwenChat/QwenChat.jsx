@@ -111,16 +111,17 @@ const QwenChat = () => {
         content: input
       });
 
-      const response = await fetch(`${API_URL}/qwen/chat`, {
+      const response = await fetch(`${API_URL}/qwen/generate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          messages: apiMessages,
+          prompt: input, 
           max_tokens: maxTokens,
-          temperature: temperature
+          temperature: temperature,
+          content_type: 'chat'
         }),
       });
 
@@ -140,7 +141,7 @@ const QwenChat = () => {
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
-        model: data.model
+        model: data.data.response
       };
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -164,7 +165,7 @@ const QwenChat = () => {
     }
   };
 
-  const handleQuickSubmit = async (prompt) => {
+  const handlegenerateSubmit = async (prompt) => {
     if (!prompt.trim()) return;
     
     const token = access_token;
@@ -178,7 +179,7 @@ const QwenChat = () => {
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/qwen/quick`, {
+      const response = await fetch(`${API_URL}/qwen/generate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -211,16 +212,16 @@ const QwenChat = () => {
       const assistantMessage = {
         id: messages.length + 2,
         role: 'assistant',
-        content: data.response,
+        content: data.data.response,
         timestamp: new Date(),
-        model: data.model
+        model: data.data.model
       };
       
       setMessages(prev => [...prev, userMessage, assistantMessage]);
       
     } catch (err) {
       setError(err.message);
-      console.error('Quick chat error:', err);
+      console.error('generate chat error:', err);
     } finally {
       setLoading(false);
     }
@@ -256,7 +257,7 @@ const QwenChat = () => {
     URL.revokeObjectURL(url);
   };
 
-  const quickPrompts = [
+  const generatePrompts = [
     'Explain quantum computing in simple terms',
     'Write a Python function to reverse a string',
     'What are the benefits of renewable energy?',
@@ -417,17 +418,17 @@ const QwenChat = () => {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2 text-gray-100">
                     <Zap className="h-5 w-5" />
-                    Quick Prompts
+                    generate Prompts
                   </CardTitle>
                   <CardDescription className="text-gray-400">
                     Try these examples
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {quickPrompts.map((prompt, index) => (
+                  {generatePrompts.map((prompt, index) => (
                     <button
                       key={index}
-                      onClick={() => handleQuickSubmit(prompt)}
+                      onClick={() => handlegenerateSubmit(prompt)}
                       disabled={loading}
                       className="w-full text-left p-3 rounded-lg border border-gray-700 hover:border-blue-500 hover:bg-gray-700 transition-colors text-sm text-gray-300"
                     >

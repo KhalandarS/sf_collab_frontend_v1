@@ -76,54 +76,67 @@ export class SimpleOAuthService {
   }
 
   // Handle OAuth callback for implicit flow
-  static handleOAuthCallback() {
-    try {
-      const hash = window.location.hash;
-      if (!hash) {
-        throw new Error('No hash found in URL');
-      }
-
-      const tokens = this.parseTokensFromHash(hash);
-      
-      if (!tokens.access_token || !tokens.id_token) {
-        throw new Error('Missing tokens in callback');
-      }
-
-      if (!this.verifyState(tokens.state)) {
-        throw new Error('Invalid state parameter');
-      }
-
-      // Decode the ID token to get user info
-      const userInfo = this.decodeJWT(tokens.id_token);
-      
-      if (!userInfo) {
-        throw new Error('Failed to decode user info');
-      }
-
-      // Clear the hash from URL
-      window.history.replaceState(null, null, window.location.pathname);
-
-      return {
-        success: true,
-        tokens,
-        user: {
-          id: userInfo.sub,
-          email: userInfo.email,
-          name: userInfo.name,
-          picture: userInfo.picture,
-          firstName: userInfo.given_name,
-          lastName: userInfo.family_name,
-          emailVerified: userInfo.email_verified,
-        }
-      };
-    } catch (error) {
-      console.error('OAuth callback error:', error);
-      return {
-        success: false,
-        error: error.message
-      };
+static handleOAuthCallback() {
+  try {
+    const hash = window.location.hash;
+    if (!hash) {
+      throw new Error('No hash found in URL');
     }
+
+    const tokens = this.parseTokensFromHash(hash);
+    
+    if (!tokens.access_token || !tokens.id_token) {
+      throw new Error('Missing tokens in callback');
+    }
+
+    if (!this.verifyState(tokens.state)) {
+      throw new Error('Invalid state parameter');
+    }
+
+    // Decode the ID token to get user info
+    const userInfo = this.decodeJWT(tokens.id_token);
+    
+    if (!userInfo) {
+      throw new Error('Failed to decode user info');
+    }
+
+    // Save tokens and user info for API / WebSocket usage
+    localStorage.setItem('access_token', tokens.access_token);
+    localStorage.setItem('id_token', tokens.id_token);
+    localStorage.setItem('user', JSON.stringify({
+      id: userInfo.sub,
+      email: userInfo.email,
+      firstName: userInfo.given_name,
+      lastName: userInfo.family_name,
+      name: userInfo.name,
+      picture: userInfo.picture,
+      emailVerified: userInfo.email_verified
+    }));
+
+    // Clear the hash from URL
+    window.history.replaceState(null, null, window.location.pathname);
+
+    return {
+      success: true,
+      tokens,
+      user: {
+        id: userInfo.sub,
+        email: userInfo.email,
+        name: userInfo.name,
+        picture: userInfo.picture,
+        firstName: userInfo.given_name,
+        lastName: userInfo.family_name,
+        emailVerified: userInfo.email_verified,
+      }
+    };
+  } catch (error) {
+    console.error('OAuth callback error:', error);
+    return {
+      success: false,
+      error: error.message
+    };
   }
+}
 
   // Start OAuth flow
   static startOAuthFlow() {

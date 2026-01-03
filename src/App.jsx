@@ -49,10 +49,9 @@ import Pricing from "./components/pages/Pricing/Pricing.jsx";
 import MembershipBenefits from "./components/landing-page/pages/MembershipBenefits.jsx";
 import ImplementationPlans from "./components/landing-page/pages/ImplementationPlans.jsx";
 import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
-import ConnectWithUsers from "./components/pages/connect_with_users/ConnectWithUsers.jsx";
-import ChatComponent from "./components/chat/ChatComponent.jsx";
-import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
+import ChatPage from "./components/pages/ChatPage.jsx";
+import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 import { ToastContainer } from "react-toastify";
 import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";
 import AdminPage from "./components/pages/admin/admin.jsx";
@@ -140,7 +139,7 @@ function App() {
         <Route path="multimodal-images" element={<ImageGenerator />} />
         <Route path="logo-generator" element={<StartupLogoGenerator />} />
         <Route path="data-scraper" element={<ScraperForm />} />
-        <Route path="chat" element={<ChatComponent />} />
+        <Route path="chat" element={<ChatPage />} />
         <Route path="qwen-chat" element={<QwenChat />} />
         <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}
