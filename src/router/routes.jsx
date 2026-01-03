@@ -44,6 +44,7 @@ import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
 import DiscoverStartups from "../components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "../components/pages/Profile/Profile.jsx";
+import ProfileSetup from "../components/pages/ProfileSetup.jsx";
 
 export const router = createBrowserRouter([
   // Authentication routes (accessible only when not logged in)
@@ -58,6 +59,16 @@ export const router = createBrowserRouter([
     element: 
         <SignUp />
      ,
+  },
+
+  // Profile setup route - shown after signup/login
+  {
+    path: "/profile-setup",
+    element: (
+      <ProtectedRoute>
+        <ProfileSetup />
+      </ProtectedRoute>
+    ),
   },
 
   // OAuth callback route

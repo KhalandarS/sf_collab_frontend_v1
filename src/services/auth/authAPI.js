@@ -52,6 +52,16 @@ export class authAPI {
     });
     return data;
   }
+
+  static async setupProfileRequest(profileData, token) {
+    const { data } = await axios.post(`${API_URL}/users/profile-setup`, profileData, {
+      headers: { 
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return data;
+  }
 }
 
 export const getProfileRequest = authAPI.getProfileRequest;
@@ -62,3 +72,4 @@ export const refreshTokenRequest = authAPI.refreshTokenRequest;
 export const logoutRequest = authAPI.logoutRequest;
 export const sendVerificationCodeRequest = authAPI.sendVerificationCodeRequest;
 export const verifyEmailRequest = authAPI.verifyEmailRequest;
+export const setupProfileRequest = authAPI.setupProfileRequest;
