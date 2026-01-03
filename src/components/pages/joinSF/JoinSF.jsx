@@ -40,7 +40,7 @@ const JoinSF = () => {
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-600/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -89,7 +89,12 @@ const JoinSF = () => {
             })}
           </div>
         </motion.section>
-        <ContactForm />
+        <ContactForm includeFiles={true}
+          acceptTerms={true}
+          subject={"Join the SForger Revolution"}
+          subjectPlaceholder={"Position you are applying for..."}
+          filesPlaceholder={"Attach your portfolio or resume"}
+        />
         {/* CTA Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}

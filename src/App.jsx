@@ -15,7 +15,7 @@ import HomedetailsPage from "./components/detailspage/HomedetailsPage.jsx";
 import Idationdetails from "./components/detailspage/Idationdetails.jsx";
 import Knowledgedetails from "./components/detailspage/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage/ProjectDetails.jsx";
-import Posts from "./components/pages/Posts.jsx";
+import Posts from "./components/pages/posts/Posts.jsx";
 import Help from "./components/pages/Help.jsx";
 import ProjectManagement from "./components/pages/ProjectManagement.jsx";
 import VideoTutorials from "./components/pages/VideoTutorials.jsx";
@@ -50,7 +50,7 @@ import MembershipBenefits from "./components/landing-page/pages/MembershipBenefi
 import ImplementationPlans from "./components/landing-page/pages/ImplementationPlans.jsx";
 import FeaturedProjects from "./components/landing-page/pages/FeaturedProjects.jsx";
 import PDFSigningApp from "./components/pages/PDF_Signing/PDFSigningApp.jsx";
-import ChatPage from "./components/pages/ChatPage.jsx";
+import ChatPage from "./components/pages/chat/ChatPage.jsx";
 import Explore_Section from "./components/landing-page/pages/Explore_Section.jsx";
 import { ToastContainer } from "react-toastify";
 import WaitlistTerms from "./components/pages/termsAndConditions/waitlistTerms.jsx";

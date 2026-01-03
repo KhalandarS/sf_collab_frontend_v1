@@ -170,7 +170,7 @@ const ImageGenerator = () => {
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-300 to-gray-100 bg-clip-text text-transparent">
-                AI Content Generator
+                AI Content Generator (Coming Soon!)
               </h1>
             </div>
             <p className="text-gray-400 text-lg mb-6">

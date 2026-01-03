@@ -47,69 +47,71 @@ export const usersAPI = {
   
   getAll: async (accessToken, params) => {
   const response = await api.get("/users", {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
-    params: {
-    page: params.page || 1,
-    per_page: params.per_page || 10,
-    status: params.status,
-    role: params.role,
-    search: params.search,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
+  params: {
+  page: params.page || 1,
+  per_page: params.per_page || 10,
+  status: params.status,
+  role: params.role,
+  search: params.search,
+  },
   });
   return response.data;
   },
 
   getById: async (userId, accessToken) => {
   const response = await api.get(`/users/${userId}`, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
   });
   return response.data.data;
   },
 
   updateProfile: async (userId, profileData, accessToken) => {
   const response = await api.put(`/users/${userId}`, profileData, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  'Content-Type': 'multipart/form-data',
+  },
   });
   return response.data.data;
   },
+  
   getActivity: async (userId, accessToken) => {
   const response = await api.get(`/users/${userId}/activity`, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
   });
   return response.data.data;
   },
 
   getStatus: async (userId, accessToken) => {
   const response = await api.get(`/users/${userId}/status`, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
   });
   return response.data.data;
   },
 
   verifyEmail: async (userId, accessToken) => {
   const response = await api.post(`/users/${userId}/verify-email`, {}, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
   });
   return response.data.data;
   },
 
   getXP: async (userId, accessToken) => {
   const response = await api.get(`/users/${userId}/xp`, {
-    headers: {
-    Authorization: `Bearer ${accessToken}`,
-    },
+  headers: {
+  Authorization: `Bearer ${accessToken}`,
+  },
   });
   return response.data.data;
   },
@@ -123,11 +125,25 @@ export const usersAPI = {
   const response = await api.get(`/users/uploads/${filename}`);
   return response.data;
   },
-  submitContactForm: async (contactForm) => {
-    const response = await api.post('/users/contact', contactForm)
-    return response.data;
+  
+submitContactForm: async (contactForm) => {
+  const response = await api.post('/users/contact', contactForm,
+    {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }
+  );
+  return response.data;
+
+},
+getAllRoles: async () => {
+    const response = await api.get('/users/roles');
+    return response.data.data;
+
   }
 };
+
 
 
 export default api

@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { io } from 'socket.io-client';
 import {
   Search, Send, Users, Settings, Plus, 
   Smile, Paperclip, MoreVertical, Check,
@@ -8,54 +7,17 @@ import {
   MessageCircle, User, ChevronDown, ChevronRight,
   Hash, Shield, Crown, UserPlus
 } from 'lucide-react';
+import { SOCKET_API_URL } from '@/utils/config';
+import useSocket from './useSocket';
+import { useSelector } from 'react-redux';
 
 // Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
 // ============================================
 // CUSTOM HOOKS
 // ============================================
 
-const useSocket = (token) => {
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState([]);
-
-  useEffect(() => {
-    if (!token) return;
-
-    const newSocket = io(SOCKET_URL, {
-      query: { token },
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
-
-    newSocket.on('connect', () => {
-      setIsConnected(true);
-      newSocket.emit('get_online_users');
-    });
-
-    newSocket.on('disconnect', () => setIsConnected(false));
-
-    newSocket.on('online_users', (data) => setOnlineUsers(data.user_ids || []));
-
-    newSocket.on('user_status', (data) => {
-      setOnlineUsers((prev) => 
-        data.status === 'online' 
-          ? [...new Set([...prev, data.user_id])]
-          : prev.filter((id) => id !== data.user_id)
-      );
-    });
-
-    setSocket(newSocket);
-    return () => newSocket.close();
-  }, [token]);
-
-  return { socket, isConnected, onlineUsers };
-};
 
 // ============================================
 // COMPONENTS
@@ -418,11 +380,7 @@ const NewConversationModal = ({ isOpen, onClose, users, onCreateDirect, onCreate
 
 const ChatPage = () => {
   // Auth
-  const [token] = useState(() => localStorage.getItem('access_token'));
-  const [currentUser] = useState(() => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  });
+  const { user: currentUser, access_token: token } = useSelector((state) => state.auth);
 
   // Socket
   const { socket, isConnected, onlineUsers } = useSocket(token);
@@ -479,7 +437,7 @@ const ChatPage = () => {
   // Fetch messages
   const fetchMessages = useCallback(async (conversationId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}chat/conversations/${conversationId}/messages`, {
+      const response = await fetch(`${API_BASE_URL}/chat/conversations/${conversationId}/messages`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
@@ -528,6 +486,10 @@ const ChatPage = () => {
       }
       fetchConversations();
     });
+    socket.on('conversation_message', (data) => {
+      fetchConversations(); // update sidebar
+    });
+
 
     socket.on('user_typing', (data) => {
       if (data.conversation_id === activeConversation?.id) {
@@ -572,6 +534,7 @@ const ChatPage = () => {
       socket.off('message_deleted');
       socket.off('added_to_team_chat');
       socket.off('new_conversation');
+      socket.off('conversation_message');
     };
   }, [socket, activeConversation, fetchConversations]);
 

@@ -500,7 +500,7 @@ const DiscoverStartups = () => {
                   layout
                 className="grid gap-6 w-full"
                 style={{
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))'
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
                 }}
                 >
                   {startups.map((startup, index) => (

@@ -48,6 +48,7 @@ useEffect(() => {
       lastName: user.lastName || '',
       email: user.email || '',
       status: user.status || 'active',
+      role: user.role || '',
       profile: {
         picture: user.profile?.picture || null,
         bio: user.profile?.bio || '',
@@ -159,6 +160,7 @@ useEffect(() => {
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       email: user.email || "",
+      role: user.role || "",
       profile: {
         ...prev.profile,
         ...(user.profile || {}),

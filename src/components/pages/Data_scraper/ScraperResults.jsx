@@ -6,10 +6,10 @@ function ScraperResults({ data, method }) {
   const [activeTab, setActiveTab] = useState('overview')
 
   const tabs = [
-    { id: 'overview', label: '📊 Overview', icon: '📊' },
-    { id: 'content', label: '📝 Content', icon: '📝' },
-    { id: 'links', label: '🔗 Links', icon: '🔗' },
-    { id: 'raw', label: '{} JSON', icon: '{}' }
+    { id: 'overview', label: 'Overview', icon: '📊' },
+    { id: 'content', label: 'Content', icon: '📝' },
+    { id: 'links', label: 'Links', icon: '🔗' },
+    { id: 'raw', label: 'JSON', icon: '{}' }
   ]
 
   return (

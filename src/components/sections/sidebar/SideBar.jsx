@@ -37,11 +37,11 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
       <div className="flex flex-col gap-4 items-center">
         {/* general links */}
         <div className="flex flex-col gap-4 items-center" style={{ zIndex: 9999999999 }}>
-          {links.map((link) => (
+          {links.map((link, idx) => (
             link.label.startsWith('Other') ? (
-              <SideBarFeaturesGroup key={link.id} link={link} onClick={onLinkClick} />
+              <SideBarFeaturesGroup key={idx} link={link} onClick={onLinkClick} />
             ) : (
-              <SideBarLink key={link.id} link={link} onClick={onLinkClick} />
+              <SideBarLink key={idx} link={link} onClick={onLinkClick} />
             )
           ))}
           {
@@ -54,8 +54,11 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
 
       {/* bottom links */}
       <div className="flex flex-col gap-2 items-center" style={{ zIndex: 9999999999 }}>
-        <SidebarFeedbackCard />
-        <Link
+        <div className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors
+            `}>
+          <SidebarFeedbackCard />
+        </div>
+        {/* <Link
           to="/help"
           className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${location.pathname === "/help"
             ? "bg-[#2A2A2A] text-white"
@@ -67,7 +70,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
           <div className="flex items-center justify-center">
             <Settings2 size={20} />
           </div>
-        </Link>
+        </Link> */}
         <Link
           to="/help"
           className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${location.pathname === "/help"

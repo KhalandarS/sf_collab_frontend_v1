@@ -1,11 +1,13 @@
 import { toast } from "react-toastify";
 import { countries } from "./countries";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usersAPI } from "@/utils/APIs/userApi";
 
 /* ---------------------- ProfileSection ---------------------- */
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
   const timezones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'];
   const [loadingCountry, setLoadingCountry] = useState(false);
+  const [roles, setRoles] = useState([]);
   const handleImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -22,7 +24,7 @@ const handleAutoDetectTimezone = () => {
     toast.info("Could not detect timezone");
     return;
   }
-
+  console.log(formData);
   setFormData(prev => ({
     ...prev,
     preferences: {
@@ -58,7 +60,29 @@ const handleAutoDetectTimezone = () => {
       setLoadingCountry(false);
     }
   };
+  const fromSnakeToTitleCase = (str) => {
+    return str
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+  const fromTitleToSnakeCase = (str) => {
 
+    return str
+      .toLowerCase()
+      .replace(/ /g, '_');
+  }
+  useEffect(() => {
+    async function getRoles() {
+      try {
+        const response = await usersAPI.getAllRoles();
+        setRoles(response.roles);
+      } catch {
+        toast.error("Failed to fetch roles");
+      }
+    }
+    getRoles();
+  }, []);
   return (
     <div className="space-y-10">
       <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
@@ -104,6 +128,14 @@ const handleAutoDetectTimezone = () => {
         <div>
           <label className="block text-sm font-medium text-gray-400 mb-2">Account Status</label>
           <input type="text" value={formData.status} readOnly className="w-full bg-gray-600 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 capitalize" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
+
+          <select value={formData.role || ''} onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
+              <option value="">Select Role</option>
+              {roles && roles.map(role => <option key={role} value={role}>{fromSnakeToTitleCase(role)}</option>)}
+            </select>
         </div>
       </div>
 

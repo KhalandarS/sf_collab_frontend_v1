@@ -466,7 +466,7 @@ const Knowledge = () => {
         </AnimatePresence>
       </div>
 
-      <style jsx>{`
+      {/* <style jsx>{`
         @keyframes shimmer {
           0% { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -481,7 +481,7 @@ const Knowledge = () => {
           -ms-overflow-style: none;
           scrollbar-width: none;
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 };

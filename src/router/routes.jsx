@@ -20,7 +20,7 @@ import HomedetailsPage from "../components/detailspage/HomedetailsPage.jsx";
 import Idationdetails from "../components/detailspage/Idationdetails.jsx";
 import Knowledgedetails from "../components/detailspage/Knowledgedetails.jsx";
 import ProjectDetails from "../components/detailspage/ProjectDetails.jsx";
-import Posts from "../components/pages/Posts.jsx";
+import Posts from "../components/pages/posts/Posts.jsx";
 import StartUpdetails from "../components/detailspage/StartUpdetails.jsx";
 import Help from "../components/pages/Help.jsx";
 import ProjectManagement from "../components/pages/ProjectManagement.jsx";
@@ -36,7 +36,7 @@ import BusinessIdeaGenerator from "../components/pages/Business_plan_generator/p
 import Test from "../components/pages/Test.jsx";
 import ScraperForm from "../components/pages/Data_scraper/ScraperForm.jsx";
 import PDFSigningApp from "@/components/pages/PDF_Signing/PDFSigningApp.jsx";
-import ChatPage from "@/components/pages/ChatPage.jsx";
+import ChatPage from "@/components/pages/chat/ChatPage.jsx";
 
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";

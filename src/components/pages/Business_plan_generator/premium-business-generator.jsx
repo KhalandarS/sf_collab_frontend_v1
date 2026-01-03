@@ -179,7 +179,7 @@ export default function BusinessIdeaGenerator() {
 
   return (
     <div className="min-h-screen  p-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full mx-auto">
         {/* Animated Background */}
         <div className="absolute inset-0">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
@@ -216,7 +216,7 @@ export default function BusinessIdeaGenerator() {
                 <br />
                 <span className=" relative">
                   <span style={{zIndex:99999}} className='mt-4 z-50 bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent '>
-                  Generator
+                  Generator (Coming Soon!)
                   </span>
                   {/* Animated underline */}
                   {/* <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-px bg-linear-to-r from-transparent via-blue-500 to-transparent animate-shimmer" /> */}
@@ -624,13 +624,7 @@ export default function BusinessIdeaGenerator() {
           </div>
         )}
 
-        {/* Footer */}
-        <div className="mt-12 text-center text-slate-500 text-sm">
-          <p className="flex items-center justify-center gap-2">
-            <Cpu className="h-4 w-4" />
-            Running locally with Hugging Face Transformers | No API keys needed
-          </p>
-        </div>
+
       </div>
     </div>
   );
