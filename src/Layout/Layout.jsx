@@ -214,6 +214,7 @@ import { SOCKET_API_URL } from "@/utils/config";
 
 const Layout = () => {
   const location = useLocation();
+
   const isRootPath = location.pathname === "/";
   
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
@@ -439,7 +440,7 @@ const Layout = () => {
             !isRootPath &&(
             <>
               <FloatingChatbox />
-              <GlassmorphismFeedbackCard />
+              {/* <GlassmorphismFeedbackCard /> */}
             </>
             )
           }

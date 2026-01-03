@@ -146,8 +146,8 @@ export default function WorldClock() {
   ]
 
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 ">
-      <div className="max-w-7xl mx-auto">
+    <div className=" p-4 md:p-6 lg:p-8 overflow-hidden ">
+      <div className="w-full mx-auto">
         {/* Header */}
         <Card className="h-38 relative overflow-hidden bg-transparent border-zinc-800 shadow-none mb-6">
           {/* <div className="transition-all duration-1000  opacity-15"> */}

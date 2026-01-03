@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
-import Dashboard from "./components/pages/dashboard.jsx";
+import Dashboard from "./components/pages/dashboard/dashboard.jsx";
 import Ideation from "./components/pages/Ideation.jsx";
 import Knowledge from "./components/pages/Knowledge.jsx";
 import Setting from "./components/pages/Setting.jsx";

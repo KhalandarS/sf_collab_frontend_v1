@@ -686,10 +686,10 @@ export default function Calendar() {
   
   
   return (
-    <div className="min-h-screen text-white">
+    <div className="overflow-hidden text-white">
       <Notification />
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="w-full mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>

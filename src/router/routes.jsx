@@ -3,7 +3,7 @@ import Home from "../components/pages/Home.jsx";
 import Layout from "../Layout/Layout.jsx";
 import Project from "../components/pages/Project.jsx";
 // import Profile from "../components/pages/Profile.jsx";
-import Dashboard from "../components/pages/dashboard.jsx";
+import Dashboard from "../components/pages/dashboard/dashboard.jsx";
 import Ideation from "../components/pages/Ideation.jsx";
 import Knowledge from "../components/pages/Knowledge.jsx";
 import Setting from "../components/pages/Setting.jsx";

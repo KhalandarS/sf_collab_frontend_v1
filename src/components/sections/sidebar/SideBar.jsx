@@ -17,8 +17,11 @@ import 'tippy.js/dist/tippy.css';
 import SideBarLink from "./sideBarLink";
 import SideBarFeaturesGroup from "./SideBarFeaturesGroup";
 import { createLinks } from "./links";
+import FloatingChatbox from "../ChatWidget";
+import CompactFeedbackCard from "../CompactFeedbackCard";
+import SidebarFeedbackCard from "../SidebarFeedbackCard";
 
-const SideBar = ({isOpen, setIsOpen, unreadMessagesCount,isAdmin}) => {
+const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   const location = useLocation();
   const [links, setLinks] = useState(createLinks(unreadMessagesCount));
   useEffect(() => setLinks(createLinks(unreadMessagesCount)), [unreadMessagesCount]);
@@ -42,21 +45,22 @@ const SideBar = ({isOpen, setIsOpen, unreadMessagesCount,isAdmin}) => {
             )
           ))}
           {
-          isAdmin && (
-              <AdminLink onClick={onLinkClick}  />
-          )
+            isAdmin && (
+              <AdminLink onClick={onLinkClick} />
+            )
           }
         </div>
       </div>
 
       {/* bottom links */}
       <div className="flex flex-col gap-2 items-center" style={{ zIndex: 9999999999 }}>
-      <Link
+        <SidebarFeedbackCard />
+        <Link
           to="/help"
           className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${location.pathname === "/help"
             ? "bg-[#2A2A2A] text-white"
             : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-          }`}
+            }`}
           onClick={onLinkClick}
           style={{ zIndex: 9999999999 }}
         >
@@ -69,7 +73,7 @@ const SideBar = ({isOpen, setIsOpen, unreadMessagesCount,isAdmin}) => {
           className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${location.pathname === "/help"
             ? "bg-[#2A2A2A] text-white"
             : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-          }`}
+            }`}
           onClick={onLinkClick}
           style={{ zIndex: 9999999999 }}
         >
@@ -93,7 +97,7 @@ const SideBar = ({isOpen, setIsOpen, unreadMessagesCount,isAdmin}) => {
       </button>  */}
       
       {/* Desktop Sidebar - Fixed position for proper stacking */}
-      <div 
+      <div
         className="hidden lg:flex  fixed  left-0 top-0 h-screen w-[60px] pt-16 text-white shadow-xl shadow-amber-300/14"
         style={{ zIndex: 999999 }}
       >
