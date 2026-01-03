@@ -32,17 +32,20 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
   const { user } = useSelector((state) => state.auth);
-  useEffect(() => {
-    if (user && user.id) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  // If you have user logged in, you should be signed out to access login page
+
   const [alertConf, setAlertConf] = useState({title:"", message:""});
   
   const [formData, setFormData] = useState({
     email: "",
     password: ""
   })
+    useEffect(() => {
+    if (user && !formData.email && !formData.password) {
+      dispatch(setUser(null));
+      dispatch(setToken(null));
+    }
+  }, [user, dispatch, formData.email, formData.password]);
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 

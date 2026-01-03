@@ -8,7 +8,7 @@ export default function UserCard({ user, onOpen }) {
   return (
     <motion.div
       whileHover={{ scale: 1.05, y: -4 }}
-      className="bg-gray-900 border border-gray-700 rounded-xl p-6 cursor-pointer
+      className="bg-gray-900 border min-w-[24rem] border-gray-700 rounded-xl p-6 cursor-pointer
                 hover:border-blue-600 transition-shadow shadow-lg hover:shadow-xl"
       onClick={() => onOpen(user)}
     >
