@@ -5,9 +5,15 @@ import { MessageCircle } from 'lucide-react';
 export default function UserCard({ user, onOpen }) {
   return (
     <motion.div
+<<<<<<< HEAD
       whileHover={{ scale: 1.02, y: -2 }}
       className="bg-gray-900 border border-gray-700 rounded-xl p-5 cursor-pointer
                 hover:border-blue-600 transition-all w-full h-full"
+=======
+      whileHover={{ scale: 1.05, y: -4 }}
+      className="bg-gray-900 border min-w-[24rem] border-gray-700 rounded-xl p-6 cursor-pointer
+                hover:border-blue-600 transition-shadow shadow-lg hover:shadow-xl"
+>>>>>>> 147e567a45004a93c4756a37d2a6d2d4a74b6ac4
       onClick={() => onOpen(user)}
     >
       {/* Profile Picture */}

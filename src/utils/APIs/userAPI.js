@@ -4,7 +4,6 @@ import axios from 'axios'
 
 
 
-
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -15,11 +14,11 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url)
+    // console.log('API Request:', config.method?.toUpperCase(), config.url)
     return config
   },
   (error) => {
-    console.error('API Request Error:', error)
+    // console.error('API Request Error:', error)
     return Promise.reject(error)
   }
 )
@@ -33,7 +32,13 @@ api.interceptors.response.use(
     if (error.code === 'ECONNREFUSED') {
       console.error('❌ Cannot connect to backend. Make sure Flask is running on', API_BASE_URL)
       console.error('   Start backend with: python3 waitlist_referral_app.py')
-    } else if (error.response) {
+    }
+    else if (error.response.status === 401 && error.response.data.msg === 'Token has expired') {
+      localStorage.removeItem('access_token')
+      window.location.href = '/login'
+    }
+    else if (error.response) {
+      console.log(error.response.status === 401 && error.response.data.msg === 'Token has expired');
       console.error('API Error:', error.response.status, error.response.data)
     } else {
       console.error('API Error:', error.message)

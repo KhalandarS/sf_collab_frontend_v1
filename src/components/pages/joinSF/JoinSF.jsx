@@ -110,7 +110,7 @@ const JoinSF = () => {
               Email us with your portfolio or resume to join our growing team.
             </p>
             
-            <a href="mailto:sfmanagers333@gmail.com">
+            <a href="mailto:sfcollab333@gmail.com">
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-6 rounded-xl text-lg">
                 <Mail className="w-5 h-5 mr-2" />
                 Get In Touch
@@ -118,7 +118,7 @@ const JoinSF = () => {
             </a>
 
             <p className="mt-8 text-slate-400">
-              <span className="font-semibold text-blue-400">sfmanagers333@gmail.com</span>
+              <span className="font-semibold text-blue-400">sfcollab333@gmail.com</span>
             </p>
           </div>
         </motion.section>

@@ -196,7 +196,7 @@ const DiscoverUsers = () => {
             transition={{ delay: 0.4 }}
             className="text-lg sm:text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed"
           >
-            Swipe right to connect with <span className="font-semibold text-white">innovators, founders, and creators</span>.
+            Connect with <span className="font-semibold text-white">innovators, founders, and creators</span>.
             Build your network and discover new opportunities.
           </motion.p>
         
@@ -337,7 +337,7 @@ const DiscoverUsers = () => {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="flex flex-col items-center justify-center py-20"
+              className="flex flex-col w-full items-center justify-center py-20"
             >
               <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
                 <Search className="w-10 h-10 text-blue-500" />
@@ -353,9 +353,13 @@ const DiscoverUsers = () => {
           ) : (
             <motion.div 
               layout
-              className="flex flex-col items-center justify-center"
+              className="flex flex-col w-full items-center justify-center"
             >
+<<<<<<< HEAD
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+=======
+              <div className="flex flex-wrap justify-start items-center gap-6">
+>>>>>>> 147e567a45004a93c4756a37d2a6d2d4a74b6ac4
                 {users.map(user => (
                   <UserCard
                     key={user.id}

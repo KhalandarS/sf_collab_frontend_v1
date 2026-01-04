@@ -154,6 +154,7 @@ const ReferPage = () => {
   return (
     <div className="min-h-screen bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-6 md:p-10">
       <div className="w-full mx-auto">
+
         {/* HEADER SECTION */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -454,7 +455,7 @@ const ReferPage = () => {
         >
           <h2 className="text-3xl font-bold text-center mb-8 flex items-center justify-center gap-2">
             <Award className="h-8 w-8 text-blue-400" />
-            Rank-Based Rewards (Lifetime)
+            Rank-Based Rewards
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {RANK_REWARDS.map((tier, idx) => (
@@ -525,7 +526,6 @@ const ReferPage = () => {
                 <li>Snapshot dates are announced in advance</li>
                 <li>Your rank at snapshot time determines your rewards</li>
                 <li>Rewards are locked and cannot be changed retroactively</li>
-                <li>No favoritism or manual overrides without founder approval</li>
               </ol>
             </div>
             <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">

@@ -259,7 +259,7 @@ useEffect(() => {
         {/* Main Content Area */}
         <div className="text-white relative flex flex-col items-center w-full max-sm:px-4 max-sm:py-0 overflow-hidden pb-16 sm:pb-0">
           {/* Options Panel - Hidden on root path */}
-          {!isRootPath && (
+          {!isRootPath && ["refer", "waitlist"].includes(location.pathname) && (
             <div
               ref={optionsRef}
               onMouseEnter={handleOptionsEnter}
@@ -270,7 +270,9 @@ useEffect(() => {
               style={{ zIndex: 99999999 }}
             >
               <Options 
-                isHidden={isNavHidden} 
+                isHidden={() => {
+                  return isNavHidden;
+                }}
                 unreadMessagesCount={unreadMessagesCount}
                 isAdmin={isAdmin} // Pass admin status to Options
               />

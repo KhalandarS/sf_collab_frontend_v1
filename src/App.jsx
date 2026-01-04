@@ -58,6 +58,7 @@ import AdminPage from "./components/pages/admin/admin.jsx";
 import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
 import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
+import Influencer from "./components/pages/influencer/Influencer.jsx";
 
 function App() {
 
@@ -110,6 +111,7 @@ function App() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="waitlist" element={<Waitlist />} />
         <Route path="waitlist-terms" element={<WaitlistTerms />} />
+        <Route path="influencer" element={<Influencer />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="refer" element={<ReferPage />} />
         <Route path="join-sf" element={<JoinSF />} />
