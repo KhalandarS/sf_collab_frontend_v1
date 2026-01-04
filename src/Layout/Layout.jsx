@@ -19,8 +19,8 @@ import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { toast } from "react-toastify";
 import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
-import { io } from "socket.io-client";
-import useSocket from "@/components/pages/chat/useSocket";
+//import { io } from "socket.io-client";
+import useSocket from "@/components/pages/chat/useSocket"; 
 
 const Layout = () => {
   const location = useLocation();

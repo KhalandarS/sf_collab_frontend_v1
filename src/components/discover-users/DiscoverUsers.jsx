@@ -355,7 +355,11 @@ const DiscoverUsers = () => {
               layout
               className="flex flex-col w-full items-center justify-center"
             >
+<<<<<<< HEAD
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
+=======
               <div className="flex flex-wrap justify-start items-center gap-6">
+>>>>>>> 147e567a45004a93c4756a37d2a6d2d4a74b6ac4
                 {users.map(user => (
                   <UserCard
                     key={user.id}
