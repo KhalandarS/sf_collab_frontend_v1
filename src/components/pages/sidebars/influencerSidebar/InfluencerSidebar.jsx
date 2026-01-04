@@ -13,6 +13,7 @@ import { Link, useLocation } from "react-router-dom";
 import 'tippy.js/dist/tippy.css';
 import { createInfluencerLinks } from "./influencerLinks";
 import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
+import BottomLinks from "../BottomLinks";
 
 
 const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
@@ -41,11 +42,10 @@ const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
               <Link
                 to={link.href}
                 onClick={onLinkClick}
-                className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors relative ${
-                  isActive
+                className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors relative ${isActive
                     ? "bg-blue-600/20 text-blue-400"
                     : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                }`}
+                  }`}
               >
                 <div className="flex items-center justify-center relative">
                   {link.icon}
@@ -64,11 +64,10 @@ const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
                       key={subItem.id}
                       to={subItem.href}
                       onClick={onLinkClick}
-                      className={`flex items-center px-2 py-2 rounded-md transition-colors ${
-                        location.pathname === subItem.href
+                      className={`flex items-center px-2 py-2 rounded-md transition-colors ${location.pathname === subItem.href
                           ? "bg-blue-600 text-white"
                           : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
-                      } ${isMobile ? 'text-xs' : 'text-[10px] justify-center'}`}
+                        } ${isMobile ? 'text-xs' : 'text-[10px] justify-center'}`}
                     >
                       {isMobile ? subItem.label : subItem.label.split(' ').map(w => w[0]).join('')}
                     </Link>
@@ -81,22 +80,8 @@ const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
       </div>
 
       {/* Bottom links */}
-      <div className="flex flex-col gap-2 items-center">
-        <div className="flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors">
-          <SidebarFeedbackCard />
-        </div>
-        <Link
-          to="/help"
-          className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${
-            location.pathname === "/help"
-              ? "bg-[#2A2A2A] text-white"
-              : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-          }`}
-          onClick={onLinkClick}
-        >
-          <HelpCircle size={20} />
-        </Link>
-      </div>
+      <BottomLinks onLinkClick={onLinkClick} />
+      
     </div>
   );
 

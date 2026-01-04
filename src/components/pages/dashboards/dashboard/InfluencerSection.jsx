@@ -1,48 +1,71 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { TrendingUp, Users, Heart, Share2, BarChart3, Target, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { Users, TrendingUp, Share2, Target, ArrowRight, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import SpotlightCard from '../../../ui/SpotlightCard';
 
-export default function InfluencerSection({ userData }) {
-  const [metrics] = useState({
-    followers: 125400,
-    engagement: 8.2,
-    totalReaches: 2500000,
-    collaborations: 12,
-    avgLikes: 15800,
-    avgComments: 2340
-  });
-
-  const stats = [
-    { icon: Users, label: 'Followers', value: metrics.followers.toLocaleString(), color: 'from-blue-500 to-blue-600' },
-    { icon: TrendingUp, label: 'Engagement Rate', value: `${metrics.engagement}%`, color: 'from-purple-500 to-purple-600' },
-    { icon: Share2, label: 'Total Reach', value: (metrics.totalReaches / 1000000).toFixed(1) + 'M', color: 'from-pink-500 to-pink-600' },
-    { icon: Target, label: 'Collaborations', value: metrics.collaborations, color: 'from-orange-500 to-orange-600' },
+export default function InfluencerProfileSection({ userData }) {
+  const previewStats = [
+    { icon: Users, label: 'Audience Growth' },
+    { icon: TrendingUp, label: 'Engagement Analytics' },
+    { icon: Share2, label: 'Campaign Reach' },
+    { icon: Target, label: 'Brand Collaborations' },
   ];
 
   return (
-    <div className="relative my-4 overflow-hidden rounded-2xl bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-white/20 backdrop-blur-sm p-5">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
-      
-      {/* Content */}
-      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Influencer Dashboard</h2>
+    <div className="relative my-6 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-600/20 to-blue-600/20 border border-indigo-400/30 backdrop-blur-sm p-5 sm:p-6 lg:p-8">
 
-      <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
-        <div className="flex-1">
-          <p className="text-white/70">Welcome back, {userData?.name || 'Creator'}! Track your campaigns, engagement metrics, and collaborations in one place.</p>
-        </div>
-        
-        <div className="absolute bottom-1 right-1 flex flex-wrap gap-4 flex-shrink-0">
-          <Link to="/influencer" className=" w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
-            <span className="relative flex items-center gap-2">
-              View Dashboard
+      {/* Subtle background pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:20px_20px]" />
+
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                Influencer Profile
+              </h2>
+              <span className="flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full bg-indigo-500/40 border border-indigo-400/50 text-white">
+                <Lock className="w-3 h-3" />
+                Locked
+              </span>
+            </div>
+            <p className="text-white/70 max-w-2xl text-sm sm:text-base">
+              Hi {userData?.firstName || 'there'}, unlock your Influencer Profile to run campaigns, track performance, collaborate with startups, and earn through your audience.
+            </p>
+          </div>
+
+          {/* CTA Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+            <Link
+              to="/apply-influencer"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-3 font-semibold text-white transition-all duration-300 border border-indigo-300/50 hover:scale-105"
+            >
+              Apply Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </span>
-          </Link>
+            </Link>
+
+            <Link
+              to="/influencer/about"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-400/50 px-6 py-3 text-white hover:bg-indigo-500/20 transition-all duration-300"
+            >
+              Learn More
+            </Link>
+          </div>
+        </div>
+
+        {/* Preview Features */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {previewStats.map(({ icon: Icon, label }) => (
+            <div
+              key={label}
+              className="flex flex-col items-center gap-2 rounded-xl border border-indigo-400/30 bg-indigo-500/10 p-4 text-center hover:bg-indigo-500/20 transition-colors"
+            >
+              <Icon className="w-5 h-5 text-indigo-300" />
+              <span className="text-xs sm:text-sm text-white/80">{label}</span>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
+}

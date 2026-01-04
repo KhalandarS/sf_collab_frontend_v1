@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-export default function DashboardChangeSection({ sections = [], onSectionChange }) {
-  const [activeSection, setActiveSection] = useState(sections[0]?.id || null);
+export default function DashboardChangeSection({ sections = [], onSectionChange, activeRole }) {
+  const [activeSection, setActiveSection] = useState(activeRole || (sections.length > 0 ? sections[0].id : null));
 
   const handleSectionChange = (sectionId) => {
     setActiveSection(sectionId);
@@ -15,8 +15,10 @@ export default function DashboardChangeSection({ sections = [], onSectionChange 
         
         Select your dashboard
       </span>
+      {console.log(activeSection)}
       {sections?.map((section) => (
         <button
+          
           key={section.id}
           onClick={() => handleSectionChange(section.id)}
           className={`px-4 py-2 rounded-lg font-semibold transition-all ${

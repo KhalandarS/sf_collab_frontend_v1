@@ -63,8 +63,8 @@ export function createLinks(unreadMessagesCount) {
     {
       id: 6,
       icon: <BrainCircuit size={23} />,
-      href: "/business-plan",
-      label: "Other features",
+      href: "/ai-dashboard",
+      label: "AI tools",
       subItems: [
         { id: "logo-generator", href: "/logo-generator", label: "Logo Generator" },
         { id: "data-scraper", href: "/data-scraper", label: "Data Scraper" },

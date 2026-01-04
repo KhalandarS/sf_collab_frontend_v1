@@ -123,7 +123,9 @@ const Dashboard = ({
       }))} onSectionChange={(sectionId) => {
         setActiveRole(sectionId);
         localStorage.setItem('activeRole', sectionId);
-      }} />
+        }}
+      activeRole={activeRole}
+      />
 
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
@@ -132,7 +134,7 @@ const Dashboard = ({
         <WaitlistSection />
         <JoinSFSection />
         {
-          userData && userData.role === "influencer"  && (
+          userData && userData.role !== "influencer"  && (
             <InfluencerSection userData={userData} />
           )
         }

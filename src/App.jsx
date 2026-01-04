@@ -67,6 +67,9 @@ import InfluencerDashboard from "./components/pages/dashboards/influencerDashboa
 import BuilderDashboard from "./components/pages/dashboards/builderDashboard/BuilderDashboard.jsx";
 import FounderDashboard from "./components/pages/dashboards/founderDashboard/FounderDashboard.jsx";
 import InvestorDashboard from "./components/pages/dashboards/investorDashboard/InvestorDashboard.jsx";
+import AIDashboard from "./components/pages/dashboards/aiDashboard/AIDashboard.jsx";
+import ContributionPage from "./components/pages/contribution/ContributionPage.jsx";
+import InfluencerApplication from "./components/pages/influencerApplication/InfluencerApplication.jsx";
 
 function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -143,7 +146,7 @@ function App() {
             <Route path="dashboard" element={<InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
           ) : user && activeRole === 'builder' ? (
             <Route path="dashboard" element={<BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-          ) : user && activeRole === 'founder' ?(
+          ) : user && activeRole === 'founder' ? (
                 <Route path="dashboard" element={<FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
               ) : user && activeRole === 'investor' ? (
                 <Route path="dashboard" element={<InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
@@ -151,13 +154,16 @@ function App() {
           )
         }
         {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
+        <Route path="ai-dashboard" element={<AIDashboard />} />
         <Route path="waitlist" element={<Waitlist />} />
         <Route path="waitlist-terms" element={<WaitlistTerms />} />
         <Route path="influencer" element={<Influencer />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="refer" element={<ReferPage />} />
         <Route path="join-sf" element={<JoinSF />} />
+        <Route path="apply-influencer" element={<InfluencerApplication />} />
         <Route path="profile-setup" element={<ProfileSetup />} />
+        <Route path="contribute" element={<ContributionPage />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />
@@ -171,6 +177,8 @@ function App() {
         <Route path="knowledge" element={<Knowledge />} />
         <Route path="knowledge-details" element={<Knowledgedetails />} />
         
+        {/* Chat */}
+        <Route path="chat" element={<ChatPage />} />
         {/* Posts */}
         <Route path="posts" element={<Posts />} />
         
@@ -184,7 +192,6 @@ function App() {
         <Route path="multimodal-images" element={<ImageGenerator />} />
         <Route path="logo-generator" element={<StartupLogoGenerator />} />
         <Route path="data-scraper" element={<ScraperForm />} />
-        <Route path="chat" element={<ChatPage />} />
         <Route path="qwen-chat" element={<QwenChat />} />
         <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}

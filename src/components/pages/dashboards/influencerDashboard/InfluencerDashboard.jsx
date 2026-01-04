@@ -8,13 +8,17 @@ export default function InfluencerDashboard({
   return (
     <div className="influencer-dashboard">
       <h1>Influencer Dashboard</h1>
-      <DashboardChangeSection sections={userRoles.map(role => ({
+      <DashboardChangeSection sections={
+        userRoles.map(role => ({
               id: role,
               label: role.charAt(0).toUpperCase() + role.slice(1)
-            }))} onSectionChange={(sectionId) => {
+        }))}
+        onSectionChange={(sectionId) => {
               setActiveRole(sectionId);
               localStorage.setItem('activeRole', sectionId);
-            }} />
+        }}
+      activeRole={activeRole}
+      />
       <div className="modules">
         {/* Add influencer-specific modules here */}
       </div>

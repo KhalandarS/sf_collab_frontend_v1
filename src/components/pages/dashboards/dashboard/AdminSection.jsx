@@ -37,7 +37,7 @@ export default function AdminSection() {
         </div>
 
         {/* CTA */}
-        <div className="absolute bottom-1 right-1 flex lg:justify-end">
+        <div className="md:absolute md:bottom-1 md:right-1 flex lg:justify-end">
           <Link
             to="/admin"
             className="inline-flex w-full items-center justify-center h-12 px-6 sm:px-8 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 border border-red-300/50 hover:scale-105"

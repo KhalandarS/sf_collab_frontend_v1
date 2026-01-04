@@ -1,7 +1,7 @@
 import DashboardChangeSection from "../dashboardChangeSection";
 
 export default function FounderDashboard({
-  userRoles, setActiveRole
+  userRoles, setActiveRole, activeRole
 }) {
   return (
     <div className="founder-dashboard">
@@ -11,7 +11,7 @@ export default function FounderDashboard({
             }))} onSectionChange={(sectionId) => {
               setActiveRole(sectionId);
               localStorage.setItem('activeRole', sectionId);
-            }} />
+            }} activeRole={activeRole}/>
       <h1>Founder Dashboard</h1>
       <div className="modules">
         {/* Add founder-specific modules here */}

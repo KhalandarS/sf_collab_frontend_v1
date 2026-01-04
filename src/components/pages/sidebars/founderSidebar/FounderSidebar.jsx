@@ -15,6 +15,7 @@ import { Link, useLocation } from "react-router-dom";
 import 'tippy.js/dist/tippy.css';
 import { createFounderLinks } from "./FounderLinks";
 import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
+import BottomLinks from "../BottomLinks";
 
 const FounderSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
   const location = useLocation();
@@ -82,22 +83,8 @@ const FounderSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
       </div>
 
       {/* Bottom links */}
-      <div className="flex flex-col gap-2 items-center">
-        <div className="flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors">
-          <SidebarFeedbackCard />
-        </div>
-        <Link
-          to="/help"
-          className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${
-            location.pathname === "/help"
-              ? "bg-[#2A2A2A] text-white"
-              : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-          }`}
-          onClick={onLinkClick}
-        >
-          <HelpCircle size={20} />
-        </Link>
-      </div>
+      <BottomLinks onLinkClick={onLinkClick}/>
+
     </div>
   );
 

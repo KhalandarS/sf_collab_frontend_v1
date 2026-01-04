@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Mail, Code, Palette, Film, Zap } from 'lucide-react';
 import { Button } from '../../ui/button';
 import ContactForm from '../ContactForm';
+import JoinSFApplicationForm from './joinSFForm';
 const JoinSF = () => {
   const roles = [
     {
@@ -40,7 +41,7 @@ const JoinSF = () => {
         <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-pink-600/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10 w-full mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -89,12 +90,7 @@ const JoinSF = () => {
             })}
           </div>
         </motion.section>
-        <ContactForm includeFiles={true}
-          acceptTerms={true}
-          subject={"Join the SForger Revolution"}
-          subjectPlaceholder={"Position you are applying for..."}
-          filesPlaceholder={"Attach your portfolio or resume"}
-        />
+        <JoinSFApplicationForm />
         {/* CTA Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -106,9 +102,9 @@ const JoinSF = () => {
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
               Ready to make an impact?
             </h2>
-            <p className="text-lg text-slate-300 mb-8">
+            {/* <p className="text-lg text-slate-300 mb-8">
               Email us with your portfolio or resume to join our growing team.
-            </p>
+            </p> */}
             
             <a href="mailto:sfcollab333@gmail.com">
               <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-8 py-6 rounded-xl text-lg">

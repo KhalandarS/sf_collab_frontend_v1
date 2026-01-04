@@ -14,7 +14,7 @@ export default function WaitlistSection() {
           <p className="text-white/70">Join our waitlist for anticipated access to premium features. Be among the first to unlock exclusive benefits.</p>
         </div>
               
-        <div className="absolute bottom-1 right-1 flex flex-wrap gap-4 flex-shrink-0">
+        <div className="md:absolute md:bottom-1 md:right-1 flex flex-wrap gap-4 flex-shrink-0">
           {/*                 
                 <a href="/waitlist" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
                   <span className="relative flex items-center gap-2">

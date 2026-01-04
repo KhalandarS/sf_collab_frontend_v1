@@ -36,7 +36,7 @@ export default function JoinSFSection() {
         </div>
 
         {/* CTA */}
-        <div className="absolute bottom-1 right-1 flex lg:justify-end">
+        <div className="md:absolute md:bottom-1 md:right-1 flex lg:justify-end">
           <Link
             to="/join-sf"
             className="inline-flex w-full items-center justify-center h-12 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-300 border border-cyan-300/50 hover:scale-105"
