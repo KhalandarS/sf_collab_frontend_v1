@@ -1,7 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
-import Dashboard from "./components/pages/dashboard/dashboard.jsx";
 import Ideation from "./components/pages/Ideation.jsx";
 import Knowledge from "./components/pages/Knowledge.jsx";
 import Setting from "./components/pages/Setting.jsx";
@@ -59,9 +58,39 @@ import DiscoverUsers from "./components/discover-users/DiscoverUsers.jsx";
 import VerifyEmail from "./components/pages/verifyEmail/VerifyEmail.jsx";
 import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
+import ProfileSetup from "./components/pages/ProfileSetup.jsx";
+import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { usersAPI } from "./utils/APIs/userApi.js";
+import Dashboard from "./components/pages/dashboards/dashboard/dashboard.jsx";
+import InfluencerDashboard from "./components/pages/dashboards/influencerDashboard/InfluencerDashboard.jsx";
+import BuilderDashboard from "./components/pages/dashboards/builderDashboard/BuilderDashboard.jsx";
+import FounderDashboard from "./components/pages/dashboards/founderDashboard/FounderDashboard.jsx";
+import InvestorDashboard from "./components/pages/dashboards/investorDashboard/InvestorDashboard.jsx";
 
 function App() {
+  const { access_token, user } = useSelector((state) => state.auth);
+  const [userRoles, setUserRoles] = useState([]);
+  const [activeRole, setActiveRole] = useState(localStorage.getItem('activeRole') || 'member');
+  useEffect(() => {
+    localStorage.setItem('activeRole', activeRole);
+  }, [activeRole]);
+  useEffect(() => {
+    async function fetchUserRoles() {
+      if (access_token) {
+        try {
+          console.log(access_token);
+          const response = await usersAPI.getMyRoles(access_token);
 
+          setUserRoles([...response.data.map(role => role.role), 'General']);
+          setActiveRole('member');
+        } catch (error) {
+          console.error("Error fetching user roles:", error);
+        }
+      }
+    }
+    fetchUserRoles();
+  }, [access_token]);
   return (<>
   
     <Routes>
@@ -103,18 +132,31 @@ function App() {
         path="/" 
         element={
           <ProtectedRoute>
-            <Layout />
+            <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
           </ProtectedRoute>
         }
       >
         {/* Dashboard */}
-        <Route path="dashboard" element={<Dashboard />} />
+        {
+          user && activeRole === 'influencer' ? (
+            <Route path="dashboard" element={<InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : user && activeRole === 'builder' ? (
+            <Route path="dashboard" element={<BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : user && activeRole === 'founder' ?(
+                <Route path="dashboard" element={<FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+              ) : user && activeRole === 'investor' ? (
+                <Route path="dashboard" element={<InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : (<Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          )
+        }
+        {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
         <Route path="waitlist" element={<Waitlist />} />
         <Route path="waitlist-terms" element={<WaitlistTerms />} />
         <Route path="influencer" element={<Influencer />} />
         <Route path="admin" element={<AdminPage />} />
         <Route path="refer" element={<ReferPage />} />
         <Route path="join-sf" element={<JoinSF />} />
+        <Route path="profile-setup" element={<ProfileSetup />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />

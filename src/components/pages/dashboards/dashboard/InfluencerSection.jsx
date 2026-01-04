@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, Users, Heart, Share2, BarChart3, Target, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import SpotlightCard from '../../ui/SpotlightCard';
+import SpotlightCard from '../../../ui/SpotlightCard';
 
 export default function InfluencerSection({ userData }) {
   const [metrics] = useState({
@@ -27,14 +27,15 @@ export default function InfluencerSection({ userData }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_1px)] bg-[length:20px_20px]"></div>
       
       {/* Content */}
+      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Influencer Dashboard</h2>
+
       <div className="relative z-10 flex flex-col sm:flex-row items-center justify-between gap-6">
         <div className="flex-1">
-          <h2 className="text-2xl font-bold text-white mb-2">Influencer Dashboard</h2>
           <p className="text-white/70">Welcome back, {userData?.name || 'Creator'}! Track your campaigns, engagement metrics, and collaborations in one place.</p>
         </div>
         
-        <div className="flex flex-wrap gap-4 flex-shrink-0">
-          <Link to="/influencer" className="w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
+        <div className="absolute bottom-1 right-1 flex flex-wrap gap-4 flex-shrink-0">
+          <Link to="/influencer" className=" w-full sm:w-auto group relative px-6 py-3 bg-blue-500/80 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-blue-400/50 hover:border-blue-300">
             <span className="relative flex items-center gap-2">
               View Dashboard
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -44,4 +45,4 @@ export default function InfluencerSection({ userData }) {
       </div>
     </div>
   );
-}
+};

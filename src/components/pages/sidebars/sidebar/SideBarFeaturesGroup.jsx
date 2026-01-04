@@ -3,7 +3,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../../ui/tooltip"; 
+} from "../../../ui/tooltip"; 
 
 import { Link } from "react-router-dom";
 import { groupFeatures } from "./groupFeatures";

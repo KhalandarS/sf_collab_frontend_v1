@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Filter, X, Building2, Users, MapPin, TrendingUp, 
   Code, Mail, ExternalLink, Sparkles, Check, Eye,
-  ChevronLeft, ChevronRight, Plus, DollarSign
+  ChevronLeft, ChevronRight, Plus, DollarSign,
+  Rocket
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -214,8 +215,9 @@ const DiscoverStartups = () => {
                 className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6   backdrop-blur-sm"
               >
                 <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
+                <Rocket className="w-4 h-4 mr-1" />
                 <span className="text-xs flex items-center font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                  <img src="/rocket.png" className="w-7" alt="1,200+ Startups Ready to Hire"/> 1,200+ Startups Ready to Hire
+                   1,200+ Startups Ready to Hire
                 </span>
               </motion.div>
             

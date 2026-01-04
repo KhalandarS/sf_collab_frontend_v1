@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, Link, useNavigate } from "react-router-dom"; // Added Link import
 import NavBar from "../components/sections/NavBar";
-import SideBar from "../components/sections/sidebar/SideBar";
+import UserSidebar from "../components/pages/sidebars/sidebar/SideBar";
 import MobileNavBar from "../components/sections/MobileNavBar";
 import Options from "../components/sections/Options";
 import useScrollHide from "../hooks/useScrollHide";
@@ -21,8 +21,16 @@ import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
 //import { io } from "socket.io-client";
 import useSocket from "@/components/pages/chat/useSocket"; 
+import { usersAPI } from "@/utils/APIs/userApi";
+import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
+import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
+import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
+import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/InvestorSidebar";
 
-const Layout = () => {
+const Layout = ({
+  activeRole, setActiveRole,
+  userRoles
+}) => {
   const location = useLocation();
 
   const isRootPath = location.pathname === "/";
@@ -32,54 +40,54 @@ const Layout = () => {
     topReveal: 10,
   });
   const navigate = useNavigate();
-const { user, access_token } = useSelector((state) => state.auth);
-const { socket, isConnected } = useSocket(access_token);
+  const { user, access_token } = useSelector((state) => state.auth);
+  const { socket, isConnected } = useSocket(access_token);
 
-useEffect(() => {
-  if (!socket || !isConnected) return;
+  useEffect(() => {
+    if (!socket || !isConnected) return;
 
-  // 🔔 Global message notification
-  const handleConversationMessage = (data) => {
-    console.log('Global message:', data);
-    if (data.message.sender.id === user.id) return; // Ignore own messages
-    if (window.location.pathname.startsWith('/chat')) return; // Ignore if already in chat
-    const truncateContent = (content, maxLength = 80) => {
-      return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+    // 🔔 Global message notification
+    const handleConversationMessage = (data) => {
+      console.log('Global message:', data);
+      if (data.message.sender.id === user.id) return; // Ignore own messages
+      if (window.location.pathname.startsWith('/chat')) return; // Ignore if already in chat
+      const truncateContent = (content, maxLength = 80) => {
+        return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
+      };
+
+      toast.info(
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold">{data.message.sender.firstName} {data.message.sender.lastName}</p>
+          <p className="text-sm opacity-90">{truncateContent(data.message.content)}</p>
+        </div>,
+        {
+          onClick: () => {
+            navigate(`/chat`);
+          }
+        }
+      );
+
+      // Optional:
+      // dispatch(fetchConversations());
+      // dispatch(incrementUnread(data.conversation_id));
     };
 
-    toast.info(
-      <div className="flex flex-col gap-1">
-      <p className="font-semibold">{data.message.sender.firstName} {data.message.sender.lastName}</p>
-      <p className="text-sm opacity-90">{truncateContent(data.message.content)}</p>
-      </div>,
-      {
-        onClick: () => {
-          navigate(`/chat`);
-        }
-      }
-    );
+    // 👥 Added to a team chat
+    const handleAddedToTeamChat = (data) => {
+      toast.success(`You have been added to the team chat: ${data.conversation_name}`);
 
-    // Optional:
-    // dispatch(fetchConversations());
-    // dispatch(incrementUnread(data.conversation_id));
-  };
+      // Optional:
+      // dispatch(fetchConversations());
+    };
 
-  // 👥 Added to a team chat
-  const handleAddedToTeamChat = (data) => {
-    toast.success(`You have been added to the team chat: ${data.conversation_name}`);
+    socket.on('conversation_message', handleConversationMessage);
+    socket.on('added_to_team_chat', handleAddedToTeamChat);
 
-    // Optional:
-    // dispatch(fetchConversations());
-  };
-
-  socket.on('conversation_message', handleConversationMessage);
-  socket.on('added_to_team_chat', handleAddedToTeamChat);
-
-  return () => {
-    socket.off('conversation_message', handleConversationMessage);
-    socket.off('added_to_team_chat', handleAddedToTeamChat);
-  };
-}, [socket, isConnected]);
+    return () => {
+      socket.off('conversation_message', handleConversationMessage);
+      socket.off('added_to_team_chat', handleAddedToTeamChat);
+    };
+  }, [socket, isConnected]);
 
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
@@ -102,21 +110,21 @@ useEffect(() => {
 
   useEffect(() => {
     AOS.init({
-      duration: 800,       
-      easing: "ease-out",  
-      once: false,         
-      mirror: false        
+      duration: 800,
+      easing: "ease-out",
+      once: false,
+      mirror: false
     });
   }, []);
   // useActivityHeartbeat(user, access_token);
-  useEffect(()=>{
+  useEffect(() => {
     if (!isRootPath) {
       setIsOptionsVisible(true);
-      setTimeout(()=>{
+      setTimeout(() => {
         setIsOptionsVisible(false);
-      },1000);
+      }, 1000);
     }
-  },[isRootPath]);
+  }, [isRootPath]);
   useEffect(() => {
     async function fetchIsOnWaitlist() {
       if (user && access_token) {
@@ -131,42 +139,42 @@ useEffect(() => {
         }
       }
     }
-  fetchIsOnWaitlist();
+    fetchIsOnWaitlist();
   }, [user, access_token, navigate]);
-    const [wsClient, setWsClient] = useState(null);
+  const [wsClient, setWsClient] = useState(null);
   useEffect(() => {
-  const userId = user?.id;
-  if (!userId || wsClient) return;
+    const userId = user?.id;
+    if (!userId || wsClient) return;
 
-  const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
+    const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
-  client.on('new_message', (data) => {
-    // 🔔 Always toast
-    toast.info(`New message received`);
+    client.on('new_message', (data) => {
+      // 🔔 Always toast
+      toast.info(`New message received`);
 
-    // 📣 Dispatch global event
-    window.dispatchEvent(
-      new CustomEvent('chat:new_message', { detail: data })
-    );
-  });
+      // 📣 Dispatch global event
+      window.dispatchEvent(
+        new CustomEvent('chat:new_message', { detail: data })
+      );
+    });
 
-  client.on('user_online', (data) => {
-    toast.success(`${data.user_name || 'User'} is online`);
-  });
+    client.on('user_online', (data) => {
+      toast.success(`${data.user_name || 'User'} is online`);
+    });
 
-  client.on('user_offline', (data) => {
-    toast.info(`${data.user_name || 'User'} went offline`);
-  });
+    client.on('user_offline', (data) => {
+      toast.info(`${data.user_name || 'User'} went offline`);
+    });
 
-  client.on('error', () => {
-    toast.error('Realtime connection error');
-  });
+    client.on('error', () => {
+      toast.error('Realtime connection error');
+    });
 
-  client.connect();
-  setWsClient(client);
+    client.connect();
+    setWsClient(client);
 
-  return () => client.disconnect();
-}, [user?.id, wsClient]);
+    return () => client.disconnect();
+  }, [user?.id, wsClient]);
 
   // Handle mouse leave with proper event delegation
   const handleNavAreaLeave = (e) => {
@@ -180,7 +188,7 @@ useEffect(() => {
   
     // Check if we're moving to the options element
     if (
-      optionsRef.current && 
+      optionsRef.current &&
       optionsRef.current.contains(e.relatedTarget)
     ) {
       return; // Don't hide if moving to options
@@ -211,10 +219,30 @@ useEffect(() => {
     }
     setIsOptionsVisible(false);
   };
-  
+  const SideBar = (
+    {
+      unreadMessagesCount,
+      setIsOpen,
+      isOpen,
+      isAdmin
+    }) => {
+    if (activeRole === 'founder') {
+      return <FounderSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
+    } else if (activeRole === 'influencer') {
+      return <InfluencerSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
+    } else if (activeRole === 'builder') {
+      return <BuilderSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
+    } else if (activeRole === 'investor') {
+      return <InvestorSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
+    } else {
+      return <UserSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
+    }
+  };
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
       {/* Dark Horizon Glow */}
+
+      
       <div
         className="absolute inset-0 z-0"
         style={{
@@ -228,16 +256,18 @@ useEffect(() => {
           ref={navContainerRef}
           onMouseEnter={handleNavAreaEnter}
           onMouseLeave={handleNavAreaLeave}
-          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-            isNavHidden ? "h-0" : "h-[60px]"
-          } lg:h-[60px]`}
+          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"
+            } lg:h-15`}
         >
           {/* Pass isAdmin prop to NavBar */}
-          <NavBar 
-            setIsOpen={setIsOpen} 
-            isOpen={isOpen} 
+          <NavBar
+            setIsOpen={setIsOpen}
+            isOpen={isOpen}
             isHidden={isNavHidden}
-            isAdmin={isAdmin} 
+            isAdmin={isAdmin}
+            activeRole={activeRole}
+            setActiveRole={setActiveRole}
+            userRoles={userRoles}
           />
         </div>
       )}
@@ -247,11 +277,11 @@ useEffect(() => {
         {!isRootPath && (
           <div className="block">
             {/* Pass isAdmin prop to SideBar */}
-            <SideBar 
-              unreadMessagesCount={unreadMessagesCount} 
-              setIsOpen={setIsOpen} 
+            <SideBar
+              unreadMessagesCount={unreadMessagesCount}
+              setIsOpen={setIsOpen}
               isOpen={isOpen}
-              isAdmin={isAdmin} 
+              isAdmin={isAdmin}
             />
           </div>
         )}
@@ -264,12 +294,11 @@ useEffect(() => {
               ref={optionsRef}
               onMouseEnter={handleOptionsEnter}
               onMouseLeave={handleOptionsLeave}
-              className={`transition-all duration-300 px-4 absolute z-50  m-auto flex justify-center top-0 ${
-                isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
-              }`}
+              className={`transition-all duration-300 px-4 absolute z-50  m-auto flex justify-center top-0 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
+                }`}
               style={{ zIndex: 99999999 }}
             >
-              <Options 
+              <Options
                 isHidden={() => {
                   return isNavHidden;
                 }}
@@ -280,20 +309,19 @@ useEffect(() => {
           )}
           
           <div
-            className={`relative w-full h-full ${
-              !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
-            } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+            className={`relative w-full h-full ${!isRootPath ? "pt-3.5 max-sm:pb-16" : ""
+              } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
             onScroll={isRootPath ? undefined : onScroll}
-          >
+          > 
             <Outlet />
           </div>
           
           {
-            !isRootPath &&(
-            <>
-              <FloatingChatbox />
-              {/* <GlassmorphismFeedbackCard /> */}
-            </>
+            !isRootPath && (
+              <>
+                {/* <FloatingChatbox /> */}
+                {/* <GlassmorphismFeedbackCard /> */}
+              </>
             )
           }
         </div>

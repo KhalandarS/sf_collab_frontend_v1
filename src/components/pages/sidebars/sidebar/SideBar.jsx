@@ -8,7 +8,7 @@ import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import 'tippy.js/dist/tippy.css';
 import { createLinks, getCurrentContext } from "./links";
-import SidebarFeedbackCard from "../SidebarFeedbackCard";
+import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
 
 const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   const location = useLocation();
