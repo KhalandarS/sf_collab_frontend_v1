@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Crown } from "lucide-react";
-import { getTopNavLinks, getCurrentContext } from "../pages/sidebars/sidebar/links";
+import { getTopNavLinks, getCurrentContext } from "./sidebar/links";
 
 const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
   const location = useLocation();

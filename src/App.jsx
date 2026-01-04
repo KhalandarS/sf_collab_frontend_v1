@@ -70,6 +70,7 @@ import InvestorDashboard from "./components/pages/dashboards/investorDashboard/I
 import AIDashboard from "./components/pages/dashboards/aiDashboard/AIDashboard.jsx";
 import ContributionPage from "./components/pages/contribution/ContributionPage.jsx";
 import InfluencerApplication from "./components/pages/influencerApplication/InfluencerApplication.jsx";
+import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
 
 function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -96,7 +97,8 @@ function App() {
     fetchUserRoles();
   }, [access_token]);
   return (<>
-  
+        <ChatNotificationProvider >
+
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutPage />} />
@@ -223,7 +225,7 @@ function App() {
       {/* Catch all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
-    <ToastContainer />
+      </ChatNotificationProvider>
   <ToastContainer
     position="bottom-center"
     autoClose={5000}
@@ -236,7 +238,8 @@ function App() {
     pauseOnHover
     theme="dark"
     style={{ bottom: '20px' }}
-  />
+      />
+      
   </>
   );
 }

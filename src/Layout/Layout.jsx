@@ -1,174 +1,120 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Outlet, useLocation, Link, useNavigate } from "react-router-dom"; // Added Link import
-import NavBar from "../components/sections/NavBar";
-import UserSidebar from "../components/pages/sidebars/sidebar/SideBar";
-import MobileNavBar from "../components/sections/MobileNavBar";
-import Options from "../components/sections/Options";
-import useScrollHide from "../hooks/useScrollHide";
-import FloatingChatbox from "../components/sections/ChatWidget";
-import AOS from 'aos';
-import 'aos/dist/aos.css'; 
-import '../components/style/Layout.css';
-
-import GlassmorphismFeedbackCard from '../components/sections/CompactFeedbackCard';
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
-import { hasPermission } from "../utils/permissionCheck"; // Import permission check utility
-import { useActivityHeartbeat } from "./useActivityHearbeat";
-import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
-import { toast } from "react-toastify";
-import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-import { SOCKET_API_URL } from "@/utils/config";
-//import { io } from "socket.io-client";
-import useSocket from "@/components/pages/chat/useSocket"; 
-import { usersAPI } from "@/utils/APIs/userApi";
+
+import NavBar from "../components/sections/NavBar";
+import Options from "../components/sections/Options";
+import FloatingChatbox from "../components/sections/ChatWidget";
+
+import UserSidebar from "@/components/pages/sidebars/sidebar/SideBar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
 import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
 import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/InvestorSidebar";
 
-const Layout = ({
-  activeRole, setActiveRole,
-  userRoles
-}) => {
-  const location = useLocation();
+import useScrollHide from "../hooks/useScrollHide";
+import { hasPermission } from "../utils/permissionCheck";
+import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
+import useSocket from "@/components/pages/chat/useSocket";
 
+import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
+import { SOCKET_API_URL } from "@/utils/config";
+
+import { toast } from "react-toastify";
+import AOS from "aos";
+import "aos/dist/aos.css";
+import "../components/style/Layout.css";
+
+const Layout = ({ activeRole, setActiveRole, userRoles }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const isRootPath = location.pathname === "/";
-  
+
+  const { user, access_token } = useSelector((state) => state.auth);
+  const isAdmin = hasPermission(user, "admin");
+
+  const { socket, isConnected } = useSocket(access_token);
+
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
     deltaThreshold: 4,
     topReveal: 10,
   });
-  const navigate = useNavigate();
-  const { user, access_token } = useSelector((state) => state.auth);
-  const { socket, isConnected } = useSocket(access_token);
-
-  useEffect(() => {
-    if (!socket || !isConnected) return;
-
-    // 🔔 Global message notification
-    const handleConversationMessage = (data) => {
-      console.log('Global message:', data);
-      if (data.message.sender.id === user.id) return; // Ignore own messages
-      if (window.location.pathname.startsWith('/chat')) return; // Ignore if already in chat
-      const truncateContent = (content, maxLength = 80) => {
-        return content.length > maxLength ? content.substring(0, maxLength) + '...' : content;
-      };
-
-      toast.info(
-        <div className="flex flex-col gap-1">
-          <p className="font-semibold">{data.message.sender.firstName} {data.message.sender.lastName}</p>
-          <p className="text-sm opacity-90">{truncateContent(data.message.content)}</p>
-        </div>,
-        {
-          onClick: () => {
-            navigate(`/chat`);
-          }
-        }
-      );
-
-      // Optional:
-      // dispatch(fetchConversations());
-      // dispatch(incrementUnread(data.conversation_id));
-    };
-
-    // 👥 Added to a team chat
-    const handleAddedToTeamChat = (data) => {
-      toast.success(`You have been added to the team chat: ${data.conversation_name}`);
-
-      // Optional:
-      // dispatch(fetchConversations());
-    };
-
-    socket.on('conversation_message', handleConversationMessage);
-    socket.on('added_to_team_chat', handleAddedToTeamChat);
-
-    return () => {
-      socket.off('conversation_message', handleConversationMessage);
-      socket.off('added_to_team_chat', handleAddedToTeamChat);
-    };
-  }, [socket, isConnected]);
-
 
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [wsClient, setWsClient] = useState(null);
+
   const optionsRef = useRef(null);
   const navContainerRef = useRef(null);
 
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Check if user has admin permission
-  const isAdmin = hasPermission(user, 'admin');
-
-  // Handle mouse enter for the entire nav area
-  const handleNavAreaEnter = () => {
-    if (!isRootPath) {
-      setIsOptionsVisible(true);
-    }
-  };
-
+  /* -------------------- AOS -------------------- */
   useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: "ease-out",
-      once: false,
-      mirror: false
-    });
+    AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
-  // useActivityHeartbeat(user, access_token);
+
+  /* -------------------- Waitlist Guard -------------------- */
   useEffect(() => {
-    if (!isRootPath) {
-      setIsOptionsVisible(true);
-      setTimeout(() => {
-        setIsOptionsVisible(false);
-      }, 1000);
-    }
-  }, [isRootPath]);
-  useEffect(() => {
-    async function fetchIsOnWaitlist() {
-      if (user && access_token) {
-        try {
-          const result = await waitlistAPI.isOnWaitlist(user.email, access_token)
-          if (!result.on_waitlist && window.location.pathname !== '/waitlist' && window.location.pathname !== '/waitlist-terms') {
-            toast.info('You should join the waitlist to access this section.');
-            navigate('/waitlist');
-          }
-        } catch (error) {
-          console.error("Error fetching waitlist status:", error);
+    if (!user || !access_token) return;
+
+    const checkWaitlist = async () => {
+      try {
+        const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
+        if (
+          !res.on_waitlist &&
+          !["/waitlist", "/waitlist-terms"].includes(location.pathname)
+        ) {
+          toast.info("You should join the waitlist to access this section.");
+          navigate("/waitlist");
         }
+      } catch (err) {
+        console.error(err);
       }
-    }
-    fetchIsOnWaitlist();
-  }, [user, access_token, navigate]);
-  const [wsClient, setWsClient] = useState(null);
+    };
+
+    checkWaitlist();
+  }, [user, access_token, location.pathname, navigate]);
+
+  /* -------------------- Socket.IO (Chat) -------------------- */
   useEffect(() => {
-    const userId = user?.id;
-    if (!userId || wsClient) return;
+    if (!socket || !isConnected || !user) return;
 
-    const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
+    const handleConversationMessage = (data) => {
+      if (data.message.sender.id === user.id) return;
+      if (location.pathname.startsWith("/chat")) return;
 
-    client.on('new_message', (data) => {
-      // 🔔 Always toast
-      toast.info(`New message received`);
-
-      // 📣 Dispatch global event
-      window.dispatchEvent(
-        new CustomEvent('chat:new_message', { detail: data })
+      toast.info(
+        <>
+          <p className="font-semibold">
+            {data.message.sender.firstName} {data.message.sender.lastName}
+          </p>
+          <p className="text-sm opacity-80 truncate">
+            {data.message.content}
+          </p>
+        </>,
+        { onClick: () => navigate("/chat") }
       );
-    });
+    };
 
-    client.on('user_online', (data) => {
-      toast.success(`${data.user_name || 'User'} is online`);
-    });
+    socket.on("conversation_message", handleConversationMessage);
+    return () =>
+      socket.off("conversation_message", handleConversationMessage);
+  }, [socket, isConnected, user, location.pathname, navigate]);
 
-    client.on('user_offline', (data) => {
-      toast.info(`${data.user_name || 'User'} went offline`);
-    });
+  /* -------------------- Raw WebSocket Client -------------------- */
+  useEffect(() => {
+    if (!user?.id || wsClient) return;
 
-    client.on('error', () => {
-      toast.error('Realtime connection error');
-    });
+    const client = new ChatWebSocketClient(SOCKET_API_URL, user.id);
+
+    client.on("new_message", () => toast.info("New message received"));
+    client.on("user_online", (d) =>
+      toast.success(`${d.user_name || "User"} is online`)
+    );
+    client.on("user_offline", (d) =>
+      toast.info(`${d.user_name || "User"} went offline`)
+    );
+    client.on("error", () => toast.error("Realtime connection error"));
 
     client.connect();
     setWsClient(client);
@@ -176,90 +122,45 @@ const Layout = ({
     return () => client.disconnect();
   }, [user?.id, wsClient]);
 
-  // Handle mouse leave with proper event delegation
-  const handleNavAreaLeave = (e) => {
-    if (isRootPath) return;
-    
-    // Safety check: relatedTarget might be null
-    if (!e.relatedTarget) {
-      setIsOptionsVisible(false);
-      return;
-    }
-  
-    // Check if we're moving to the options element
-    if (
-      optionsRef.current &&
-      optionsRef.current.contains(e.relatedTarget)
-    ) {
-      return; // Don't hide if moving to options
-    }
-    
-    // Also check if we're moving to a child of options
-    const isMovingToOptions = e.relatedTarget.closest('.options-container');
-    if (isMovingToOptions) {
-      return;
-    }
-    
-    setIsOptionsVisible(false);
-  };
+  /* -------------------- Sidebar Resolver -------------------- */
+  const SideBar = () => {
+    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
 
-  // Handle options area specifically
-  const handleOptionsEnter = () => {
-    if (!isRootPath) {
-      setIsOptionsVisible(true);
+    switch (activeRole) {
+      case "founder":
+        return <FounderSidebar {...props} />;
+      case "influencer":
+        return <InfluencerSidebar {...props} />;
+      case "builder":
+        return <BuilderSidebar {...props} />;
+      case "investor":
+        return <InvestorSidebar {...props} />;
+      default:
+        return <UserSidebar {...props} />;
     }
   };
 
-  const handleOptionsLeave = (e) => {
-    if (isRootPath) return;
-    
-    // Check if we're moving back to the nav area
-    if (navContainerRef.current && navContainerRef.current.contains(e.relatedTarget)) {
-      return; // Don't hide if moving back to nav
-    }
-    setIsOptionsVisible(false);
-  };
-  const SideBar = (
-    {
-      unreadMessagesCount,
-      setIsOpen,
-      isOpen,
-      isAdmin
-    }) => {
-    if (activeRole === 'founder') {
-      return <FounderSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
-    } else if (activeRole === 'influencer') {
-      return <InfluencerSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
-    } else if (activeRole === 'builder') {
-      return <BuilderSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
-    } else if (activeRole === 'investor') {
-      return <InvestorSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
-    } else {
-      return <UserSidebar unreadMessagesCount={unreadMessagesCount} setIsOpen={setIsOpen} isOpen={isOpen} isAdmin={isAdmin} />;
-    }
-  };
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
-      {/* Dark Horizon Glow */}
-
-      
+      {/* Background */}
       <div
         className="absolute inset-0 z-0"
         style={{
-          background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          background:
+            "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
         }}
       />
 
-      {/* Collapsible Top Nav Container - Hidden on root path */}
+      {/* Top Nav */}
       {!isRootPath && (
         <div
           ref={navContainerRef}
-          onMouseEnter={handleNavAreaEnter}
-          onMouseLeave={handleNavAreaLeave}
-          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"
-            } lg:h-15`}
+          onMouseEnter={() => setIsOptionsVisible(true)}
+          onMouseLeave={() => setIsOptionsVisible(false)}
+          className={`transition-all ${
+            isNavHidden ? "h-0" : "h-[60px]"
+          } overflow-hidden`}
         >
-          {/* Pass isAdmin prop to NavBar */}
           <NavBar
             setIsOpen={setIsOpen}
             isOpen={isOpen}
@@ -272,63 +173,35 @@ const Layout = ({
         </div>
       )}
 
-      <div className="relative flex-1 w-full flex overflow-hidden">
-        {/* Desktop Sidebar - Hidden on root path and mobile */}
-        {!isRootPath && (
-          <div className="block">
-            {/* Pass isAdmin prop to SideBar */}
-            <SideBar
-              unreadMessagesCount={unreadMessagesCount}
-              setIsOpen={setIsOpen}
-              isOpen={isOpen}
-              isAdmin={isAdmin}
-            />
-          </div>
-        )}
-        
-        {/* Main Content Area */}
-        <div className="text-white relative flex flex-col items-center w-full max-sm:px-4 max-sm:py-0 overflow-hidden pb-16 sm:pb-0">
-          {/* Options Panel - Hidden on root path */}
-          {!isRootPath && ["refer", "waitlist"].includes(location.pathname) && (
-            <div
-              ref={optionsRef}
-              onMouseEnter={handleOptionsEnter}
-              onMouseLeave={handleOptionsLeave}
-              className={`transition-all duration-300 px-4 absolute z-50  m-auto flex justify-center top-0 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
+      <div className="flex flex-1 overflow-hidden">
+        {!isRootPath && <SideBar />}
+
+        <div className="relative w-full flex flex-col overflow-hidden">
+          {!isRootPath &&
+            ["refer", "waitlist"].includes(location.pathname) && (
+              <div
+                ref={optionsRef}
+                className={`absolute top-0 w-full flex justify-center transition ${
+                  isOptionsVisible ? "opacity-100" : "opacity-30"
                 }`}
-              style={{ zIndex: 99999999 }}
-            >
-              <Options
-                isHidden={() => {
-                  return isNavHidden;
-                }}
-                unreadMessagesCount={unreadMessagesCount}
-                isAdmin={isAdmin} // Pass admin status to Options
-              />
-            </div>
-          )}
-          
+              >
+                <Options
+                  unreadMessagesCount={unreadMessagesCount}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            )}
+
           <div
-            className={`relative w-full h-full ${!isRootPath ? "pt-3.5 max-sm:pb-16" : ""
-              } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
-            onScroll={isRootPath ? undefined : onScroll}
-          > 
+            className="relative w-full h-full overflow-y-auto scrollbar-hide"
+            onScroll={!isRootPath ? onScroll : undefined}
+          >
             <Outlet />
           </div>
-          
-          {
-            !isRootPath && (
-              <>
-                {/* <FloatingChatbox /> */}
-                {/* <GlassmorphismFeedbackCard /> */}
-              </>
-            )
-          }
+
+          {!isRootPath && <FloatingChatbox />}
         </div>
       </div>
-
-      {/* Mobile Navigation Bar - Only visible on mobile and hidden on root path */}
-      {/* {!isRootPath && <MobileNavBar isHidden={isNavHidden} isAdmin={isAdmin} />} */}
     </div>
   );
 };
