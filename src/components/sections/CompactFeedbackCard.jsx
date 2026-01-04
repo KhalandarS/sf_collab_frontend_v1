@@ -34,14 +34,27 @@ const CompactFeedbackCard = () => {
   const [feedbackContent, setFeedbackContent] = useState('');
   const { access_token, user } = useSelector((state) => state.auth);
   
-  const MIN_FEEDBACK_LENGTH = 20;
-  const isValidFeedback = feedbackContent.trim().length >= MIN_FEEDBACK_LENGTH;
+  const MIN_FEEDBACK_LENGTH = 5;
+  const MAX_FEEDBACK_LENGTH = 600;
+  const isValidFeedback = feedbackContent.trim().length >= MIN_FEEDBACK_LENGTH && feedbackContent.length <= MAX_FEEDBACK_LENGTH;
+
+  const handleFeedbackChange = (e) => {
+    const value = e.target.value;
+    // Only update if under max length
+    if (value.length <= MAX_FEEDBACK_LENGTH) {
+      setFeedbackContent(value);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!isValidFeedback) {
-      toast.warn(`Feedback must be at least ${MIN_FEEDBACK_LENGTH} characters long.`);
+      if (feedbackContent.trim().length < MIN_FEEDBACK_LENGTH) {
+        toast.warn(`Feedback must be at least ${MIN_FEEDBACK_LENGTH} characters long.`);
+      } else if (feedbackContent.length > MAX_FEEDBACK_LENGTH) {
+        toast.warn(`Feedback must not exceed ${MAX_FEEDBACK_LENGTH} characters.`);
+      }
       return;
     }
 
@@ -58,7 +71,6 @@ const CompactFeedbackCard = () => {
     console.log(response);
     if (response.status === 201) {
       toast.success('Thank you for your feedback!');
-      // waitlistAPI.addPoints({ userId: user.id, category: 'contribution' }, access_token);
       setFeedbackContent('');
       e.target.reset();
       setIsOpen(false);
@@ -160,23 +172,35 @@ const CompactFeedbackCard = () => {
                 Please provide genuine feedback only. Spam or nonsense suggestions may result in account suspension or ban.
               </p>
             </div>
-
+ 
             <div className="mt-4 space-y-3">
               <Label className="text-white text-sm">Your feedback</Label>
               <Textarea 
                 name="feedback"
                 placeholder="What can we improve?"
-                className="min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
+                // Added 'break-all' and fixed the height management
+                className={cn(
+                  "min-h-[120px] max-h-[180px] bg-gray-800/50 border-gray-700 text-white text-sm",
+                  "resize-none overflow-y-auto break-all whitespace-pre-wrap"
+                )}
                 value={feedbackContent}
-                onChange={(e) => setFeedbackContent(e.target.value)}
+                onChange={handleFeedbackChange}
+                maxLength={MAX_FEEDBACK_LENGTH} // This prevents typing more than 600
                 required
               />
-              <p className={cn(
-                "text-xs",
-                feedbackContent.length >= MIN_FEEDBACK_LENGTH ? "text-green-400" : "text-gray-500"
-              )}>
-                {feedbackContent.length}/{MIN_FEEDBACK_LENGTH} characters
-              </p>
+              <div className="flex justify-between items-center">
+                <p className={cn(
+                  "text-xs",
+                  feedbackContent.length >= MIN_FEEDBACK_LENGTH && feedbackContent.length <= MAX_FEEDBACK_LENGTH 
+                    ? "text-green-400" 
+                    : "text-gray-500"
+                )}>
+                  {feedbackContent.length}/{MAX_FEEDBACK_LENGTH} characters
+                </p>
+                {feedbackContent.length < MIN_FEEDBACK_LENGTH && feedbackContent.length > 0 && (
+                  <span className="text-xs text-red-400">Min. {MIN_FEEDBACK_LENGTH} characters required</span>
+                )}
+              </div>
             </div>
 
             <DialogFooter className="mt-4">

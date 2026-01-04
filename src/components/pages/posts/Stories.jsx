@@ -21,19 +21,20 @@ export default function Stories() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchStories = async () => {
-      try {
-        setLoading(true);
-        const accessToken = localStorage.getItem('accessToken'); // or however you store it
-        const response = await postAPI.getAll(accessToken, { per_page: 20 });
-        setStories(response.data.stories);
-      } catch (err) {
-        console.error('Failed to fetch stories:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+    // In Stories.jsx - add safety check
+const fetchStories = async () => {
+  try {
+    const response = await storiesAPI.getAll();
+    if (response && response.data && response.data.stories) {
+      setStories(response.data.stories);
+    } else {
+      setStories([]);
+    }
+  } catch (error) {
+    console.error("Failed to fetch stories:", error);
+    setStories([]);
+  }
+};
 
     fetchStories();
   }, []);
