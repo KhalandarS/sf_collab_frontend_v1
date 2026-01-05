@@ -4,9 +4,8 @@ import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
 import Options from "../components/sections/Options";
-import FloatingChatbox from "../components/sections/ChatWidget";
 
-import UserSidebar from "@/components/pages/sidebars/sidebar/SideBar";
+import UserSidebar from "../components/pages/sidebars/sidebar/SideBar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
 import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
@@ -17,27 +16,20 @@ import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
 import useSocket from "@/components/pages/chat/useSocket";
-
 import { toast } from "react-toastify";
-import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-import { SOCKET_API_URL } from "@/utils/config";
-//import { io } from "socket.io-client";
-import useSocket from "@/components/pages/chat/useSocket"; 
 
 import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
 
-import { toast } from "react-toastify";
 import AOS from "aos";
 import "aos/dist/aos.css";
-import "../components/style/Layout.css";
-
-import OnlineFriendsSidebar from '../components/OnlineFriendsSidebar';
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const isRootPath = location.pathname === "/";
+  const isChatRoute = location.pathname.startsWith("/chat");
 
   const { user, access_token } = useSelector((state) => state.auth);
   const isAdmin = hasPermission(user, "admin");
@@ -49,20 +41,19 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     topReveal: 10,
   });
 
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [unreadMessagesCount] = useState(0);
   const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const [wsClient, setWsClient] = useState(null);
-
   const optionsRef = useRef(null);
   const navContainerRef = useRef(null);
 
-  /* -------------------- AOS -------------------- */
+  const [isOpen, setIsOpen] = useState(false);
+  const [wsClient, setWsClient] = useState(null);
+
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
 
-  /* -------------------- Waitlist Guard -------------------- */
+  // ✅ Waitlist guard
   useEffect(() => {
     if (!user || !access_token) return;
 
@@ -70,7 +61,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       try {
         const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
         if (
-          !res.on_waitlist &&
+          !res?.on_waitlist &&
           !["/waitlist", "/waitlist-terms"].includes(location.pathname)
         ) {
           toast.info("You should join the waitlist to access this section.");
@@ -84,45 +75,50 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     checkWaitlist();
   }, [user, access_token, location.pathname, navigate]);
 
-
-  /* -------------------- Socket.IO (Chat) -------------------- */
+  // ✅ Socket.io global notifications (skip if already in chat)
   useEffect(() => {
     if (!socket || !isConnected || !user) return;
 
     const handleConversationMessage = (data) => {
+      if (!data?.message?.sender) return;
       if (data.message.sender.id === user.id) return;
       if (location.pathname.startsWith("/chat")) return;
 
+      const content = data.message.content || "";
+      const short = content.length > 80 ? content.slice(0, 80) + "..." : content;
+
       toast.info(
-        <>
+        <div className="flex flex-col gap-1">
           <p className="font-semibold">
             {data.message.sender.firstName} {data.message.sender.lastName}
           </p>
-          <p className="text-sm opacity-80 truncate">
-            {data.message.content}
-          </p>
-        </>,
+          <p className="text-sm opacity-90">{short}</p>
+        </div>,
         { onClick: () => navigate("/chat") }
       );
     };
 
     socket.on("conversation_message", handleConversationMessage);
-    return () =>
-      socket.off("conversation_message", handleConversationMessage);
+    return () => socket.off("conversation_message", handleConversationMessage);
   }, [socket, isConnected, user, location.pathname, navigate]);
 
-  /* -------------------- Raw WebSocket Client -------------------- */
+  // ✅ Raw websocket client (optional)
   useEffect(() => {
-    if (!user?.id || wsClient) return;
+    const userId = user?.id;
+    if (!userId || wsClient) return;
 
-    const client = new ChatWebSocketClient(SOCKET_API_URL, user.id);
+    const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
-    client.on("new_message", () => toast.info("New message received"));
-    client.on("user_online", (d) =>
-      toast.success(`${d.user_name || "User"} is online`)
+    client.on("new_message", (data) => {
+      toast.info("New message received");
+      window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
+    });
+
+    client.on("user_online", (data) =>
+      toast.success(`${data?.user_name || "User"} is online`)
     );
-    client.on("user_offline", (d) =>
-      toast.info(`${d.user_name || "User"} went offline`)
+    client.on("user_offline", (data) =>
+      toast.info(`${data?.user_name || "User"} went offline`)
     );
     client.on("error", () => toast.error("Realtime connection error"));
 
@@ -132,38 +128,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     return () => client.disconnect();
   }, [user?.id, wsClient]);
 
-  const Layout = ({ children }) => {
-  return (
-    <div className="flex min-h-screen">
-      {/* Left sidebar (if you have one) */}
-      
-      {/* Main content */}
-      <main className="flex-1">
-        {children}
-      </main>
-      
-      {/* Right sidebar - Online Friends */}
-      <OnlineFriendsSidebar className="hidden lg:flex" />
-    </div>
-  );
-};
-
-const UserProfile = ({ userId }) => {
-  return (
-    <div className="profile-header">
-      <h1>John Doe</h1>
-      
-      {/* Add friend button */}
-      <FriendRequestButton 
-        userId={userId}
-        showMessage={true}
-        variant="default"
-      />
-    </div>
-  );
-};
-
-  /* -------------------- Sidebar Resolver -------------------- */
+  // ✅ Sidebar resolver
   const SideBar = () => {
     const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
 
@@ -181,6 +146,16 @@ const UserProfile = ({ userId }) => {
     }
   };
 
+  const handleNavAreaEnter = () => !isRootPath && setIsOptionsVisible(true);
+
+  const handleNavAreaLeave = (e) => {
+    if (isRootPath) return;
+    if (!e.relatedTarget) return setIsOptionsVisible(false);
+    if (optionsRef.current?.contains(e.relatedTarget)) return;
+    if (e.relatedTarget.closest?.(".options-container")) return;
+    setIsOptionsVisible(false);
+  };
+
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
       {/* Background */}
@@ -196,11 +171,11 @@ const UserProfile = ({ userId }) => {
       {!isRootPath && (
         <div
           ref={navContainerRef}
-          onMouseEnter={() => setIsOptionsVisible(true)}
-          onMouseLeave={() => setIsOptionsVisible(false)}
-          className={`transition-all ${
+          onMouseEnter={handleNavAreaEnter}
+          onMouseLeave={handleNavAreaLeave}
+          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
             isNavHidden ? "h-0" : "h-[60px]"
-          } overflow-hidden`}
+          }`}
         >
           <NavBar
             setIsOpen={setIsOpen}
@@ -214,33 +189,37 @@ const UserProfile = ({ userId }) => {
         </div>
       )}
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="relative flex-1 w-full flex overflow-hidden">
+        {/* Left sidebar */}
         {!isRootPath && <SideBar />}
 
-        <div className="relative w-full flex flex-col overflow-hidden">
-          {!isRootPath &&
-            ["refer", "waitlist"].includes(location.pathname) && (
-              <div
-                ref={optionsRef}
-                className={`absolute top-0 w-full flex justify-center transition ${
-                  isOptionsVisible ? "opacity-100" : "opacity-30"
-                }`}
-              >
-                <Options
-                  unreadMessagesCount={unreadMessagesCount}
-                  isAdmin={isAdmin}
-                />
-              </div>
-            )}
+        {/* Main */}
+        <div className="text-white relative flex flex-col items-center w-full overflow-hidden">
+          {/* ✅ Options bar: never show on chat */}
+          {!isRootPath && !isChatRoute && (
+            <div
+              ref={optionsRef}
+              className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
+                isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
+              }`}
+              style={{ zIndex: 99999999 }}
+            >
+              <Options
+                isHidden={isNavHidden}
+                unreadMessagesCount={unreadMessagesCount}
+                isAdmin={isAdmin}
+              />
+            </div>
+          )}
 
           <div
-            className="relative w-full h-full overflow-y-auto scrollbar-hide"
-            onScroll={!isRootPath ? onScroll : undefined}
+            className={`relative w-full h-full ${
+              !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
+            } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+            onScroll={isRootPath ? undefined : onScroll}
           >
             <Outlet />
           </div>
-
-          {!isRootPath && <FloatingChatbox />}
         </div>
       </div>
     </div>

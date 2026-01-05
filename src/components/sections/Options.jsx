@@ -1,33 +1,17 @@
 import React from "react";
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> main
 import { Link, useLocation } from "react-router-dom";
 import { Crown } from "lucide-react";
-import { getTopNavLinks, getCurrentContext } from "./sidebar/links";
+import { getTopNavLinks } from "../pages/sidebars/sidebar/links";
 
 const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
   const location = useLocation();
-  const contextId = getCurrentContext(location.pathname);
   const subLinks = getTopNavLinks(location.pathname, unreadMessagesCount);
 
-  // Only show sub-items if we have them (not for Chat which has no subItems)
-  const showSubItems = subLinks && subLinks.length > 0;
-<<<<<<< HEAD
+  const showSubItems = Array.isArray(subLinks) && subLinks.length > 0;
 
-=======
-import { Link } from "react-router-dom";
-import { Badge } from "../ui/badge";
-import { IoChatbubbles } from "react-icons/io5";
-import { Crown, Lightbulb, Rocket} from "lucide-react";
-import { LuLayoutDashboard } from "react-icons/lu";
+  // ✅ If no subitems and not admin -> render nothing (no top bar on Chat)
+  if (!showSubItems && !isAdmin) return null;
 
-const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
->>>>>>> 147e567a45004a93c4756a37d2a6d2d4a74b6ac4
-=======
-
->>>>>>> main
   return (
     <div
       className={`transition-all duration-400 will-change-transform ${
@@ -35,8 +19,7 @@ const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
       } lg:translate-y-0 lg:opacity-100 bg-white/5 backdrop-blur-3xl px-2 rounded-full`}
     >
       <div className="flex items-center gap-1 overflow-x-auto text-sm py-2">
-        {showSubItems ? (
-          // Show sub-items for current context
+        {showSubItems &&
           subLinks.map((link) => (
             <Link
               key={link.id}
@@ -49,22 +32,15 @@ const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
             >
               {link.label}
             </Link>
-          ))
-        ) : (
-          // Fallback for pages without sub-items (like Chat)
-          <span className="px-4 py-2 text-white font-medium">
-            {contextId === 4 ? "Chat" : ""}
-          </span>
-        )}
+          ))}
 
-        {/* Admin Panel - always show if admin */}
         {isAdmin && (
           <Link
             className={`px-4 py-2 rounded-full transition-all duration-200 font-medium ${
               location.pathname === "/admin"
                 ? "bg-white text-gray-950 shadow-sm"
                 : "text-white hover:text-gray-900 hover:bg-gray-100"
-            } flex items-center gap-1`}
+            } flex items-center gap-1 whitespace-nowrap`}
             to="/admin"
           >
             <Crown size={21} /> Admin Panel
