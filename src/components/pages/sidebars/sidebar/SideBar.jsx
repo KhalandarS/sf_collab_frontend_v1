@@ -1,40 +1,52 @@
-import {
-  HelpCircle,
-  X,
-  Crown,
-} from "lucide-react";
-
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import 'tippy.js/dist/tippy.css';
-import { createLinks, getCurrentContext } from "./links";
+import { HelpCircle, X, Crown, ChevronRight } from "lucide-react";
 import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
+import { createLinks, getCurrentContext } from "./links";
 import BottomLinks from "../BottomLinks";
 
 const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   const location = useLocation();
-  const [links, setLinks] = useState(createLinks(unreadMessagesCount));
-  const currentContextId = getCurrentContext(location.pathname);
+
+  // Build links once per unread count change
+  const [links, setLinks] = useState(() => createLinks(unreadMessagesCount));
 
   useEffect(() => {
     setLinks(createLinks(unreadMessagesCount));
   }, [unreadMessagesCount]);
 
-  // Close sidebar on mobile
-  const handleMobileLinkClick = () => {
-    setIsOpen(false);
+  // Identify current context
+  const currentContextId = useMemo(
+    () => getCurrentContext(location.pathname),
+    [location.pathname]
+  );
+
+  // If your "Chat" context id is different, change this value.
+  // (From your earlier Options code, contextId === 4 looked like Chat.)
+  const CHAT_CONTEXT_ID = 4;
+
+  // Close sidebar on mobile when navigating
+  const handleMobileLinkClick = () => setIsOpen(false);
+
+  // Render subitems only for non-chat contexts
+  const shouldShowSubItems = (link, isActive) => {
+    const hasSubItems = Array.isArray(link.subItems) && link.subItems.length > 0;
+    if (!hasSubItems) return false;
+    if (!isActive) return false;
+    // Do NOT show subitems for Chat
+    if (link.id === CHAT_CONTEXT_ID) return false;
+    return true;
   };
 
   const SidebarContent = ({ onLinkClick, isMobile = false }) => (
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       {/* Main navigation */}
       <div className="flex flex-col gap-1 items-center px-1">
-        {links.map((link, index) => {
+        {links.map((link) => {
           const isActive = link.id === currentContextId;
-          const hasSubItems = link.subItems && link.subItems.length > 0;
 
           return (
-            <div key={index} className="w-full">
+            <div key={link.id} className="w-full">
               {/* Main nav link */}
               <Link
                 to={link.href}
@@ -49,28 +61,71 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
                   {link.icon}
                   {link.unreadCount}
                 </div>
+
+                {/* Show labels only on mobile */}
                 {isMobile && (
                   <span className="text-sm font-medium">{link.label}</span>
                 )}
+
+                {/* Optional chevron hint on mobile when active + has subitems */}
+                {isMobile &&
+                  Array.isArray(link.subItems) &&
+                  link.subItems.length > 0 &&
+                  link.id !== CHAT_CONTEXT_ID && (
+                    <ChevronRight
+                      size={16}
+                      className={`ml-auto transition-transform ${
+                        isActive ? "rotate-90" : ""
+                      }`}
+                    />
+                  )}
               </Link>
 
-              {/* Dropdown sub-items - show when this context is active */}
-              {isActive && hasSubItems && (
-                <div className={`flex flex-col gap-1 mt-1 ${isMobile ? 'pl-6' : 'pl-1'}`}>
-                  {link.subItems.map((subItem) => (
-                    <Link
-                      key={subItem.id}
-                      to={subItem.href}
-                      onClick={onLinkClick}
-                      className={`flex items-center px-2 py-2 rounded-md transition-colors ${
-                        location.pathname === subItem.href
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
-                      } ${isMobile ? 'text-xs' : 'text-[10px] justify-center'}`}
-                    >
-                      {isMobile ? subItem.label : subItem.label.split(' ').map(w => w[0]).join('')}
-                    </Link>
-                  ))}
+              {/* Sub-items (ICONS ONLY) */}
+              {shouldShowSubItems(link, isActive) && (
+                <div
+                  className={`flex flex-col gap-1 mt-1 ${
+                    isMobile ? "pl-6" : "pl-0"
+                  }`}
+                >
+                  {link.subItems.map((subItem) => {
+                    const isSubActive = location.pathname === subItem.href;
+
+                    return (
+                      <Link
+                        key={subItem.id}
+                        to={subItem.href}
+                        onClick={onLinkClick}
+                        className={`
+                          ${isMobile ? "justify-start" : "justify-center"}
+                          flex items-center gap-2 px-2 py-2 rounded-md transition-colors
+                          ${
+                            isSubActive
+                              ? "bg-blue-600/30 text-white"
+                              : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
+                          }
+                        `}
+                        title={subItem.label}
+                        aria-label={subItem.label}
+                      >
+                        {/* ICON ONLY on desktop, icon + label on mobile */}
+                        {subItem.icon ? (
+                          <span className="inline-flex items-center justify-center">
+                            {subItem.icon}
+                          </span>
+                        ) : (
+                          // If no icon exists in data, show a tiny dot as fallback
+                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                        )}
+
+                        {isMobile && (
+                          <span className="text-xs font-medium">
+                            {subItem.label}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -96,8 +151,8 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
         )}
       </div>
 
-      {/* Bottom links */}
-      <BottomLinks onLinkClick={onLinkClick}/>
+      <BottomLinks onLinkClick={onLinkClick} />
+
     </div>
   );
 
@@ -111,8 +166,9 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
         <div
           className="absolute inset-0"
           style={{
-            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-            zIndex: -1
+            background:
+              "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+            zIndex: -1,
           }}
         />
         <SidebarContent />
@@ -152,13 +208,13 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
 
           {/* Sidebar Content */}
           <div className="px-2">
-            <SidebarContent onLinkClick={handleMobileLinkClick} isMobile={true} />
+            <SidebarContent onLinkClick={handleMobileLinkClick} isMobile />
           </div>
         </div>
       </div>
 
       {/* Content spacer */}
-      <div className="hidden lg:block w-[70px]"></div>
+      <div className="hidden lg:block w-[70px]" />
     </>
   );
 };

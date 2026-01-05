@@ -61,7 +61,7 @@ import Influencer from "./components/pages/influencer/Influencer.jsx";
 import ProfileSetup from "./components/pages/ProfileSetup.jsx";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { usersAPI } from "./utils/APIs/userApi.js";
+import { usersAPI } from "./utils/APIs/userAPI.js";
 import Dashboard from "./components/pages/dashboards/dashboard/dashboard.jsx";
 import InfluencerDashboard from "./components/pages/dashboards/influencerDashboard/InfluencerDashboard.jsx";
 import BuilderDashboard from "./components/pages/dashboards/builderDashboard/BuilderDashboard.jsx";
@@ -73,6 +73,7 @@ import InfluencerApplication from "./components/pages/influencerApplication/Infl
 import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
 import ContributionIdeasPage from "./components/pages/contribution/ContributionIdeasPage.jsx";
 import ContributionPollsPage from "./components/pages/contribution/ContributionPollsPage.jsx";
+
 
 function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -88,8 +89,9 @@ function App() {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles(access_token);
 
-          // setUserRoles(['General', ...response.data.map(role => role.role)]);
+          // setUserRoles([...response.data.map(role => role.role), 'General']);
           setUserRoles(['influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+          setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
@@ -98,8 +100,7 @@ function App() {
     fetchUserRoles();
   }, [access_token]);
   return (<>
-        <ChatNotificationProvider >
-
+  
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutPage />} />
@@ -149,7 +150,7 @@ function App() {
             <Route path="dashboard" element={<InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
           ) : user && activeRole === 'builder' ? (
             <Route path="dashboard" element={<BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-          ) : user && activeRole === 'founder' ? (
+          ) : user && activeRole === 'founder' ?(
                 <Route path="dashboard" element={<FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
               ) : user && activeRole === 'investor' ? (
                 <Route path="dashboard" element={<InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
@@ -169,8 +170,7 @@ function App() {
         <Route path="contribute" element={<ContributionPage />} />
         <Route path="contribute-ideas" element={<ContributionIdeasPage />} />
         <Route path="contribute-polls" element={<ContributionPollsPage />} />
-
-          {/* Projects */}
+        {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />
         <Route path="project-details" element={<ProjectDetails />} />
@@ -198,6 +198,7 @@ function App() {
         <Route path="multimodal-images" element={<ImageGenerator />} />
         <Route path="logo-generator" element={<StartupLogoGenerator />} />
         <Route path="data-scraper" element={<ScraperForm />} />
+        <Route path="chat" element={<ChatPage />} />
         <Route path="qwen-chat" element={<QwenChat />} />
         <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}
@@ -229,7 +230,7 @@ function App() {
       {/* Catch all route */}
       <Route path="*" element={<NotFound />} />
     </Routes>
-      </ChatNotificationProvider>
+    <ToastContainer />
   <ToastContainer
     position="bottom-center"
     autoClose={5000}
@@ -242,8 +243,7 @@ function App() {
     pauseOnHover
     theme="dark"
     style={{ bottom: '20px' }}
-      />
-      
+  />
   </>
   );
 }
