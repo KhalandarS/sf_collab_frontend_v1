@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { HelpCircle, X, Crown, ChevronRight } from "lucide-react";
 import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
 import { createLinks, getCurrentContext } from "./links";
+import BottomLinks from "../BottomLinks";
 
 const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   const location = useLocation();
@@ -150,24 +151,8 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
         )}
       </div>
 
-      {/* Bottom links */}
-      <div className="flex flex-col gap-2 items-center pb-2">
-        <div className="flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors">
-          <SidebarFeedbackCard />
-        </div>
+      <BottomLinks onLinkClick={onLinkClick} />
 
-        <Link
-          to="/help"
-          className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${
-            location.pathname === "/help"
-              ? "bg-[#2A2A2A] text-white"
-              : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-          }`}
-          onClick={onLinkClick}
-        >
-          <HelpCircle size={20} />
-        </Link>
-      </div>
     </div>
   );
 

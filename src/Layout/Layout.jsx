@@ -17,12 +17,13 @@ import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
 import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
-
 import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
+//import { io } from "socket.io-client";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
+
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();

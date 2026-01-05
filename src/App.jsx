@@ -72,6 +72,7 @@ import ContributionPage from "./components/pages/contribution/ContributionPage.j
 import InfluencerApplication from "./components/pages/influencerApplication/InfluencerApplication.jsx";
 import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
 import ContributionIdeasPage from "./components/pages/contribution/ContributionIdeasPage.jsx";
+import ContributionPollsPage from "./components/pages/contribution/ContributionPollsPage.jsx";
 
 
 function App() {
@@ -166,6 +167,9 @@ function App() {
         <Route path="join-sf" element={<JoinSF />} />
         <Route path="apply-influencer" element={<InfluencerApplication />} />
         <Route path="profile-setup" element={<ProfileSetup />} />
+        <Route path="contribute" element={<ContributionPage />} />
+        <Route path="contribute-ideas" element={<ContributionIdeasPage />} />
+        <Route path="contribute-polls" element={<ContributionPollsPage />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />

@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Link, useLocation } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { getTopNavLinks } from "../pages/sidebars/sidebar/links";
@@ -16,7 +17,7 @@ const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
     <div
       className={`transition-all duration-400 will-change-transform ${
         isHidden ? "-translate-y-6 opacity-0" : "translate-y-0 opacity-100"
-      } lg:translate-y-0 lg:opacity-100 bg-white/5 backdrop-blur-3xl px-2 rounded-full`}
+        } lg:translate-y-0 lg:opacity-100 bg-white/5 backdrop-blur-3xl px-2 rounded-full`}
     >
       <div className="flex items-center gap-1 overflow-x-auto text-sm py-2">
         {showSubItems &&
