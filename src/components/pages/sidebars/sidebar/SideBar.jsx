@@ -29,12 +29,12 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       {/* Main navigation */}
       <div className="flex flex-col gap-1 items-center px-1">
-        {links.map((link) => {
+        {links.map((link, index) => {
           const isActive = link.id === currentContextId;
           const hasSubItems = link.subItems && link.subItems.length > 0;
 
           return (
-            <div key={link.id} className="w-full">
+            <div key={index} className="w-full">
               {/* Main nav link */}
               <Link
                 to={link.href}

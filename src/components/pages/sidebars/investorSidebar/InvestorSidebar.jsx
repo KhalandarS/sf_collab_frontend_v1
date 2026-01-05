@@ -18,9 +18,9 @@ const InvestorSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
   const SidebarContent = ({ onLinkClick, isMobile = false }) => (
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       <div className="flex flex-col gap-1 items-center px-1">
-        {links.map((link) => (
+        {links.map((link, index) => (
           <Link
-            key={link.path}
+            key={index}
             to={link.path}
             onClick={onLinkClick}
             className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors ${location.pathname === link.path

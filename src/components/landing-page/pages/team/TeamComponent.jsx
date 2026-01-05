@@ -17,6 +17,7 @@ import RazeenImg from "@/assets/imgs/Razeen Iqbal ( product Manager).jpg";
 import ShreyImg from "@/assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
 import VarunImg from "@/assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
 import IvanImg from "@/assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
+import LaurieImg from "@/assets/imgs/Laurie Breton (Management Department).jpg";
 gsap.registerPlugin(ScrollTrigger);
 
 // Team Data
@@ -28,16 +29,22 @@ const teamMembers = [
     desc: "Driving the company's vision and strategy with a passion for innovation.",
   },
   {
-    name: "Fatima Abba",
-    role: "Backend Developer",
-    img: FatimaImg,
-    desc: "Architecting robust and scalable backend solutions.",
+    name: "Laurie Breton",
+    role: "Management Department",
+    img: LaurieImg,
+    desc: "Overseeing operations and ensuring organizational efficiency.",
   },
   {
     name: "Chinmay Bharadwaj",
     role: "Full Stack Developer",
     img: ChinmayImg,
     desc: "Building performant and scalable web applications.",
+  },
+    {
+    name: "Fatima Abba",
+    role: "Backend Developer",
+    img: FatimaImg,
+    desc: "Architecting robust and scalable backend solutions.",
   },
   {
     name: "Krystian Śledziewski",
@@ -68,7 +75,7 @@ const teamMembers = [
     role: "Frontend Developer & AI Researcher",
     img: VarunImg,
     desc: "Crafting intuitive interfaces and researching AI-driven solutions.",
-  },
+  }
 ];
 
 export default function TeamComponent() {
@@ -103,7 +110,7 @@ export default function TeamComponent() {
         </div>
 
         {/* Team Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
           {teamMembers.map((person, i) => (
             <div
               key={i}
@@ -121,7 +128,7 @@ export default function TeamComponent() {
                   alt={person.name}
                   className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full object-cover
                              border-2 border-purple-400/30 group-hover:border-purple-400
-                             transition-all duration-300"
+                             transition-all duration-300 filter grayscale"
                 />
               </div>
 

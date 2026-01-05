@@ -32,12 +32,12 @@ const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       {/* Main navigation */}
       <div className="flex flex-col gap-1 items-center px-1">
-        {links.map((link) => {
+        {links.map((link, index) => {
           const isActive = link.href === location.pathname;
           const hasSubItems = link.subItems && link.subItems.length > 0;
 
           return (
-            <div key={link.id} className="w-full">
+            <div key={index} className="w-full">
               {/* Main nav link */}
               <Link
                 to={link.href}
@@ -59,9 +59,9 @@ const InfluencerSidebar = ({ isOpen, setIsOpen, unreadMessagesCount }) => {
               {/* Dropdown sub-items - show when this context is active */}
               {isActive && hasSubItems && (
                 <div className={`flex flex-col gap-1 mt-1 ${isMobile ? 'pl-6' : 'pl-1'}`}>
-                  {link.subItems.map((subItem) => (
+                  {link.subItems.map((subItem, index) => (
                     <Link
-                      key={subItem.id}
+                      key={index}
                       to={subItem.href}
                       onClick={onLinkClick}
                       className={`flex items-center px-2 py-2 rounded-md transition-colors ${location.pathname === subItem.href

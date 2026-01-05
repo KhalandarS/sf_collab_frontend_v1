@@ -17,6 +17,7 @@ import { API_BASE_URL } from '@/utils/config';
 import { usersAPI } from '@/utils/APIs/userApi';
 import { waitlistAPI } from '@/utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
+import { applicationAPI } from '@/utils/APIs/applicationAPI';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -146,6 +147,15 @@ const AdminDashboard = () => {
       },
     ],
   };
+  const [allApplications, setAllApplications] = useState([]);
+  useEffect(() => {
+    async function fetchApplications() {
+      const response = await applicationAPI.getAll(access_token, { page: 1, per_page: 1000 });
+      console.log(response.data.applications);
+      setAllApplications(response.data.applications || []);
+    }
+    fetchApplications();
+  }, [access_token]);
 
   return (
     <div className="p-8 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white">
@@ -195,7 +205,56 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
+          <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
+            <h2 className="text-xl font-semibold mb-4 text-gray-100">📋 Applications</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Job Applications */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-blue-300">💼 Job Applications</h3>
+                <ul className="space-y-3 max-h-96 overflow-y-auto">
+                  {allApplications
+                    .filter(item => item.application_type === 'job')
+                    .map((app) => (
+                      <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
+                        <div className="font-medium text-blue-300">{app.name}</div>
+                        <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
+                        <p className="text-xs text-gray-400">🌍 {app.country}</p>
+                        <div className="text-xs text-gray-300 mt-2">
+                          <p><strong>Area:</strong> {app.data?.area}</p>
+                          <p><strong>Skills:</strong> {app.data?.skills}</p>
+                          <p><strong>Availability:</strong> {app.data?.availability} hours/week</p>
+                          <p><strong>Early CoBuilder:</strong> {app.data?.earlyCoBuilder}</p>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">{new Date(app.created_at).toLocaleDateString()}</p>
+                      </li>
+                    ))}
+                </ul>
+              </div>
 
+              {/* Influencer Applications */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3 text-purple-300">⭐ Influencer Applications</h3>
+                <ul className="space-y-3 max-h-96 overflow-y-auto">
+                  {allApplications
+                    .filter(item => item.application_type === 'influencer')
+                    .map((app) => (
+                      <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
+                        <div className="font-medium text-purple-300">{app.name}</div>
+                        <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
+                        <p className="text-xs text-gray-400">🌍 {app.country}</p>
+                        <div className="text-xs text-gray-300 mt-2">
+                          <p><strong>Niche:</strong> {app.data?.niche}</p>
+                          <p><strong>Followers:</strong> {app.data?.followers}</p>
+                          <p><strong>Audience Fit:</strong> {app.data?.audienceFit}</p>
+                          <p><strong>Early Partner:</strong> {app.data?.earlyPartner}</p>
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">{new Date(app.created_at).toLocaleDateString()}</p>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
           <h2 className="text-xl font-semibold mb-4 text-gray-100">💬 Feedback</h2>
           <input
@@ -208,33 +267,33 @@ const AdminDashboard = () => {
           <ul className="space-y-3 max-h-80 overflow-y-auto">
             {filteredFeedback.map((item) => (
               <li
-  key={item.id}
-  className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition backdrop-blur"
->
-  <div className="flex justify-between items-center mb-2">
-    <div className="font-medium text-blue-300">
-      User ID: {item.userId}
+                key={item.id}
+                className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition backdrop-blur"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <div className="font-medium text-blue-300">
+                    User ID: {item.userId}
                   </div>
                   
     
-    <button
-      onClick={() => {
-        setSelectedUser(users.find(u => u.id === item.userId));
-        setShowPointsModal(true);
-      }}
-      className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
-    >
-      + Give Points
-    </button>
-  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(users.find(u => u.id === item.userId));
+                      setShowPointsModal(true);
+                    }}
+                    className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
+                  >
+                    + Give Points
+                  </button>
+                </div>
 
-  <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
-  <p className="text-gray-100">{item.content}</p>
-  <p className="text-xs text-gray-400 mt-2">
-    {new Date(item.createdAt).toLocaleDateString()} •{' '}
-    {new Date(item.createdAt).toLocaleTimeString()}
-  </p>
-</li>
+                <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
+                <p className="text-gray-100">{item.content}</p>
+                <p className="text-xs text-gray-400 mt-2">
+                  {new Date(item.createdAt).toLocaleDateString()} •{' '}
+                  {new Date(item.createdAt).toLocaleTimeString()}
+                </p>
+              </li>
 
             ))}
           </ul>

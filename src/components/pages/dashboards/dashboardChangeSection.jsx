@@ -15,7 +15,6 @@ export default function DashboardChangeSection({ sections = [], onSectionChange,
         
         Select your dashboard
       </span>
-      {console.log(activeSection)}
       {sections?.map((section) => (
         <button
           

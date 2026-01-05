@@ -134,12 +134,12 @@ const Dashboard = ({
         <WaitlistSection />
         <JoinSFSection />
         {
-          userData && userData.role !== "influencer"  && (
+          userData && !userRoles.includes("influencer")  && (
             <InfluencerSection userData={userData} />
           )
         }
         {
-          userData && userData.role === "member"  && (
+          userData && (userRoles.includes("admin") || user.role === 'admin') && (
             <AdminSection userData={userData} />
           )
         }

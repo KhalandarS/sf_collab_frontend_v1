@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,12 +11,14 @@ import { toast } from "react-toastify";
 import axios from "axios";
 import { API_URL } from "@/utils/config";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { applicationAPI } from "@/utils/APIs/applicationAPI";
 
 export default function JoinSFApplicationForm() {
   const [loading, setLoading] = useState(false);
   const [agreement, setAgreement] = useState(false);
   const navigate = useNavigate();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(localStorage.getItem("joinSFFormData") ? JSON.parse(localStorage.getItem("joinSFFormData")) : {
     name: "",
     email: "",
     location: "",
@@ -28,10 +30,13 @@ export default function JoinSFApplicationForm() {
     motivation: "",
   });
 
+  useEffect(() => {
+    localStorage.setItem("joinSFFormData", JSON.stringify(form));
+  }, [form]);
   const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
-
+  const { user } = useSelector((state) => state.auth);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -55,16 +60,30 @@ export default function JoinSFApplicationForm() {
         return;
       }
     }
+    if (!user || !user.id) {
+      toast.error("You must be logged in to submit the application.");
+      return;
+    }
 
     setLoading(true);
-
+    const body = {
+        user_id: user.id,
+        name: form.name,
+        email: form.email,
+        country: form.location,
+        data: {
+          portfolio: form.portfolio,
+          area: form.area,
+          skills: form.skills,
+          availability: form.availability,
+          earlyCoBuilder: form.earlyCoBuilder,
+          motivation: form.motivation,
+        }
+      };
     try {
       // 🔁 Replace with your backend endpoint
-      const response = await axios.post(
-        `${API_URL}/join-sf/apply`,
-        form
-      );
-      if (!response.data.success) {
+      const response = await applicationAPI.createJobApplication(body);
+      if (!response.success) {
         throw new Error("Application submission failed");
       }
       toast.success("Application submitted successfully!");
@@ -80,6 +99,7 @@ export default function JoinSFApplicationForm() {
         earlyCoBuilder: "",
         motivation: "",
       });
+      localStorage.removeItem("joinSFFormData");
       setAgreement(false);
     } catch (err) {
       toast.error("Failed to submit application. Please try again.");

@@ -5,17 +5,20 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { motion } from "framer-motion";
+import { applicationAPI } from "@/utils/APIs/applicationAPI";
+import { useSelector } from "react-redux";
 
 export default function InfluencerApplicationForm() { 
   const [loading, setLoading] = useState(false);
   const [agreement, setAgreement] = useState(false);
-  const [form, setForm] = useState({
+  const { user } = useSelector((state) => state.auth);
+  const [form, setForm] = useState(localStorage.getItem("influencerApplicationForm") ? JSON.parse(localStorage.getItem("influencerApplicationForm")) : {
     name: "",
     email: "",
-    platform: "",
+    country: "",
     profileLink: "",
     followers: "",
     niche: "",
@@ -24,9 +27,13 @@ export default function InfluencerApplicationForm() {
     earlyPartner: "",
     agreement: false,
   });
+  useEffect(() => {
+    localStorage.setItem("influencerApplicationForm", JSON.stringify(form));
+  }, [form]);
     const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
-  };
+    };
+
     const handleSubmit = async (e) => {
       e.preventDefault();
   
@@ -35,23 +42,38 @@ export default function InfluencerApplicationForm() {
         return;
       }
       setLoading(true);
-      if (!form.name || !form.email || !form.platform || !form.profileLink || !form.followers || !form.niche || !form.contribution || !form.earlyPartner) {
+      console.log(form)
+      if (!form.name || !form.email || !form.country || !form.profileLink || !form.followers || !form.niche || !form.contribution || !form.earlyPartner) {
         toast.error("Please fill in all required fields.");
         setLoading(false);
         return;
       }
 
+      const body = {
+        user_id: user.id,
+        name: form.name,
+        email: form.email,
+        country: form.country,
+        data: {
+          profileLink: form.profileLink,
+          followers: form.followers,
+          niche: form.niche,
+          contribution: form.contribution,
+          audienceFit: form.audienceFit,
+          earlyPartner: form.earlyPartner,
+        }
+      };
+       
       try {
-        await fetch("/api/influencer/apply", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(form),
-        });
-  
+        const response = await applicationAPI.createInfluencerApplication(body);
+        if (!response.success) {
+          throw new Error("No response from server");
+        }
         toast.success("Application submitted successfully!");
         setForm({
           name: "",
           email: "",
+          country: "",
           platform: "",
           profileLink: "",
           followers: "",
@@ -61,6 +83,8 @@ export default function InfluencerApplicationForm() {
           earlyPartner: "",
           agreement: false,
         });
+        localStorage.removeItem("influencerApplicationForm");
+        
       } catch (err) {
         toast.error("Failed to submit application. Please try again.");
       } finally {
@@ -111,18 +135,18 @@ export default function InfluencerApplicationForm() {
                       />
                     </div>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label className="text-slate-300">Main Platform *</Label>
+                      <Label className="text-slate-300">Country *</Label>
                       <Input
-                        placeholder="TikTok, YouTube, X, LinkedIn..."
-                        value={form.platform}
-                        onChange={(e) => update("platform", e.target.value)}
+                        placeholder=""
+                        value={form.country}
+                        onChange={(e) => update("country", e.target.value)}
                         className="bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-400 focus:border-blue-400"
                         required
                       />
-                    </div>
+                </div>
+                
 
                     <div className="space-y-2">
                       <Label className="text-slate-300">Profile Link *</Label>

@@ -17,7 +17,7 @@ const contributionActions = [
     points: "5–75 points",
     icon: Lightbulb,
     cta: "Submit Idea",
-    to: "/contribute/ideas",
+    to: "/contribute-ideas",
     // Thinking / creation → indigo (calm, smart)
     color: "from-indigo-500/20 to-indigo-400/10",
     available: true,
@@ -30,7 +30,7 @@ const contributionActions = [
     bonus: "+25 points every 5 referrals",
     icon: Users,
     cta: "Get Referral Link",
-    to: "/contribute/referrals",
+    to: "/refer",
     // Networking → slate + blue accent
     color: "from-slate-500/20 to-blue-500/10",
     available: true,
@@ -42,7 +42,7 @@ const contributionActions = [
     points: "1–3 points per vote",
     icon: Vote,
     cta: "View Polls",
-    to: "/contribute/polls",
+    to: "/contribute-polls",
     // Community / governance → purple (on-brand)
     color: "from-purple-500/20 to-pink-500/10",
     available: true,
@@ -89,17 +89,17 @@ export default function ContributionPage() {
         </section>
 
         {/* ================= ACTIONS ================= */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {contributionActions.map((action) => {
             const Icon = action.icon;
 
             return (
               <div
                 key={action.title}
-                className="relative rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm overflow-hidden"
+                className={`relative rounded-2xl border border-white/10 bg-gradient-to-br ${action.color} backdrop-blur-sm overflow-hidden`}
               >
                 <div
-                  className={`absolute inset-0 opacity-20 bg-gradient-to-br ${action.color}`}
+                  className='absolute inset-0 opacity-20  '
                 />
 
                 <div className="relative z-10 p-6 flex flex-col h-full">

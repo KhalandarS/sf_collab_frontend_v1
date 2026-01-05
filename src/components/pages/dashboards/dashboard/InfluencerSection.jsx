@@ -18,8 +18,8 @@ export default function InfluencerProfileSection({ userData }) {
 
       <div className="relative z-10">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-6">
-          <div>
+        <div className="flex flex-col lg:flex-row justify-center items-start lg:items-center gap-6 mb-6">
+          <div className="w-full flex flex-col justify-center items-center">
             <div className="flex items-center gap-3 mb-2">
               <h2 className="text-2xl sm:text-3xl font-bold text-white">
                 Influencer Profile
@@ -35,7 +35,7 @@ export default function InfluencerProfileSection({ userData }) {
           </div>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <div className="md:absolute md:top-1 md:right-1 flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <Link
               to="/apply-influencer"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-3 font-semibold text-white transition-all duration-300 border border-indigo-300/50 hover:scale-105"
@@ -44,12 +44,6 @@ export default function InfluencerProfileSection({ userData }) {
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
 
-            <Link
-              to="/influencer/about"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-indigo-400/50 px-6 py-3 text-white hover:bg-indigo-500/20 transition-all duration-300"
-            >
-              Learn More
-            </Link>
           </div>
         </div>
 

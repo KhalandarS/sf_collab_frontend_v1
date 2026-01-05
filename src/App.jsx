@@ -71,6 +71,8 @@ import AIDashboard from "./components/pages/dashboards/aiDashboard/AIDashboard.j
 import ContributionPage from "./components/pages/contribution/ContributionPage.jsx";
 import InfluencerApplication from "./components/pages/influencerApplication/InfluencerApplication.jsx";
 import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
+import ContributionIdeasPage from "./components/pages/contribution/ContributionIdeasPage.jsx";
+import ContributionPollsPage from "./components/pages/contribution/ContributionPollsPage.jsx";
 
 function App() {
   const { access_token, user } = useSelector((state) => state.auth);
@@ -86,9 +88,8 @@ function App() {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles(access_token);
 
-          // setUserRoles([...response.data.map(role => role.role), 'General']);
+          // setUserRoles(['General', ...response.data.map(role => role.role)]);
           setUserRoles(['influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
@@ -166,7 +167,10 @@ function App() {
         <Route path="apply-influencer" element={<InfluencerApplication />} />
         <Route path="profile-setup" element={<ProfileSetup />} />
         <Route path="contribute" element={<ContributionPage />} />
-        {/* Projects */}
+        <Route path="contribute-ideas" element={<ContributionIdeasPage />} />
+        <Route path="contribute-polls" element={<ContributionPollsPage />} />
+
+          {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />
         <Route path="project-details" element={<ProjectDetails />} />

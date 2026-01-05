@@ -52,7 +52,7 @@ const Home = () => {
         <Explore/>
         <Products/>
         <Roadmap/>
-        <Team/>
+        {/* <Team/> */}
         <StartUp/>
         <Contact/>
       </section>
