@@ -73,6 +73,8 @@ import InfluencerApplication from "./components/pages/influencerApplication/Infl
 import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
 import ContributionIdeasPage from "./components/pages/contribution/ContributionIdeasPage.jsx";
 import ContributionPollsPage from "./components/pages/contribution/ContributionPollsPage.jsx";
+import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
+
 
 
 function App() {
@@ -90,8 +92,8 @@ function App() {
           const response = await usersAPI.getMyRoles(access_token);
 
           // setUserRoles([...response.data.map(role => role.role), 'General']);
-          setUserRoles(['influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          setActiveRole('member');
+          setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+          // setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
@@ -168,8 +170,9 @@ function App() {
         <Route path="apply-influencer" element={<InfluencerApplication />} />
         <Route path="profile-setup" element={<ProfileSetup />} />
         <Route path="contribute" element={<ContributionPage />} />
-        <Route path="contribute-ideas" element={<ContributionIdeasPage />} />
-        <Route path="contribute-polls" element={<ContributionPollsPage />} />
+        <Route path="contribute-ideas" element={<ContributionIdeasPage userRoles={userRoles} />} />
+        <Route path="contribute-polls" element={<ContributionPollsPage userRoles={userRoles} />} />
+        <Route path="crowdfunding" element={<Crowdfunding />} />
         {/* Projects */}
         <Route path="projects" element={<Project />} />
         <Route path="project-management" element={<ProjectManagement />} />

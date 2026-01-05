@@ -81,11 +81,12 @@ export const waitlistAPI = {
     return response.data.data;
   },
 
-  addPoints: async ({ userId, category }, accessToken) => {
+  addPoints: async ({ category, points }, accessToken) => {
     const response = await api.post(
       "/waitlist/add-points",
       {
-        category, // referral | contribution | activity | new_startup | (small|medium|large)_contribution
+        category, // referral | contribution | activity | new_startup | custom | (small|medium|large)_contribution
+        points,
       },
       {
         headers: {

@@ -27,9 +27,9 @@ const RANK_DISCOUNTS = [
 ];
 
 const CONTRIBUTION_SYSTEM = [
-  { type: "Small Contribution", points: 5, examples: ["Feedback", "Minor bug reports", "Testing"] },
-  { type: "Medium Contribution", points: 10, examples: ["Feature suggestions", "Documentation", "Demo projects"] },
-  { type: "High-Impact Contribution", points: 20, examples: ["Critical bug fixes", "Integration creation", "Community support"] },
+  { type: "Small Contribution", points: 15, examples: ["Feedback", "Minor bug reports", "Testing"] },
+  { type: "Medium Contribution", points: 25, examples: ["Feature suggestions", "Documentation", "Demo projects"] },
+  { type: "High-Impact Contribution", points: 50, examples: ["Critical bug fixes", "Integration creation", "Community support"] },
 ];
 
 const ReferPage = () => {

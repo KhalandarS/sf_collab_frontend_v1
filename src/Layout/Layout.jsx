@@ -50,6 +50,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [wsClient, setWsClient] = useState(null);
 
+
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
