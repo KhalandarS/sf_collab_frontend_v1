@@ -22,17 +22,11 @@ import { toast } from "react-toastify";
 import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
 //import { io } from "socket.io-client";
-import useSocket from "@/components/pages/chat/useSocket"; 
 
-import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-import { SOCKET_API_URL } from "@/utils/config";
-
-import { toast } from "react-toastify";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "../components/style/Layout.css";
 
-import OnlineFriendsSidebar from '../components/OnlineFriendsSidebar';
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -143,7 +137,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       </main>
       
       {/* Right sidebar - Online Friends */}
-      <OnlineFriendsSidebar className="hidden lg:flex" />
+      {/* <OnlineFriendsSidebar className="hidden lg:flex" /> */}
     </div>
   );
 };
