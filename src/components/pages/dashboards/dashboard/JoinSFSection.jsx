@@ -6,14 +6,14 @@ export default function JoinSFSection() {
     
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:20px_20px]" />
-
+      <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                  Join the SForger Team
+                </h2>
       <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
       
         {/* Text content */}
         <div className="text-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-            Join the SForger Team
-          </h2>
+          
           <p className="text-white/80 text-center max-w-2xl m-auto text-sm sm:text-base">
             We’re hiring developers, content creators, and 3D designers to help build the future of SForger.
           </p>
@@ -36,7 +36,7 @@ export default function JoinSFSection() {
         </div>
 
         {/* CTA */}
-        <div className="flex lg:justify-end">
+        <div className="md:absolute md:bottom-1 md:right-1 flex lg:justify-end">
           <Link
             to="/join-sf"
             className="inline-flex w-full items-center justify-center h-12 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-300 border border-cyan-300/50 hover:scale-105"

@@ -10,6 +10,7 @@ import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch ,useSelector} from "react-redux";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import LoadingSpinner from "../LoadingSpinner";
+import { Repeat, Crown, Hammer, Megaphone, Shield } from "lucide-react";
 
 
 import AOS from 'aos';
@@ -20,6 +21,7 @@ import { IoLogIn } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 
 import { ShineButton } from '../lightswind/shine-button';
+import { usersAPI } from "@/utils/APIs/userApi";
 
 // Simple icon components
 const BellIcon = () => (
@@ -27,6 +29,12 @@ const BellIcon = () => (
     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
   </svg>
 );
+const ROLE_META = {
+  founder: { label: "Founder Mode", icon: Crown },
+  builder: { label: "Builder Mode", icon: Hammer },
+  influencer: { label: "Influencer Mode", icon: Megaphone },
+  admin: { label: "Admin Mode", icon: Shield },
+};
 
 const SettingsIcon = () => (
   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,7 +63,7 @@ const LogoutIcon = () => (
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 
-const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
+const NavBar = ({isOpen,setIsOpen, isHidden = false , activeRole, setActiveRole, userRoles}) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   
   const [notifications, setNotifications] = useState([]);
@@ -66,7 +74,8 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {user,access_token,refreshToken,loading,error} = useSelector((state) => state.auth);
-  
+
+
   const handleLogout = async () => {
     setLoaderState(true);
   
@@ -163,7 +172,9 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
     fetchNotifications();
   }, [access_token, user]);
 
-
+  if (loaderState) {
+    return null
+  }
   return (
     <nav
       className={`  flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
@@ -171,13 +182,6 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
       } lg:translate-y-0`}
       style={{zIndex:9999999}}
     >
-      
-      {loaderState && (
-        <LoadingSpinner
-          title="Authenticating with Google..."
-          message="This will only take a moment. Please follow the Google sign-in window."
-        />
-      )}
       
       
         {/* Dark Horizon Glow */}
@@ -291,7 +295,8 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , isAdmin}) => {
               </button>
             </Tippy>
           </div>
-  
+         
+
           {/* Profile dropdown */}
           <div className="relative" ref={profileRef}>
             <Tippy

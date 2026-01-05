@@ -77,7 +77,29 @@ export default function Waitlist() {
         <div className="w-full mx-auto mb-12">
           <WaitlistSignup />
         </div>
-
+      <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="rounded-2xl bg-neutral-900 border border-neutral-800 backdrop-blur-sm p-6 hover:border-neutral-700 transition-all duration-300 w-full mx-auto mb-12"
+        >
+          <motion.h3 variants={itemVariants} className="text-xl font-semibold flex items-center gap-2 text-white mb-4">
+            <Zap className="h-5 w-5 text-yellow-400" />
+            Waitlist Scarcity Explanation
+          </motion.h3>
+          <ul className="space-y-3 text-sm">
+            <motion.li variants={itemVariants} className="text-white/80">
+              Remaining waitlist users are added in stages.
+            </motion.li>
+            <motion.li variants={itemVariants} className="text-white/80">
+              Without participation, users may wait months for access.
+            </motion.li>
+            <motion.li variants={itemVariants} className="text-white/80">
+              Crowdfunding investment can provide earlier access.
+            </motion.li>
+          </ul>
+        </motion.div>
         {/* Four Paths to Rank */}
         <motion.div
           variants={containerVariants}
@@ -173,7 +195,7 @@ export default function Waitlist() {
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
           <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/10 rounded-full -translate-x-12 translate-y-12"></div>
         </motion.div>
-
+        
         {/* Key Principles */}
         <motion.div
           variants={containerVariants}

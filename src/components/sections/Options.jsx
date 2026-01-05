@@ -1,5 +1,8 @@
 import React from "react";
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> main
 import { Link, useLocation } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { getTopNavLinks, getCurrentContext } from "./sidebar/links";
@@ -11,6 +14,7 @@ const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
 
   // Only show sub-items if we have them (not for Chat which has no subItems)
   const showSubItems = subLinks && subLinks.length > 0;
+<<<<<<< HEAD
 
 =======
 import { Link } from "react-router-dom";
@@ -21,6 +25,9 @@ import { LuLayoutDashboard } from "react-icons/lu";
 
 const Options = ({ isHidden = false ,unreadMessagesCount=0, isAdmin}) => {
 >>>>>>> 147e567a45004a93c4756a37d2a6d2d4a74b6ac4
+=======
+
+>>>>>>> main
   return (
     <div
       className={`transition-all duration-400 will-change-transform ${

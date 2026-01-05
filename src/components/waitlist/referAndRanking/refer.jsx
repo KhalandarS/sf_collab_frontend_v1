@@ -507,7 +507,73 @@ const ReferPage = () => {
             </p>
           </div>
         </motion.div>
-
+        {/* LIFETIME DISCOUNT CLARIFICATION */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.57 }}
+          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+        >
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Award className="h-6 w-6 text-purple-400" />
+            Lifetime Discount Tiers - What's Included
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+              <p className="text-sm font-semibold text-green-300 mb-3">✓ Included in Discounts</p>
+              <ul className="text-sm text-green-200 space-y-2">
+                <li>• All SF-developed features</li>
+                <li>• Core platform functionality</li>
+                <li>• SF premium tools & integrations</li>
+                <li>• Future SF product releases</li>
+              </ul>
+            </div>
+            <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+              <p className="text-sm font-semibold text-orange-300 mb-3">✗ Excluded from Discounts</p>
+              <ul className="text-sm text-orange-200 space-y-2">
+                <li>• Third-party tool subscriptions</li>
+                <li>• API overages & usage limits</li>
+                <li>• Non-SF partnerships</li>
+                <li>• External service fees</li>
+              </ul>
+            </div>
+          </div>
+          <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
+            <p className="text-sm text-neutral-300">
+              <strong>Remember:</strong> Your lifetime discount applies exclusively to features built and maintained by SForger. External services and third-party integrations follow their own pricing and discount policies.
+            </p>
+          </div>
+        </motion.div>
+        {/* WAITLIST SCARCITY EXPLANATION */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.75 }}
+          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+        >
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <Zap className="h-6 w-6 text-yellow-400" />
+            Waitlist Access & Scarcity
+          </h3>
+          <div className="space-y-4">
+            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
+              <p className="font-semibold text-white mb-3">How Remaining Waitlist Users Get Access</p>
+              <ul className="text-sm text-neutral-300 space-y-2 list-disc list-inside">
+                <li>After V1 launch (Feb 7th), remaining users are added in stages</li>
+                <li>Rollout is gradual based on infrastructure capacity</li>
+                <li>Without participation or investment, you may wait months for access</li>
+              </ul>
+            </div>
+            <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+              <p className="text-sm text-yellow-300 mb-3">
+                <strong>Speed Up Your Access</strong>
+              </p>
+              <p className="text-sm text-yellow-200">
+                Participate in rankings, contribute to the community, or consider investing in SForger's crowdfunding round to secure earlier priority access.
+              </p>
+            </div>
+          </div>
+        </motion.div>
         {/* SNAPSHOT & LOCKING RULES */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -570,7 +636,7 @@ const ReferPage = () => {
               {
                 icon: Users,
                 title: "Referrals Optional",
-                desc: "+2 points each. They accelerate progress but don't guarantee rewards. Verify only.",
+                desc: "+5 points each. They accelerate progress but don't guarantee rewards. Verify only. For every 5 successful referrals, a bonus of 25 points is awarded.",
                 color: "border-green-500/30",
               },
               {

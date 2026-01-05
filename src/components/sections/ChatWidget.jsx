@@ -27,7 +27,6 @@ const Bubble = ({ message }) => {
         <Link
           key={i}
           to={part}
-          target="_blank"
           rel="noopener noreferrer"
           className="underline hover:opacity-80"
         >

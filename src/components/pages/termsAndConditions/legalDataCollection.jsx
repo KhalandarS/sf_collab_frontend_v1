@@ -1,4 +1,4 @@
-import SideBar from "../../sections/sidebar/SideBar";
+import SideBar from "../sidebars/sidebar/SideBar";
 import NavBar from "../../sections/NavBar";
 import MarkdownFileRender from "../../../utils/markdownFileRender";
 import Footer from "../../landing-page/Footer";

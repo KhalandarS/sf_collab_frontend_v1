@@ -40,12 +40,12 @@ export default function Login() {
     email: "",
     password: ""
   })
-    useEffect(() => {
-    if (user && !formData.email && !formData.password) {
-      dispatch(setUser(null));
-      dispatch(setToken(null));
-    }
-  }, [user, dispatch, formData.email, formData.password]);
+  //   useEffect(() => {
+  //   if (user && !formData.email && !formData.password) {
+  //     dispatch(setUser(null));
+  //     dispatch(setToken(null));
+  //   }
+  // }, [user, dispatch, formData.email, formData.password]);
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 

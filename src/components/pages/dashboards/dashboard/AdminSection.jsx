@@ -7,17 +7,17 @@ export default function AdminSection() {
     
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[length:20px_20px]" />
-
-      <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
-      
-        {/* Text content */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2 mb-2">
+<div className="flex items-center justify-center gap-2 mb-2">
             <Shield className="w-6 h-6 text-red-400" />
             <h2 className="text-2xl sm:text-3xl font-bold text-white">
               Admin Panel
             </h2>
           </div>
+      <div className="relative z-10 grid gap-6 lg:grid-cols-[1fr_auto] lg:items-center">
+      
+        {/* Text content */}
+        <div className="text-center">
+          
           <p className="text-white/80 text-center max-w-2xl m-auto text-sm sm:text-base">
             Manage users, monitor platform activity, and control system settings from the admin dashboard.
           </p>
@@ -37,7 +37,7 @@ export default function AdminSection() {
         </div>
 
         {/* CTA */}
-        <div className="flex lg:justify-end">
+        <div className="md:absolute md:bottom-1 md:right-1 flex lg:justify-end">
           <Link
             to="/admin"
             className="inline-flex w-full items-center justify-center h-12 px-6 sm:px-8 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white font-semibold rounded-xl transition-all duration-300 border border-red-300/50 hover:scale-105"

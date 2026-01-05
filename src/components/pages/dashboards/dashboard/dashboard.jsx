@@ -1,19 +1,19 @@
 
 import React, { useMemo, useState, useEffect } from "react";
-import WorldClock from "../../sections/WorldClock";
-import Calendar from "../../sections/Calendar";
-import Tasks from "../../sections/Tasks";
-import DashboardHeader from "../../headers/DashboardHeader";
-import DashboardSection from "../../sections/DashboardSection";
-import TaskProgress from "../../sections/TaskProgress";
-import Silk from '../../ui/Silk';
+import WorldClock from "../../../sections/WorldClock";
+import Calendar from "../../../sections/Calendar";
+import Tasks from "../../../sections/Tasks";
+import DashboardHeader from "../../../headers/DashboardHeader";
+import DashboardSection from "../../../sections/DashboardSection";
+import TaskProgress from "../../../sections/TaskProgress";
+import Silk from '../../../ui/Silk';
 import { Search } from 'lucide-react'; 
-import SpotlightCard from "../../ui/SpotlightCard";
-import GlareHover from "../../ui/GlareHover";
+import SpotlightCard from "../../../ui/SpotlightCard";
+import GlareHover from "../../../ui/GlareHover";
 import { GrOverview } from "react-icons/gr";
-import ShinyText from "../../ui/ShinyText";
+import ShinyText from "../../../ui/ShinyText";
 import { useDispatch ,useSelector} from "react-redux";
-import { NotificationList } from "../../ui/notification-list";
+import { NotificationList } from "../../../ui/notification-list";
 import {
   DndContext,
   PointerSensor,
@@ -27,7 +27,7 @@ import {
   arrayMove,
 } from "@dnd-kit/sortable";
 
-import { GravityStarsBackground } from '../../animate-ui/components/backgrounds/gravity-stars';
+import { GravityStarsBackground } from '../../../animate-ui/components/backgrounds/gravity-stars';
 import { Link } from "react-router-dom";
 import SortableSection from "./SortableSection";
 import OverviewWebsite from "./OverviewWebsite";
@@ -37,12 +37,10 @@ import JoinSFSection from "./JoinSFSection";
 import InfluencerSection from "./InfluencerSection";
 import AdminSection from "./AdminSection";
 import Loader from "@/components/loader/loader";
-
-//!
-
-
-//!
-const Dashboard = () => {
+import DashboardChangeSection from "../dashboardChangeSection";
+const Dashboard = ({
+  activeRole, setActiveRole, userRoles
+}) => {
   const [query, setQuery] = useState("");
   const [userData, setUserData] = useState(null);
   // State for search functionality
@@ -119,7 +117,15 @@ const Dashboard = () => {
     <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
-      
+      <DashboardChangeSection sections={userRoles.map(role => ({
+        id: role,
+        label: role.charAt(0).toUpperCase() + role.slice(1)
+      }))} onSectionChange={(sectionId) => {
+        setActiveRole(sectionId);
+        localStorage.setItem('activeRole', sectionId);
+        }}
+      activeRole={activeRole}
+      />
 
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
@@ -128,12 +134,12 @@ const Dashboard = () => {
         <WaitlistSection />
         <JoinSFSection />
         {
-          userData && userData.role === "influencer"  && (
+          userData && !userRoles.includes("influencer")  && (
             <InfluencerSection userData={userData} />
           )
         }
         {
-          userData && userData.role === "admin"  && (
+          userData && (userRoles.includes("admin") || user.role === 'admin') && (
             <AdminSection userData={userData} />
           )
         }

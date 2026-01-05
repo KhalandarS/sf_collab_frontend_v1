@@ -91,7 +91,11 @@ const ProfileSetting = () => {
             </div>
             <div className="flex gap-4 items-center w-[50%]">
               <div className="w-24 h-24 rounded-full overflow-hidden text-center py-4 border border-white/10">
-                <img src="/placeholder.svg?height=96&width=96" alt="Profile picture" width={96} height={96} />
+                <img 
+                  src="/default-user.jpeg" 
+                  alt="Profile" 
+                  className="w-full h-full object-cover" 
+                />
               </div>
               <div className="flex flex-col gap-2">
                 <button type="button" className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-full transition-colors">
