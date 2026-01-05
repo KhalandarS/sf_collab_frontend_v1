@@ -15,7 +15,14 @@ import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/Investo
 import useScrollHide from "../hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
+
 import useSocket from "@/components/pages/chat/useSocket";
+
+import { toast } from "react-toastify";
+import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
+import { SOCKET_API_URL } from "@/utils/config";
+//import { io } from "socket.io-client";
+import useSocket from "@/components/pages/chat/useSocket"; 
 
 import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
 import { SOCKET_API_URL } from "@/utils/config";
@@ -24,6 +31,8 @@ import { toast } from "react-toastify";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import "../components/style/Layout.css";
+
+import OnlineFriendsSidebar from '../components/OnlineFriendsSidebar';
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -75,6 +84,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     checkWaitlist();
   }, [user, access_token, location.pathname, navigate]);
 
+
   /* -------------------- Socket.IO (Chat) -------------------- */
   useEffect(() => {
     if (!socket || !isConnected || !user) return;
@@ -121,6 +131,37 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     return () => client.disconnect();
   }, [user?.id, wsClient]);
+
+  const Layout = ({ children }) => {
+  return (
+    <div className="flex min-h-screen">
+      {/* Left sidebar (if you have one) */}
+      
+      {/* Main content */}
+      <main className="flex-1">
+        {children}
+      </main>
+      
+      {/* Right sidebar - Online Friends */}
+      <OnlineFriendsSidebar className="hidden lg:flex" />
+    </div>
+  );
+};
+
+const UserProfile = ({ userId }) => {
+  return (
+    <div className="profile-header">
+      <h1>John Doe</h1>
+      
+      {/* Add friend button */}
+      <FriendRequestButton 
+        userId={userId}
+        showMessage={true}
+        variant="default"
+      />
+    </div>
+  );
+};
 
   /* -------------------- Sidebar Resolver -------------------- */
   const SideBar = () => {

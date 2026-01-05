@@ -61,7 +61,7 @@ import Influencer from "./components/pages/influencer/Influencer.jsx";
 import ProfileSetup from "./components/pages/ProfileSetup.jsx";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { usersAPI } from "./utils/APIs/userApi.js";
+import { usersAPI } from "../utils/APIs/userApi.js";
 import Dashboard from "./components/pages/dashboards/dashboard/dashboard.jsx";
 import InfluencerDashboard from "./components/pages/dashboards/influencerDashboard/InfluencerDashboard.jsx";
 import BuilderDashboard from "./components/pages/dashboards/builderDashboard/BuilderDashboard.jsx";
