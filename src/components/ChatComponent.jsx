@@ -762,161 +762,132 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     
     
     //! Initialize WebSocket connection
-  useEffect(() => {
-    if (!userId || wsClient) return; // Don't reinitialize if client already exists
-  
+ useEffect(() => {
+    // Prevent connection if essential data is missing or client exists
+    if (!userId || !access_token || wsClient) return;
+
     const client = new ChatWebSocketClient(SOCKET_API_URL, userId, {
+      token: access_token, // Fixed: Passing the token here to solve "token=null"
       maxReconnectAttempts: 5,
-      reconnectionDelay: 1000,
-      timeout: 20000
+      reconnectionDelay: 1000
     });
-    
-    // Connection events
+
+    // --- Connection events ---
     client.on('connected', () => {
-      console.log('WebSocket connected');
+      console.log('✅ WebSocket connected with token');
       setIsConnected(true);
       loadConversations();
       showNotification('success', 'Connected to chat server');
     });
-  
+
     client.on('disconnected', () => {
-      console.log('WebSocket disconnected');
+      console.log('❌ WebSocket disconnected');
       setIsConnected(false);
       showNotification('error', 'Disconnected from chat server');
     });
-  
-    client.on('connection_error', (error) => {
-      console.error('Connection error:', error);
-      showNotification('error', 'Connection error occurred');
-    });
-  
-    client.on('reconnected', (attemptNumber) => {
-      console.log('Reconnected after attempt:', attemptNumber);
-      showNotification('success', `Reconnected after ${attemptNumber} attempts`);
-    });
-  
-    client.on('reconnect_failed', () => {
-      // console.error('Reconnection failed');
-      showNotification('error', 'Failed to reconnect to chat server');
-    });
-  
-    // Message events
+
+    // --- Message events ---
     client.on('new_message', (data) => {
-      // console.log('New message received via WebSocket:', data);
-      
-      // Check if this message is for the current conversation
       const isCurrentConversation = selectedConversation?.id === data.conversation_id;
-      
-      // Always handle the message
-      handleNewMessage(data);
-      
-      // Show notification only if not in the current conversation
-      if (!isCurrentConversation) {
+
+      if (isCurrentConversation) {
+        // Update the UI immediately for the receiver
+        setMessages(prev => [...prev, data.message]);
+      } else {
+        // Handle notification for background conversations
         const conversation = conversations.find(c => c.id === data.conversation_id);
-        const conversationName = getConversationName(conversation) || 'Unknown conversation';
-        showNotification('info', `New message in ${conversationName}`);
+        const name = getConversationName(conversation) || 'Unknown conversation';
+        showNotification('info', `New message in ${name}`);
       }
+      
+      handleNewMessage(data); 
     });
-  
+
     client.on('message_edited', (data) => {
-      // console.log('Message edited:', data);
       handleMessageEdited(data);
       showNotification('info', 'Message was edited');
     });
-  
+
     client.on('message_deleted', (data) => {
-      // console.log('Message deleted:', data);
       handleMessageDeleted(data);
       showNotification('info', 'Message was deleted');
     });
-  
+
     client.on('mark_message_read', (data) => {
-      // console.log('Message read:', data);
       // If someone else read messages in a conversation, update counts
       if (data.conversation_id && data.user_id !== userId) {
         showNotification('info', 'Messages marked as read');
         loadConversations();
       }
     });
-  
-    // Typing events
+
+    // --- User & Typing events ---
     client.on('user_typing', (data) => {
-      // console.log('User typing:', data);
       handleUserTyping(data);
     });
-  
-    // User status events
+
     client.on('user_online', (data) => {
-      // console.log(`User ${data.user_id} is now online`);
       handleUserOnline(data);
       showNotification('success', `User ${data.user_name || data.user_id} is now online`);
     });
-  
+
     client.on('user_offline', (data) => {
-      // console.log(`User ${data.user_id} is now offline`);
       handleUserOffline(data);
       showNotification('info', `User ${data.user_name || data.user_id} went offline`);
     });
-  
+
     client.on('user_status_changed', (data) => {
-      // console.log(`User ${data.user_id} status changed to ${data.status}`);
       showNotification('info', `User ${data.user_name || data.user_id} is now ${data.status}`);
     });
-  
-    // Conversation events
+
+    // --- Conversation & Participant events ---
     client.on('conversation_created', (data) => {
-      // console.log('New conversation created:', data);
       handleConversationCreated(data);
       showNotification('success', 'New conversation created');
     });
-  
+
     client.on('conversation_updated', (data) => {
-      // console.log('Conversation updated:', data);
       handleConversationUpdated(data);
       showNotification('info', 'Conversation updated');
     });
-  
-    // Participant events
+
     client.on('participant_added', (data) => {
-      // console.log('Participant added:', data);
       handleParticipantAdded(data);
       showNotification('info', `User ${data.user_name} added to conversation`);
     });
-  
+
     client.on('participant_removed', (data) => {
-      // console.log('Participant removed:', data);
       handleParticipantRemoved(data);
       showNotification('info', `User ${data.user_name} removed from conversation`);
     });
-  
+
     client.on('added_to_conversation', (data) => {
-      // console.log('Added to conversation:', data);
       handleAddedToConversation(data);
       showNotification('success', 'You were added to a conversation');
     });
-  
+
     client.on('removed_from_conversation', (data) => {
-      // console.log('Removed from conversation:', data);
       handleRemovedFromConversation(data);
       showNotification('error', 'You were removed from a conversation');
     });
-  
-    // Error events
+
+    // --- Error handling ---
     client.on('error', (error) => {
       console.error('Socket error:', error);
       showNotification('error', `Chat error: ${error.message || 'Unknown error'}`);
     });
-  
+
+    // --- Finalize connection ---
     client.connect();
     setWsClient(client);
-    
+
     return () => {
       if (client) {
         client.disconnect();
         setWsClient(null);
       }
     };
-  }, [userId]); // Only depend on userId
+  }, [userId, access_token, selectedConversation?.id]);// Only depend on userId
   
   // Debug: Log WebSocket state changes
   useEffect(() => {
@@ -1513,111 +1484,132 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
     };
     
     
-    //! handle send message:
-    const handleSendMessage = async (messageContent, file = null) => {
-        if ((!messageContent?.trim() && !file) || !selectedConversation) return;
-        
-        setLoading(true);
-        const token = access_token; 
-        
-        if (!token) {
-            console.error('No access token found');
-            setLoading(false);
-            return;
+    ///! handle send message:
+  const handleSendMessage = async (messageContent, file = null) => {
+    // Check if there is anything to send
+    if ((!messageContent?.trim() && !file) || !selectedConversation) return;
+
+    setLoading(true);
+    const token = access_token;
+
+    if (!token) {
+      console.error('No access token found');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (file) {
+        // --- Handle file upload ---
+        const formData = new FormData();
+        formData.append('sender_id', userId);
+        formData.append('content', messageContent || 'Sent a file');
+        formData.append('message_type', 'file');
+        formData.append('file', file);
+
+        const response = await fetch(
+          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
+          {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            credentials: 'include',
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        try {
-            if (file) {
-                // Handle file upload
-                const formData = new FormData();
-                formData.append('sender_id', userId);
-                formData.append('content', messageContent || 'Sent a file');
-                formData.append('message_type', 'file');
-                formData.append('file', file);
-                
-                const response = await fetch(
-                    `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-                    {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        credentials: 'include',
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success && data.data?.message) {
-                  const msg=formatMessageContent(data.data?.message?.content)
-                  handleCreateNotification(
-                    `You have new message from ${user?.firstName} ${user?.lastName}`,
-                    msg,
-                    "system",
-                    false,
-                    selectedConversation.participants?.find(u => u.id !== userId)?.id
-                  );
-                  setMessages(prev => [...prev, data.data.message]);
-                  loadConversations();
-                  loadConversationFiles(selectedConversation.id);
-                } else {
-                    throw new Error(data.message || "Failed to send message");
-                }
-            } else {
-                // Handle text message
-                const response = await fetch(
-                    `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify({
-                            sender_id: userId,
-                            content: messageContent,
-                            message_type: 'text'
-                        }),
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    }
-                );
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                if (data.success && data.data?.message) {
-                  const msg=formatT(data.data?.message?.content)
-                  handleCreateNotification(
-                    `You have new message from ${user?.firstName} ${user?.lastName}`,
-                    msg,
-                    "system",
-                    false,
-                    selectedConversation.participants?.find(u => u.id !== userId)?.id
-                  );
-                  setMessages(prev => [...prev, data.data.message]);
-                  loadConversations();
-                } else {
-                    throw new Error(data.message || "Failed to send message");
-                }
+
+        const data = await response.json();
+
+        if (data.success && data.data?.message) {
+          // Emit via WebSocket so the receiver gets it in real-time
+          if (wsClient && wsClient.socket) {
+            wsClient.socket.emit('send_message', {
+              conversation_id: selectedConversation.id,
+              message: data.data.message,
+              receiver_id: selectedConversation.participants?.find(u => u.id !== userId)?.id
+            });
+          }
+
+          const msg = formatMessageContent(data.data?.message?.content);
+          handleCreateNotification(
+            `You have new message from ${user?.firstName} ${user?.lastName}`,
+            msg,
+            "system",
+            false,
+            selectedConversation.participants?.find(u => u.id !== userId)?.id
+          );
+
+          setMessages(prev => [...prev, data.data.message]);
+          loadConversations();
+          loadConversationFiles(selectedConversation.id);
+        } else {
+          throw new Error(data.message || "Failed to send message");
+        }
+      } else {
+        // --- Handle text message ---
+        const response = await fetch(
+          `${API_BASE_URL}/chat/conversations/${selectedConversation.id}/messages`,
+          {
+            method: 'POST',
+            body: JSON.stringify({
+              sender_id: userId,
+              content: messageContent,
+              message_type: 'text'
+            }),
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json'
             }
-        } catch (error) {
-            console.error('Error sending message:', error);
-            // Show error alert
-            setShowAlert(true);
-            setAlertVariant("error");
-            setAlertDismissible(true);
-            setAlertMessage(error.message || "Failed to send message");
-        } finally {
-            setLoading(false);
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-    };
+
+        const data = await response.json();
+
+        if (data.success && data.data?.message) {
+          // Emit via WebSocket
+          if (wsClient && wsClient.socket) {
+            wsClient.socket.emit('send_message', {
+              conversation_id: selectedConversation.id,
+              message: data.data.message,
+              receiver_id: selectedConversation.participants?.find(u => u.id !== userId)?.id
+            });
+          }
+
+          const msg = formatT ? formatT(data.data?.message?.content) : data.data?.message?.content;
+          handleCreateNotification(
+            `You have new message from ${user?.firstName} ${user?.lastName}`,
+            msg,
+            "system",
+            false,
+            selectedConversation.participants?.find(u => u.id !== userId)?.id
+          );
+
+          setMessages(prev => [...prev, data.data.message]);
+          loadConversations();
+        } else {
+          throw new Error(data.message || "Failed to send message");
+        }
+      }
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Show error alert
+      setShowAlert(true);
+      setAlertVariant("error");
+      setAlertDismissible(true);
+      setAlertMessage(error.message || "Failed to send message");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
     //! handle typing:
