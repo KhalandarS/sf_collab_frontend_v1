@@ -195,6 +195,7 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
+<<<<<<< HEAD
         <ToastContainer
           position="bottom-center"
           autoClose={5000}
@@ -202,6 +203,26 @@ function App() {
         />
       </ChatNotificationProvider>
     </BrowserRouter>
+=======
+      {/* Catch all route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+    <ToastContainer />
+  <ToastContainer
+    position="bottom-center"
+    autoClose={5000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="dark"
+    style={{ bottom: '20px' }}
+  />
+  </>
+>>>>>>> 57389c39fc375411a2030fa9836be27d6edfcd66
   );
 }
 
