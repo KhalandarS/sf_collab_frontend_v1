@@ -1,17 +1,8 @@
-/**
- * ChatPage Component
- * Main chat page that combines all chat components
- * 
- * Put this in: src/pages/ChatPage.jsx
- * 
- * This is the main page - imports all the smaller components
- */
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Edit3, MessageCircle } from 'lucide-react';
 
 // Import custom hook
-import useSocket from '/src/hooks/useSocket';
+import useSocket from '@/hooks/useSocket';
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -22,6 +13,7 @@ import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
 import NewMessageModal from '@/components/chat/NewMessageModal';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -52,7 +44,8 @@ const ChatPage = () => {
   const [typingUsers, setTypingUsers] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState('all');
 
   // ============================================
   // REFS
@@ -313,12 +306,22 @@ const ChatPage = () => {
     return (currTime - prevTime) > 5 * 60 * 1000; // 5 minutes
   };
 
-  // Filter conversations by search
   const filteredConversations = conversations.filter(c => {
-    if (!searchTerm) return true;
+  // Filter by search
+  if (searchTerm) {
     const name = c.name || c.participants?.find(p => p.id !== currentUser?.id)?.firstName || '';
-    return name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+    if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+  }
+  
+  // Filter by tab
+  if (activeTab === 'all') return true;
+  if (activeTab === 'friends') return c.conversation_type === 'direct';
+  if (activeTab === 'groups') return c.conversation_type === 'group';
+  if (activeTab === 'startups') return c.conversation_type === 'team';
+  if (activeTab === 'general') return c.conversation_type === 'general';
+  
+  return true;
+});
 
   // Get other participant for direct messages
   const otherParticipant = activeConversation?.participants?.find(
@@ -380,6 +383,29 @@ const ChatPage = () => {
               className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
             />
           </div>
+        </div>
+
+        {/* Category Tabs */}
+        <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+          {[
+            { id: 'all', label: 'All' },
+            { id: 'friends', label: 'Friends', type: 'direct' },
+            { id: 'groups', label: 'Groups', type: 'group' },
+            { id: 'startups', label: 'Startups', type: 'team' },
+            { id: 'general', label: 'General', type: 'general' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                activeTab === tab.id
+                  ? 'bg-amber-500 text-zinc-900'
+                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Conversation List */}
@@ -469,7 +495,7 @@ const ChatPage = () => {
         ) : (
           /* No conversation selected */
           <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-orange-500/20 rounded-full flex items-center justify-center mb-4">
               <MessageCircle size={40} className="text-indigo-500" />
             </div>
             <h2 className="text-xl font-semibold text-white mb-2">Your Messages</h2>

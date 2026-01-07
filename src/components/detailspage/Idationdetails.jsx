@@ -19,7 +19,7 @@ import axios from "axios";
 // API Configuration - Single base URL for all ideation API calls
 const BASE_URL =
   window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "http://localhost:5000/api/ideas"
+    ? "http://localhost:5001/api/ideas"
     : "https://sfcolab-backend.onrender.com/api/ideation";
 
 const IdeationDetails = () => {

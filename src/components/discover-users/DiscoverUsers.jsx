@@ -355,8 +355,7 @@ const DiscoverUsers = () => {
               layout
               className="flex flex-col w-full items-center justify-center"
             >
-              <div className="flex flex-wrap justify-start items-center gap-6">
-              {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full"> */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
                 {users.map(user => (
                   <UserCard
                     key={user.id}

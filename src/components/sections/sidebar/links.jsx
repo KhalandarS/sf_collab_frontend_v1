@@ -65,7 +65,7 @@ export function createLinks(unreadMessagesCount) {
       label: "Dashboard",
       subItems: [
         { id: "overview", href: "/dashboard", label: "Overview", icon: <LuEye size={18} /> },
-        { id: "discover-startups", href: "/discover-startups", label: "My Startup", icon: <BriefcaseBusiness size={18} /> },
+        { id: "my-startup", href: "/discover-startups", label: "My Startup", icon: <BriefcaseBusiness size={18} /> },
       ],
     },
     {
@@ -83,8 +83,8 @@ export function createLinks(unreadMessagesCount) {
       href: "/discover-startups",
       label: "Startups",
       subItems: [
-        { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
-        { id: "register-startup", href: "/register-startup", label: "Register Startup", icon: <PlusSquare size={18} /> },
+        { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
+        { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
       ],
     },
     {
@@ -100,12 +100,12 @@ export function createLinks(unreadMessagesCount) {
     },
     {
       id: 5,
-      icon: <PlusSquare size={22} />,
+      icon: <FileText size={22} />,
       href: "/posts",
       label: "Posts",
       subItems: [
         { id: "posts-feed", href: "/posts", label: "Posts Feed", icon: <FileText size={18} /> },
-        { id: "discover-users", href: "/discover-users", label: "Connect with Users", icon: <Users size={18} /> },
+        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
       ],
     },
     {
@@ -123,14 +123,28 @@ export function createLinks(unreadMessagesCount) {
 }
 
 export function getCurrentContext(pathname) {
-  if (["/dashboard", "/discover-startups"].some((p) => pathname.startsWith(p))) return 1;
+  //if (pathname.startsWith("/chat")) return null;
+
+  // Startups first to avoid collision
+  if (
+    ["/discover-startups", "/register-startup", "/startup-teams", "/startup-documents", "/startup-details"].some((p) =>
+      pathname.startsWith(p)
+    )
+  )
+    return 3;
+
+  if (pathname.startsWith("/dashboard")) return 1;
+
   if (["/ideation", "/submit-idea", "/my-ideas", "/ideas-feed"].some((p) => pathname.startsWith(p))) return 2;
-  if (["/discover-startups", "/register-startup", "/startup-teams", "/startup-documents", "/startup-details"].some((p) => pathname.startsWith(p))) return 3;
-  if (pathname.startsWith("/chat")) return null;
+
   if (["/posts", "/my-posts", "/discover-users"].some((p) => pathname.startsWith(p))) return 5;
-  if (["/business-plan", "/logo-generator", "/data-scraper", "/knowledge"].some((p) => pathname.startsWith(p))) return 6;
+
+  if (["/business-plan", "/logo-generator", "/data-scraper", "/knowledge"].some((p) => pathname.startsWith(p)))
+    return 6;
+
   return 1;
 }
+
 
 export function getTopNavLinks(pathname, unreadMessagesCount = 0) {
   const contextId = getCurrentContext(pathname);

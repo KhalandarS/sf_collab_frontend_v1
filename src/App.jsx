@@ -93,8 +93,8 @@ function App() {
           const response = await usersAPI.getMyRoles(access_token);
 
           // setUserRoles([...response.data.map(role => role.role), 'General']);
-          setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          // setActiveRole('member');
+          setUserRoles(['influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+          setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
@@ -102,91 +102,107 @@ function App() {
     }
     fetchUserRoles();
   }, [access_token]);
-  return (
-    <BrowserRouter> {/* Added this to provide context for useNavigate */}
-      <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/team" element={<TeamPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/startuppage" element={<StartupPage />} />
-          <Route path="/products" element={<ProductsPage />} />
-          <Route path="/explore_section" element={<Explore_Section />} />
-          
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/verify-email" element={<VerifyEmail />} />
-          
-          <Route path='membership-benefits' element={<MembershipBenefits />} />
-          <Route path='implementation-plans' element={<ImplementationPlans />} />
-          <Route path='featured-projects' element={<FeaturedProjects />} />
-          <Route path="/contribution" element={<ContributionPage />} />
-          <Route path="/contribution-ideas" element={<ContributionIdeasPage />} />
+  return (<>
+  
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/about" element={<AboutPage />} />
+      <Route path="/team" element={<TeamPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/startuppage" element={<StartupPage />} />
+      <Route path="/products" element={<ProductsPage />} />
+      <Route path="/explore_section" element={<Explore_Section/>} />
+      
+      {/* Public Authentication Routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
+      {/* Refer and Waitlist */}
+      
+      {/*   const navlink = [
+    { href: '/', name: 'Home' },
+    { href: '/about', name: 'Platform' },
+    { href: '/membership-benefits', name: 'Membership benefits' },
+    { href: '/implementation-plans', name: 'Implementation Plans' },
+    { href: '/featured-projects', name: 'Featured Projects' },
+    { href: '/team', name: 'Our Team' },
+    { href: '/contact', name: 'Contact' },
+  ]; */}
+      
+      <Route path='membership-benefits' element={<MembershipBenefits />} />
+      <Route path='implementation-plans' element={<ImplementationPlans />} />
+      <Route path='featured-projects' element={<FeaturedProjects />} />
 
-          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/data-collection-and-tracking" element={<DataCollection />} />
-          <Route path="/pricing" element={<Pricing />} />
-
-          {/* Protected Routes */}
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
-              </ProtectedRoute>
-            }
-          >
-            {/* Dashboard Logic */}
-            <Route 
-              path="dashboard" 
-              element={
-                activeRole === 'influencer' ? <InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} /> :
-                activeRole === 'builder' ? <BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} /> :
-                activeRole === 'founder' ? <FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} /> :
-                activeRole === 'investor' ? <InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} /> :
-                <Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
-              } 
-            />
-
-            <Route path="ai-dashboard" element={<AIDashboard />} />
-            <Route path="waitlist" element={<Waitlist />} />
-            <Route path="waitlist-terms" element={<WaitlistTerms />} />
-            <Route path="influencer" element={<Influencer />} />
-            <Route path="admin" element={<AdminPage />} />
-            <Route path="refer" element={<ReferPage />} />
-            <Route path="join-sf" element={<JoinSF />} />
-            <Route path="apply-influencer" element={<InfluencerApplication />} />
-            <Route path="profile-setup" element={<ProfileSetup />} />
-            <Route path="projects" element={<Project />} />
-            <Route path="project-management" element={<ProjectManagement />} />
-            <Route path="project-details" element={<ProjectDetails />} />
-            <Route path="ideation" element={<Ideation />} />
-            <Route path="ideation-details" element={<Idationdetails />} />
-            <Route path="knowledge" element={<Knowledge />} />
-            <Route path="knowledge-details" element={<Knowledgedetails />} />
-            <Route path="chat" element={<ChatPage />} />
-            <Route path="posts" element={<Posts />} />
-            <Route path="register-startup" element={<RegisterStartUp />} />
-            <Route path="discover-startups" element={<DiscoverStartups />} />
-            <Route path="startup-details/:id" element={<StartupDetailPage />} />
-            <Route path="business-plan" element={<BusinessIdeaGenerator />} />
-            <Route path="multimodal-images" element={<ImageGenerator />} />
-            <Route path="logo-generator" element={<StartupLogoGenerator />} />
-            <Route path="data-scraper" element={<ScraperForm />} />
-            <Route path="qwen-chat" element={<QwenChat />} />
-            <Route path="pdf-signing" element={<PDFSigningApp />} />
-            <Route path="discover-users" element={<DiscoverUsers />} />
-            <Route path="user-profile" element={<Profile />} />
-            <Route path="saved" element={<SavedList />} />
-            <Route path="home-details" element={<HomedetailsPage />} />
-            <Route path="help" element={<Help />} />
-            <Route path="notifications" element={<Notifications />} />
-            <Route path="video-tutorials" element={<VideoTutorials />} />
-            <Route path="getting-started" element={<GettingStarted />} />
-            <Route path="team-collaboration" element={<TeamCollaboration />} />
-            <Route path="Test" element={<Test />} />
+      {/* Terms and conditions and privacy policy */}
+      <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/data-collection-and-tracking" element={<DataCollection />} />
+       <Route path="/pricing"  element={<Pricing />} />
+      {/* Protected Routes */}
+      <Route 
+        path="/" 
+        element={
+          <ProtectedRoute>
+            <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
+          </ProtectedRoute>
+        }
+      >
+        {/* Dashboard */}
+        {
+          user && activeRole === 'influencer' ? (
+            <Route path="dashboard" element={<InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : user && activeRole === 'builder' ? (
+            <Route path="dashboard" element={<BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : user && activeRole === 'founder' ?(
+                <Route path="dashboard" element={<FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+              ) : user && activeRole === 'investor' ? (
+                <Route path="dashboard" element={<InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          ) : (<Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
+          )
+        }
+        {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
+        <Route path="ai-dashboard" element={<AIDashboard />} />
+        <Route path="waitlist" element={<Waitlist />} />
+        <Route path="waitlist-terms" element={<WaitlistTerms />} />
+        <Route path="influencer" element={<Influencer />} />
+        <Route path="admin" element={<AdminPage />} />
+        <Route path="refer" element={<ReferPage />} />
+        <Route path="join-sf" element={<JoinSF />} />
+        <Route path="apply-influencer" element={<InfluencerApplication />} />
+        <Route path="profile-setup" element={<ProfileSetup />} />
+        {/* Projects */}
+        <Route path="projects" element={<Project />} />
+        <Route path="project-management" element={<ProjectManagement />} />
+        <Route path="project-details" element={<ProjectDetails />} />
+        
+        {/* Ideation */}
+        <Route path="ideation" element={<Ideation />} />
+        <Route path="ideation-details" element={<Idationdetails />} />
+        
+        {/* Knowledge */}
+        <Route path="knowledge" element={<Knowledge />} />
+        <Route path="knowledge-details" element={<Knowledgedetails />} />
+        
+        {/* Chat */}
+        <Route path="chat" element={<ChatPage />} />
+        {/* Posts */}
+        <Route path="posts" element={<Posts />} />
+        
+        {/* Startups */}
+        <Route path="register-startup" element={<RegisterStartUp />} />
+        <Route path="discover-startups" element={<DiscoverStartups />} />
+        <Route path="startup-details/:id" element={<StartupDetailPage />} />
+        
+        {/* Tools */}
+        <Route path="business-plan" element={<BusinessIdeaGenerator />} />
+        <Route path="multimodal-images" element={<ImageGenerator />} />
+        <Route path="logo-generator" element={<StartupLogoGenerator />} />
+        <Route path="data-scraper" element={<ScraperForm />} />
+        <Route path="chat" element={<ChatPage />} />
+        <Route path="qwen-chat" element={<QwenChat />} />
+        <Route path="pdf-signing" element={<PDFSigningApp />} />
+        {/* User */}
+        <Route path="discover-users" element={<DiscoverUsers />} />
 
             <Route path="setting" element={<Setting />}>
               <Route index element={<ProfileSetting />} />
@@ -198,13 +214,24 @@ function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
 
-        <ToastContainer
-          position="bottom-center"
-          autoClose={5000}
-          theme="dark"
-        />
-      </ChatNotificationProvider>
-    </BrowserRouter>
+      {/* Catch all route */}
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+    <ToastContainer />
+  <ToastContainer
+    position="bottom-center"
+    autoClose={5000}
+    hideProgressBar={false}
+    newestOnTop={false}
+    closeOnClick
+    rtl={false}
+    pauseOnFocusLoss
+    draggable
+    pauseOnHover
+    theme="dark"
+    style={{ bottom: '20px' }}
+  />
+  </>
   );
 }
 

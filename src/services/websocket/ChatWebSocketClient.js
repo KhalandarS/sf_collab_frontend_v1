@@ -60,7 +60,13 @@ class ChatWebSocketClient {
 
     const socketOptions = { ...defaultOptions, ...this.options };
     
-    this.socket = io(this.serverUrl, socketOptions);
+    
+    this.socket = io("http://localhost:5001", {
+      query: {
+        token: localStorage.getItem('authToken') // MUST match your login storage key
+      },
+      transports: ["websocket"]
+    });
 
     this.setupDefaultHandlers();
     return this.socket;
@@ -292,7 +298,7 @@ class ChatWebSocketClient {
 
   // Send a new message
   sendMessage(conversationId, content, messageType = 'text', metadata = {}, replyToId = null) {
-    return this.emitWithCallback('send_message', {
+    return this.socket.emit('send_message', {
       conversation_id: conversationId,
       user_id: this.userId,
       content: content,

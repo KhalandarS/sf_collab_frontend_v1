@@ -27,7 +27,7 @@ import IdeationHeader from "../headers/IdeationHeader";
 import ScrollToTop from "../sections/ScrollToTop";
 
 // API Configuration - Single base URL for all ideation API calls
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 const BASE_URL = `${API_URL}/ideas`;
 
 // Helper to decode JWT and get user ID
