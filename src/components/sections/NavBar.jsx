@@ -19,6 +19,7 @@ import { ShineButton } from '../lightswind/shine-button';
 
 // IMPORTANT: Import the apiClient you created
 import apiClient from "@/services/apiClient";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 // Simple icon components
 const BellIcon = () => (
@@ -243,7 +244,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                           <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-slate-700/50">
                             <img
                               className="h-full w-full object-cover"
-                              src={user?.profile?.picture ? (user.profile.picture.startsWith('http') ? user.profile.picture : `${BASE_URL}/users/avatars/${user.profile.picture.replace(/^\/?uploads\//, "")}`) : "/default-user.jpeg"}
+                              src={getProfilePicture(user)}
                               alt="profile"
                             />
                           </div>

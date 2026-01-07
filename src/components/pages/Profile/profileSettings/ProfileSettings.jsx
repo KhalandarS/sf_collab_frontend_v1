@@ -14,6 +14,7 @@ import ProfileSection from './profileSection';
 import axios from 'axios';
 import { API_URL } from '@/utils/config';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
+import { Link } from 'react-router-dom';
 /**
  * Updated Settings UI wired to backend routes:
   - GET /auth/me
@@ -49,6 +50,7 @@ useEffect(() => {
       email: user.email || '',
       status: user.status || 'active',
       role: user.role || '',
+      roles: user.roles || [],
       profile: {
         picture: user.profile?.picture || null,
         bio: user.profile?.bio || '',
@@ -61,7 +63,8 @@ useEffect(() => {
         privacy: user.preferences?.privacy || 'public',
         language: user.preferences?.language || 'en',
         timezone: user.preferences?.timezone || 'UTC',
-        theme: user.preferences?.theme || 'light'
+        theme: user.preferences?.theme || 'light',
+        builderPreferences: user.preferences?.builderPreferences || ''
       },
       notificationSettings: {
         newComments: user.notificationSettings?.newComments ?? true,
@@ -161,6 +164,7 @@ useEffect(() => {
       lastName: user.lastName || "",
       email: user.email || "",
       role: user.role || "",
+      roles: user.roles || [],
       profile: {
         ...prev.profile,
         ...(user.profile || {}),
@@ -206,12 +210,35 @@ useEffect(() => {
   const saveProfile = async () => {
     setSaving(true);
     try {
-
-      await updateUser({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        profile: formData.profile,
-      }, false);
+      if (!formData.firstName || !formData.lastName) {
+        throw new Error("First and Last name are required");
+      }
+      if (!formData.email) {
+        throw new Error("Email is required");
+      }
+      if (formData.roles.length === 0) {
+        throw new Error("At least one role must be selected");
+      }
+      
+      if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
+        toast.info(
+          <Link to="/apply-influencer" target="_blank" className="flex items-center gap-2">
+            <div>
+            <span>To complete your Influencer application, please fill out the Influencer Application Form.</span>
+            <ExternalLink className="w-4 h-4" />
+            
+            </div>
+          </Link>
+        )
+        return
+      }
+      if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
+        toast.error(
+          "You must set up your Builder preferences"
+        )
+        return
+      }
+      await updateUser(formData, false);
       toast.success("Profile updated");
       back();
 

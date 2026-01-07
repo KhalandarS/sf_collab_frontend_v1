@@ -29,7 +29,7 @@ import Test from "./components/pages/Test.jsx";
 import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
 import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/startupDetails/StartupDetailPage.jsx";
-import Profile from "./components/pages/Profile/Profile.jsx";
+import Profile from "./components/pages/Profile/user-profile/Profile.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
 import StartupLogoGenerator from "./components/pages/Image_Logo_Generator/StartupLogoGenerator.jsx";
 import QwenChat from './components/pages/QwenChat/QwenChat';
@@ -173,7 +173,9 @@ function App() {
             <Route path="join-sf" element={<JoinSF />} />
             <Route path="apply-influencer" element={<InfluencerApplication />} />
             <Route path="profile-setup" element={<ProfileSetup />} />
+            <Route path="user-profile" element={<Profile />} />
             {/* Projects */}
+
             <Route path="projects" element={<Project />} />
             <Route path="project-management" element={<ProjectManagement />} />
             <Route path="project-details" element={<ProjectDetails />} />

@@ -90,14 +90,6 @@ export const usersAPI = {
     return response.data.data;
 
   },
-  getMyRoles: async (accessToken) => {
-    const response = await api.get('/user-roles/my-roles', {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return response.data;
-  },
   addRole: async (userId, roles, accessToken) => {
     const response = await api.put(`/user-roles/${userId}`, { roles }, {
       headers: {

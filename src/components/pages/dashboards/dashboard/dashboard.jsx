@@ -113,29 +113,40 @@ const Dashboard = ({
     setSections(items => arrayMove(items, from, to));
   };
 
+  const [showInfluencerInfo, setShowInfluencerInfo] = useState(() => {
+    const stored = localStorage.getItem('preferences:showInfluencerInfo');
+    return stored === 'true';
+  });
+  const [showJobApplication, setShowJobApplication] = useState(() => {
+    const stored = localStorage.getItem('preferences:showJobApplication');
+    return stored === 'true';
+  });
   return (
     <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
-      <DashboardChangeSection sections={userRoles.map(role => ({
-        id: role,
-        label: role.charAt(0).toUpperCase() + role.slice(1)
-      }))} onSectionChange={(sectionId) => {
-        setActiveRole(sectionId);
-        localStorage.setItem('activeRole', sectionId);
-        }}
-      activeRole={activeRole}
-      />
+      
 
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-
+        <DashboardChangeSection sections={userRoles.map(role => ({
+          id: role,
+          label: role.charAt(0).toUpperCase() + role.slice(1)
+        }))} onSectionChange={(sectionId) => {
+          setActiveRole(sectionId);
+          localStorage.setItem('activeRole', sectionId);
+          }}
+        activeRole={activeRole}
+        />
         <WaitlistSection />
-        <JoinSFSection />
         {
-          userData && !userRoles.includes("influencer")  && (
-            <InfluencerSection userData={userData} />
+          !showJobApplication && <JoinSFSection setShowJobApplication={setShowJobApplication}/>
+        }
+        
+        {
+          userData && !userRoles.includes("influencer") && !showInfluencerInfo && (
+            <InfluencerSection userData={userData} setShowInfluencerInfo={setShowInfluencerInfo} />
           )
         }
         {

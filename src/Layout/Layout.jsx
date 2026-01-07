@@ -23,6 +23,7 @@ import { SOCKET_API_URL } from "@/utils/config";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
+import { isUserProfileComplete } from "@/utils/getUserComplete";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -62,7 +63,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
         if (
           !res?.on_waitlist &&
-          !["/waitlist", "/waitlist-terms"].includes(location.pathname)
+          !["/waitlist", "/waitlist-terms", "/user-profile"].includes(location.pathname)
         ) {
           toast.info("You should join the waitlist to access this section.");
           navigate("/waitlist");
@@ -130,7 +131,22 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     return () => client.disconnect();
   }, [user?.id, wsClient]);
+  const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
+  // ✅ Profile completion reminder
+  useEffect(() => {
+    if (!user || !access_token) return;
 
+    const checkProfileCompletion = async () => {
+
+      // Check if the last reminder was more than a week ago
+      console.log(isUserProfileComplete(user));
+      if (!isUserProfileComplete(user) && !location.pathname.startsWith("/user-profile")) {
+        setCompletePopupVisible(true);
+      }
+    };
+
+    checkProfileCompletion();
+  }, [user, access_token]);
   // ✅ Sidebar resolver
   const SideBar = () => {
     const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
@@ -181,7 +197,35 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
         }}
       />
-
+      {
+        isCompletePopupVisible && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+            <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md mx-4">
+              <h2 className="text-2xl font-semibold mb-4">Complete Your Profile</h2>
+              <p className="mb-4">
+                It looks like your profile is incomplete. Please take a moment to update your information to get the best experience.
+              </p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700"
+                  onClick={() => setCompletePopupVisible(false)}
+                >
+                  Later
+                </button>
+                <button
+                  className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+                  onClick={() => {
+                    setCompletePopupVisible(false);
+                    navigate("/user-profile?page=settings");
+                  }}
+                >
+                  Complete Now
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+    }
       {/* Top Nav */}
       {!isRootPath && (
         <div

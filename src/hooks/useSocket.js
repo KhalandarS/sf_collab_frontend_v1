@@ -1,7 +1,6 @@
+import { SOCKET_API_URL } from '@/utils/config';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
-
-const SOCKET_URL = 'http://localhost:5001';
 
 const useSocket = () => {
     const [socket, setSocket] = useState(null);
@@ -24,7 +23,7 @@ const useSocket = () => {
         if (socketRef.current?.connected) return;
 
         // 3. Initialize connection
-        const newSocket = io(SOCKET_URL, {
+        const newSocket = io(SOCKET_API_URL, {
             query: { token },
             transports: ['websocket'],
             reconnectionAttempts: 5,
