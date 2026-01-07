@@ -76,31 +76,34 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   }, [user, access_token, location.pathname, navigate]);
 
   // ✅ Socket.io global notifications (skip if already in chat)
-  useEffect(() => {
-    if (!socket || !isConnected || !user) return;
+  // useEffect(() => {
+  //   if (!socket || !isConnected || !user) return;
 
-    const handleConversationMessage = (data) => {
-      if (!data?.message?.sender) return;
-      if (data.message.sender.id === user.id) return;
-      if (location.pathname.startsWith("/chat")) return;
+  //   const handleConversationMessage = (data) => {
+  //     if (!data?.message?.sender) return;
+  //     if (data.message.sender.id === user.id) return;
+  //     if (location.pathname.startsWith("/chat")) return;
 
-      const content = data.message.content || "";
-      const short = content.length > 80 ? content.slice(0, 80) + "..." : content;
+  //     const content = data.message.content || "";
+  //     const short = content.length > 80 ? content.slice(0, 80) + "..." : content;
 
-      toast.info(
-        <div className="flex flex-col gap-1">
-          <p className="font-semibold">
-            {data.message.sender.firstName} {data.message.sender.lastName}
-          </p>
-          <p className="text-sm opacity-90">{short}</p>
-        </div>,
-        { onClick: () => navigate("/chat") }
-      );
-    };
+  //     // toast.info(
+  //     //   <div className="flex flex-col gap-1">
+  //     //     <p className="font-semibold">
+  //     //       {data.message.sender.firstName} {data.message.sender.lastName}
+  //     //     </p>
+  //     //     <p className="text-sm opacity-90">{short}</p>
+  //     //   </div>,
+  //     //   { onClick: () => navigate("/chat") }
+  //     // );
+  //     console.log("Dispatching chat:new_message", data);
+      
 
-    socket.on("conversation_message", handleConversationMessage);
-    return () => socket.off("conversation_message", handleConversationMessage);
-  }, [socket, isConnected, user, location.pathname, navigate]);
+  //   };
+
+  //   socket.on("conversation_message", handleConversationMessage);
+  //   return () => socket.off("conversation_message", handleConversationMessage);
+  // }, [socket, isConnected, user, location.pathname, navigate]);
 
   // ✅ Raw websocket client (optional)
   useEffect(() => {
@@ -151,10 +154,22 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;
     if (!e.relatedTarget) return setIsOptionsVisible(false);
+    console.log(optionsRef);
     if (optionsRef.current?.contains(e.relatedTarget)) return;
     if (e.relatedTarget.closest?.(".options-container")) return;
     setIsOptionsVisible(false);
   };
+  useEffect(() => {
+    const handler = (event) => {
+      console.log("Received chat:new_message", event.detail);
+    };
+
+    window.addEventListener("chat:new_message", handler);
+
+    return () => {
+      window.removeEventListener("chat:new_message", handler);
+    };
+  }, []);
 
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">

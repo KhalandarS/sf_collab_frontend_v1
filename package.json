@@ -41,6 +41,8 @@
     "@react-three/drei": "^9.96.3",
     "@react-three/fiber": "^8.15.11",
     "@reduxjs/toolkit": "^2.10.1",
+    "@stripe/react-stripe-js": "^5.4.1",
+    "@stripe/stripe-js": "^8.6.1",
     "@tippyjs/react": "^4.2.6",
     "ai": "^5.0.101",
     "aos": "^2.3.4",

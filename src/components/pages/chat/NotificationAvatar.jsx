@@ -4,7 +4,7 @@
 import { Globe, Shield, Users } from "lucide-react"
 
 // ============================================
-const NotificationAvatar = ({ src, name, type }) => {
+export default function NotificationAvatar({ src, name, type }) {
   const initials = name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   
   // Different styles for different conversation types

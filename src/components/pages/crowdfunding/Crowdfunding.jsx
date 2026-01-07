@@ -8,6 +8,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
+import { Link } from "react-router-dom";
 
 export default function CrowdfundingSection() {
   const [tiers, setTiers] = useState([]);
@@ -19,7 +20,6 @@ export default function CrowdfundingSection() {
     const fetchPlans = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/payments/plans`);
-        console.log(res.data);
         setTiers(res.data);
       } catch (err) {
         console.error("❌ Failed to load plans", err);
@@ -31,23 +31,6 @@ export default function CrowdfundingSection() {
     fetchPlans();
   }, []);
 
-  /* ================= STRIPE CHECKOUT ================= */
-  const handleCheckout = async (priceId, tierId) => {
-    try {
-      setCheckoutLoading(tierId);
-
-      const res = await axios.post(
-        `${API_BASE_URL}/payments/checkout`,
-        { price_id: priceId },
-        { withCredentials: true }
-      );
-
-      window.location.href = res.data.checkout_url;
-    } catch (err) {
-      console.error("❌ Checkout failed", err);
-      setCheckoutLoading(null);
-    }
-  };
 
   /* ================= PRICE FORMAT ================= */
   const formatPrice = (price, currency) =>
@@ -84,44 +67,43 @@ export default function CrowdfundingSection() {
 
         {/* ================= TIERS ================= */}
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {tiers.map((tier) => (
+          {tiers.length !== 0 && tiers.map((tier) => (
             <div
-              key={tier.id}
+              key={tier?.id}
               className={`relative rounded-2xl border backdrop-blur-sm p-6 flex flex-col
                 ${
-                  tier.highlight
+                  tier?.highlight
                     ? "border-violet-400/40 bg-violet-500/10 shadow-xl"
-                    : tier.accent === "gold"
+                    : tier?.accent === "gold"
                     ? "border-yellow-500/40 bg-yellow-500/5"
                     : "border-white/10 bg-white/5"
                 }`}
             >
-              {tier.highlight && (
+              {tier?.highlight && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full bg-violet-500 text-white font-semibold">
                   Most Popular
                 </span>
               )}
 
               <div className="flex items-center gap-2 mb-2">
-                {tier.crown && (
+
                   <Crown className="w-5 h-5 text-yellow-400" />
-                )}
-                <h3 className="text-lg font-semibold">{tier.title}</h3>
+                <h3 className="text-lg font-semibold">{tier?.title}</h3>
               </div>
 
               <p className="text-xs text-white/50 mb-4">
-                {tier.description}
+                {tier?.description}
               </p>
 
               <div className="mb-6">
                 <p className="text-3xl font-bold">
-                  {formatPrice(tier.price, tier.currency)}
+                  {formatPrice(tier?.price, tier?.currency || "USD")}
                 </p>
-                <p className="text-xs text-white/40">{tier.note}</p>
+                <p className="text-xs text-white/40">{tier?.note}</p>
               </div>
 
               <ul className="space-y-2 text-sm text-white/70 flex-1">
-                {tier.features.map((feature) => (
+                {tier?.features.map((feature) => (
                   <li key={feature} className="flex gap-2">
                     <Star className="w-4 h-4 text-indigo-400" />
                     {feature}
@@ -129,39 +111,39 @@ export default function CrowdfundingSection() {
                 ))}
               </ul>
 
-              {tier.limit && (
+              {tier?.limit && (
                 <p className="mt-3 text-xs text-center text-red-400">
-                  🔥 Limited: {tier.limit} spots
+                  🔥 Limited: {tier?.limit} spots
                 </p>
               )}
-
+              <Link to={`/checkout/${tier?.id}`}>
               <button
-                onClick={() =>
-                  handleCheckout(tier.stripe_price_id, tier.id)
-                }
-                disabled={checkoutLoading === tier.id}
+                
+                disabled={checkoutLoading === tier?.id}
                 className={`mt-6 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition
                   ${
-                    tier.highlight
+                    tier?.highlight
                       ? "bg-violet-500 hover:bg-violet-600"
-                      : tier.accent === "gold"
+                      : tier?.accent === "gold"
                       ? "bg-yellow-500 text-black hover:opacity-90"
                       : "border border-white/20 hover:bg-white/10"
                   }
                   disabled:opacity-60 disabled:cursor-not-allowed`}
-              >
-                {checkoutLoading === tier.id ? (
+                >
+                  
+                {checkoutLoading === tier?.id ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Redirecting…
                   </>
                 ) : (
                   <>
-                    {tier.cta}
+                    {tier?.cta}
                     <ArrowRight className="w-4 h-4" />
                   </>
                 )}
-              </button>
+                </button>
+                </Link>
             </div>
           ))}
         </div>

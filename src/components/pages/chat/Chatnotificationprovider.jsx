@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import NotificationAvatar from './NotificationAvatar';
 
 // ============================================
 // CONFIGURATION
@@ -127,7 +128,7 @@ const ChatToast = ({
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-3">
-          <NotificationAvatar 
+          <NotificationAvatar
             src={sender?.profilePicture} 
             name={conversationName}
             type={conversationType}
@@ -311,7 +312,7 @@ export default function ChatNotificationProvider({ children }) {
     });
 
     // Listen for new messages
-    newSocket.on('new_message', (data) => {
+    const callback = (data) => {
       const { message, conversation_id } = data;
       
       // Don't show notification if:
@@ -339,7 +340,9 @@ export default function ChatNotificationProvider({ children }) {
         // Update unread count
         setUnreadCount(prev => prev + 1);
       }
-    });
+    }
+    newSocket.on('new_message', callback);
+    newSocket.on('conversation_message', callback);
 
     // Listen for being added to conversations
     newSocket.on('added_to_team_chat', (data) => {
