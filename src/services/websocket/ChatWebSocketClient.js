@@ -46,11 +46,13 @@ class ChatWebSocketClient {
   }
 
   // Initialize and connect to WebSocket server
+  // Initialize and connect to WebSocket server
   connect() {
     const defaultOptions = {
       query: { user_id: this.userId },
-      transports: ['websocket'],
-      upgrade: false,
+      withCredentials: true, 
+      transports: ['polling', 'websocket'], 
+      upgrade: true,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
@@ -74,12 +76,12 @@ class ChatWebSocketClient {
       this.reconnectAttempts = 0;
       this.trigger('connected');
       this.startHeartbeat();
-      this.startConnectionWatchdog();
+      //this.startConnectionWatchdog();
       // IMPORTANT: Wait a bit before joining conversations to ensure socket is fully registered
       setTimeout(() => {
         // Join all user's conversation rooms
         this.joinUserConversations();
-      }, 200);
+      }, 500);
     });
 
     this.socket.on('disconnect', (reason) => {

@@ -93,10 +93,12 @@ export function createLinks(unreadMessagesCount) {
       href: "/chat",
       label: "Chat",
       unreadCount: (
-        <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
+        <Badge
+          className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300"
+        >
           {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
         </Badge>
-      ),
+      )
     },
     {
       id: 5,

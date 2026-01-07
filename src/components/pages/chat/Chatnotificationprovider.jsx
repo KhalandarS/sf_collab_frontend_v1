@@ -6,7 +6,7 @@ import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } fro
 // ============================================
 // CONFIGURATION
 // ============================================
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
 const NOTIFICATION_DURATION = 5000; // 5 seconds
 const MAX_NOTIFICATIONS = 2; // Max stacked notifications
 

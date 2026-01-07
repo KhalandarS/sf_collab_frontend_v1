@@ -164,14 +164,14 @@ const ContactItem = ({ friend, isOnline, onClick }) => (
     <div className="flex-1 min-w-0">
     <span className={`text-sm truncate block ${
         isOnline ? 'text-zinc-300 group-hover:text-white' : 'text-zinc-500 group-hover:text-zinc-300'
-    }`}>
+      }`}>
         {friend.firstName} {friend.lastName}
-    </span>
-    {!isOnline && friend.lastSeenDisplay && (
+      </span>
+      {!isOnline && friend.lastSeenDisplay && (
         <span className="text-[10px] text-zinc-600 block">
-        {friend.lastSeenDisplay}
-        </span>
-    )}
+          {friend.lastSeenDisplay}
+      </span>
+        )}
     </div>
   </button>
 );

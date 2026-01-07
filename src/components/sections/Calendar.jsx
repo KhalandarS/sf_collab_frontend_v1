@@ -90,7 +90,7 @@ export default function Calendar() {
     { value: 'list', label: 'List', icon: <ListFilter className="h-4 w-4" /> }
   ]
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
   // Fetch events on component mount and when filters change
   useEffect(() => {

@@ -92,7 +92,7 @@ export default function SignUp() {
     const handleOAuthMessage = (event) => {
       const allowedOrigins = [
         window.location.origin ,
-        "http://localhost:5000",
+        "http://localhost:5001",
         "null",
         "https://sfclb.netlify.app",
         "https://sfclb.netlify.app/",

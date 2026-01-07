@@ -57,7 +57,7 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
               {isActive && hasSubItems && (
                 <div className={`flex flex-col gap-1 mt-1 ${isMobile ? 'pl-6' : 'pl-1'}`}>
                   {link.subItems.map((subItem) => (
-                    <Link
+                    <Link 
                       key={subItem.id}
                       to={subItem.href}
                       onClick={onLinkClick}

@@ -10,18 +10,18 @@ import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch ,useSelector} from "react-redux";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
 import LoadingSpinner from "../LoadingSpinner";
-import { Repeat, Crown, Hammer, Megaphone, Shield } from "lucide-react";
+import { Repeat, Crown, Hammer, Megaphone, Shield, MessageCircle } from "lucide-react";
+import { ChatNotificationBadge } from "../pages/chat/Chatnotificationprovider";
 
 
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
-
 import { FaUserPlus } from "react-icons/fa6";
 import { IoLogIn } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 
 import { ShineButton } from '../lightswind/shine-button';
-import { usersAPI } from "@/utils/APIs/userApi";
+import { usersAPI } from "@/utils/APIs/userAPI";
 
 // Simple icon components
 const BellIcon = () => (
@@ -60,7 +60,7 @@ const LogoutIcon = () => (
   </svg>
 );
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 
 const NavBar = ({isOpen,setIsOpen, isHidden = false , activeRole, setActiveRole, userRoles}) => {
@@ -441,6 +441,10 @@ const NavBar = ({isOpen,setIsOpen, isHidden = false , activeRole, setActiveRole,
         )
       }
       </div>
+      <Link to="/chat" className="relative p-2">
+        <MessageCircle size={24} />
+        <ChatNotificationBadge />  
+      </Link>
     </nav>
   );
 };

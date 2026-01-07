@@ -60,10 +60,7 @@ const ConversationItem = ({
             {isGeneral && <span className="text-[10px]">🌐</span>}
             {isTeam && <span className="text-[10px]">🚀</span>}
             {isGroup && <span className="text-[10px]">👥</span>}
-            
-            <span className={`font-medium truncate text-sm ${isActive ? 'text-white' : 'text-zinc-300'}`}>
-                {displayName}
-            </span>
+            <div className="font-medium text-sm truncate">{displayName}</div>
         </div>
           
           {/* Last message time */}

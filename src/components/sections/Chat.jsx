@@ -115,7 +115,7 @@ export default function Chat() {
 
   // Configuration
   const SOCKET_URL =
-    import.meta.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
+    import.meta.env.REACT_APP_SOCKET_URL || "http://localhost:5001";
 
   // Toggle search input
   const toggleInput = () => {

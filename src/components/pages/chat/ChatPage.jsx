@@ -53,6 +53,7 @@ const ChatPage = () => {
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('all');
 
   // ============================================
   // REFS
@@ -315,10 +316,21 @@ const ChatPage = () => {
 
   // Filter conversations by search
   const filteredConversations = conversations.filter(c => {
-    if (!searchTerm) return true;
+  // Filter by search
+  if (searchTerm) {
     const name = c.name || c.participants?.find(p => p.id !== currentUser?.id)?.firstName || '';
-    return name.toLowerCase().includes(searchTerm.toLowerCase());
-  });
+    if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+  }
+  
+  // Filter by tab
+  if (activeTab === 'all') return true;
+  if (activeTab === 'friends') return c.conversation_type === 'direct';
+  if (activeTab === 'groups') return c.conversation_type === 'group';
+  if (activeTab === 'startups') return c.conversation_type === 'team';
+  if (activeTab === 'general') return c.conversation_type === 'general';
+  
+  return true;
+});
 
   // Get other participant for direct messages
   const otherParticipant = activeConversation?.participants?.find(
@@ -380,6 +392,28 @@ const ChatPage = () => {
               className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
             />
           </div>
+          {/* Category Tabs */}
+          <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'friends', label: 'Friends', type: 'direct' },
+              { id: 'groups', label: 'Groups', type: 'group' },
+              { id: 'startups', label: 'Startups', type: 'team' },
+              { id: 'general', label: 'General', type: 'general' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-500 text-zinc-900'
+                    : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+</div>
         </div>
 
         {/* Conversation List */}
@@ -419,8 +453,8 @@ const ChatPage = () => {
               conversation={activeConversation}
               currentUserId={currentUser.id}
               isOnline={otherParticipant && onlineUsers.includes(otherParticipant.id)}
-              onVideoCall={() => console.log('Video call')}
-              onVoiceCall={() => console.log('Voice call')}
+              //onVideoCall={() => console.log('Video call')}
+              //onVoiceCall={() => console.log('Voice call')}
               onInfo={() => console.log('Show info')}
             />
 

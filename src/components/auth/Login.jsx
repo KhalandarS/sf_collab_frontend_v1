@@ -20,8 +20,8 @@ import { IoLogIn } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
 
-const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5000/api/auth';
-const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5001/api/auth';
+const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5001';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -100,7 +100,7 @@ export default function Login() {
   useEffect(() => {
     const handleOAuthMessage = (event) => {
       const allowedOrigins = [
-        "http://localhost:5000",
+        "http://localhost:5001",
         "http://localhost:5001",
         window.location.origin,
         "http://127.0.0.1:5000",
