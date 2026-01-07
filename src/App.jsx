@@ -103,7 +103,8 @@ function App() {
     fetchUserRoles();
   }, [access_token]);
   return (<>
-  
+  <BrowserRouter> {/* Added this to provide context for useNavigate */}
+      <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/about" element={<AboutPage />} />
@@ -198,7 +199,6 @@ function App() {
         <Route path="multimodal-images" element={<ImageGenerator />} />
         <Route path="logo-generator" element={<StartupLogoGenerator />} />
         <Route path="data-scraper" element={<ScraperForm />} />
-        <Route path="chat" element={<ChatPage />} />
         <Route path="qwen-chat" element={<QwenChat />} />
         <Route path="pdf-signing" element={<PDFSigningApp />} />
         {/* User */}
@@ -210,14 +210,10 @@ function App() {
               <Route path="account" element={<AccountandSecurity />} />
             </Route>
           </Route>
-
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-
-      {/* Catch all route */}
       <Route path="*" element={<NotFound />} />
+      {/* Catch all route */}
+      
     </Routes>
-    <ToastContainer />
   <ToastContainer
     position="bottom-center"
     autoClose={5000}
@@ -230,7 +226,9 @@ function App() {
     pauseOnHover
     theme="dark"
     style={{ bottom: '20px' }}
-  />
+        />
+        </ChatNotificationProvider>
+    </BrowserRouter>
   </>
   );
 }
