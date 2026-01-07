@@ -16,7 +16,7 @@ const contributionActions = [
     title: "Submit an Idea",
     description:
       "Propose product ideas, features, or improvements that shape SFCollab.",
-    points: "5–75 points",
+    points: "10-50 points",
     icon: Lightbulb,
     cta: "Submit Idea",
     to: "/contribute-ideas",
@@ -102,9 +102,9 @@ export default function ContributionPage() {
           </h2>
 
           <ul className="text-sm text-gray-400 space-y-2 list-disc list-inside">
-            <li>Small contributions: <b>5–15 points</b></li>
-            <li>Medium contributions: <b>15–35 points</b></li>
-            <li>High-impact contributions: <b>25–75 points</b></li>
+            <li>Small contributions: <b>10 points</b></li>
+            <li>Medium contributions: <b>25 points</b></li>
+            <li>High-impact contributions: <b>50 points</b></li>
             <li>
               Every <b>5 referrals</b> grants a <b>25-point bonus</b>
             </li>

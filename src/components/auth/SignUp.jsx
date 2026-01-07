@@ -356,7 +356,7 @@ export default function SignUp() {
             className="w-full max-h-screen object-cover"
             alt="Recollab Background" 
           /> */}
-          <video src="/Create_a_short_cinematic_intro.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
+          <video src="//login_video.mp4" className="w-full max-h-screen object-fill" autoPlay muted loop/>
         </div>
         
         {/* Right side - Login Form */}

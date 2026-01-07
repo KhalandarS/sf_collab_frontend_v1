@@ -92,9 +92,9 @@ function App() {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles(access_token);
 
-          // setUserRoles([...response.data.map(role => role.role), 'General']);
-          setUserRoles(['influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          setActiveRole('member');
+          setUserRoles([...response.data.map(role => role.role), 'General']);
+          // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+          // setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }

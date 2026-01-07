@@ -5,9 +5,9 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-export default function PollCard({ poll, setPolls, userRoles = [] }) {
+export default function PollCard({ poll, setPolls, isAdmin }) {
   const [selectedOption, setSelectedOption] = useState(null);
-  const { access_token, user } = useSelector((state) => state.auth);
+  const { access_token } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
   const handleVote = async () => {
     try {
@@ -79,7 +79,7 @@ export default function PollCard({ poll, setPolls, userRoles = [] }) {
                   ? "border-purple-400 bg-purple-400/20"
                   : "border-white/10 hover:border-white/20"}`}
             >
-              {option} {userRoles.includes('admin') && (
+              {option} {isAdmin && (
                 <span className="text-xs text-gray-400 ml-2">({poll.votes[index] || 0} votes)</span>
               )}
             </button>

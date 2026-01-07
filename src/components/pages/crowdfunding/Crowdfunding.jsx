@@ -1,75 +1,73 @@
-import { ArrowRight, Crown, Shield, Rocket, Star } from "lucide-react";
-
-const tiers = [
-  {
-    id: "early",
-    title: "Early Pioneer",
-    price: "$39",
-    note: "One-time",
-    description: "For early believers",
-    accent: "indigo",
-    cta: "Claim Early Access",
-    features: [
-      "Lifetime Pro access",
-      "Beta access",
-      "Pioneer badge",
-      "Priority support",
-    ],
-    limit: "100 spots",
-  },
-  {
-    id: "builder",
-    title: "Professional Builder",
-    price: "$99",
-    note: "One-time",
-    description: "Most popular",
-    highlight: true,
-    accent: "violet",
-    cta: "Upgrade to Pro",
-    features: [
-      "2 years Pro access",
-      "Advanced analytics",
-      "Custom domain (1 year)",
-      "Priority support",
-    ],
-  },
-  {
-    id: "agency",
-    title: "Agency Partner",
-    price: "$299",
-    note: "One-time",
-    description: "Teams & studios",
-    accent: "slate",
-    cta: "Scale with SFCollab",
-    features: [
-      "3 years Pro access",
-      "5 team seats",
-      "White-label options",
-      "Dev team access",
-    ],
-  },
-  {
-    id: "founder",
-    title: "Founding Member",
-    price: "$999",
-    note: "Lifetime",
-    description: "Shape the platform",
-    accent: "gold",
-    crown: true,
-    cta: "Become a Member",
-    features: [
-      "Lifetime access (10 users)",
-      "Monthly founder calls",
-      "Feature priority",
-      "All future products",
-    ],
-    limit: "50 spots",
-  },
-];
+import { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  ArrowRight,
+  Crown,
+  Shield,
+  Star,
+  Loader2,
+} from "lucide-react";
+import { API_BASE_URL } from "@/utils/config";
 
 export default function CrowdfundingSection() {
+  const [tiers, setTiers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
+
+  /* ================= FETCH PLANS ================= */
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/payments/plans`);
+        console.log(res.data);
+        setTiers(res.data);
+      } catch (err) {
+        console.error("❌ Failed to load plans", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  /* ================= STRIPE CHECKOUT ================= */
+  const handleCheckout = async (priceId, tierId) => {
+    try {
+      setCheckoutLoading(tierId);
+
+      const res = await axios.post(
+        `${API_BASE_URL}/payments/checkout`,
+        { price_id: priceId },
+        { withCredentials: true }
+      );
+
+      window.location.href = res.data.checkout_url;
+    } catch (err) {
+      console.error("❌ Checkout failed", err);
+      setCheckoutLoading(null);
+    }
+  };
+
+  /* ================= PRICE FORMAT ================= */
+  const formatPrice = (price, currency) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 0,
+    }).format(price);
+
+  /* ================= LOADING ================= */
+  if (loading) {
+    return (
+      <section className="py-32 flex justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white/60" />
+      </section>
+    );
+  }
+
   return (
-    <section className="h-full relative py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
+    <section className="relative py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
       <div className="max-w-7xl mx-auto space-y-16">
 
         {/* ================= HEADER ================= */}
@@ -105,31 +103,43 @@ export default function CrowdfundingSection() {
               )}
 
               <div className="flex items-center gap-2 mb-2">
-                {tier.crown && <Crown className="w-5 h-5 text-yellow-400" />}
+                {tier.crown && (
+                  <Crown className="w-5 h-5 text-yellow-400" />
+                )}
                 <h3 className="text-lg font-semibold">{tier.title}</h3>
               </div>
 
-              <p className="text-xs text-white/50 mb-4">{tier.description}</p>
+              <p className="text-xs text-white/50 mb-4">
+                {tier.description}
+              </p>
 
               <div className="mb-6">
-                <p className="text-3xl font-bold">{tier.price}</p>
+                <p className="text-3xl font-bold">
+                  {formatPrice(tier.price, tier.currency)}
+                </p>
                 <p className="text-xs text-white/40">{tier.note}</p>
               </div>
 
               <ul className="space-y-2 text-sm text-white/70 flex-1">
-                {tier.features.map((f) => (
-                  <li key={f} className="flex gap-2">
+                {tier.features.map((feature) => (
+                  <li key={feature} className="flex gap-2">
                     <Star className="w-4 h-4 text-indigo-400" />
-                    {f}
+                    {feature}
                   </li>
                 ))}
               </ul>
-                {tier.limit && (
+
+              {tier.limit && (
                 <p className="mt-3 text-xs text-center text-red-400">
-                  🔥 Limited: {tier.limit}
+                  🔥 Limited: {tier.limit} spots
                 </p>
               )}
+
               <button
+                onClick={() =>
+                  handleCheckout(tier.stripe_price_id, tier.id)
+                }
+                disabled={checkoutLoading === tier.id}
                 className={`mt-6 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition
                   ${
                     tier.highlight
@@ -137,13 +147,21 @@ export default function CrowdfundingSection() {
                       : tier.accent === "gold"
                       ? "bg-yellow-500 text-black hover:opacity-90"
                       : "border border-white/20 hover:bg-white/10"
-                  }`}
+                  }
+                  disabled:opacity-60 disabled:cursor-not-allowed`}
               >
-                {tier.cta}
-                <ArrowRight className="w-4 h-4" />
+                {checkoutLoading === tier.id ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Redirecting…
+                  </>
+                ) : (
+                  <>
+                    {tier.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
-
-              
             </div>
           ))}
         </div>
@@ -174,7 +192,6 @@ export default function CrowdfundingSection() {
             </p>
           </div>
         </section>
-
       </div>
     </section>
   );

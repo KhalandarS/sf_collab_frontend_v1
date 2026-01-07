@@ -13,6 +13,7 @@ import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
 import NewMessageModal from '@/components/chat/NewMessageModal';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
+import { useSelector } from 'react-redux';
 import { usersAPI } from '@/utils/APIs/userAPI';
 
 // API Configuration
@@ -22,11 +23,7 @@ const ChatPage = () => {
   // ============================================
   // AUTH
   // ============================================
-  const [token] = useState(() => localStorage.getItem('access_token'));
-  const [currentUser] = useState(() => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  });
+  const { user, access_token: token } = useSelector((state) => state.auth);
 
   // ============================================
   // SOCKET CONNECTION
@@ -97,14 +94,14 @@ const ChatPage = () => {
         });
         data = await response.json();
         if (data.success) {
-          const users = data.data.users.filter(u => u.id !== currentUser?.id);
+          const users = data.data.users.filter(u => u.id !== user?.id);
           setFriends(users);
         }
       }
     } catch (error) {
       console.error('Failed to fetch friends:', error);
     }
-  }, [token, currentUser?.id]);
+  }, [token, user?.id]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
@@ -325,13 +322,13 @@ const ChatPage = () => {
 
   // Get other participant for direct messages
   const otherParticipant = activeConversation?.participants?.find(
-    p => p.id !== currentUser?.id
+    p => p.id !== user?.id
   );
 
   // ============================================
   // RENDER: Not logged in
   // ============================================
-  if (!token || !currentUser) {
+  if (!token || !user) {
     return (
       <div className="h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
@@ -427,7 +424,7 @@ const ChatPage = () => {
                 isActive={activeConversation?.id === conv.id}
                 onClick={() => handleSelectConversation(conv)}
                 onlineUsers={onlineUsers}
-                currentUserId={currentUser.id}
+                userId={user.id}
               />
             ))
           )}
@@ -443,7 +440,7 @@ const ChatPage = () => {
             {/* Chat Header */}
             <ChatHeader
               conversation={activeConversation}
-              currentUserId={currentUser.id}
+              userId={user.id}
               isOnline={otherParticipant && onlineUsers.includes(otherParticipant.id)}
               onVideoCall={() => console.log('Video call')}
               onVoiceCall={() => console.log('Voice call')}
@@ -470,9 +467,9 @@ const ChatPage = () => {
                   <MessageBubble
                     key={message.id}
                     message={message}
-                    isOwn={message.sender_id === currentUser.id}
+                    isOwn={message.sender_id === user.id}
                     showAvatar={shouldShowAvatar(message, index)}
-                    currentUserId={currentUser.id}
+                    userId={user.id}
                   />
                 ))
               )}

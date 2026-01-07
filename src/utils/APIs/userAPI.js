@@ -57,11 +57,14 @@ export const usersAPI = {
     return response.data.data;
   },
 
-  updateProfile: async (userId, profileData) => {
+  updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
     const response = await api.put(`/users/${userId}`, profileData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': dType,
+      },
     });
-    return response.data.data;
+    return response.data;
   },
   
   getActivity: async (userId) => {
@@ -85,7 +88,24 @@ export const usersAPI = {
   getAllRoles: async () => {
     const response = await api.get('/users/roles');
     return response.data.data;
-  }
+
+  },
+  getMyRoles: async (accessToken) => {
+    const response = await api.get('/user-roles/my-roles', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+  addRole: async (userId, roles, accessToken) => {
+    const response = await api.put(`/user-roles/${userId}`, { roles }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
+  },
 };
 
 export default api;

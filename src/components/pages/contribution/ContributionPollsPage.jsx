@@ -48,6 +48,14 @@ export default function ContributionPollsPage({ userRoles = [] }) {
   const [polls, setPolls] = useState([]);
   const { user, access_token } = useSelector((state) => state.auth);
   const [selectedOption, setSelectedOption] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (user && (user.role === "admin" || userRoles.includes("admin"))) {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [user, userRoles]);
   useEffect(() => {
     async function fetchPolls() {
       try {
@@ -60,15 +68,14 @@ export default function ContributionPollsPage({ userRoles = [] }) {
           toast.error("Failed to fetch polls");
           return;
         }
-        console.log(response.data);
-        setPolls(response.data.polls.filter(poll => poll.usersVoted ? !poll.usersVoted.includes(user.id) : true));
+        setPolls(response.data.polls.filter(poll => poll.usersVoted ? isAdmin || !poll.usersVoted?.includes(user.id): true));
       } catch (error) {
         console.error("Error fetching polls:", error);
         toast.error("Error fetching polls");
       }
     }
     fetchPolls();
-  }, [access_token, user?.id]);
+  }, [access_token, user, isAdmin]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 px-6 py-10 text-white">
@@ -90,18 +97,18 @@ export default function ContributionPollsPage({ userRoles = [] }) {
         
         <section className="space-y-6">
           {polls.length === 0 && (
-  <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
-    <p className="text-sm text-white/60">
-      No polls available right now
-    </p>
-    <p className="text-xs text-white/40">
-      New community polls will appear here once they’re published.
-    </p>
-  </div>
-)}
+            <div className="flex flex-col items-center justify-center py-12 text-center space-y-3">
+              <p className="text-sm text-white/60">
+                No polls available right now
+              </p>
+              <p className="text-xs text-white/40">
+                New community polls will appear here once they’re published.
+              </p>
+            </div>
+          )}
 
           {polls.map((poll) => (
-            <PollCard key={poll.id} poll={poll} userRoles={userRoles} setPolls={setPolls} />
+            <PollCard key={poll.id} poll={poll} isAdmin={isAdmin} setPolls={setPolls} />
           ))}
         </section>
 
@@ -111,11 +118,11 @@ export default function ContributionPollsPage({ userRoles = [] }) {
           introduce multipliers based on contribution history.
         </section>
         {
-        user && (user.role === "admin" || userRoles.includes("admin")) && 
+          user && isAdmin &&
           <CreatePollSection />
-      }
+        }
       </div>
       
     </div>
   );
-}
+};
