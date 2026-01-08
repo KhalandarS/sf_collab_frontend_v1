@@ -76,6 +76,7 @@ import ContributionPollsPage from "./components/pages/contribution/ContributionP
 import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
+import Donate from "./components/pages/donate/Donate.jsx";
 
 
 
@@ -205,6 +206,7 @@ function App() {
             <Route path="crowdfunding" element={<Crowdfunding />} />
             <Route path="checkout/:tierId" element={<Checkout />} />
             <Route path="checkout/return" element={<ReturnPage />} />
+            <Route path="donate" element={<Donate />} />
             {/* Quick Guides */}
             <Route path="getting-started" element={<GettingStarted />} />
             <Route path="team-collaboration" element={<TeamCollaboration />} />

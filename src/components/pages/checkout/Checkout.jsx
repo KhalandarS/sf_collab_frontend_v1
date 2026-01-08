@@ -10,12 +10,12 @@ import {
   useElements,
 } from "@stripe/react-stripe-js";
 import axios from "axios";
-import { API_URL } from "@/utils/config";
+import { API_URL, STRIPE_PUBLIC_KEY } from "@/utils/config";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 // Load Stripe with your public key
-const stripePromise = loadStripe("pk_test_51SmnadJ8Kpy8IUysd6AaIzTDBCJxNG3G9Giy9rhqUyhQcXidxlgjuOkKnSq6eg9YwSMkOLadG5sUuObhqp3CecZH00zgaUywvh"); // <-- replace with your key
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY); // <-- replace with your key
 
 // Checkout Form Component
 function CheckoutForm({ clientSecret }) {
@@ -39,7 +39,6 @@ function CheckoutForm({ clientSecret }) {
 
     // checkoutState.type === 'success'
     const { checkout } = checkoutState;
-    console.log(checkoutState);
     const result = await checkout.confirm({
       redirect: 'always',
       email: user.email,
@@ -144,6 +143,7 @@ export default function Checkout() {
         });
 
         setClientSecret(response.data.checkoutSessionClientSecret);
+        window.location.href = response.data.url;
       } catch (err) {
         console.error(err);
       }

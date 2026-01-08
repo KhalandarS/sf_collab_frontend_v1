@@ -11,6 +11,7 @@ export default function ReturnPage() {
   const { access_token } = useSelector((state) => state.auth);
 
   const [searchParams] = useSearchParams();
+  const donate = searchParams.get("donation") === "true";
   const sessionId = searchParams.get("session_id");
   async function savePaymentInfo(checkout) {
     const body = {
@@ -18,7 +19,9 @@ export default function ReturnPage() {
       plan_id: checkout.metadata.plan_id,
       amount: checkout.amount_total,
       currency: checkout.currency,
-      stripe_payment_intent_id: checkout.payment_intent
+      stripe_payment_intent_id: checkout.payment_intent,
+      stripe_checkout_session_id: checkout.id,
+      type: donate ? "donation" : "subscription",
     }
     const response = await axios.post(`${API_URL}/payments/record-transaction`, body, {
       headers: {
@@ -66,16 +69,25 @@ export default function ReturnPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-8">
       {status === "success" ? (
-        <div className="bg-green-700 text-white p-8 rounded-2xl shadow-lg text-center">
-          <h1 className="text-3xl font-bold mb-4">Payment Successful! 🎉</h1>
-          <p className="mb-2">Thank you for your purchase.</p>
-          <p>Plan: {session?.metadata?.plan_id}</p>
-          <p>Amount: {(session?.amount_total / 100).toFixed(2)} {session?.currency?.toUpperCase()}</p>
+        <div className="bg-green-700 text-white p-8 rounded-2xl shadow-lg text-center max-w-md">
+          <h1 className="text-3xl font-bold mb-4">
+            {donate ? "Donation Received! 🙏" : "Payment Successful! 🎉"}
+          </h1>
+          <p className="mb-4">
+            {donate
+              ? "Thank you for your generous donation."
+              : "Thank you for your purchase."}
+          </p>
+          {!donate && <p className="mb-2">Plan: {session?.metadata?.plan_id}</p>}
+          <p className="text-sm">
+            Amount: {(session?.amount_total / 100).toFixed(2)}{" "}
+            {session?.currency?.toUpperCase()}
+          </p>
         </div>
       ) : (
-        <div className="bg-red-700 text-white p-8 rounded-2xl shadow-lg text-center">
+        <div className="bg-red-700 text-white p-8 rounded-2xl shadow-lg text-center max-w-md">
           <h1 className="text-3xl font-bold mb-4">Payment Failed ❌</h1>
-          <p>{error}</p>
+          <p className="text-sm">{error}</p>
         </div>
       )}
     </div>
