@@ -2216,7 +2216,7 @@ const ChatComponent = () => {
                           </div>
                           {conversation.unread_count > 0 && (
                             <Badge
-                              className="ml-2 shadow-md shadow-amber-100 text-black text-xs font-bold py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
+                              className="ml-2 shadow-md shadow-indigo-100 text-black text-xs font-bold py-0.5 h-5 min-w-5 rounded-full px-1 font-mono tabular-nums animate-bounce"
                               variant="secondary"
                             >
                               {conversation.unread_count}

@@ -1,452 +1,243 @@
-import React, { useState, useRef, useEffect } from "react";
-import { DrawLineText } from "../gsap/draw-line-text";
-import { HelpCircle, MapPinIcon, StarIcon } from "lucide-react";
-import { ProfilePeek } from "../gsap/profile-peek";
-import Tippy from '@tippyjs/react';
-import 'tippy.js/dist/tippy.css';
-import GlareHover from "../ui/GlareHover";
-import { Link, useNavigate } from "react-router-dom";
-import { logoutUser } from "../../services/auth/authThunks";
-import { useDispatch ,useSelector} from "react-redux";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
-import LoadingSpinner from "../LoadingSpinner";
-import { Repeat, Crown, Hammer, Megaphone, Shield, MessageCircle } from "lucide-react";
-import { ChatNotificationBadge } from "../pages/chat/Chatnotificationprovider";
+// landingpage/navbar.jsx
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { Link } from 'react-router-dom';
+import {  Menu, X } from 'lucide-react';
+import gsap from 'gsap';
+import { heroAssest, mainsong } from "../landing-page/utils";
 
 
-import AOS from 'aos';
-import 'aos/dist/aos.css'; 
-import { FaUserPlus } from "react-icons/fa6";
-import { IoLogIn } from "react-icons/io5";
-import { TiThMenu } from "react-icons/ti";
-
-import { ShineButton } from '../lightswind/shine-button';
-import { usersAPI } from "@/utils/APIs/userAPI";
-
-// Simple icon components
-const BellIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-  </svg>
-);
-const ROLE_META = {
-  founder: { label: "Founder Mode", icon: Crown },
-  builder: { label: "Builder Mode", icon: Hammer },
-  influencer: { label: "Influencer Mode", icon: Megaphone },
-  admin: { label: "Admin Mode", icon: Shield },
-};
-
-const SettingsIcon = () => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const ChevronDownIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-  </svg>
-);
-
-const LogoutIcon = () => (
-  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-  </svg>
-);
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+import MediaLinks from '../../utils/MediaLinks';
+//import { ChatNotificationBadge } from "@/components/pages/chat/Chatnotificationprovider";
 
 
-const NavBar = ({isOpen,setIsOpen, isHidden = false , activeRole, setActiveRole, userRoles}) => {
-  const [activeDropdown, setActiveDropdown] = useState(null);
-  
-  const [notifications, setNotifications] = useState([]);
-  const [loaderState, setLoaderState] = useState(false)
-  
-  const notificationRef = useRef(null);
-  const profileRef = useRef(null);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const {user,access_token,refreshToken,loading,error} = useSelector((state) => state.auth);
 
 
-  const handleLogout = async () => {
-    setLoaderState(true);
-  
-    try {
-
-      await dispatch(logoutUser());
-      
-      setTimeout(() => {
-        navigate("/login", { replace: true });
-        setLoaderState(false);
-      },3000);
-      
-  
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
-
-  useEffect(() => {
-    AOS.init({
-      duration: 800,       
-      easing: "ease-out",  
-      once: false,         
-      mirror: false        
-    });
+const Navbar = () => {
     
-    // alert(JSON.stringify(user))
-  }, []);
-  
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    if (!activeDropdown) return;
+  const [dockUnread, setDockUnread] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("chatDock:unread") || "{}");
+    } catch {
+      return {};
+    }
+  });
 
-    const handleClickOutside = (event) => {
-      if (
-        (activeDropdown === "notification" &&
-          notificationRef.current &&
-          !notificationRef.current.contains(event.target)) ||
-        (activeDropdown === "profile" &&
-          profileRef.current &&
-          !profileRef.current.contains(event.target))
-      ) {
-        setActiveDropdown(null);
+  useEffect(() => {
+    const handler = (e) => {
+      if (e?.detail?.unread) {
+        setDockUnread(e.detail.unread);
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [activeDropdown]);
+    window.addEventListener("chat:unread", handler);
+    return () => window.removeEventListener("chat:unread", handler);
+  }, []);
 
-  const handleDropdownClick = (dropdownName) => {
-    setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
+  const totalDockUnread = useMemo(() => {
+    return Object.values(dockUnread).reduce(
+      (sum, v) => sum + (Number(v) || 0),
+      0
+    );
+  }, [dockUnread]);
+
+
+  const [isOpen, setIsOpen] = useState(false);
+  const overlayRef = useRef(null);
+  const linksRef = useRef([]);
+  const [showNavbar, setShowNavbar] = useState(true);
+  const lastScrollY = useRef(0);
+  const navbarRef = useRef(null);
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
+  const audioRef = useRef(null);
+  const barRefs = useRef([]);
+  const barTimeline = useRef(null);
+  
+
+  const toggleMenu = () => setIsOpen(!isOpen);
+
+
+
+  useEffect(() => {
+    audioRef.current = new Audio(mainsong.mainAudio);
+    audioRef.current.loop = true;
+    audioRef.current.volume = 0.5;
+    audioRef.current.preload = 'auto';
+
+    barTimeline.current = gsap.timeline({ repeat: -1, paused: true })
+      .to(barRefs.current[0], { scaleY: 2, duration: 0.4, ease: 'power2.inOut' })
+      .to(barRefs.current[1], { scaleY: 1.8, duration: 0.3, ease: 'power2.inOut' }, '-=0.3')
+      .to(barRefs.current[2], { scaleY: 2.2, duration: 0.5, ease: 'power2.inOut' }, '-=0.2')
+      .to(barRefs.current, { scaleY: 1, duration: 0.4, stagger: 0.1, ease: 'power2.inOut' }, '+=0.2');
+
+    return () => {
+      if (audioRef.current) audioRef.current.pause();
+      if (barTimeline.current) barTimeline.current.kill();
+    };
+  }, []);
+
+  const toggleMusic = () => {
+    if (!userInteracted) setUserInteracted(true);
+    isPlaying ? handleStopMusic() : handlePlayMusic();
   };
 
-  const fetchNotifications = async () => {
-    const token = access_token;
-    if (!token) return;
-
+  const handlePlayMusic = async () => {
     try {
-      const response = await fetch(`${BASE_URL}/notifications`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+      await audioRef.current.play();
+      setIsPlaying(true);
+      barTimeline.current.play();
+    } catch {
+      setIsPlaying(false);
+    }
+  };
+
+  const handleStopMusic = () => {
+    audioRef.current.pause();
+    setIsPlaying(false);
+    barTimeline.current.pause();
+    gsap.to(barRefs.current, { scaleY: 1, duration: 0.3 });
+  };
+
+  useEffect(() => setUserInteracted(false), []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      setShowNavbar(!(currentScroll > lastScrollY.current && currentScroll > 100));
+      lastScrollY.current = currentScroll;
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!overlayRef.current) return;
+
+    if (isOpen) {
+      gsap.set(overlayRef.current, { display: 'flex', pointerEvents: 'auto' });
+      gsap.fromTo(overlayRef.current, { opacity: 0, scale: 0.95 }, { opacity: 1, scale: 1, duration: 0.5 });
+      gsap.fromTo(linksRef.current, { x: -100, opacity: 0 }, { x: 0, opacity: 1, stagger: 0.1, delay: 0.2 });
+
+      document.body.classList.add('menu-open');
+      document.body.style.overflow = 'hidden';
+    } else {
+      gsap.to(overlayRef.current, {
+        opacity: 0,
+        scale: 0.95,
+        duration: 0.4,
+        onComplete: () => {
+          gsap.set(overlayRef.current, { display: 'none', pointerEvents: 'none' });
         },
       });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const result = await response.json();
-      
-      // Debug log to see the actual response structure
-      // console.log('Notifications API Response:', result);
-      
-      // The API returns { data: { notifications: [...] } }
-      const notificationsData = result.data?.notifications || [];
-      setNotifications(notificationsData.filter(notif =>notif.isRead !== true)?.map((notif)=>({ id: notif?.id, title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead, type:notif?.notification_type })) || []);
-      
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      // Fallback to user relationships if API fails
-      if (user?.relationships?.notifications) {
-        setNotifications(user?.relationships?.notifications?.filter(notif => notif.isRead !== true)?.map((notif)=>({ id: notif?.id,title: notif?.title , text: notif?.message, time: notif?.createdAt, unread: notif?.isRead , type:notif?.notification_type})) || []);
-      }
+      document.body.classList.remove('menu-open');
+      document.body.style.overflow = 'auto';
     }
-  };
+  }, [isOpen]);
 
-  // Initial fetch
-  useEffect(() => {
-    fetchNotifications();
-  }, [access_token, user]);
+  const navlink = [
+    { href: '/', name: 'Home' },
+    { href: '/about', name: 'Platform' },
+    { href: '/pricing', name: 'Pricing' },
+    { href: '/explore_section', name: 'Explore' },
+    { href: '/startuppage', name: 'Startups' },
+    { href: '/team', name: 'Team' },
+    { href: '/contact', name: 'Contact' },
+  ];
 
-  if (loaderState) {
-    return null
-  }
   return (
-    <nav
-      className={`  flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
-        isHidden ? "-translate-y-full" : "translate-y-0"
-      } lg:translate-y-0`}
-      style={{zIndex:9999999}}
-    >
-      
-      
-        {/* Dark Horizon Glow */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)",
-          }}
-        />
+    <>
+      {/* Menu Overlay */}
+      <div ref={overlayRef} className='fixed inset-0 z-40 hidden bg-[#0f0f0f] text-white items-center justify-center'>
+        <div className='w-full h-full flex items-center lg:pt-5 pt-10 justify-between p-4'>
 
-
-      {/* Logo */}
-      <div className="logo h-full z-50 scale-140">
-        <Link to={user?.id ? `/dashboard` : '/' } className="group h-full cursor-pointer flex items-center"> 
-
-          <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
-        </Link>
-      </div>
-
-      {/* Main content */}
-      <div className="flex items-center h-full gap-3 z-50">
-        
-      
-      {
-        user?(
-        <>
-          {/* Notification dropdown */}
-          <div className="relative " ref={notificationRef}>
-            
-            
-            <Tippy
-              content={
-                <GlareHover
-                width="100%"
-                height="100%"
-                  glareColor="#ffffff"
-                  glareOpacity={0.3}
-                  glareAngle={-30}
-                  glareSize={300}
-                  transitionDuration={800}
-                  playOnce={true}
-                  style={{background:"rgba(58, 58, 58, 0.600)",backdropFilter:" blur(10px)"}}
+          {/* Left Menu */}
+          <div className='lg:w-1/2 h-full w-full flex flex-col gap-10 lg:justify-between py-10'>
+            <div className='flex flex-col gap-4 px-3 lg:px-8'>
+              {navlink.map((link, index) => (
+                <Link
+                  key={index}
+                  to={link.href}
+                  ref={(el) => (linksRef.current[index] = el)}
+                  className='lg:text-6xl md:text-5xl text-2xl font-medium Messina hover:text-zinc-400 transition-all'
+                  onClick={() => setIsOpen(false)}
                 >
-                  <div style={{borderRadius:' 15px'}} className="  w-80 overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {/* Header */}
-                  <div className="p-4 border-b border-slate-700/50">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-white">Notifications</h3>
-                      <span className="px-2.5 py-1 bg-linear-to-br from-rose-500/10 to-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
-                        {notifications?.length} New
-                      </span>
-                    </div>
-                  </div>
-        
-                  {/* Notifications list */}
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((notif) => (
-                      <div
-                        key={notif.id}
-                        className="p-4 hover:bg-slate-800/50 transition-colors cursor-pointer border-b border-slate-800/50 last:border-0"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className={`p-1.5 rounded-lg ${notif.unread ? 'bg-blue-500/10 ring-1 ring-blue-500/20' : 'bg-slate-700/50'}`}>
-                            <BellIcon />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-md  text-white font-medium`}>
-                              {notif.title}
-                            </p>
-                            <p className={`text-sm ${notif.unread ? 'text-white font-medium' : 'text-slate-400'}`}>
-                              {notif.text}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-1">{notif.time}</p>
-                          </div>
-                          {notif.unread && (
-                            <div className="w-2 h-2 bg-blue-500 rounded-full mt-1.5" />
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-        
-                  {/* Footer */}
-                  <div className="p-3 border-t border-slate-700/50 bg-slate-900/50">
-                    <button onClick={()=>navigate('/notifications')} className="cursor-pointer w-full py-2 text-sm font-semibold text-blue-400 hover:text-blue-300 transition-colors">
-                      View all notifications
-                    </button>
-                  </div>
-                  </div>
-              </GlareHover>
-              }
-              // interactive={true}
-              trigger="click"
-              animation="scale"
-              theme="custom-dark"
-              delay={[100, 50]}
-              placement="bottom"
-              className="p-0 bg-muted"
-              appendTo={document.body}
-              interactive={true}
-            >
-              <button
-                onClick={() => handleDropdownClick("notification")}
-                className="relative p-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all duration-300 border border-slate-700/50 group"
-              >
-                <BellIcon />
-                {/* Notification badge */}
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-linear-to-br from-rose-500 to-red-600 text-white rounded-full shadow-lg px-1 animate-pulse">
-                  {notifications?.length>0?notifications.length:"0"}
-                </span>
-              </button>
-            </Tippy>
-          </div>
-         
+                  {link.name}
+                </Link>
+              ))}
 
-          {/* Profile dropdown */}
-          <div className="relative" ref={profileRef}>
-            <Tippy
-              content={
-                <GlareHover
-                width="100%"
-                height="100%"
-                  glareColor="#ffffff"
-                  glareOpacity={0.3}
-                  glareAngle={-30}
-                  glareSize={300}
-                  transitionDuration={800}
-                  playOnce={true}
-                  style={{background:"rgba(58, 58, 58, 0.283)",backdropFilter:" blur(10px)"}}
-                >
-                  <div className=" mt-3 w-full  overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
-                  {/* Profile header */}
-                  <div className="p-4 border-b border-slate-700/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full flex items-center justify-center overflow-hidden ring-2 ring-slate-700/50">
-                        <img
-                          className="rounded-full h-full w-full"
-                          src={
-                            user?.profile?.picture
-                              ? user.profile.picture.startsWith("http") || user.profile.picture.startsWith("https")
-                                ? user.profile.picture
-                                : user.profile.picture.startsWith("/uploads")
-                                  ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
-                                  : `${BASE_URL}/${user.profile.picture}`
-                              : "/default-user.jpeg"
-                          }
-                        />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-white ">{user?.firstName} {user?.lastName}</p>
-                        <p className="text-xs text-slate-400">{user?.email}</p>
-                      </div>
-                    </div>
-                  </div>
-    
-                  {/* Menu items */}
-                  <div className="p-2">
-                    <Link to="/user-profile" className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-all duration-200">
-                      <UserIcon />
-                      <span className="text-sm font-medium">Profile</span>
-                    </Link>
-                    <Link to="/help" className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-all duration-200">
-                      <HelpCircle />
-                      <span className="text-sm font-medium">Help</span>
-                          </Link>
-                          <Link to="/user-profile?page=settings" className="mt-1 block">
-                    <button className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-slate-300 hover:text-white hover:bg-slate-800/70 rounded-xl transition-all duration-200">
-                      <SettingsIcon />
-                      <span className="text-sm font-medium">Settings</span>
-                            </button>
-                          </Link>
-                  </div>
-    
-                  {/* Logout */}
-                  <div className="p-2 border-t border-slate-700/50">
-                    <button
-                      onClick={handleLogout}
-                      className="cursor-pointer flex items-center gap-3 w-full px-3 py-2.5 text-left text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-xl transition-all duration-200"
-                    >
-                      <LogoutIcon />
-                      <span className="text-sm font-medium">Logout</span>
-                    </button>
-                  </div>
-                  </div>
-                </GlareHover>
-              }
-              // interactive={true}
-              trigger="click"
-              animation="scale"
-              theme="custom-dark"
-              delay={[100, 50]}
-              placement="bottom"
-              appendTo={document.body}
-              interactive={true}
-            >
-              <button
-                onClick={() => handleDropdownClick("profile")}
-                className="flex items-center gap-2.5 w-11 h-11  rounded-full bg-slate-800/50 hover:bg-slate-700/50 transition-all duration-300 border border-slate-700/50 group"
-              >
-                <div className="w-full h-full  transition-all">
-                  <img
-                    className="rounded-full h-full w-full"
-                    src={
-                      user?.profile?.picture
-                        ? user.profile.picture.startsWith("http") || user.profile.picture.startsWith("https")
-                          ? user.profile.picture
-                          : user.profile.picture.startsWith("/uploads")
-                            ? `${BASE_URL}/users/avatars/${user.profile.picture?.replace(/^\/?uploads\//, "")}`
-                            : `${BASE_URL}/${user.profile.picture}`
-                        : "/default-user.jpeg"
-                    }
-                  />
-                </div>
-              </button>
-            </Tippy>
+              <div className='flex gap-2'>
+                <Link to="/signup" onClick={() => setIsOpen(false)}
+                  className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
+                  Get Started
+                </Link>
+                <Link to="/login" onClick={() => setIsOpen(false)}
+                  className='lg:mb-6 mb-3 text-lg font-semibold bg-white text-black px-6 py-3 rounded-full'>
+                  Login
+                </Link>
+              </div>
+            </div>
+
+            <div className='px-3 lg:px-8 flex items-center gap-12'>
+              <div className='flex gap-2'>
+                <MediaLinks />
+              </div>
+            </div>
           </div>
-          
-          {/* Settings (mobile only) */}
-        <div 
-          className="lg:hidden"
-        >
-          <ShineButton 
-            className="cursor-pointer rounded-md flex items-center justify-center text-white "
-            as="button"
-            onClick={() => setIsOpen(!isOpen)}
-            icon={<TiThMenu size={15} className="hover:animate-pulse "/>}
-            size="sm" 
-            bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-          />
+
+          {/* Right Video */}
+          {/* Right Video */}
+      {/* Right Video */}
+      <div className="w-[65%] h-full hidden md:flex lg:flex items-center justify-end pr-10">
+        <div className="relative w-full max-w-[800px] h-[450px] rounded-2xl overflow-hidden bg-black shadow-xl">
+          <video
+            muted
+            autoPlay
+            loop
+            playsInline
+            className="absolute inset-0 w-full h-full object-contain"
+          >
+            <source src={heroAssest.herovideoOne} type="video/mp4" />
+          </video>
         </div>
-        </>
-        ):(
-          <div  className="relative hidden lg:flex gap-4">
-            <div data-aos='fade-left' data-aos-delay="100">
-              <ShineButton 
-                className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white "
-                label="Login" 
-                icon={<IoLogIn size={18} className="hover:animate-pulse "/>}
-                size="sm" 
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                onClick={() => navigate('/login')} 
-                
-              />
-            </div>
-            
-            <div data-aos='fade-left' data-aos-delay="300">
-            <ShineButton 
-              className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white "
-              label="Sign Up" 
-              icon={<FaUserPlus size={17} className="hover:animate-pulse "/>}
-              size="sm" 
-              bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-              onClick={() => navigate('/signup')} 
-            />
-            </div>
-          </div>
-        )
-      }
       </div>
-      <Link to="/chat" className="relative p-2">
-        <MessageCircle size={24} />
-        <ChatNotificationBadge />  
-      </Link>
-    </nav>
+
+
+
+        </div>
+      </div>
+      <div 
+        ref={navbarRef}
+        className='fixed z-40 flex justify-between items-center w-full px-4 h-16 lg:h-20 transition-transform  '
+      >
+        <Link to="/" className="flex-1 h-full flex items-center md:pl-0 ">
+        <div className="md:pt-0 h-full flex-1 items-center">
+            <img src="/logo_white.svg" className="h-full md:left-0 left-1" alt="sf collab"/>
+        </div>
+        </Link>
+         <div className="flex-1 flex justify-end pt-4 md:pt-0">
+  <button
+    onClick={toggleMenu}
+    className="flex items-center justify-center rounded-full transition-all duration-300 hover:scale-105"
+    aria-label={isOpen ? "Close menu" : "Open menu"}
+    type="button"
+  >
+    <span className="relative bg-[#2A2725] p-2 rounded-full hover:bg-zinc-900 transition-colors">
+      {isOpen ? <X className="text-white size-5" /> : <Menu className="text-white size-5" />}
+
+      {totalDockUnread > 0 && (
+        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center">
+          {totalDockUnread > 99 ? "99+" : totalDockUnread}
+        </span>
+      )}
+    </span>
+  </button>
+</div>
+
+
+      </div>
+    </>
   );
 };
 
-export default NavBar;
+export default Navbar;

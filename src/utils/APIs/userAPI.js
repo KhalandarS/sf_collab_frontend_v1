@@ -25,27 +25,32 @@ api.interceptors.request.use(
 
 // Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
-    return response
-  },
+  (response) => response,
   (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend. Make sure Flask is running on', API_BASE_URL)
-      console.error('   Start backend with: python3 waitlist_referral_app.py')
+    // Axios: if request never reached server (CORS, network), response is undefined
+    const status = error?.response?.status;
+    const msg = error?.response?.data?.msg;
+    const data = error?.response?.data;
+
+    // ECONNREFUSED is more common in Node; in browser you’ll usually get "Network Error"
+    if (!error?.response) {
+      console.error("❌ API network/CORS error:", error?.message || error);
+      console.error("   Backend URL:", API_BASE_URL);
+      return Promise.reject(error);
     }
-    else if (error.response.status === 401 && error.response.data.msg === 'Token has expired') {
-      localStorage.removeItem('access_token')
-      window.location.href = '/login'
+
+    // JWT expired
+    if (status === 401 && msg === "Token has expired") {
+      localStorage.removeItem("access_token");
+      window.location.href = "/login";
+      return Promise.reject(error);
     }
-    else if (error.response) {
-      console.log(error.response.status === 401 && error.response.data.msg === 'Token has expired');
-      console.error('API Error:', error.response.status, error.response.data)
-    } else {
-      console.error('API Error:', error.message)
-    }
-    return Promise.reject(error)
+
+    console.error("API Error:", status, data);
+    return Promise.reject(error);
   }
-)
+);
+
 
 // Users API
 export const usersAPI = {

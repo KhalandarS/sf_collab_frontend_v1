@@ -1,17 +1,9 @@
-/**
- * ChatPage Component
- * Main chat page that combines all chat components
- * 
- * Put this in: src/pages/ChatPage.jsx
- * 
- * This is the main page - imports all the smaller components
- */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Edit3, MessageCircle } from 'lucide-react';
 
 // Import custom hook
-import useSocket from '/src/hooks/useSocket';
+//import useSocket from '/src/hooks/useSocket';
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -22,6 +14,11 @@ import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
 import NewMessageModal from '@/components/chat/NewMessageModal';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
+import { useAppSocket } from "@/context/SocketProvider";
+import { useChatContacts } from "@/context/ChatContactsProvider";
+import { useSearchParams } from "react-router-dom";
+
+
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -39,7 +36,10 @@ const ChatPage = () => {
   // ============================================
   // SOCKET CONNECTION
   // ============================================
-  const { socket, isConnected, onlineUsers } = useSocket(token);
+  
+  const { socket, isConnected, onlineUsers } = useAppSocket();
+  const { friends } = useChatContacts();
+
 
   // ============================================
   // STATE
@@ -47,13 +47,15 @@ const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [friends, setFriends] = useState([]);
+  //const [friends, setFriends] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+  const [searchParams] = useSearchParams();
+
 
   // ============================================
   // REFS
@@ -85,7 +87,7 @@ const ChatPage = () => {
   }, [token]);
 
   // Fetch friends
-  const fetchFriends = useCallback(async () => {
+  /*const fetchFriends = useCallback(async () => {
     if (!token) return;
     
     try {
@@ -112,7 +114,7 @@ const ChatPage = () => {
     } catch (error) {
       console.error('Failed to fetch friends:', error);
     }
-  }, [token, currentUser?.id]);
+  }, [token, currentUser?.id]);*/
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
@@ -139,54 +141,69 @@ const ChatPage = () => {
 
   // Initial data load
   useEffect(() => {
-    if (token) {
-      fetchConversations();
-      fetchFriends();
-    }
-  }, [token, fetchConversations, fetchFriends]);
+  if (token) {
+    fetchConversations();
+  }
+}, [token, fetchConversations]);
+
+// Open DM if URL has ?user=<id>
+useEffect(() => {
+  if (activeConversation) return;
+
+  const userId = searchParams.get("user");
+  if (!userId) return;
+  if (!friends?.length) return;
+
+  const friend = friends.find((f) => String(f.id) === String(userId));
+  if (!friend) return;
+
+  handleOpenChatWithFriend(friend);
+}, [searchParams, friends]);
+
+
 
   // Socket event listeners
   useEffect(() => {
-    if (!socket) return;
+  if (!socket) return;
 
-    // Join active conversation room
-    if (activeConversation) {
-      socket.emit('join_conversation', { conversation_id: activeConversation.id });
+  if (activeConversation) {
+    socket.emit("join_conversation", { conversation_id: activeConversation.id });
+  }
+
+  const onNewMessage = (data) => {
+    if (data.conversation_id === activeConversation?.id) {
+      setMessages((prev) => [...prev, data.message]);
+      socket.emit("mark_read", { conversation_id: activeConversation.id });
     }
+    fetchConversations();
+  };
 
-    // New message handler
-    socket.on('new_message', (data) => {
-      if (data.conversation_id === activeConversation?.id) {
-        setMessages((prev) => [...prev, data.message]);
-        socket.emit('mark_read', { conversation_id: activeConversation.id });
+  const onUserTyping = (data) => {
+    if (data.conversation_id === activeConversation?.id) {
+      if (data.is_typing) {
+        setTypingUsers((prev) => {
+          if (prev.find((u) => u.id === data.user_id)) return prev;
+          const user = activeConversation.participants?.find((p) => p.id === data.user_id);
+          return user ? [...prev, user] : prev;
+        });
+      } else {
+        setTypingUsers((prev) => prev.filter((u) => u.id !== data.user_id));
       }
-      fetchConversations(); // Refresh list for last message preview
-    });
+    }
+  };
 
-    // Typing indicator handler
-    socket.on('user_typing', (data) => {
-      if (data.conversation_id === activeConversation?.id) {
-        if (data.is_typing) {
-          setTypingUsers((prev) => {
-            if (prev.find((u) => u.id === data.user_id)) return prev;
-            const user = activeConversation.participants?.find((p) => p.id === data.user_id);
-            return user ? [...prev, user] : prev;
-          });
-        } else {
-          setTypingUsers((prev) => prev.filter((u) => u.id !== data.user_id));
-        }
-      }
-    });
+  socket.on("new_message", onNewMessage);
+  socket.on("user_typing", onUserTyping);
 
-    // Cleanup
-    return () => {
-      if (activeConversation) {
-        socket.emit('leave_conversation', { conversation_id: activeConversation.id });
-      }
-      socket.off('new_message');
-      socket.off('user_typing');
-    };
-  }, [socket, activeConversation, fetchConversations]);
+  return () => {
+    if (activeConversation) {
+      socket.emit("leave_conversation", { conversation_id: activeConversation.id });
+    }
+    socket.off("new_message", onNewMessage);
+    socket.off("user_typing", onUserTyping);
+  };
+}, [socket, activeConversation, fetchConversations]);
+
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -440,6 +457,7 @@ const ChatPage = () => {
             ))
           )}
         </div>
+
       </div>
 
       {/* ============================================ */}

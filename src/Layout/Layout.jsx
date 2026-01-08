@@ -15,11 +15,17 @@ import useScrollHide from "../hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
-import useSocket from "@/components/pages/chat/useSocket";
+//import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
-import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-import { SOCKET_API_URL } from "@/utils/config";
+//import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
+//import { SOCKET_API_URL } from "@/utils/config";
 //import { io } from "socket.io-client";
+import ChatDock from "@/components/chat-dock/ChatDock";
+import OnlineContactsSidebar from "@/components/chat/OnlineContactsSidebar";
+import { useAppSocket } from "@/context/SocketProvider";
+import { useChatContacts } from "@/context/ChatContactsProvider";
+import OnlineFriendsPanel from "@/components/chat/OnlineFriendsPanel";
+
 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -35,7 +41,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const { user, access_token } = useSelector((state) => state.auth);
   const isAdmin = hasPermission(user, "admin");
 
-  const { socket, isConnected } = useSocket(access_token);
+  const { /*socket, isConnected,*/ onlineUsers } = useAppSocket();
+  const { friends } = useChatContacts();
+
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
     deltaThreshold: 4,
@@ -48,7 +56,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const navContainerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [wsClient, setWsClient] = useState(null);
+  //const [wsClient, setWsClient] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
@@ -77,7 +85,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   }, [user, access_token, location.pathname, navigate]);
 
   // ✅ Socket.io global notifications (skip if already in chat)
-  useEffect(() => {
+ /* useEffect(() => {
     if (!socket || !isConnected || !user) return;
 
     const handleConversationMessage = (data) => {
@@ -99,12 +107,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       );
     };
 
-    socket.on("conversation_message", handleConversationMessage);
-    return () => socket.off("conversation_message", handleConversationMessage);
-  }, [socket, isConnected, user, location.pathname, navigate]);
+    //socket.on("conversation_message", handleConversationMessage);
+    //return () => socket.off("conversation_message", handleConversationMessage);
+  }, [socket, isConnected, user, location.pathname, navigate]);*/
 
   // ✅ Raw websocket client
-useEffect(() => {
+/*useEffect(() => {
   const userId = user?.id;
   // 1. Only run if we have a user and NO existing client
   if (!userId || wsClient) return;
@@ -115,9 +123,9 @@ useEffect(() => {
 
   // Event Listeners
   client.on("new_message", (data) => {
-    toast.info("New message received");
-    window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
-  });
+  window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
+});
+
 
   client.on("user_online", (data) => toast.success(`${data?.user_name || "User"} is online`));
   client.on("user_offline", (data) => toast.info(`${data?.user_name || "User"} went offline`));
@@ -136,7 +144,7 @@ useEffect(() => {
     client.disconnect();
     setWsClient(null); // Clear state so it can reconnect if needed
   };
-}, [user?.id]); // 4. Remove wsClient from dependency list to prevent loops
+}, [user?.id]); // 4. Remove wsClient from dependency list to prevent loops*/
 
   // ✅ Sidebar resolver
   const SideBar = () => {
@@ -159,12 +167,23 @@ useEffect(() => {
   const handleNavAreaEnter = () => !isRootPath && setIsOptionsVisible(true);
 
   const handleNavAreaLeave = (e) => {
-    if (isRootPath) return;
-    if (!e.relatedTarget) return setIsOptionsVisible(false);
-    if (optionsRef.current?.contains(e.relatedTarget)) return;
-    if (e.relatedTarget.closest?.(".options-container")) return;
+  if (isRootPath) return;
+
+  const nextEl = e.relatedTarget;
+
+  // if we don't know where the mouse went, hide
+  if (!nextEl || !(nextEl instanceof Node)) {
     setIsOptionsVisible(false);
-  };
+    return;
+  }
+
+  
+  if (optionsRef.current && optionsRef.current.contains(nextEl)) return;
+  if (nextEl.closest?.(".options-container")) return;
+
+  setIsOptionsVisible(false);
+};
+
 
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
@@ -200,38 +219,51 @@ useEffect(() => {
       )}
 
       <div className="relative flex-1 w-full flex overflow-hidden">
-        {/* Left sidebar */}
-        {!isRootPath && <SideBar />}
+      {/* Left sidebar */}
+      {!isRootPath && <SideBar />}
 
-        {/* Main */}
-        <div className="text-white relative flex flex-col items-center w-full overflow-hidden">
-          {/* ✅ Options bar: never show on chat */}
-          {!isRootPath && !isChatRoute && (
-            <div
-              ref={optionsRef}
-              className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
-                isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
-              }`}
-              style={{ zIndex: 99999999 }}
-            >
-              <Options
-                isHidden={isNavHidden}
-                unreadMessagesCount={unreadMessagesCount}
-                isAdmin={isAdmin}
-              />
+      {/* Main */}
+      <div className="text-white relative flex flex-col items-center w-full overflow-hidden">
+        {/* ✅ Options bar: never show on chat */}
+        {!isRootPath && !isChatRoute && (
+          <div
+            ref={optionsRef}
+            className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
+              isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
+            }`}
+            style={{ zIndex: 99999999 }}
+          >
+            <Options
+              isHidden={isNavHidden}
+              unreadMessagesCount={unreadMessagesCount}
+              isAdmin={isAdmin}
+            />
+          </div>
+        )}
+
+        <div
+          className={`relative w-full h-full ${
+            !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
+          } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+          onScroll={isRootPath ? undefined : onScroll}
+        >
+          <Outlet />
+          {/* Right chat system — persistent */}
+          {!isRootPath && (
+            <div className="fixed right-0 top-[60px] h-[calc(100%-60px)] flex z-[999999]">
+              
+              {/* 1️⃣ Contacts list — ALWAYS FIRST */}
+              <OnlineFriendsPanel />
+
+              {/* 2️⃣ Chat windows — slide from right to left */}
+              <ChatDock maxWindows={2} />
             </div>
           )}
-
-          <div
-            className={`relative w-full h-full ${
-              !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
-            } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
-            onScroll={isRootPath ? undefined : onScroll}
-          >
-            <Outlet />
-          </div>
         </div>
       </div>
+
+     
+    </div>
     </div>
   );
 };
