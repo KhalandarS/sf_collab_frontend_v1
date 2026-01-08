@@ -384,77 +384,44 @@ useEffect(() => {
   // WebSocket: incoming messages
   // -----------------------------
   useEffect(() => {
-    if (!socket) return;
+  if (!socket) return;
 
-    const onNewMessage = (payload) => {
-  // 1. Extract the message correctly based on your backend structure
-  const rawMsg = payload.message || payload.data || payload; 
-  const cid = String(payload.conversation_id || rawMsg.conversation_id);
-  const messageNorm = normalizeMessage(rawMsg);
+  const onNewMessage = (payload) => {
+    // 1. Properly extract the message data
+    const messageData = payload?.message || payload; 
+    const cid = String(payload?.conversation_id || messageData?.conversation_id);
+    
+    // 2. Normalize it (using your helper)
+    const messageNorm = normalizeMessage(messageData);
 
-  if (!cid || !messageNorm) return;
+    if (!cid || !messageNorm) return;
 
-  // 2. DON'T show notification or update if I am the sender
-  if (String(messageNorm.sender_id) === String(currentUser?.id)) {
-    return; 
-  }
-
-  // 3. Update the windows state so it "shows" in the box
-  setWindows((prev) => {
-    return prev.map((w) => {
-      if (String(w.conversationId) === cid) {
-        // Prevent duplicates
-        const exists = w.messages.some(m => m.id === messageNorm.id);
-        if (exists) return w;
-        return { ...w, messages: [...(w.messages || []), messageNorm] };
-      }
-      return w;
-    });
-  });
-
-
-      // refresh list ordering if you want
-      fetchConversations();
-
-      // If open, append message into window
-      setWindows((prev) => {
-        const idx = prev.findIndex((w) => String(w.conversationId) === cid);
-        if (idx === -1) return prev;
-
-        const next = [...prev];
-        const win = next[idx];
-
-        next[idx] = { ...win, messages: [...(win.messages || []), messageNorm] };
-
-        return next;
+    // 3. Update the state ONLY if it's for an open window
+    setWindows((prev) => {
+      return prev.map((w) => {
+        if (String(w.conversationId) === cid) {
+          // Prevent duplicates (checks by ID)
+          const exists = w.messages.some(m => String(m.id) === String(messageNorm.id));
+          if (exists) return w;
+          return { ...w, messages: [...(w.messages || []), messageNorm] };
+        }
+        return w;
       });
+    });
 
-      const open = isConvOpen(cid);
-      const minimized = isConvMinimized(cid);
+    // Handle unread/scroll
+    if (!isConvOpen(cid) || isConvMinimized(cid) || !consideredActive) {
+      bumpUnread(cid);
+    } else {
+      clearUnread(cid);
+      socket.emit("mark_read", { conversation_id: cid });
+    }
+    setTimeout(() => scrollToBottom(cid), 50);
+  };
 
-      if (!open || minimized || !consideredActive) {
-        bumpUnread(cid);
-      } else {
-        clearUnread(cid);
-        socket.emit("mark_read", { conversation_id: cid });
-      }
-
-      setTimeout(() => scrollToBottom(cid), 30);
-    };
-
-    socket.on("new_message", onNewMessage);
-    return () => socket.off("new_message", onNewMessage);
-  }, [
-    socket,
-    currentUser?.id,
-    fetchConversations,
-    consideredActive,
-    isConvOpen,
-    isConvMinimized,
-    bumpUnread,
-    clearUnread,
-    scrollToBottom,
-  ]);
+  socket.on("new_message", onNewMessage);
+  return () => socket.off("new_message", onNewMessage);
+}, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive]);
 
   // -----------------------------
   // WebSocket: send message
