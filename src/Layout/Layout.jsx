@@ -170,7 +170,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;
     if (!e.relatedTarget) return setIsOptionsVisible(false);
-    console.log(optionsRef);
     if (optionsRef.current?.contains(e.relatedTarget)) return;
     if (e.relatedTarget.closest?.(".options-container")) return;
     setIsOptionsVisible(false);
