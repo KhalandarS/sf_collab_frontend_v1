@@ -1,9 +1,15 @@
+/**
+ * ChatPage.jsx - FIXED VERSION
+ * 
+ * FIXES:
+ * 1. isOwn comparison uses String() to handle type mismatches
+ * 2. File upload handler added
+ * 3. Passes socket and conversationId to ChatInput
+ * 4. DateSeparator support added
+ */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Edit3, MessageCircle } from 'lucide-react';
-
-// Import custom hook
-//import useSocket from '/src/hooks/useSocket';
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -14,14 +20,51 @@ import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
 import NewMessageModal from '@/components/chat/NewMessageModal';
 import ChatHeader from '@/components/chat/ChatHeader';
 import ChatInput from '@/components/chat/ChatInput';
+import DateSeparator, { shouldShowDateSeparator } from '@/components/chat/DateSeparator';
 import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";
 
-
-
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+function normalizeMessage(m) {
+  if (!m) return m;
+
+  const created =
+    m.created_at ||
+    m.createdAt ||
+    m.timestamp ||
+    m.sent_at ||
+    m.sentAt ||
+    m.time ||
+    null;
+
+  const sender =
+    m.sender ||
+    m.user ||
+    m.from ||
+    (m.sender_id
+      ? {
+          id: m.sender_id,
+          firstName: m.sender_first_name || m.senderFirstName || m.sender_name || m.firstName || "",
+          lastName: m.sender_last_name || m.senderLastName || m.lastName || "",
+          first_name: m.sender_first_name || m.senderFirstName || m.sender_name || m.firstName || "",
+          last_name: m.sender_last_name || m.senderLastName || m.lastName || "",
+          profilePicture: m.sender_profile_picture || m.profilePicture || null,
+          profile_picture: m.sender_profile_picture || m.profilePicture || null,
+        }
+      : null);
+
+  return {
+    ...m,
+    created_at: created,
+    sender,
+    sender_id: m.sender_id || sender?.id,
+    content: m.content ?? m.original_content ?? m.message ?? "",
+  };
+}
+
 
 const ChatPage = () => {
   // ============================================
@@ -47,7 +90,6 @@ const ChatPage = () => {
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-  //const [friends, setFriends] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]);
   const [messageInput, setMessageInput] = useState('');
@@ -86,36 +128,6 @@ const ChatPage = () => {
     }
   }, [token]);
 
-  // Fetch friends
-  /*const fetchFriends = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      // Try friends endpoint first, fall back to users
-      let response = await fetch(`${API_BASE_URL}/friends`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      let data = await response.json();
-      
-      if (data.success && data.data.friends) {
-        setFriends(data.data.friends);
-      } else {
-        // Fallback to users endpoint
-        response = await fetch(`${API_BASE_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        data = await response.json();
-        if (data.success) {
-          const users = data.data.users.filter(u => u.id !== currentUser?.id);
-          setFriends(users);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch friends:', error);
-    }
-  }, [token, currentUser?.id]);*/
-
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
@@ -127,7 +139,7 @@ const ChatPage = () => {
       );
       const data = await response.json();
       if (data.success) {
-        setMessages(data.data.messages);
+        setMessages((data.data.messages || []).map(normalizeMessage));
         socket?.emit('mark_read', { conversation_id: conversationId });
       }
     } catch (error) {
@@ -136,74 +148,103 @@ const ChatPage = () => {
   }, [token, socket]);
 
   // ============================================
+  // FILE UPLOAD HANDLER
+  // ============================================
+  const handleFileUpload = useCallback(async (file) => {
+    if (!token || !file) return null;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('content', file.name);
+    formData.append('message_type', file.type.startsWith('image/') ? 'image' : 'file');
+    
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/chat/conversations/${activeConversation.id}/messages`,
+        {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+      const data = await response.json();
+      
+      if (data.success && data.data.message) {
+        return data.data.message.file_url;
+      }
+      return null;
+    } catch (error) {
+      console.error('File upload failed:', error);
+      return null;
+    }
+  }, [token, activeConversation?.id]);
+
+  // ============================================
   // EFFECTS
   // ============================================
 
   // Initial data load
   useEffect(() => {
-  if (token) {
-    fetchConversations();
-  }
-}, [token, fetchConversations]);
+    if (token) {
+      fetchConversations();
+    }
+  }, [token, fetchConversations]);
 
-// Open DM if URL has ?user=<id>
-useEffect(() => {
-  if (activeConversation) return;
+  // Open DM if URL has ?user=<id>
+  useEffect(() => {
+    if (activeConversation) return;
 
-  const userId = searchParams.get("user");
-  if (!userId) return;
-  if (!friends?.length) return;
+    const userId = searchParams.get("user");
+    if (!userId) return;
+    if (!friends?.length) return;
 
-  const friend = friends.find((f) => String(f.id) === String(userId));
-  if (!friend) return;
+    const friend = friends.find((f) => String(f.id) === String(userId));
+    if (!friend) return;
 
-  handleOpenChatWithFriend(friend);
-}, [searchParams, friends]);
-
-
+    handleOpenChatWithFriend(friend);
+  }, [searchParams, friends]);
 
   // Socket event listeners
   useEffect(() => {
-  if (!socket) return;
+    if (!socket) return;
 
-  if (activeConversation) {
-    socket.emit("join_conversation", { conversation_id: activeConversation.id });
-  }
-
-  const onNewMessage = (data) => {
-    if (data.conversation_id === activeConversation?.id) {
-      setMessages((prev) => [...prev, data.message]);
-      socket.emit("mark_read", { conversation_id: activeConversation.id });
-    }
-    fetchConversations();
-  };
-
-  const onUserTyping = (data) => {
-    if (data.conversation_id === activeConversation?.id) {
-      if (data.is_typing) {
-        setTypingUsers((prev) => {
-          if (prev.find((u) => u.id === data.user_id)) return prev;
-          const user = activeConversation.participants?.find((p) => p.id === data.user_id);
-          return user ? [...prev, user] : prev;
-        });
-      } else {
-        setTypingUsers((prev) => prev.filter((u) => u.id !== data.user_id));
-      }
-    }
-  };
-
-  socket.on("new_message", onNewMessage);
-  socket.on("user_typing", onUserTyping);
-
-  return () => {
     if (activeConversation) {
-      socket.emit("leave_conversation", { conversation_id: activeConversation.id });
+      socket.emit("join_conversation", { conversation_id: activeConversation.id });
     }
-    socket.off("new_message", onNewMessage);
-    socket.off("user_typing", onUserTyping);
-  };
-}, [socket, activeConversation, fetchConversations]);
 
+    const onNewMessage = (data) => {
+      if (String(data.conversation_id) === String(activeConversation?.id)) {
+        setMessages((prev) => [...prev, normalizeMessage(data.message)]);
+        socket.emit("mark_read", { conversation_id: activeConversation.id });
+      }
+      fetchConversations();
+    };
+
+    const onUserTyping = (data) => {
+      if (String(data.conversation_id) === String(activeConversation?.id)) {
+        if (data.is_typing) {
+          setTypingUsers((prev) => {
+            if (prev.find((u) => u.id === data.user_id)) return prev;
+            const user = activeConversation.participants?.find((p) => String(p.id) === String(data.user_id));
+            return user ? [...prev, user] : prev;
+          });
+        } else {
+          setTypingUsers((prev) => prev.filter((u) => String(u.id) !== String(data.user_id)));
+        }
+      }
+    };
+
+    socket.on("new_message", onNewMessage);
+    socket.on("user_typing", onUserTyping);
+
+    return () => {
+      if (activeConversation) {
+        socket.emit("leave_conversation", { conversation_id: activeConversation.id });
+      }
+      socket.off("new_message", onNewMessage);
+      socket.off("user_typing", onUserTyping);
+    };
+  }, [socket, activeConversation, fetchConversations]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -234,7 +275,7 @@ useEffect(() => {
     // Check if conversation already exists
     const existing = conversations.find(c =>
       c.conversation_type === 'direct' &&
-      c.participants?.some(p => p.id === friend.id)
+      c.participants?.some(p => String(p.id) === String(friend.id))
     );
 
     if (existing) {
@@ -325,33 +366,33 @@ useEffect(() => {
   const shouldShowAvatar = (message, index) => {
     if (index === 0) return true;
     const prevMessage = messages[index - 1];
-    if (prevMessage.sender_id !== message.sender_id) return true;
+    if (String(prevMessage.sender_id) !== String(message.sender_id)) return true;
     const prevTime = new Date(prevMessage.created_at);
     const currTime = new Date(message.created_at);
     return (currTime - prevTime) > 5 * 60 * 1000; // 5 minutes
   };
 
-  // Filter conversations by search
+  // Filter conversations by search and tab
   const filteredConversations = conversations.filter(c => {
-  // Filter by search
-  if (searchTerm) {
-    const name = c.name || c.participants?.find(p => p.id !== currentUser?.id)?.firstName || '';
-    if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-  }
-  
-  // Filter by tab
-  if (activeTab === 'all') return true;
-  if (activeTab === 'friends') return c.conversation_type === 'direct';
-  if (activeTab === 'groups') return c.conversation_type === 'group';
-  if (activeTab === 'startups') return c.conversation_type === 'team';
-  if (activeTab === 'general') return c.conversation_type === 'general';
-  
-  return true;
-});
+    // Filter by search
+    if (searchTerm) {
+      const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
+      if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+    }
+    
+    // Filter by tab
+    if (activeTab === 'all') return true;
+    if (activeTab === 'friends') return c.conversation_type === 'direct';
+    if (activeTab === 'groups') return c.conversation_type === 'group';
+    if (activeTab === 'startups') return c.conversation_type === 'team';
+    if (activeTab === 'general') return c.conversation_type === 'general';
+    
+    return true;
+  });
 
   // Get other participant for direct messages
   const otherParticipant = activeConversation?.participants?.find(
-    p => p.id !== currentUser?.id
+    p => String(p.id) !== String(currentUser?.id)
   );
 
   // ============================================
@@ -409,6 +450,7 @@ useEffect(() => {
               className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
             />
           </div>
+          
           {/* Category Tabs */}
           <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
             {[
@@ -430,7 +472,7 @@ useEffect(() => {
                 {tab.label}
               </button>
             ))}
-</div>
+          </div>
         </div>
 
         {/* Conversation List */}
@@ -457,7 +499,6 @@ useEffect(() => {
             ))
           )}
         </div>
-
       </div>
 
       {/* ============================================ */}
@@ -466,14 +507,11 @@ useEffect(() => {
       <div className="flex-1 flex flex-col bg-zinc-950">
         {activeConversation ? (
           <>
-            {/* Chat Header */}
+            {/* Chat Header - No more Phone/Video/Info icons */}
             <ChatHeader
               conversation={activeConversation}
               currentUserId={currentUser.id}
               isOnline={otherParticipant && onlineUsers.includes(otherParticipant.id)}
-              //onVideoCall={() => console.log('Video call')}
-              //onVoiceCall={() => console.log('Voice call')}
-              onInfo={() => console.log('Show info')}
             />
 
             {/* Messages Area */}
@@ -492,15 +530,28 @@ useEffect(() => {
                   <p className="text-sm text-zinc-500">Start a conversation</p>
                 </div>
               ) : (
-                messages.map((message, index) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isOwn={message.sender_id === currentUser.id}
-                    showAvatar={shouldShowAvatar(message, index)}
-                    currentUserId={currentUser.id}
-                  />
-                ))
+                messages.map((message, index) => {
+                  const prevMessage = index > 0 ? messages[index - 1] : null;
+                  // Use String() comparison to avoid type mismatch
+                  const isOwn = String(message.sender_id) === String(currentUser.id);
+                  
+                  return (
+                    <React.Fragment key={message.id || index}>
+                      {/* Date separator (Today, Yesterday, etc.) */}
+                      {shouldShowDateSeparator(message, prevMessage) && (
+                        <DateSeparator date={message.created_at} />
+                      )}
+                      
+                      {/* Message bubble */}
+                      <MessageBubble
+                        message={message}
+                        isOwn={isOwn}
+                        showAvatar={shouldShowAvatar(message, index)}
+                        currentUserId={currentUser.id}
+                      />
+                    </React.Fragment>
+                  );
+                })
               )}
               
               {/* Typing indicator */}
@@ -510,11 +561,14 @@ useEffect(() => {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Chat Input */}
+            {/* Chat Input - with file upload support */}
             <ChatInput
               value={messageInput}
               onChange={handleInputChange}
               onSend={handleSendMessage}
+              onFileUpload={handleFileUpload}
+              socket={socket}
+              conversationId={activeConversation?.id}
               disabled={!activeConversation}
             />
           </>
@@ -544,7 +598,7 @@ useEffect(() => {
         onlineUsers={onlineUsers}
         onOpenChat={handleOpenChatWithFriend}
         onNewMessage={() => setShowNewMessage(true)}
-        className="hidden lg:flex" // Hide on smaller screens
+        className="hidden lg:flex"
       />
 
       {/* ============================================ */}

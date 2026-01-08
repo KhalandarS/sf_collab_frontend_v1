@@ -287,7 +287,7 @@ const ChatToast = ({
 // ============================================
 const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickReply }) => {
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col-reverse gap-3">
+    <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3">
       {notifications.slice(0, MAX_NOTIFICATIONS).map((notification, index) => (
         <ChatToast
           key={notification.id}

@@ -252,9 +252,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {/* Right chat system — persistent */}
           {!isRootPath && (
             <div className="fixed right-0 top-[60px] h-[calc(100%-60px)] flex z-[999999]">
-              
-              {/* 1️⃣ Contacts list — ONLY on the chat route */}
-              {isChatRoute && <OnlineFriendsPanel />}
 
               {/* 2️⃣ Chat windows/launcher — ALWAYS present for quick chats */}
               <ChatDock maxWindows={2} />
