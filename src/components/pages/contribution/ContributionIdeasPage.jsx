@@ -1,14 +1,20 @@
 import { useState } from "react";
 import { Lightbulb, Send, Info } from "lucide-react";
+import { useSelector } from "react-redux";
+import { contributionAPI } from "@/utils/APIs/contributionAPI";
+import { toast } from "react-toastify";
+import AdminIdeasReviewSection from "./AdminIdeasReviewSection";
 
-export default function ContributionIdeasPage() {
+export default function ContributionIdeasPage({
+  userRoles = []
+}) {
   const [form, setForm] = useState({
     title: "",
     description: "",
     impact: "small",
     area: "product",
   });
-
+  
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
@@ -17,32 +23,46 @@ export default function ContributionIdeasPage() {
       [e.target.name]: e.target.value,
     });
   };
-
+  const { access_token, user } = useSelector((state) => state.auth);
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    try {
+      const body = {
+        title: form.title,
+        description: form.description,
+        impact: form.impact,
+        area: form.area,
+        status: "pending",
+      }
+      const response = await contributionAPI.createIdea(body, access_token)
 
-    // 🔌 Backend later:
-    // await ideasAPI.submit(form)
+      if (!response.success) {
+        toast.error("Error submitting idea: " + (response.message || "Unknown error"));
+        return;
+      }
 
-    console.log("Submitted idea:", form);
-
-    setTimeout(() => {
+      setTimeout(() => {
+        toast.success("Idea submitted successfully 🚀");
+        setForm({
+          title: "",
+          description: "",
+          impact: "small",
+          area: "product",
+        });
+      }, 800);
+    }
+    catch (error) {
+      console.error("Error submitting idea:", error);
+      toast.error("Error submitting idea: " + (error.message || "Unknown error"));
+    } finally {
       setLoading(false);
-      alert("Idea submitted successfully 🚀");
-      setForm({
-        title: "",
-        description: "",
-        impact: "small",
-        area: "product",
-      });
-    }, 800);
+    }
   };
 
   return (
     <div className="min-h-screen px-6 py-10 text-white bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950">
-      <div className="max-w-3xl mx-auto space-y-10">
-
+      <div className="max-w-7xl mx-auto space-y-10">
         {/* ================= HEADER ================= */}
         <header className="text-center space-y-4">
           <div className="flex justify-center">
@@ -55,7 +75,7 @@ export default function ContributionIdeasPage() {
             Submit an Idea
           </h1>
 
-          <p className="text-gray-300 max-w-xl mx-auto">
+          <p className="text-gray-300 max-w-2xl mx-auto">
             Ideas shape the future of SFCollab. Be clear, be honest, and think in
             terms of impact — not features for yourself.
           </p>
@@ -129,19 +149,19 @@ export default function ContributionIdeasPage() {
                 {
                   value: "small",
                   label: "Small",
-                  points: "5–15 pts",
+                  points: "10 pts",
                   desc: "Minor improvements or fixes",
                 },
                 {
                   value: "medium",
                   label: "Medium",
-                  points: "15–35 pts",
+                  points: "25 pts",
                   desc: "Meaningful feature or flow improvement",
                 },
                 {
                   value: "large",
                   label: "High impact",
-                  points: "25–75 pts",
+                  points: "50 pts",
                   desc: "Platform-level or strategic improvement",
                 },
               ].map((opt) => (
@@ -194,6 +214,13 @@ export default function ContributionIdeasPage() {
           </div>
         </form>
       </div>
+      {
+        (userRoles.includes('admin') || user.role === 'admin')&& (
+          <div className="max-w-7xl mx-auto mt-10">
+            <AdminIdeasReviewSection />
+          </div>
+        )
+              }
     </div>
   );
 }

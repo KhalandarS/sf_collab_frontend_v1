@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import React, {
   createContext,
   useContext,
@@ -15,68 +16,33 @@ import { useAppSocket } from "@/context/SocketProvider";
 
 const SocketContext = createContext(null);
 
+=======
+import React, { useState, useEffect, useCallback, useRef, createContext } from 'react';
+import { io } from 'socket.io-client';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import NotificationAvatar from './NotificationAvatar';
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
 // ============================================
 // CONFIGURATION
 // ============================================
+<<<<<<< HEAD
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+=======
+
+const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000'; // Please do not change this line directly, change yout .env
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 const NOTIFICATION_DURATION = 5000; // 5 seconds
 const MAX_NOTIFICATIONS = 2; // Max stacked notifications
-
 // ============================================
 // CONTEXT
 // ============================================
 const ChatNotificationContext = createContext(null);
 
-export const useChatNotifications = () => {
-  const context = useContext(ChatNotificationContext);
-  if (!context) {
-    throw new Error('useChatNotifications must be used within ChatNotificationProvider');
-  }
-  return context;
-};
 
-// ============================================
-// AVATAR COMPONENT
-// ============================================
-const NotificationAvatar = ({ src, name, type }) => {
-  const initials = name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  
-  // Different styles for different conversation types
-  const typeStyles = {
-    general: 'from-emerald-500 to-teal-600',
-    team: 'from-violet-500 to-purple-600',
-    group: 'from-blue-500 to-indigo-600',
-    direct: 'from-amber-500 to-orange-600'
-  };
 
-  const TypeIcon = {
-    general: Globe,
-    team: Shield,
-    group: Users,
-    direct: null
-  }[type];
-
-  if (TypeIcon && (type === 'general' || type === 'team')) {
-    return (
-      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${typeStyles[type]} flex items-center justify-center shadow-lg`}>
-        <TypeIcon size={22} className="text-white" />
-      </div>
-    );
-  }
-
-  return src ? (
-    <img 
-      src={src} 
-      alt={name} 
-      className="w-12 h-12 rounded-2xl object-cover shadow-lg ring-2 ring-white/10" 
-    />
-  ) : (
-    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${typeStyles[type] || typeStyles.direct} flex items-center justify-center shadow-lg font-semibold text-white`}>
-      {initials}
-    </div>
-  );
-};
 
 // ============================================
 // SINGLE TOAST NOTIFICATION
@@ -186,7 +152,7 @@ const ChatToast = ({
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-3">
-          <NotificationAvatar 
+          <NotificationAvatar
             src={sender?.profilePicture} 
             name={conversationName}
             type={conversationType}
@@ -335,13 +301,25 @@ const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickRepl
 // ============================================
 // PROVIDER COMPONENT
 // ============================================
+<<<<<<< HEAD
 export const ChatNotificationProvider = ({ children }) => {
   const { socket, isConnected } = useAppSocket(); // ✅ shared singleton socket
+=======
+export default function ChatNotificationProvider({ children }) {
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
+<<<<<<< HEAD
+=======
+  
+  // Get auth from localStorage
+  const { user, access_token: token} = useSelector((state) => state.auth);
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
   const [currentUserId, setCurrentUserId] = useState(() => {
   try {
@@ -430,7 +408,30 @@ useEffect(() => {
       const { message, conversation_id } = data || {};
       if (!message) return;
 
+<<<<<<< HEAD
       const isOwnMessage = message.sender_id === currentUserId;
+=======
+    newSocket.on('connect', () => {
+      // console.log('🔔 Notification socket connected');
+      setIsConnected(true);
+    });
+
+    newSocket.on('disconnect', () => {
+      // console.log('🔔 Notification socket disconnected');
+      setIsConnected(false);
+    });
+
+    // Listen for new messages
+    const callback = (data) => {
+      const { message, conversation_id } = data;
+      
+      // Don't show notification if:
+      // 1. Message is from current user
+      // 2. User is already on chat page viewing this conversation
+      const isOwnMessage = message.sender_id === user?.id;
+      const isOnChatPage = location.pathname === '/chat';
+      
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
       if (isOwnMessage) return;
 
       // Only show toast when not on chat page
@@ -442,6 +443,19 @@ useEffect(() => {
           sender: message.sender,
           timestamp: new Date(),
         });
+<<<<<<< HEAD
+=======
+        
+        // Play notification sound
+        playNotificationSound();
+        
+        // Update unread count
+        setUnreadCount(prev => prev + 1);
+      }
+    }
+    newSocket.on('new_message', callback);
+    newSocket.on('conversation_message', callback);
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
         playNotificationSound();
         setUnreadCount((prev) => prev + 1);
@@ -467,7 +481,11 @@ useEffect(() => {
       socket.off("new_message", onNewMessage);
       socket.off("added_to_team_chat", onAddedToTeamChat);
     };
+<<<<<<< HEAD
   }, [socket, currentUserId, addNotification, playNotificationSound]);
+=======
+  }, [token, user?.id, location.pathname]);
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
   const sendQuickReply = useCallback(
     async (conversationId, content) => {
@@ -528,6 +546,7 @@ useEffect(() => {
   );
 };
 
+<<<<<<< HEAD
 
 export const ChatNotificationBadge = ({ className = "" }) => {
   const { unreadCount } = useChatNotifications();
@@ -554,3 +573,6 @@ export const ChatNotificationBadge = ({ className = "" }) => {
 
 
 export default ChatNotificationProvider;
+=======
+
+>>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692

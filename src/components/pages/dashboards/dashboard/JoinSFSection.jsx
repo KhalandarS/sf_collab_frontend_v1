@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 
-export default function JoinSFSection() {
+export default function JoinSFSection({
+  setShowJobApplication,
+}) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-400/30 backdrop-blur-sm p-5 sm:p-6 lg:p-8">
     
@@ -36,13 +38,22 @@ export default function JoinSFSection() {
         </div>
 
         {/* CTA */}
-        <div className="md:absolute md:bottom-1 md:right-1 flex lg:justify-end">
+        <div className="md:absolute md:bottom-1 flex-col gap-4 md:right-1 flex lg:justify-end items-end">
           <Link
             to="/join-sf"
             className="inline-flex w-full items-center justify-center h-12 px-6 sm:px-8 bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-300 border border-cyan-300/50 hover:scale-105"
           >
             Apply Now
           </Link>
+          <div
+              onClick={() => {
+              localStorage.setItem('preferences:showJobApplication', 'true');
+              setShowJobApplication(true);
+              }}
+              className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-gray-700 hover:bg-gray-600 px-6 py-3 font-semibold text-white transition-all duration-300 border border-gray-600 hover:scale-105"
+            >
+              Not interested
+            </div>
         </div>
 
       </div>

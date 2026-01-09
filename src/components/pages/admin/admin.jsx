@@ -18,13 +18,16 @@ import { usersAPI } from '@/utils/APIs/userApi';
 import { waitlistAPI } from '@/utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '@/utils/APIs/applicationAPI';
+import AdminIdeasReviewSection from '../contribution/AdminIdeasReviewSection';
+import { useNavigate } from 'react-router-dom';
+import UserPopUp from './userPopUp';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  const { access_token } = useSelector((state) => state.auth);
-
+  const { access_token, user } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [startups, setStartups] = useState([]);
   const [feedback, setFeedback] = useState([]);
@@ -36,7 +39,7 @@ const AdminDashboard = () => {
   });
   const [feedbackFilter, setFeedbackFilter] = useState('');
   const [usersFilter, setUsersFilter] = useState('');
-
+  const [activeUser, setActiveUser] = useState(null)
   const [startupsFilter, setStartupsFilter] = useState('');
   const [page, setPage] = useState(1);
   const [selectedUser, setSelectedUser] = useState({});
@@ -45,7 +48,6 @@ const AdminDashboard = () => {
   const [loadingPoints, setLoadingPoints] = useState(false);
   const handleGivePoints = async () => {
     if (!selectedUser) return;
-
     try {
       setLoadingPoints(true);
 
@@ -79,6 +81,11 @@ const AdminDashboard = () => {
 
   const fetchAllData = useCallback(async () => {
     try {
+      // if (!user.is_admin) {
+      //   toast.error('Unauthorized access to admin data');
+      //   navigate('/dashboard')
+      //   return
+      // }
       const headers = {
         "Authorization": `Bearer ${access_token}`,
         "Content-Type": 'application/json',
@@ -92,7 +99,7 @@ const AdminDashboard = () => {
       const usersData = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.users || [];
       const startupsData = Array.isArray(startupsRes.data.data) ? startupsRes.data.data : startupsRes.data.data.startups || [];
       const feedbackData = Array.isArray(feedbackRes.data.data) ? feedbackRes.data.data : feedbackRes.data.data.feedback || [];
-
+      console.log(usersData);
       setUsers(usersData);
       setStartups(startupsData);
       setFeedback(feedbackData);
@@ -102,6 +109,11 @@ const AdminDashboard = () => {
         totalFeedback: feedbackData.length
       });
     } catch (err) {
+      if (err.response && err.response.status === 403) {
+        toast.error('Unauthorized access to admin data');
+        navigate('/dashboard')
+        return
+      }
       console.error('Error fetching admin data:', err.response?.data || err.message);
     }
   }, [access_token]);
@@ -151,13 +163,16 @@ const AdminDashboard = () => {
   useEffect(() => {
     async function fetchApplications() {
       const response = await applicationAPI.getAll(access_token, { page: 1, per_page: 1000 });
-      console.log(response.data.applications);
       setAllApplications(response.data.applications || []);
     }
     fetchApplications();
   }, [access_token]);
 
   return (
+    <>
+      {
+        activeUser && <UserPopUp user={activeUser} onClose={() => setActiveUser(null)}/>
+      }
     <div className="p-8 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white">
       <div className="w-full mx-auto">
         <div className="mb-12">
@@ -288,7 +303,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
-                <p className="text-gray-100">{item.content}</p>
+                <p className="text-gray-100 whitespace-pre-wrap break-words">{item.content}</p>
                 <p className="text-xs text-gray-400 mt-2">
                   {new Date(item.createdAt).toLocaleDateString()} •{' '}
                   {new Date(item.createdAt).toLocaleTimeString()}
@@ -298,7 +313,7 @@ const AdminDashboard = () => {
             ))}
           </ul>
         </div>
-
+        <AdminIdeasReviewSection />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
             <h2 className="text-xl font-semibold mb-4 text-gray-100">👥 Users List</h2>
@@ -311,7 +326,10 @@ const AdminDashboard = () => {
             />
             <ul className="max-h-80 overflow-y-auto space-y-2">
               {filteredUsers.map((u) => (
-                <li key={u.id} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-600/40 transition">
+                <li key={u.id}
+                  onClick={() => setActiveUser(u)}
+
+                  className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-600/40 transition">
                   <div className="font-medium text-green-300">{u.fullName}</div>
                   <div className="text-xs text-gray-400 mt-1">📧 {u.email}</div>
                   <div className="text-xs text-gray-400">👤 {u.role} • {u.status}</div>
@@ -380,6 +398,7 @@ const AdminDashboard = () => {
         )}
       </div>
     </div>
+    </>
   );
 };
 

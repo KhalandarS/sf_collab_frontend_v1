@@ -1,5 +1,6 @@
 import React from 'react';
 import Avatar from './Avatar';
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 const MessageBubble = ({ message, isOwn, showAvatar }) => {
   // pick the correct timestamp field regardless of backend shape
@@ -38,7 +39,7 @@ const MessageBubble = ({ message, isOwn, showAvatar }) => {
       <div className={`flex-shrink-0 w-8 ${showAvatar ? 'visible' : 'invisible'}`}>
         {showAvatar && (
           <Avatar
-            src={message.sender?.profilePicture}
+            src={getProfilePicture(message.sender?.profilePicture)}
             name={senderName || ' '}
             size="sm"
             showStatus={false}
