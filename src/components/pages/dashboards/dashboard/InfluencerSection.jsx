@@ -2,7 +2,7 @@ import React from 'react';
 import { Users, TrendingUp, Share2, Target, ArrowRight, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export default function InfluencerProfileSection({ userData, setShowInfluencerInfo }) {
+export default function InfluencerProfileSection({ userData }) {
   const previewStats = [
     { icon: Users, label: 'Audience Growth' },
     { icon: TrendingUp, label: 'Engagement Analytics' },
@@ -35,24 +35,15 @@ export default function InfluencerProfileSection({ userData, setShowInfluencerIn
           </div>
 
           {/* CTA Buttons */}
-          <div className="md:absolute md:top-1 md:right-1 flex flex-col gap-2 sm:flex-row gap-3 w-full lg:w-auto items-center">
+          <div className="md:absolute md:top-1 md:right-1 flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <Link
               to="/apply-influencer"
-              className="inline-flex mx-4 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-3 font-semibold text-white transition-all duration-300 border border-indigo-300/50 hover:scale-105"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-3 font-semibold text-white transition-all duration-300 border border-indigo-300/50 hover:scale-105"
             >
               Apply Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <div
-              onClick={() => {
-                localStorage.setItem('preferences:showInfluencerInfo', 'true');
-                setShowInfluencerInfo(true);
-              }}
-              className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-gray-700 hover:bg-gray-600 px-6 py-3 font-semibold text-white transition-all duration-300 border border-gray-600 hover:scale-105"
-            >
-              Not Interested
-              
-            </div>
+
           </div>
         </div>
 

@@ -1,31 +1,29 @@
-import { SOCKET_API_URL } from '@/utils/config';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
+
+const SOCKET_URL = 'http://localhost:5001';
 
 const useSocket = () => {
     const [socket, setSocket] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
     const [onlineUsers, setOnlineUsers] = useState([]);
-    
-    // Using a ref for the socket to avoid re-renders causing multiple connections
     const socketRef = useRef(null);
 
     const connectSocket = useCallback(() => {
-        // 1. Get the token - checking both common naming conventions
         const token = localStorage.getItem('access_token') || localStorage.getItem('authToken');
 
-        // 2. Only connect if we actually have a token
         if (!token) {
-            console.warn("Socket connection aborted: No token found in localStorage.");
+            console.warn("Socket connection aborted: No token found.");
             return;
         }
 
         if (socketRef.current?.connected) return;
 
-        // 3. Initialize connection
-        const newSocket = io(SOCKET_API_URL, {
-            query: { token },
+        // UPDATED: Added withCredentials and auth object to match Flask requirements
+        const newSocket = io(SOCKET_URL, {
+            auth: { token }, // Better than query for security
             transports: ['websocket'],
+            withCredentials: true, // MUST match the backend CORS setting
             reconnectionAttempts: 5,
             reconnectionDelay: 5000,
         });
@@ -36,16 +34,11 @@ const useSocket = () => {
         });
 
         newSocket.on('disconnect', (reason) => {
-            console.log('❌ Disconnected from WebSocket:', reason);
+            console.log('❌ Disconnected:', reason);
             setIsConnected(false);
         });
 
-        newSocket.on('connect_error', (error) => {
-            console.error('⚠️ Socket Connection Error:', error.message);
-            setIsConnected(false);
-        });
-
-        // Handle online users list
+        // Handle the online users list from backend
         newSocket.on('get_online_users', (users) => {
             setOnlineUsers(users);
         });
@@ -65,11 +58,7 @@ const useSocket = () => {
 
     useEffect(() => {
         connectSocket();
-
-        // Cleanup on unmount
-        return () => {
-            disconnectSocket();
-        };
+        return () => disconnectSocket();
     }, [connectSocket, disconnectSocket]);
 
     return { socket, isConnected, onlineUsers, connectSocket, disconnectSocket };

@@ -1,6 +1,9 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
 
+
+
+
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -8,96 +11,158 @@ const api = axios.create({
   },
 })
 
-// ✅ FIXED: Request interceptor syntax (Removed the broken try/catch)
+// Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
+    // console.log('API Request:', config.method?.toUpperCase(), config.url)
+    return config
   },
   (error) => {
+    // console.error('API Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // Axios: if request never reached server (CORS, network), response is undefined
+    const status = error?.response?.status;
+    const msg = error?.response?.data?.msg;
+    const data = error?.response?.data;
+
+    // ECONNREFUSED is more common in Node; in browser you’ll usually get "Network Error"
+    if (!error?.response) {
+      console.error("❌ API network/CORS error:", error?.message || error);
+      console.error("   Backend URL:", API_BASE_URL);
+      return Promise.reject(error);
+    }
+
+    // JWT expired
+    if (status === 401 && msg === "Token has expired") {
+      localStorage.removeItem("access_token");
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    console.error("API Error:", status, data);
     return Promise.reject(error);
   }
 );
 
-// ✅ FIXED: Response interceptor (Added safety checks for error.response)
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend at', API_BASE_URL);
-    } else if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      window.location.href = '/login';
-    } else if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
-    return Promise.reject(error);
-  }
-)
 
 // Users API
 export const usersAPI = {
-  // Now these functions will automatically use the token from the interceptor!
-  getAll: async (params = {}) => {
+  
+  getAll: async (accessToken, params) => {
     const response = await api.get("/users", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
-        ...params
+        status: params.status,
+        role: params.role,
+        search: params.search,
       },
     });
     return response.data;
   },
 
-  getById: async (userId) => {
-    const response = await api.get(`/users/${userId}`);
+  getById: async (userId, accessToken) => {
+    const response = await api.get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data.data;
   },
 
-  updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
+  updateProfile: async (userId, profileData, accessToken) => {
     const response = await api.put(`/users/${userId}`, profileData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        'Content-Type': dType,
+        'Content-Type': 'multipart/form-data',
       },
     });
-    return response.data;
+    return response.data.data;
   },
   
-  getActivity: async (userId) => {
-    const response = await api.get(`/users/${userId}/activity`);
+  getActivity: async (userId, accessToken) => {
+    const response = await api.get(`/users/${userId}/activity`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data.data;
   },
 
-  getMyRoles: async () => {
-    const response = await api.get('/user-roles/my-roles');
-    return response.data;
-  },
-
-  submitContactForm: async (contactForm) => {
-    const response = await api.post('/users/contact', contactForm, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+  getStatus: async (userId, accessToken) => {
+    const response = await api.get(`/users/${userId}/status`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
+    return response.data.data;
+  },
+
+  verifyEmail: async (userId, accessToken) => {
+    const response = await api.post(`/users/${userId}/verify-email`, {}, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
+  },
+
+  getXP: async (userId, accessToken) => {
+    const response = await api.get(`/users/${userId}/xp`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data.data;
+  },
+
+  getAvatar: async (filename) => {
+    const response = await api.get(`/users/avatars/${filename}`);
     return response.data;
   },
 
-  // Added missing roles fetch helper
+  getUpload: async (filename) => {
+    const response = await api.get(`/users/uploads/${filename}`);
+    return response.data;
+  },
+  
+  submitContactForm: async (contactForm) => {
+    const response = await api.post('/users/contact', contactForm,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+
+  },
   getAllRoles: async () => {
     const response = await api.get('/users/roles');
     return response.data.data;
 
   },
-  addRole: async (userId, roles, accessToken) => {
-    const response = await api.put(`/user-roles/${userId}`, { roles }, {
+  getMyRoles: async (accessToken) => {
+    const response = await api.get('/user-roles/my-roles', {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data.data;
-  },
+    return response.data;
+  }
 };
 
-export default api;
+
+
+export default api
+

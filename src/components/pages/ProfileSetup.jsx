@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { setUser } from "../../services/auth/authSlice";
 import { Mail, User, Building, Globe, Clock, MapPin, Camera } from "lucide-react";
 import { Button } from "../ui/button";
@@ -60,6 +60,7 @@ export default function ProfileSetup() {
   const [isLoading, setIsLoading] = useState(false);
   const [profileImage, setProfileImage] = useState(null);
   const [profileImagePreview, setProfileImagePreview] = useState(null);
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -118,7 +119,7 @@ export default function ProfileSetup() {
       reader.readAsDataURL(file);
     }
   };
-  const { user } = useSelector((state) => state.auth);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -206,7 +207,7 @@ export default function ProfileSetup() {
                 <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden border-4 border-slate-700">
                   {profileImagePreview ? (
                     <img
-                      src={user.profileImage || profileImagePreview}
+                      src={profileImagePreview}
                       alt="Profile preview"
                       className="w-full h-full object-cover"
                     />

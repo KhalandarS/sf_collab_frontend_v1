@@ -7,36 +7,17 @@ import {
   Trophy,
   Layers,
   TrendingUp,
-  Zap,
-  TrendingDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardChangeSection from "../dashboardChangeSection";
-import KnowledgeResources from "@/components/pages/dashboards/influencerDashboard/components/KnowledgeResources";
-import DashboardTopNav from "@/components/common/DashboardTopNav";
-import { useDashboardNavHide } from "@/components/common/DashboardTopNav";
 
 export default function InfluencerDashboard({
   userRoles,
   activeRole,
   setActiveRole,
 }) {
-  // Sticky navigation visibility
-  const isNavHidden = useDashboardNavHide();
-
-  // Navigation links
-  const dashboardLinks = [
-    { label: 'Overview', href: '/dashboard', icon: Zap },
-    { label: 'My Campaigns', href: '/influencer/campaigns', icon: Megaphone },
-    { label: 'Performance', href: '/influencer/performance', icon: TrendingUp },
-  ];
-
   return (
-    <>
-      {/* Sticky top navigation */}
-      <DashboardTopNav links={dashboardLinks} isHidden={isNavHidden} />
-
-      <div className="relative space-y-6 sm:space-y-8 lg:space-y-10 px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
+    <div className="relative my-6 space-y-10">
       {/* Background texture */}
       <div className="absolute inset-0 pointer-events-none
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
@@ -55,21 +36,21 @@ export default function InfluencerDashboard({
         activeRole={activeRole}
       />
 
-      <div className="relative z-10 space-y-6 sm:space-y-8 lg:space-y-10">
+      <div className="relative z-10 space-y-10">
 
         {/* ================= HEADER ================= */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white flex items-center gap-2">
-            <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-pink-400 flex-shrink-0" />
-            <span>Influencer Dashboard</span>
+        <div className="flex flex-col gap-4">
+          <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
+            <Layers className="w-6 h-6 text-pink-400" />
+            Influencer Dashboard
           </h2>
 
-          <p className="text-xs sm:text-sm text-white/60 max-w-3xl leading-relaxed">
+          <p className="text-sm text-white/60 max-w-3xl">
             Run campaigns, track performance, manage payouts, and grow your
             influence inside the SF ecosystem.
           </p>
 
-          <div className="flex flex-wrap gap-2 sm:gap-3">
+          <div className="flex flex-wrap gap-3">
             <KPI label="Total Clicks" value="18,420" />
             <KPI label="Conversion Rate" value="4.8%" />
             <KPI label="Revenue Generated" value="$3,260" />
@@ -83,7 +64,7 @@ export default function InfluencerDashboard({
           title="Campaigns"
           subtitle="Active, upcoming, and completed"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
             <CampaignCard
               name="NeuroForge Launch"
               status="Active"
@@ -98,7 +79,7 @@ export default function InfluencerDashboard({
 
           <Link
             to="/influencer/campaigns"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
+            className="inline-block mt-4 text-pink-300 hover:underline text-sm"
           >
             View all campaigns →
           </Link>
@@ -110,7 +91,7 @@ export default function InfluencerDashboard({
           title="Performance Statistics"
           subtitle="Core campaign metrics"
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <Stat label="Views" value="92k" />
             <Stat label="Clicks" value="18.4k" />
             <Stat label="Conversions" value="884" />
@@ -126,7 +107,7 @@ export default function InfluencerDashboard({
           title="Referral Links & Assets"
           subtitle="Tracking links and promo materials"
         >
-          <div className="space-y-2 text-xs sm:text-sm text-white">
+          <div className="space-y-2 text-sm text-white">
             <Row label="Active Referral Links" value="5" />
             <Row label="UTM Campaigns" value="3" />
             <Row label="Media Kit Files" value="Available" />
@@ -134,7 +115,7 @@ export default function InfluencerDashboard({
 
           <Link
             to="/influencer/referrals"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
+            className="inline-block mt-4 text-pink-300 hover:underline text-sm"
           >
             Manage referral assets →
           </Link>
@@ -146,7 +127,7 @@ export default function InfluencerDashboard({
           title="Payouts"
           subtitle="Earnings and withdrawals"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <Stat label="Earned" value="$3,260" />
             <Stat label="Pending" value="$740" />
             <Stat label="Paid Out" value="$2,520" />
@@ -154,7 +135,7 @@ export default function InfluencerDashboard({
 
           <Link
             to="/influencer/payouts"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
+            className="inline-block mt-4 text-pink-300 hover:underline text-sm"
           >
             View payouts →
           </Link>
@@ -166,7 +147,7 @@ export default function InfluencerDashboard({
           title="Audience Profile"
           subtitle="Who you reach"
         >
-          <div className="space-y-2 text-xs sm:text-sm text-white">
+          <div className="space-y-2 text-sm text-white">
             <Row label="Primary Niche" value="Tech / Startups" />
             <Row label="Top Regions" value="US, EU, LATAM" />
             <Row label="Platforms" value="X, YouTube, TikTok" />
@@ -180,7 +161,7 @@ export default function InfluencerDashboard({
           title="Leaderboard"
           subtitle="Your position in the ecosystem"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
+          <div className="grid sm:grid-cols-3 gap-4">
             <Stat label="Rank" value="#12" />
             <Stat label="Total Influencers" value="1,240" />
             <Stat label="Bonus Tier" value="Silver" />
@@ -188,20 +169,14 @@ export default function InfluencerDashboard({
 
           <Link
             to="/influencer/leaderboard"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
+            className="inline-block mt-4 text-pink-300 hover:underline text-sm"
           >
             View leaderboard →
           </Link>
         </Section>
 
-        {/* ================= KNOWLEDGE RESOURCES ================= */}
-        <section className="rounded-lg sm:rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6">
-          <KnowledgeResources />
-        </section>
-
       </div>
     </div>
-    </>
   );
 }
 
@@ -209,11 +184,11 @@ export default function InfluencerDashboard({
 
 function Section({ icon: Icon, title, subtitle, children }) {
   return (
-    <section className="rounded-lg sm:rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6 space-y-3 sm:space-y-4">
-      <div className="flex items-start sm:items-center gap-2 sm:gap-3">
-        <Icon className="w-4 sm:w-5 h-4 sm:h-5 text-pink-400 flex-shrink-0 mt-0.5 sm:mt-0" />
-        <div className="min-w-0 flex-1">
-          <h3 className="text-base sm:text-lg font-semibold text-white">{title}</h3>
+    <section className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
+      <div className="flex items-center gap-3">
+        <Icon className="w-5 h-5 text-pink-400" />
+        <div>
+          <h3 className="text-lg font-semibold text-white">{title}</h3>
           <p className="text-xs text-white/60">{subtitle}</p>
         </div>
       </div>
@@ -224,23 +199,21 @@ function Section({ icon: Icon, title, subtitle, children }) {
 
 function KPI({ label, value }) {
   return (
-    <div className="rounded-lg sm:rounded-xl bg-white/5 border border-white/10 px-3 sm:px-4 py-2 sm:py-3 min-h-[56px] flex flex-col justify-center">
+    <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
       <p className="text-xs text-white/60">{label}</p>
-      <p className="text-base sm:text-lg font-semibold text-white mt-1">{value}</p>
+      <p className="text-lg font-semibold text-white">{value}</p>
     </div>
   );
 }
 
 function CampaignCard({ name, status, roi }) {
   return (
-    <div className="rounded-lg sm:rounded-xl bg-white/5 border border-white/10 p-3 sm:p-4 min-h-[80px] flex flex-col justify-between">
-      <div>
-        <p className="font-semibold text-sm sm:text-base text-white break-words">{name}</p>
-        <p className="text-xs text-white/60 mt-1 sm:mt-2">
-          Status: {status}
-        </p>
-      </div>
-      <p className="text-xs text-pink-300 mt-2 sm:mt-3">
+    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
+      <p className="font-semibold text-white">{name}</p>
+      <p className="text-xs text-white/60 mt-1">
+        Status: {status}
+      </p>
+      <p className="text-xs text-pink-300 mt-1">
         ROI: {roi}
       </p>
     </div>
@@ -249,18 +222,18 @@ function CampaignCard({ name, status, roi }) {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-lg sm:rounded-xl bg-white/5 border border-white/10 p-3 sm:p-4 min-h-[80px] flex flex-col justify-center">
+    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
       <p className="text-xs text-white/60">{label}</p>
-      <p className="text-base sm:text-lg font-semibold text-white mt-1">{value}</p>
+      <p className="text-lg font-semibold text-white">{value}</p>
     </div>
   );
 }
 
 function Row({ label, value }) {
   return (
-    <div className="flex justify-between items-center gap-2 pb-2 last:pb-0">
-      <span className="text-white truncate">{label}</span>
-      <span className="text-white/70 flex-shrink-0">{value}</span>
+    <div className="flex justify-between">
+      <span>{label}</span>
+      <span className="text-white/70">{value}</span>
     </div>
   );
 }

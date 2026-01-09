@@ -53,16 +53,8 @@ export function WaitlistSignup() {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(false)
   const [isOnWaitlist, setIsOnWaitlist] = useState(false)
-  const [totalCount, setTotalCount] = useState(0)
+  const [totalCount, setTotalCount] = useState(600)
   const [maxCount, setMaxCount] = useState(1000)
-  useEffect(() => {
-    async function fetchTotalCount() {
-      const result = await waitlistAPI.getTotalCount()
-      setTotalCount(result.total)
-      setMaxCount(result.max_allowed)
-    }
-    fetchTotalCount()
-  }, []);
   const [expiresAt] = useState(null) // in seconds
   const navigate = useNavigate()
   const { user, access_token } = useSelector((state) => state.auth);
@@ -88,7 +80,14 @@ export function WaitlistSignup() {
     }
     checkWaitlist()
   }, [email]);
-  
+  useEffect(() => {
+    async function fetchTotalCount() {
+      const result = await waitlistAPI.getTotalCount()
+      setTotalCount(result.total)
+      setMaxCount(result.max_allowed)
+    }
+    fetchTotalCount()
+  }, []);
   
 
   const handleSubmit = async (e) => {

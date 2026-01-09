@@ -3,47 +3,48 @@ import {
   Lightbulb,
   Users,
   Vote,
+  BookOpen,
   Rocket,
   ArrowRight,
   Lock,
-  Gift,
+  Gift
 } from "lucide-react";
-
-/* ================= DATA ================= */
-
 const contributionActions = [
   {
     title: "Submit an Idea",
     description:
-      "Propose product ideas, features, or improvements that shape SFCollab.",
-    points: "10-50 points",
+      "Share product ideas, features, or improvements that help shape SFCollab.",
+    points: "5–75 points",
     icon: Lightbulb,
     cta: "Submit Idea",
-    to: "/contribution-ideas",
-    tone: "primary",
+    to: "/contribute-ideas",
+    // Thinking / creation → indigo (calm, smart)
+    color: "from-indigo-500/20 to-indigo-400/10",
     available: true,
   },
   {
     title: "Refer Friends",
     description:
-      "Invite builders or founders. Earn points for every verified referral.",
+      "Invite builders, founders, or creators. Earn points for each successful referral.",
     points: "5 points / referral",
     bonus: "+25 points every 5 referrals",
     icon: Users,
     cta: "Get Referral Link",
     to: "/refer",
-    tone: "neutral",
+    // Networking → slate + blue accent
+    color: "from-slate-500/20 to-blue-500/10",
     available: true,
   },
   {
     title: "Vote in Polls",
     description:
-      "Help guide product decisions by voting on community polls.",
+      "Help us make decisions by voting on community and product polls.",
     points: "1–3 points per vote",
     icon: Vote,
     cta: "View Polls",
-    to: "/contribution-polls",
-    tone: "neutral",
+    to: "/contribute-polls",
+    // Community / governance → purple (on-brand)
+    color: "from-purple-500/20 to-pink-500/10",
     available: true,
   },
   {
@@ -52,127 +53,128 @@ const contributionActions = [
       "Support SFCollab early and unlock discounted lifetime access.",
     points: "Early access + bonuses",
     icon: Rocket,
-    cta: "Contribute Now",
-    to: "/crowdfunding",
-    tone: "locked",
-    available: true,
+    cta: "Coming Soon",
+    // Premium / future → muted amber (not hype)
+    color: "from-amber-400/20 to-orange-400/10",
+    available: false,
   },
 ];
 
-/* ================= PAGE ================= */
 
 export default function ContributionPage() {
+  // These will later come from backend
   const userPoints = 42;
-  const currentStage = "Waitlist — Stage 2";
+  const currentStage = "Waitlist – Stage 2";
   const nextUnlock = "Stage 3 (75 points)";
 
   return (
-    <div className="min-h-screen bg-radial from-purple-950 to-black px-6 py-10 text-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 px-6 py-10 text-white">
       <div className="max-w-7xl mx-auto space-y-12">
 
-        {/* ================= HEADER ================= */}
-        <section className="space-y-4">
-          <h1 className="text-4xl font-semibold">
-            Contribute to Unlock Access
+        {/* ================= HERO ================= */}
+        <section className="text-center space-y-4">
+          <h1 className="text-4xl sm:text-5xl font-bold">
+            Contribute to Move Faster 🚀
           </h1>
-          <p className="text-gray-400 max-w-2xl">
-            Meaningful contributions move you forward. Earn points to unlock
-            features, access, and early benefits.
+          <p className="text-gray-300 max-w-2xl mx-auto">
+            SFCollab rewards real contributions. The more you help shape the
+            platform, the faster you unlock access and benefits.
           </p>
 
-          <div className="flex flex-wrap gap-4 pt-6">
-            <StatusCard label="Your Points" value={userPoints} />
+          <div className="flex flex-wrap justify-center gap-4 mt-6">
+            <StatusCard label="Your Points" value={`${userPoints}`} />
             <StatusCard label="Current Stage" value={currentStage} />
             <StatusCard label="Next Unlock" value={nextUnlock} />
           </div>
         </section>
 
         {/* ================= ACTIONS ================= */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contributionActions.map((action) => (
-            <ActionCard key={action.title} action={action} />
-          ))}
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+          {contributionActions.map((action) => {
+            const Icon = action.icon;
+
+            return (
+              <div
+                key={action.title}
+                className={`relative rounded-2xl border border-white/10 bg-gradient-to-br ${action.color} backdrop-blur-sm overflow-hidden`}
+              >
+                <div
+                  className='absolute inset-0 opacity-20  '
+                />
+
+                <div className="relative z-10 p-6 flex flex-col h-full">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-3 rounded-xl bg-black/30 border border-white/10">
+                      <Icon className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold">
+                      {action.title}
+                    </h3>
+                  </div>
+
+                  <p className="text-sm text-gray-300 flex-1">
+                    {action.description}
+                  </p>
+
+                  <div className="mt-4 space-y-1 text-sm">
+                    <p className="text-white font-medium">
+                      {action.points}
+                    </p>
+                    {action.bonus && (
+                      <p className="text-green-400 text-xs">
+                        {action.bonus}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-6">
+                    {action.available ? (
+                      <Link
+                        to={action.to}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-white hover:underline"
+                      >
+                        {action.cta}
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    ) : (
+                      <div className="inline-flex items-center gap-2 text-sm text-gray-400">
+                        <Lock className="h-4 w-4" />
+                        Coming Soon
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </section>
 
-        {/* ================= INFO ================= */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Gift className="h-5 w-5 text-indigo-400" />
+        {/* ================= POINTS EXPLANATION ================= */}
+        <section className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
+          <h2 className="text-2xl font-semibold flex items-center gap-2">
+            <Gift className="h-6 w-6 text-yellow-400" />
             How Points Work
           </h2>
 
-          <ul className="text-sm text-gray-400 space-y-2 list-disc list-inside">
-            <li>Small contributions: <b>10 points</b></li>
-            <li>Medium contributions: <b>25 points</b></li>
-            <li>High-impact contributions: <b>50 points</b></li>
+          <ul className="text-sm text-gray-300 space-y-2 list-disc list-inside">
+            <li>Small contributions earn <b>5–15 points</b></li>
+            <li>Medium contributions earn <b>15–35 points</b></li>
+            <li>High-impact contributions earn <b>25–75 points</b></li>
             <li>
-              Every <b>5 referrals</b> grants a <b>25-point bonus</b>
+              Every <b>5 successful referrals</b> grants a <b>25-point bonus</b>
             </li>
-            <li>Points affect waitlist priority and feature access</li>
+            <li>
+              Points determine waitlist priority and early access eligibility
+            </li>
           </ul>
         </section>
 
-        {/* ================= FOOT NOTE ================= */}
-        <p className="text-sm text-gray-500 max-w-3xl">
-          Access is released in stages. Active contributors progress
-          significantly faster than inactive users.
-        </p>
-      </div>
-    </div>
-  );
-}
-
-/* ================= COMPONENTS ================= */
-
-function ActionCard({ action }) {
-  const Icon = action.icon;
-
-  const toneStyles = {
-    primary:
-      "border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/15",
-    neutral:
-      "border-white/10 bg-white/5 hover:bg-white/10",
-    locked:
-      "border-amber-400/20 bg-amber-500/10 opacity-70",
-  };
-
-  return (
-    <div
-      className={`rounded-2xl border p-6 transition-colors ${toneStyles[action.tone]}`}
-    >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-3 rounded-xl bg-black/40 border border-white/10">
-          <Icon className="h-5 w-5 text-indigo-300" />
-        </div>
-        <h3 className="text-lg font-semibold">{action.title}</h3>
-      </div>
-
-      <p className="text-sm text-gray-400 mb-4">
-        {action.description}
-      </p>
-
-      <div className="text-sm space-y-1">
-        <p className="text-white font-medium">{action.points}</p>
-        {action.bonus && (
-          <p className="text-emerald-400 text-xs">{action.bonus}</p>
-        )}
-      </div>
-
-      <div className="mt-6">
-        {action.available ? (
-          <Link
-            to={action.to}
-            className="inline-flex items-center gap-2 text-sm font-medium text-indigo-300 hover:text-indigo-200"
-          >
-            {action.cta}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        ) : (
-          <div className="inline-flex items-center gap-2 text-sm text-gray-400">
-            <Lock className="h-4 w-4" />
-            Coming Soon
-          </div>
-        )}
+        {/* ================= SCARCITY ================= */}
+        <section className="text-center text-sm text-gray-400 max-w-3xl mx-auto">
+          Access is released in <b>stages</b>. Users who do not contribute may
+          wait <b>months</b> for access. Contributing — or participating in early
+          crowdfunding — significantly improves your position.
+        </section>
       </div>
     </div>
   );
@@ -180,11 +182,13 @@ function ActionCard({ action }) {
 
 function StatusCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-4 min-w-[160px]">
-      <p className="text-xs uppercase tracking-wide text-gray-500">
+    <div className="rounded-xl bg-white/5 border border-white/10 px-6 py-4 min-w-[160px]">
+      <p className="text-xs uppercase tracking-wide text-gray-400">
         {label}
       </p>
-      <p className="text-lg font-semibold mt-1">{value}</p>
+      <p className="text-lg font-semibold text-white mt-1">
+        {value}
+      </p>
     </div>
   );
 }

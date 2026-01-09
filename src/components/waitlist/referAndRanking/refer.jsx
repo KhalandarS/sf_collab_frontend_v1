@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
+import { waitlistAPI } from "../../../utils/APIs/waitlistAPI";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -27,9 +27,9 @@ const RANK_DISCOUNTS = [
 ];
 
 const CONTRIBUTION_SYSTEM = [
-  { type: "Small Contribution", points: 15, examples: ["Feedback", "Minor bug reports", "Testing"] },
-  { type: "Medium Contribution", points: 25, examples: ["Feature suggestions", "Documentation", "Demo projects"] },
-  { type: "High-Impact Contribution", points: 50, examples: ["Critical bug fixes", "Integration creation", "Community support"] },
+  { type: "Small Contribution", points: 5, examples: ["Feedback", "Minor bug reports", "Testing"] },
+  { type: "Medium Contribution", points: 10, examples: ["Feature suggestions", "Documentation", "Demo projects"] },
+  { type: "High-Impact Contribution", points: 20, examples: ["Critical bug fixes", "Integration creation", "Community support"] },
 ];
 
 const ReferPage = () => {
@@ -45,7 +45,7 @@ const ReferPage = () => {
     `${window.location.origin}/signup?ref=${user?.id || ""}`
   );
   const [leaderboard, setLeaderboard] = useState([]);
-  const [mvpDeadline] = useState(new Date("2026-01-15"));
+  const [mvpDeadline] = useState(new Date("2026-01-10"));
 
   // Fetch waitlist status
   useEffect(() => {
@@ -309,49 +309,49 @@ const ReferPage = () => {
           </div>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
-        >
-          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <Zap className="h-6 w-6 text-yellow-400" />
-            How Rank Score is Calculated
-          </h3>
-          <div className="bg-neutral-800/50 rounded-lg p-4 mb-6 border border-neutral-700 font-mono text-sm text-blue-300">
-            <p>Total Rank Score =</p>
-            <p className="ml-4">(Referrals × 2) + Contribution Points</p>
-            <p className="ml-4">+ Engagement Points + Early Commitment Bonus</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-              <p className="text-sm text-neutral-400 mb-2">✓ Referrals are optional, not mandatory</p>
-              <p className="text-sm text-neutral-400 mb-2">✓ Contributions can outweigh referrals</p>
-              <p className="text-sm text-neutral-400">✓ Introverts & solo builders have equal paths</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.35 }}
+            className="bg-gradient-to-br from-neutral-800 to-neutral-900 border border-neutral-700 rounded-2xl p-8 mb-12"
+          >
+            <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <Zap className="h-6 w-6 text-yellow-400" />
+              How Rank Score is Calculated
+            </h3>
+            <div className="bg-neutral-800/50 rounded-lg p-4 mb-6 border border-neutral-700 font-mono text-sm text-blue-300">
+              <p>Total Rank Score =</p>
+              <p className="ml-4">(Referrals × 2) + Contribution Points</p>
+              <p className="ml-4">+ Engagement Points + Early Commitment Bonus</p>
             </div>
-            <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
-              <p className="text-sm text-neutral-400 mb-2">✓ Engagement rewards consistency</p>
-              <p className="text-sm text-neutral-400 mb-2">✓ Early signup gets bonus points</p>
-              <p className="text-sm text-neutral-400">✓ Only verified activity counts</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
+                <p className="text-sm text-neutral-400 mb-2">✓ Referrals are optional, not mandatory</p>
+                <p className="text-sm text-neutral-400 mb-2">✓ Contributions can outweigh referrals</p>
+                <p className="text-sm text-neutral-400">✓ Introverts & solo builders have equal paths</p>
+              </div>
+              <div className="bg-neutral-900 rounded-lg p-4 border border-neutral-700">
+                <p className="text-sm text-neutral-400 mb-2">✓ Engagement rewards consistency</p>
+                <p className="text-sm text-neutral-400 mb-2">✓ Early signup gets bonus points</p>
+                <p className="text-sm text-neutral-400">✓ Only verified activity counts</p>
+              </div>
             </div>
-          </div>
 
-          <div className="mt-6 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
-            <p className="text-sm text-purple-300 mb-3">
-              <strong>Bonus Rewards:</strong>
-            </p>
-            <ul className="text-sm text-purple-300 space-y-2">
-              <li>• <strong>New Startup Bonus:</strong> +30 points for founding members from new startups</li>
-              <li>• <strong>Early Waitlist Bonus:</strong> Up to +50 points based on your entry position</li>
-            </ul>
-            <p className="text-xs text-purple-400 mt-3 font-mono">
-              bonus_points = (2500 - position) / 50
-            </p>
-          </div>
-        </motion.div>
+            <div className="mt-6 bg-purple-500/10 border border-purple-500/30 rounded-lg p-4">
+              <p className="text-sm text-purple-300 mb-3">
+                <strong>Bonus Rewards:</strong>
+              </p>
+              <ul className="text-sm text-purple-300 space-y-2">
+                <li>• <strong>New Startup Bonus:</strong> +30 points for founding members from new startups</li>
+                <li>• <strong>Early Waitlist Bonus:</strong> Up to +50 points based on your entry position</li>
+              </ul>
+              <p className="text-xs text-purple-400 mt-3 font-mono">
+                bonus_points = (2500 - position) / 50
+              </p>
+            </div>
+          </motion.div>
 
-        {/* CONTRIBUTION SYSTEM */}
+          {/* CONTRIBUTION SYSTEM */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -403,21 +403,23 @@ const ReferPage = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.05 }}
-                className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${leaderUser.isYou
-                  ? "bg-linear-to-r from-blue-500/20 to-purple-500/20 border-blue-500/50"
-                  : "bg-neutral-900 border-neutral-700 hover:border-neutral-600"
-                  }`}
+                className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-300 ${
+                  leaderUser.isYou
+                    ? "bg-linear-to-r from-blue-500/20 to-purple-500/20 border-blue-500/50"
+                    : "bg-neutral-900 border-neutral-700 hover:border-neutral-600"
+                }`}
               >
                 <div className="flex items-center gap-4 flex-1">
                   <div
-                    className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm ${leaderUser.position === 1
-                      ? "bg-yellow-500/30 text-yellow-400"
-                      : leaderUser.position === 2
-                        ? "bg-gray-400/30 text-gray-300"
-                        : leaderUser.position === 3
-                          ? "bg-orange-500/30 text-orange-400"
-                          : "bg-neutral-700 text-neutral-300"
-                      }`}
+                    className={`w-10 h-10 flex items-center justify-center rounded-lg font-bold text-sm ${
+                      leaderUser.position === 1
+                        ? "bg-yellow-500/30 text-yellow-400"
+                        : leaderUser.position === 2
+                          ? "bg-gray-400/30 text-gray-300"
+                          : leaderUser.position === 3
+                            ? "bg-orange-500/30 text-orange-400"
+                            : "bg-neutral-700 text-neutral-300"
+                    }`}
                   >
                     #{leaderUser.position}
                   </div>
@@ -715,11 +717,7 @@ const ReferPage = () => {
             >
               <div className="text-2xl font-bold text-blue-400 w-12 text-center">1.</div>
               <div>
-                <p className="font-semibold text-blue-300 text-lg">MVP ({mvpDeadline.toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                })
-                })</p>
+                <p className="font-semibold text-blue-300 text-lg">MVP (Jan 10)</p>
                 <p className="text-sm text-neutral-300">1,000 ranked users + manually selected contributors</p>
                 <p className="text-xs text-neutral-400 mt-1">Get: "Founding Member" badge, direct feedback channel, feature voting rights</p>
               </div>

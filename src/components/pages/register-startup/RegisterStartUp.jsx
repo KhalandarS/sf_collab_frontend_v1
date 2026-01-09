@@ -469,73 +469,50 @@ export default function RegisterStartUp() {
   }, [currentStep, maxStep]);
   //! StepIndicator
   const StepIndicator = () => (
-    <div className="mb-8 overflow-x-auto">
-      <div className="flex items-center justify-start sm:justify-center min-w-max px-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
-          <div key={step} className="flex items-center">
-            <div
-              onClick={() => maxStep >= step && setCurrentStep(step)}
-              className={`flex flex-col items-center cursor-pointer ${step < currentStep
-                  ? 'text-blue-400'
-                  : step === currentStep
-                    ? 'text-white'
-                    : 'text-gray-500'
-                }`}
-            >
-              <div
-                className={`
-                w-8 h-8 sm:w-12 sm:h-12
-                rounded-full border-2
-                flex items-center justify-center
-                transition-all duration-300
-                ${step < currentStep
-                    ? 'bg-blue-400 border-blue-400 text-white'
-                    : step === currentStep
-                      ? 'bg-white border-blue-400 text-blue-400 animate-pulse'
-                      : step <= maxStep
-                        ? 'bg-gray-700 border-gray-500 text-gray-300'
-                        : 'bg-gray-800 border-gray-600 text-gray-500'
-                  }
-              `}
-              >
-                {step < currentStep ? (
-                  <CheckCircle size={16} />
-                ) : (
-                  <span className="font-bold text-xs sm:text-sm">{step}</span>
-                )}
-              </div>
-
-              {/* Hide labels on mobile */}
-              <span className="hidden sm:block text-xs mt-2 font-medium">
-                {[
-                  'Company',
-                  'Founder',
-                  'Details',
-                  'Financial',
-                  'Branding',
-                  'Documents',
-                  'Team',
-                  'Review',
-                  'Complete',
-                ][step - 1]}
-              </span>
+    <div className="flex items-center justify-center mb-8">
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
+        <div key={step} className="flex items-center">
+          <div
+            onClick={() => maxStep >= step && setCurrentStep(step)}
+            className={`flex flex-col cursor-pointer items-center ${step < currentStep ?
+             'text-blue-400' : step === currentStep ? 'text-white' : 'text-gray-500'}`}>
+            <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              step < currentStep 
+                ? 'bg-blue-400 border-blue-400 text-white shadow-lg shadow-blue-400/30' 
+                : step === currentStep 
+                ? 'bg-white border-blue-400 text-blue-400 shadow-lg shadow-blue-400/30 animate-pulse' 
+                  : step <= maxStep 
+            ? 'bg-gray-700 border-gray-500 text-gray-300'
+                
+                : 'bg-gray-800 border-gray-500 text-gray-500'
+            }`}>
+              {step < currentStep ? (
+                <CheckCircle size={20} className="text-white" />
+              ) : (
+                <span className="font-bold">{step}</span>
+              )}
             </div>
-
-            {step < 9 && (
-              <div
-                className={`
-                w-6 sm:w-12 h-1 mx-1 sm:mx-2 rounded-full
-                transition-all duration-300
-                ${step < currentStep ? 'bg-blue-400' : 'bg-gray-700'}
-              `}
-              />
-            )}
+            <span className="text-xs mt-2 font-medium capitalize" >
+              {step === 1 && 'Company'}
+              {step === 2 && 'Founder'}
+              {step === 3 && 'Details'}
+              {step === 4 && 'Financial'}
+              {step === 5 && 'Branding'}
+              {step === 6 && 'Documents'}
+              {step === 7 && 'Team'}
+              {step === 8 && 'Review'}
+              {step === 9 && 'Complete'}
+            </span>
           </div>
-        ))}
-      </div>
+          {step < 9 && (
+            <div className={`w-12 h-1 mx-2 transition-all duration-300 rounded-full ${
+              step < currentStep ? 'bg-blue-400' : 'bg-gray-700'
+            }`} />
+          )}
+        </div>
+      ))}
     </div>
   );
-
   
 
   // Format currency for display

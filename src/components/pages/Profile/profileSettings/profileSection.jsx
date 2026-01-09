@@ -2,16 +2,12 @@ import { toast } from "react-toastify";
 import { countries } from "./countries";
 import { useEffect, useState } from "react";
 import { usersAPI } from "@/utils/APIs/userApi";
-import { useSelector } from "react-redux";
-import { getRenderImageUrl } from "./getRenderImageUrl";
-import { getProfilePicture } from "@/utils/getProfilePicture";
 
 /* ---------------------- ProfileSection ---------------------- */
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
   const timezones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'];
   const [loadingCountry, setLoadingCountry] = useState(false);
   const [roles, setRoles] = useState([]);
-  const { user} = useSelector((state) => state.auth);
   const handleImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -79,11 +75,8 @@ const handleAutoDetectTimezone = () => {
   useEffect(() => {
     async function getRoles() {
       try {
-        // if (!user.roles) {
-        //   const data = await usersAPI.getMyRoles();
-        //   return;
-        // }
-        setRoles(['influencer', 'investor', 'builder', 'founder']);
+        const response = await usersAPI.getAllRoles();
+        setRoles(response.roles);
       } catch {
         toast.error("Failed to fetch roles");
       }
@@ -98,8 +91,8 @@ const handleAutoDetectTimezone = () => {
         <label className="block text-sm font-medium text-gray-400 mb-2">Profile Picture</label>
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden">
-            {(user.profile.picture || formData.profile.picture) ? (
-              <img src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
+            {formData.profile.picture ? (
+              <img src={formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
             ) : (
               <div className="flex items-center justify-center text-gray-400 text-sm h-full">No image</div>
             )}
@@ -136,58 +129,15 @@ const handleAutoDetectTimezone = () => {
           <label className="block text-sm font-medium text-gray-400 mb-2">Account Status</label>
           <input type="text" value={formData.status} readOnly className="w-full bg-gray-600 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 capitalize" />
         </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-400 mb-2">Role</label>
 
-        {
-          formData.roles.length === 0 &&
-          <div className="col-span-2">
-            <h3 className="text-red-500 border border-red-500 rounded-lg px-4 py-3 font-medium">You must include one role to continue</h3>
-          </div>
-        }
-        {
-          roles.length > 0 && roles.map(role => (
-            <div key={role}>
-              <input type="checkbox"
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setFormData(prev => ({ ...prev, roles: [...(prev.roles || []), role] }));
-                  } else {
-                    setFormData(prev => ({ ...prev, roles: (prev.roles || []).filter(r => r !== role) }));
-                  }
-                }}
-                checked={formData.roles?.includes(role)} className="w-full bg-gray-600 text-gray-400 rounded-lg px-4 py-3" />
-
-              <label className="block text-sm font-medium text-gray-400 mb-2">{fromSnakeToTitleCase(role)} Role</label>
-            </div>
-          ))
-        }
+          <select value={formData.role || ''} onChange={(e) => setFormData(prev => ({ ...prev, role: e.target.value }))} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
+              <option value="">Select Role</option>
+              {roles && roles.map(role => <option key={role} value={role}>{fromSnakeToTitleCase(role)}</option>)}
+            </select>
+        </div>
       </div>
-      {formData.roles?.includes("builder") && (
-  <div>
-    <label className="block text-sm font-medium text-gray-400 mb-2">
-      Builder Focus
-    </label>
-
-    <select
-      value={formData.preferences.builderPreferences || ""}
-      onChange={(e) =>
-        setFormData((prev) => ({
-          ...prev,
-          preferences: {
-            ...prev.preferences,
-            builderPreferences: e.target.value,
-          }
-        }))
-      }
-      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3"
-    >
-      <option value="" disabled>
-        Select an option
-      </option>
-      <option value="development">Development</option>
-      <option value="marketing">Marketing</option>
-    </select>
-  </div>
-)}
 
       <div>
         <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
@@ -245,15 +195,6 @@ const handleAutoDetectTimezone = () => {
             />
           ))}
         </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Role Type</label>
-        <select value={formData.roleType || ''} onChange={(e) => setFormData(prev => ({ ...prev, roleType: e.target.value }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
-          <option value="">Select role type</option>
-          <option value="development">Development</option>
-          <option value="marketing">Marketing</option>
-        </select>
       </div>
     </div>
   );

@@ -113,44 +113,29 @@ const Dashboard = ({
     setSections(items => arrayMove(items, from, to));
   };
 
-  const [showInfluencerInfo, setShowInfluencerInfo] = useState(() => {
-    const stored = localStorage.getItem('preferences:showInfluencerInfo');
-    return stored === 'true';
-  });
-  const [showJobApplication, setShowJobApplication] = useState(() => {
-    const stored = localStorage.getItem('preferences:showJobApplication');
-    return stored === 'true';
-  });
   return (
     <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
-      
+      <DashboardChangeSection sections={userRoles.map(role => ({
+        id: role,
+        label: role.charAt(0).toUpperCase() + role.slice(1)
+      }))} onSectionChange={(sectionId) => {
+        setActiveRole(sectionId);
+        localStorage.setItem('activeRole', sectionId);
+        }}
+      activeRole={activeRole}
+      />
 
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-        <div className="flex justify-center items-center p-4">
-          <p className="text-lg">We want to hear from you! If you like what we do, consider donating.</p>
-          <Link to="/donate" className="ml-4 text-blue-500 underline">Donate</Link>
-        </div>
-        <DashboardChangeSection sections={userRoles.map(role => ({
-          id: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1)
-        }))} onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem('activeRole', sectionId);
-          }}
-        activeRole={activeRole}
-        />
+
         <WaitlistSection />
+        <JoinSFSection />
         {
-          !showJobApplication && <JoinSFSection setShowJobApplication={setShowJobApplication}/>
-        }
-        
-        {
-          userData && !userRoles.includes("influencer") && !showInfluencerInfo && (
-            <InfluencerSection userData={userData} setShowInfluencerInfo={setShowInfluencerInfo} />
+          userData && !userRoles.includes("influencer")  && (
+            <InfluencerSection userData={userData} />
           )
         }
         {
