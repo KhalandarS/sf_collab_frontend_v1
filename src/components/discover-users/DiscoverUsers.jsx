@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import ShinyText from "../ui/ShinyText";
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { usersAPI } from '@/utils/APIs/userAPI';
+import { usersAPI } from '@/utils/APIs/userApi';
 import FilterSidebar from './FilterSidebar';
 import UserCard from './UserCard';
 import { chatAPI } from '@/utils/APIs/chatApi';

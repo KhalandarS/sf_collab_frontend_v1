@@ -46,13 +46,11 @@ class ChatWebSocketClient {
   }
 
   // Initialize and connect to WebSocket server
-  // Initialize and connect to WebSocket server
   connect() {
     const defaultOptions = {
       query: { user_id: this.userId },
-      withCredentials: true, 
-      transports: ['polling', 'websocket'], 
-      upgrade: true,
+      transports: ['websocket'],
+      upgrade: false,
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
       reconnectionDelay: 1000,
@@ -62,7 +60,13 @@ class ChatWebSocketClient {
 
     const socketOptions = { ...defaultOptions, ...this.options };
     
-    this.socket = io(this.serverUrl, socketOptions);
+    
+    this.socket = io("http://localhost:5001", {
+      query: {
+        token: localStorage.getItem('authToken') // MUST match your login storage key
+      },
+      transports: ["websocket"]
+    });
 
     this.setupDefaultHandlers();
     return this.socket;
@@ -76,12 +80,12 @@ class ChatWebSocketClient {
       this.reconnectAttempts = 0;
       this.trigger('connected');
       this.startHeartbeat();
-      //this.startConnectionWatchdog();
+      this.startConnectionWatchdog();
       // IMPORTANT: Wait a bit before joining conversations to ensure socket is fully registered
       setTimeout(() => {
         // Join all user's conversation rooms
         this.joinUserConversations();
-      }, 500);
+      }, 200);
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -294,7 +298,7 @@ class ChatWebSocketClient {
 
   // Send a new message
   sendMessage(conversationId, content, messageType = 'text', metadata = {}, replyToId = null) {
-    return this.emitWithCallback('send_message', {
+    return this.socket.emit('send_message', {
       conversation_id: conversationId,
       user_id: this.userId,
       content: content,

@@ -145,7 +145,7 @@ const SidebarFeedbackCard = () => {
             "sm:max-w-[450px]",
             "bg-gray-900/95 backdrop-blur-xl",
             "border border-gray-700/50",
-            "shadow-2xl shadow-black/40"
+            "shadow-2xl shadow-black/40 w-full"
           )}
           onMouseEnter={() => setTooltipOpen(false)}
         >
@@ -167,10 +167,10 @@ const SidebarFeedbackCard = () => {
 
             <div className="mt-4 space-y-3">
               <Label className="text-white text-sm">Your feedback</Label>
-              <Textarea 
+              <textarea 
                 name="feedback"
                 placeholder="What can we improve?"
-                className="min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
+                className="w-full min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
                 value={feedbackContent}
                 onChange={(e) => setFeedbackContent(e.target.value)}
                 required

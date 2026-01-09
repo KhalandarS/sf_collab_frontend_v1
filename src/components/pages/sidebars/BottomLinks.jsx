@@ -11,7 +11,7 @@ export default function BottomLinks({
         <SidebarFeedbackCard />
       </div>
       <Link
-        to="/contribute"
+        to="/contribution"
         className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${location.pathname === "/contribute"
             ? "bg-[#2A2A2A] text-white"
             : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"

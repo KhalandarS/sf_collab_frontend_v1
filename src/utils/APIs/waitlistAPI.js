@@ -15,7 +15,7 @@ const api = axios.create({
 // Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.url)
+    // console.log('API Request:', config.method?.toUpperCase(), config.url)
     return config
   },
   (error) => {
@@ -81,11 +81,12 @@ export const waitlistAPI = {
     return response.data.data;
   },
 
-  addPoints: async ({ userId, category }, accessToken) => {
+  addPoints: async ({ category, points }, accessToken) => {
     const response = await api.post(
       "/waitlist/add-points",
       {
-        category, // referral | contribution | activity | new_startup | (small|medium|large)_contribution
+        category, // referral | contribution | activity | new_startup | custom | (small|medium|large)_contribution
+        points,
       },
       {
         headers: {
@@ -108,7 +109,6 @@ export const waitlistAPI = {
         },
       }
     );
-    console.log(response);
     return response.data.data;
   },
   heartbeat: async (userId, accessToken) => {

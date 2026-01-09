@@ -121,12 +121,9 @@ const Posts = () => {
     // In Posts.jsx - add safety check
 const fetchPosts = async () => {
   try {
-    const response = await postAPI.getAll(/* params */);
-    if (response && response.data) {
-      // Use response.data.page safely
-      const page = response.data?.page || 1;
-      // rest of your code
-    }
+    // Ensure you pass an object with a page property
+    const response = await postAPI.getAll({ page: 1, limit: 10 }); 
+    setPosts(response.data.posts);
   } catch (error) {
     console.error("Failed to fetch posts:", error);
   }

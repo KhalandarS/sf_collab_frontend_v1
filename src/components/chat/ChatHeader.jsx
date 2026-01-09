@@ -1,15 +1,14 @@
-/**
- * ChatHeader.jsx - FIXED VERSION
- * REMOVED: Phone, Video, Info icons as requested
- */
-
 import React from 'react';
+import { Phone, Video, Info } from 'lucide-react';
 import Avatar from './Avatar';
 
 const ChatHeader = ({ 
   conversation, 
   currentUserId,
   isOnline = false,
+  onVideoCall,
+  onVoiceCall,
+  onInfo
 }) => {
   if (!conversation) return null;
 
@@ -21,12 +20,12 @@ const ChatHeader = ({
   // Display name
   const displayName = conversation.name || 
     (otherParticipant 
-      ? `${otherParticipant.firstName || otherParticipant.first_name || ''} ${otherParticipant.lastName || otherParticipant.last_name || ''}`.trim()
+      ? `${otherParticipant.firstName} ${otherParticipant.lastName}`
       : 'Unknown'
     );
 
   // Avatar
-  const avatarUrl = otherParticipant?.profilePicture || otherParticipant?.profile_picture || conversation.avatar_url;
+  const avatarUrl = otherParticipant?.profilePicture || conversation.avatar_url;
 
   // Status text
   const getStatusText = () => {
@@ -64,7 +63,35 @@ const ChatHeader = ({
         </div>
       </div>
 
-      {/* REMOVED: Phone, Video, Info buttons - as requested */}
+      {/* Right: Action buttons */}
+      <div className="flex items-center gap-1">
+        {/* Voice call */}
+        <button 
+          onClick={onVoiceCall}
+          className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+          title="Voice call"
+        >
+          <Phone size={18} />
+        </button>
+        
+        {/* Video call */}
+        <button 
+          onClick={onVideoCall}
+          className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+          title="Video call"
+        >
+          <Video size={18} />
+        </button>
+        
+        {/* Info/Details */}
+        <button 
+          onClick={onInfo}
+          className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+          title="Conversation info"
+        >
+          <Info size={18} />
+        </button>
+      </div>
     </div>
   );
 };

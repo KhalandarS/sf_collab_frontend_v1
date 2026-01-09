@@ -1,4 +1,4 @@
-import { Hero } from "../ui/animated-hero"
+import { Hero } from "./animated-hero"
 
 function HeroDemo() {
   return (

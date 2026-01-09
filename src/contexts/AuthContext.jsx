@@ -21,7 +21,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const { disconnectSocket } = useSocket();
 
-  // Check for existing authentication on app load
+  // 1. Setup Axios defaults whenever the token changes
+  const setSession = (token, userData) => {
+    if (token) {
+      localStorage.setItem("authToken", token);
+      // This ensures any axios call made AFTER this line has the header
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    } else {
+      localStorage.removeItem("authToken");
+      delete axios.defaults.headers.common["Authorization"];
+    }
+
+    if (userData) {
+      localStorage.setItem("userData", JSON.stringify(userData));
+    } else {
+      localStorage.removeItem("userData");
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     const userData = localStorage.getItem("userData");
@@ -31,10 +48,11 @@ export const AuthProvider = ({ children }) => {
         const parsedUser = JSON.parse(userData);
         setUser(parsedUser);
         setIsAuthenticated(true);
+        // Re-attach header on refresh
+        axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       } catch (error) {
         console.error("Error parsing user data:", error);
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userData");
+        logout();
       }
     }
     setLoading(false);
@@ -42,17 +60,11 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      const response = await fetch(
-        `${API_URL_AUTH}/login`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include", // keep if you want cookies
-          body: JSON.stringify(credentials),
-        }
-      );
+      const response = await fetch(`${API_URL_AUTH}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(credentials),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -60,64 +72,40 @@ export const AuthProvider = ({ children }) => {
       }
 
       const data = await response.json();
-
-      // ✅ match your backend
-      const token = data.tokens?.accessToken; // <- correct path
+      const token = data.tokens?.accessToken;
       const userData = data.user;
 
-      if (!token) {
-        throw new Error("No access token returned from server");
-      }
+      if (!token) throw new Error("No access token returned from server");
 
-      localStorage.setItem("authToken", token);
-      localStorage.setItem("userData", JSON.stringify(userData));
-
+      setSession(token, userData);
       setUser(userData);
       setIsAuthenticated(true);
 
       return { success: true, user: userData };
     } catch (error) {
-      console.error("Login error:", error);
       return { success: false, error: error.message };
     }
   };
 
   const signup = async (userData) => {
     try {
-      // POST to your backend
-      const response = await axios.post(
-        `${API_URL_AUTH}/signup`,
-        userData,
-        { withCredentials: true } // ensure cookies allowed if backend sets them
-      );
+      const response = await axios.post(`${API_URL_AUTH}/signup`, userData);
 
-      // Your backend returns status 201 and body { message, user, tokens }
       if (response.status === 201 && response.data?.user) {
+        const token = response.data.tokens?.accessToken;
         const returnedUser = response.data.user;
-        const tokens = response.data.tokens || {};
 
-        // Save tokens and user (adjust keys if your backend uses different names)
-        if (tokens.accessToken)
-          localStorage.setItem("authToken", tokens.accessToken);
-        if (tokens.refreshToken)
-          localStorage.setItem("refreshToken", tokens.refreshToken);
+        setSession(token, returnedUser);
+        if (response.data.tokens?.refreshToken) {
+            localStorage.setItem("refreshToken", response.data.tokens.refreshToken);
+        }
 
-        localStorage.setItem("userData", JSON.stringify(returnedUser));
-
-        // Update context state so ProtectedRoute sees user is authenticated
         setUser(returnedUser);
         setIsAuthenticated(true);
-
-        return { success: true, user: returnedUser, tokens };
+        return { success: true, user: returnedUser };
       }
-
-      // fallback error
-      return { success: false, error: response.data?.error || "Signup failed" };
+      return { success: false, error: "Signup failed" };
     } catch (err) {
-      console.error(
-        "Signup error (AuthContext):",
-        err.response?.data || err.message
-      );
       return {
         success: false,
         error: err.response?.data?.message || err.message || "Signup failed",
@@ -125,47 +113,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async () => {
-    try {
-      // Start OAuth flow - this will redirect to Google
-      SimpleOAuthService.startOAuthFlow();
-      return { success: true };
-    } catch (error) {
-      console.error("Google login error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
-  const handleOAuthCallback = async () => {
-    try {
-      const result = SimpleOAuthService.handleOAuthCallback();
-
-      if (result.success) {
-        // Store authentication data
-        localStorage.setItem("authToken", result.tokens.access_token);
-        localStorage.setItem("userData", JSON.stringify(result.user));
-
-        setUser(result.user);
-        setIsAuthenticated(true);
-
-        return { success: true, user: result.user };
-      } else {
-        return { success: false, error: result.error };
-      }
-    } catch (error) {
-      console.error("OAuth callback error:", error);
-      return { success: false, error: error.message };
-    }
-  };
-
   const logout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("userData");
+    setSession(null, null);
     localStorage.removeItem("refreshToken");
     disconnectSocket?.();
     setUser(null);
     setIsAuthenticated(false);
   };
+
+  // ... (keep loginWithGoogle and handleOAuthCallback as they were)
 
   const value = {
     isAuthenticated,
@@ -173,9 +129,10 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     signup,
+    logout,
+    // Add these back if needed
     loginWithGoogle,
     handleOAuthCallback,
-    logout,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

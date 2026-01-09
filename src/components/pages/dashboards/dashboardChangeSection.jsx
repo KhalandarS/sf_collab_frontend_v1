@@ -10,7 +10,7 @@ export default function DashboardChangeSection({ sections = [], onSectionChange,
 
   return (
 
-    <div className="z-50 flex gap-4 px-4">
+    <div className="z-50 flex gap-4 px-4 my-4">
       <span className="text-2xl gap-2 flex items-center text-white font-semibold">
         
         Select your dashboard

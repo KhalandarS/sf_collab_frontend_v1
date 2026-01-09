@@ -15,10 +15,10 @@ import { useSelector } from "react-redux";
 
 const POINT_VALUES = {
   referral: { points: 2, label: "Valid Referral" },
-  small_contribution: { points: 5, label: "Small Contribution" },
-  contribution: { points: 10, label: "Medium Contribution" },
-  large_contribution: { points: 20, label: "High-Impact Contribution" },
-  engagement: { points: 1, label: "Weekly Engagement" },
+  small_contribution: { points: 10, label: "Small Contribution" },
+  contribution: { points: 25, label: "Medium Contribution" },
+  large_contribution: { points: 50, label: "High-Impact Contribution" },
+  // engagement: { points: 1, label: "Weekly Engagement" },
   early_signup: { points: 15, label: "Early Signup Bonus" },
 };
 
@@ -30,7 +30,7 @@ const RANK_REWARDS = [
 ];
 
 const CONTRIBUTION_PATHS = [
-  { icon: "🔗", title: "Referrals", description: "Invite verified users (+2 pts each)", fastest: true },
+  { icon: "🔗", title: "Referrals", description: "Invite verified users (+5 pts each), each 5 users invited you get +25 extra points", fastest: true },
   { icon: "🛠", title: "Contributions", description: "Bug reports, features, testing, docs (+5–20 pts)", valuable: true },
   { icon: "💬", title: "Engagement", description: "Polls, feedback, active testing (+1 pt recurring)" },
   { icon: "⏳", title: "Early Commitment", description: "Stay active before launch (one-time bonus)" },
