@@ -72,6 +72,8 @@ import ContributionPage from "./components/pages/contribution/ContributionPage.j
 import InfluencerApplication from "./components/pages/influencerApplication/InfluencerApplication.jsx";
 import ChatNotificationProvider from "./components/pages/chat/Chatnotificationprovider.jsx";
 import ContributionIdeasPage from "./components/pages/contribution/ContributionIdeasPage.jsx";
+import { SocketProvider } from "@/context/SocketProvider.jsx";
+import { ChatContactsProvider } from "@/context/ChatContactsProvider.jsx";
 import ContributionPollsPage from "./components/pages/contribution/ContributionPollsPage.jsx";
 import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
@@ -105,10 +107,12 @@ function App() {
     }
     fetchUserRoles();
   }, [access_token]);
-  return (<>
+  return (
     <BrowserRouter> {/* Added this to provide context for useNavigate */}
-      <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
-        <Routes>
+      <SocketProvider token={access_token}>
+        <ChatContactsProvider token={access_token}>
+          <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
+            <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/team" element={<TeamPage />} />
@@ -254,9 +258,10 @@ function App() {
           theme="dark"
           style={{ bottom: '20px' }}
         />
-      </ChatNotificationProvider>
+          </ChatNotificationProvider>
+        </ChatContactsProvider>
+      </SocketProvider>
     </BrowserRouter>
-  </>
   );
 };
 

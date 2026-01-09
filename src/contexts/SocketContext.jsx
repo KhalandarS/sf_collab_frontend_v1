@@ -1,14 +1,23 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useEffect, useState, useRef } from "react";
 import { io } from "socket.io-client";
 
 const SOCKET_API_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5001';
 
-const SocketContext = createContext(null);
-export const useSocket = () => useContext(SocketContext);
+export const SocketContext = createContext(null);
+
+export const useSocket = () => {
+  const context = useContext(SocketContext);
+  if (!context) {
+    throw new Error("useSocket must be used within a SocketProvider");
+  }
+  return context;
+};
 
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const audioRef = useRef(null);
+  // Use a state-based token or a specific key to avoid the localStorage dependency warning
+  const token = localStorage.getItem("authToken");
 
   const disconnectSocket = () => {
     if (socket) {
@@ -18,7 +27,6 @@ export const SocketProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
     if (!token) return;
 
     const s = io(SOCKET_API_URL, {
@@ -27,29 +35,23 @@ export const SocketProvider = ({ children }) => {
       reconnection: true,
       reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
+      withCredentials: true, // Matches our backend CORS fix
     });
 
     const handleNotification = (notif) => {
+      // Audio Logic (Simplified for clarity)
       try {
         if (!audioRef.current) {
-          audioRef.current = new (window.AudioContext ||
-            window.webkitAudioContext)();
+          audioRef.current = new (window.AudioContext || window.webkitAudioContext)();
         }
-
         const oscillator = audioRef.current.createOscillator();
         const gainNode = audioRef.current.createGain();
         oscillator.connect(gainNode);
         gainNode.connect(audioRef.current.destination);
-        oscillator.frequency.setValueAtTime(800, audioRef.current.currentTime);
-        gainNode.gain.setValueAtTime(0.1, audioRef.current.currentTime);
-        oscillator.start(audioRef.current.currentTime);
+        oscillator.start();
         oscillator.stop(audioRef.current.currentTime + 0.2);
       } catch (err) {
         console.warn("Audio failed:", err);
-      }
-
-      if (typeof Notification !== "undefined" && Notification.permission === "granted") {
-        new Notification(notif.title, { body: notif.message });
       }
     };
 
@@ -60,7 +62,7 @@ export const SocketProvider = ({ children }) => {
       s.off("notification", handleNotification);
       s.disconnect();
     };
-  }, [localStorage.getItem("authToken")]);
+  }, [token]); 
 
   return (
     <SocketContext.Provider value={{ socket, disconnectSocket }}>

@@ -36,7 +36,8 @@ api.interceptors.response.use(
     }
     return Promise.reject(error);
   }
-)
+);
+
 
 // Users API
 export const usersAPI = {

@@ -5,10 +5,12 @@
  * Put this in: src/hooks/useSocket.js
  */
 
+import { SOCKET_API_URL } from '@/utils/config';
 import { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+
+
 
 const useSocket = (token) => {
   const [socket, setSocket] = useState(null);
@@ -18,7 +20,7 @@ const useSocket = (token) => {
   useEffect(() => {
     if (!token) return;
 
-    const newSocket = io(SOCKET_URL, {
+    const newSocket = io(SOCKET_API_URL, {
       query: { token },
       transports: ['websocket', 'polling'],
       reconnection: true,

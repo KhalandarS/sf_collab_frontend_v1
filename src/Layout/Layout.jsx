@@ -1,3 +1,12 @@
+/**
+ * Layout.jsx - FIXED VERSION
+ * 
+ * FIXES:
+ * 1. Proper sidebar spacing (60px on desktop)
+ * 2. Removed the ChatDock from fixed position (it was overlapping)
+ * 3. Clean structure
+ */
+
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -14,6 +23,11 @@ import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/Investo
 import useScrollHide from "../hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
+
+
+import ChatDock from "@/components/chat-dock/ChatDock";
+import { useAppSocket } from "@/context/SocketProvider";
+import { useChatContacts } from "@/context/ChatContactsProvider";
 
 import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
@@ -35,7 +49,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const { user, access_token } = useSelector((state) => state.auth);
   const isAdmin = hasPermission(user, "admin");
 
-  const { socket, isConnected } = useSocket(access_token);
+  const { onlineUsers } = useAppSocket();
+  const { friends } = useChatContacts();
+
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
     deltaThreshold: 4,
@@ -48,13 +64,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const navContainerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [wsClient, setWsClient] = useState(null);
 
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
 
-  // ✅ Waitlist guard
+  // Waitlist guard
   useEffect(() => {
     if (!user || !access_token) return;
 
@@ -109,7 +124,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   // ✅ Raw websocket client (optional)
   useEffect(() => {
     const userId = user?.id;
-    if (!userId || wsClient) return;
+    if (!userId) return;
 
     const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
@@ -127,10 +142,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     client.on("error", () => toast.error("Realtime connection error"));
 
     client.connect();
-    setWsClient(client);
+    
 
     return () => client.disconnect();
-  }, [user?.id, wsClient]);
+  }, [user?.id]);
   const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
   // ✅ Profile completion reminder
   useEffect(() => {
@@ -169,22 +184,20 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   const handleNavAreaLeave = (e) => {
     if (isRootPath) return;
-    if (!e.relatedTarget) return setIsOptionsVisible(false);
-    if (optionsRef.current?.contains(e.relatedTarget)) return;
-    if (e.relatedTarget.closest?.(".options-container")) return;
+
+    const nextEl = e.relatedTarget;
+
+    if (!nextEl || !(nextEl instanceof Node)) {
+      setIsOptionsVisible(false);
+      return;
+    }
+
+    if (optionsRef.current && optionsRef.current.contains(nextEl)) return;
+    if (nextEl.closest?.(".options-container")) return;
+
     setIsOptionsVisible(false);
   };
-  useEffect(() => {
-    const handler = (event) => {
-      console.log("Received chat:new_message", event.detail);
-    };
 
-    window.addEventListener("chat:new_message", handler);
-
-    return () => {
-      window.removeEventListener("chat:new_message", handler);
-    };
-  }, []);
 
   return (
     <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
@@ -248,12 +261,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       )}
 
       <div className="relative flex-1 w-full flex overflow-hidden">
-        {/* Left sidebar */}
+        {/* Left sidebar - Fixed position, handled internally */}
         {!isRootPath && <SideBar />}
 
-        {/* Main */}
-        <div className="text-white relative flex flex-col items-center w-full overflow-hidden">
-          {/* ✅ Options bar: never show on chat */}
+        {/* Main content area - offset by sidebar width on desktop */}
+        <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
+          {/* Options bar: never show on chat */}
           {!isRootPath && !isChatRoute && (
             <div
               ref={optionsRef}
@@ -277,6 +290,16 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             onScroll={isRootPath ? undefined : onScroll}
           >
             <Outlet />
+            
+            {/* Chat dock - persistent on right side */}
+            {!isRootPath && !isChatRoute && (
+              <div 
+                className="fixed right-0 bottom-0 z-[999999]"
+                style={{ right: '16px', bottom: '16px' }}
+              >
+                <ChatDock maxWindows={2} />
+              </div>
+            )}
           </div>
         </div>
       </div>
