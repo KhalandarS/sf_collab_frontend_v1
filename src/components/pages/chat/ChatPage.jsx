@@ -17,6 +17,7 @@ import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -176,7 +177,8 @@ const ChatPage = () => {
   useEffect(() => {
     if (token) {
       fetchConversations();
-    }
+
+ }
   }, [token, fetchConversations]);
 
   // Open DM if URL has ?user=<id>

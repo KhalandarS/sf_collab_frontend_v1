@@ -13,6 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
 import { useAppSocket } from "@/context/SocketProvider";
 import NotificationAvatar from "./NotificationAvatar";
+import useChatNotifications from "./useChatNotiffications";
 
 const SocketContext = createContext(null);
 
