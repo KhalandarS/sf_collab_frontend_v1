@@ -84,7 +84,7 @@ import Donate from "./components/pages/donate/Donate.jsx";
 
 
 function App() {
-  const { access_token } = useSelector((state) => state.auth);
+  const { access_token, user } = useSelector((state) => state.auth);
   const [userRoles, setUserRoles] = useState([]);
   const [activeRole, setActiveRole] = useState(localStorage.getItem('activeRole') || 'member');
   useEffect(() => {

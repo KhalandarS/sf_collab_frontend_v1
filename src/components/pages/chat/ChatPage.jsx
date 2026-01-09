@@ -1,16 +1,7 @@
-/**
- * ChatPage.jsx - FIXED VERSION
- * 
- * FIXES:
- * 1. isOwn comparison uses String() to handle type mismatches
- * 2. File upload handler added
- * 3. Passes socket and conversationId to ChatInput
- * 4. DateSeparator support added
- */
+
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Search, Edit3, MessageCircle } from 'lucide-react';
-<<<<<<< HEAD
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -25,6 +16,7 @@ import DateSeparator, { shouldShowDateSeparator } from '@/components/chat/DateSe
 import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";
+import { useSelector } from 'react-redux';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -66,79 +58,36 @@ function normalizeMessage(m) {
   };
 }
 
-=======
-
-// Import custom hook
-import useSocket from '@/hooks/useSocket';
-
-// Import chat components
-import Avatar from '@/components/chat/Avatar';
-import TypingIndicator from '@/components/chat/TypingIndicator';
-import MessageBubble from '@/components/chat/MessageBubble';
-import ConversationItem from '@/components/chat/ConversationItem';
-import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
-import NewMessageModal from '@/components/chat/NewMessageModal';
-import ChatHeader from '@/components/chat/ChatHeader';
-import ChatInput from '@/components/chat/ChatInput';
-import { useSelector } from 'react-redux';
-import { usersAPI } from '@/utils/APIs/userAPI';
-
-// API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
 const ChatPage = () => {
   // ============================================
   // AUTH
   // ============================================
-<<<<<<< HEAD
-  const [token] = useState(() => localStorage.getItem('access_token'));
-  const [currentUser] = useState(() => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  });
-=======
-  const { user, access_token: token } = useSelector((state) => state.auth);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
+  const { user :currentUser, access_token: token } = useSelector((state) => state.auth);
 
   // ============================================
   // SOCKET CONNECTION
   // ============================================
-<<<<<<< HEAD
   
   const { socket, isConnected, onlineUsers } = useAppSocket();
   const { friends } = useChatContacts();
 
 
-=======
-  const { socket, isConnected, onlineUsers } = useSocket(token);
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   // ============================================
   // STATE
   // ============================================
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
-<<<<<<< HEAD
-=======
-  const [friends, setFriends] = useState([]);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   const [isLoading, setIsLoading] = useState(true);
   const [typingUsers, setTypingUsers] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
-<<<<<<< HEAD
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [searchParams] = useSearchParams();
 
 
-=======
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState('all');
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   // ============================================
   // REFS
   // ============================================
@@ -168,49 +117,11 @@ const ChatPage = () => {
     }
   }, [token]);
 
-<<<<<<< HEAD
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
     
     try {
-=======
-  // Fetch friends
-  const fetchFriends = useCallback(async () => {
-    if (!token) return;
-    
-    try {
-      // Try friends endpoint first, fall back to users
-      let response = await fetch(`${API_BASE_URL}/friends`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      let data = await response.json();
-      
-      if (data.success && data.data.friends) {
-        setFriends(data.data.friends);
-      } else {
-        // Fallback to users endpoint
-        response = await fetch(`${API_BASE_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        data = await response.json();
-        if (data.success) {
-          const users = data.data.users.filter(u => u.id !== user?.id);
-          setFriends(users);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch friends:', error);
-    }
-  }, [token, user?.id]);
-
-  // Fetch messages for a conversation
-  const fetchMessages = useCallback(async (conversationId) => {
-    if (!token) return;
-    
-    try {
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
       const response = await fetch(
         `${API_BASE_URL}/chat/conversations/${conversationId}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
@@ -226,7 +137,6 @@ const ChatPage = () => {
   }, [token, socket]);
 
   // ============================================
-<<<<<<< HEAD
   // FILE UPLOAD HANDLER
   // ============================================
   const handleFileUpload = useCallback(async (file) => {
@@ -262,16 +172,10 @@ const ChatPage = () => {
   // EFFECTS
   // ============================================
 
-=======
-  // EFFECTS
-  // ============================================
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   // Initial data load
   useEffect(() => {
     if (token) {
       fetchConversations();
-<<<<<<< HEAD
     }
   }, [token, fetchConversations]);
 
@@ -289,12 +193,6 @@ const ChatPage = () => {
     handleOpenChatWithFriend(friend);
   }, [searchParams, friends]);
 
-=======
-      fetchFriends();
-    }
-  }, [token, fetchConversations, fetchFriends]);
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   // Socket event listeners
   useEffect(() => {
     if (!socket) return;
@@ -304,7 +202,6 @@ const ChatPage = () => {
       socket.emit("join_conversation", { conversation_id: activeConversation.id });
     }
 
-<<<<<<< HEAD
     const onNewMessage = (data) => {
       if (String(data.conversation_id) === String(activeConversation?.id)) {
         setMessages((prev) => [...prev, normalizeMessage(data.message)]);
@@ -315,20 +212,6 @@ const ChatPage = () => {
 
     const onUserTyping = (data) => {
       if (String(data.conversation_id) === String(activeConversation?.id)) {
-=======
-    // New message handler
-    socket.on('new_message', (data) => {
-      if (data.conversation_id === activeConversation?.id) {
-        setMessages((prev) => [...prev, data.message]);
-        socket.emit('mark_read', { conversation_id: activeConversation.id });
-      }
-      fetchConversations(); // Refresh list for last message preview
-    });
-
-    // Typing indicator handler
-    socket.on('user_typing', (data) => {
-      if (data.conversation_id === activeConversation?.id) {
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
         if (data.is_typing) {
           setTypingUsers((prev) => {
             if (prev.find((u) => u.id === data.user_id)) return prev;
@@ -341,7 +224,6 @@ const ChatPage = () => {
       }
     };
 
-<<<<<<< HEAD
     socket.on("new_message", onNewMessage);
     socket.on("user_typing", onUserTyping);
 
@@ -351,15 +233,6 @@ const ChatPage = () => {
       }
       socket.off("new_message", onNewMessage);
       socket.off("user_typing", onUserTyping);
-=======
-    // Cleanup
-    return () => {
-      if (activeConversation) {
-        socket.emit('leave_conversation', { conversation_id: activeConversation.id });
-      }
-      socket.off('new_message');
-      socket.off('user_typing');
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
     };
   }, [socket, activeConversation, fetchConversations]);
 
@@ -392,11 +265,7 @@ const ChatPage = () => {
     // Check if conversation already exists
     const existing = conversations.find(c =>
       c.conversation_type === 'direct' &&
-<<<<<<< HEAD
       c.participants?.some(p => String(p.id) === String(friend.id))
-=======
-      c.participants?.some(p => p.id === friend.id)
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
     );
 
     if (existing) {
@@ -493,7 +362,6 @@ const ChatPage = () => {
     return (currTime - prevTime) > 5 * 60 * 1000; // 5 minutes
   };
 
-<<<<<<< HEAD
   // Filter conversations by search and tab
   const filteredConversations = conversations.filter(c => {
     // Filter by search
@@ -515,38 +383,12 @@ const ChatPage = () => {
   // Get other participant for direct messages
   const otherParticipant = activeConversation?.participants?.find(
     p => String(p.id) !== String(currentUser?.id)
-=======
-  const filteredConversations = conversations.filter(c => {
-  // Filter by search
-  if (searchTerm) {
-    const name = c.name || c.participants?.find(p => p.id !== currentUser?.id)?.firstName || '';
-    if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-  }
-  
-  // Filter by tab
-  if (activeTab === 'all') return true;
-  if (activeTab === 'friends') return c.conversation_type === 'direct';
-  if (activeTab === 'groups') return c.conversation_type === 'group';
-  if (activeTab === 'startups') return c.conversation_type === 'team';
-  if (activeTab === 'general') return c.conversation_type === 'general';
-  
-  return true;
-});
-
-  // Get other participant for direct messages
-  const otherParticipant = activeConversation?.participants?.find(
-    p => p.id !== user?.id
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   );
 
   // ============================================
   // RENDER: Not logged in
   // ============================================
-<<<<<<< HEAD
   if (!token || !currentUser) {
-=======
-  if (!token || !user) {
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
     return (
       <div className="h-screen bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
@@ -623,32 +465,6 @@ const ChatPage = () => {
           </div>
         </div>
 
-<<<<<<< HEAD
-=======
-        {/* Category Tabs */}
-        <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
-          {[
-            { id: 'all', label: 'All' },
-            { id: 'friends', label: 'Friends', type: 'direct' },
-            { id: 'groups', label: 'Groups', type: 'group' },
-            { id: 'startups', label: 'Startups', type: 'team' },
-            { id: 'general', label: 'General', type: 'general' },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                activeTab === tab.id
-                  ? 'bg-amber-500 text-zinc-900'
-                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto px-2">
           {isLoading ? (
@@ -668,11 +484,7 @@ const ChatPage = () => {
                 isActive={activeConversation?.id === conv.id}
                 onClick={() => handleSelectConversation(conv)}
                 onlineUsers={onlineUsers}
-<<<<<<< HEAD
                 currentUserId={currentUser.id}
-=======
-                userId={user.id}
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
               />
             ))
           )}
@@ -685,22 +497,11 @@ const ChatPage = () => {
       <div className="flex-1 flex flex-col bg-zinc-950">
         {activeConversation ? (
           <>
-<<<<<<< HEAD
             {/* Chat Header - No more Phone/Video/Info icons */}
             <ChatHeader
               conversation={activeConversation}
               currentUserId={currentUser.id}
               isOnline={otherParticipant && onlineUsers.includes(otherParticipant.id)}
-=======
-            {/* Chat Header */}
-            <ChatHeader
-              conversation={activeConversation}
-              userId={user.id}
-              isOnline={otherParticipant && onlineUsers.includes(otherParticipant.id)}
-              onVideoCall={() => console.log('Video call')}
-              onVoiceCall={() => console.log('Voice call')}
-              onInfo={() => console.log('Show info')}
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
             />
 
             {/* Messages Area */}
@@ -719,7 +520,6 @@ const ChatPage = () => {
                   <p className="text-sm text-zinc-500">Start a conversation</p>
                 </div>
               ) : (
-<<<<<<< HEAD
                 messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   // Use String() comparison to avoid type mismatch
@@ -742,17 +542,6 @@ const ChatPage = () => {
                     </React.Fragment>
                   );
                 })
-=======
-                messages.map((message, index) => (
-                  <MessageBubble
-                    key={message.id}
-                    message={message}
-                    isOwn={message.sender_id === user.id}
-                    showAvatar={shouldShowAvatar(message, index)}
-                    userId={user.id}
-                  />
-                ))
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
               )}
               
               {/* Typing indicator */}
@@ -762,32 +551,21 @@ const ChatPage = () => {
               <div ref={messagesEndRef} />
             </div>
 
-<<<<<<< HEAD
             {/* Chat Input - with file upload support */}
-=======
-            {/* Chat Input */}
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
             <ChatInput
               value={messageInput}
               onChange={handleInputChange}
               onSend={handleSendMessage}
-<<<<<<< HEAD
               onFileUpload={handleFileUpload}
               socket={socket}
               conversationId={activeConversation?.id}
-=======
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
               disabled={!activeConversation}
             />
           </>
         ) : (
           /* No conversation selected */
           <div className="flex-1 flex flex-col items-center justify-center">
-<<<<<<< HEAD
             <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-4">
-=======
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-orange-500/20 rounded-full flex items-center justify-center mb-4">
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
               <MessageCircle size={40} className="text-indigo-500" />
             </div>
             <h2 className="text-xl font-semibold text-white mb-2">Your Messages</h2>
@@ -810,11 +588,7 @@ const ChatPage = () => {
         onlineUsers={onlineUsers}
         onOpenChat={handleOpenChatWithFriend}
         onNewMessage={() => setShowNewMessage(true)}
-<<<<<<< HEAD
         className="hidden lg:flex"
-=======
-        className="hidden lg:flex" // Hide on smaller screens
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
       />
 
       {/* ============================================ */}

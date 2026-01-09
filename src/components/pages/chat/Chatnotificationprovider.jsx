@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, {
   createContext,
   useContext,
@@ -13,27 +12,16 @@ import React, {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
 import { useAppSocket } from "@/context/SocketProvider";
+import NotificationAvatar from "./NotificationAvatar";
 
 const SocketContext = createContext(null);
 
-=======
-import React, { useState, useEffect, useCallback, useRef, createContext } from 'react';
-import { io } from 'socket.io-client';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import NotificationAvatar from './NotificationAvatar';
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
 // ============================================
 // CONFIGURATION
 // ============================================
-<<<<<<< HEAD
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
-=======
 
 const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000'; // Please do not change this line directly, change yout .env
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 const NOTIFICATION_DURATION = 5000; // 5 seconds
 const MAX_NOTIFICATIONS = 2; // Max stacked notifications
 // ============================================
@@ -301,25 +289,13 @@ const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickRepl
 // ============================================
 // PROVIDER COMPONENT
 // ============================================
-<<<<<<< HEAD
 export const ChatNotificationProvider = ({ children }) => {
   const { socket, isConnected } = useAppSocket(); // ✅ shared singleton socket
-=======
-export default function ChatNotificationProvider({ children }) {
-  const [socket, setSocket] = useState(null);
-  const [isConnected, setIsConnected] = useState(false);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const navigate = useNavigate();
   const location = useLocation();
-<<<<<<< HEAD
-=======
-  
-  // Get auth from localStorage
-  const { user, access_token: token} = useSelector((state) => state.auth);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
   const [currentUserId, setCurrentUserId] = useState(() => {
   try {
@@ -408,30 +384,7 @@ useEffect(() => {
       const { message, conversation_id } = data || {};
       if (!message) return;
 
-<<<<<<< HEAD
       const isOwnMessage = message.sender_id === currentUserId;
-=======
-    newSocket.on('connect', () => {
-      // console.log('🔔 Notification socket connected');
-      setIsConnected(true);
-    });
-
-    newSocket.on('disconnect', () => {
-      // console.log('🔔 Notification socket disconnected');
-      setIsConnected(false);
-    });
-
-    // Listen for new messages
-    const callback = (data) => {
-      const { message, conversation_id } = data;
-      
-      // Don't show notification if:
-      // 1. Message is from current user
-      // 2. User is already on chat page viewing this conversation
-      const isOwnMessage = message.sender_id === user?.id;
-      const isOnChatPage = location.pathname === '/chat';
-      
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
       if (isOwnMessage) return;
 
       // Only show toast when not on chat page
@@ -443,19 +396,6 @@ useEffect(() => {
           sender: message.sender,
           timestamp: new Date(),
         });
-<<<<<<< HEAD
-=======
-        
-        // Play notification sound
-        playNotificationSound();
-        
-        // Update unread count
-        setUnreadCount(prev => prev + 1);
-      }
-    }
-    newSocket.on('new_message', callback);
-    newSocket.on('conversation_message', callback);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
         playNotificationSound();
         setUnreadCount((prev) => prev + 1);
@@ -481,11 +421,7 @@ useEffect(() => {
       socket.off("new_message", onNewMessage);
       socket.off("added_to_team_chat", onAddedToTeamChat);
     };
-<<<<<<< HEAD
-  }, [socket, currentUserId, addNotification, playNotificationSound]);
-=======
-  }, [token, user?.id, location.pathname]);
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
+  }, [socket, currentUserId]);
 
   const sendQuickReply = useCallback(
     async (conversationId, content) => {
@@ -546,7 +482,6 @@ useEffect(() => {
   );
 };
 
-<<<<<<< HEAD
 
 export const ChatNotificationBadge = ({ className = "" }) => {
   const { unreadCount } = useChatNotifications();
@@ -573,6 +508,3 @@ export const ChatNotificationBadge = ({ className = "" }) => {
 
 
 export default ChatNotificationProvider;
-=======
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692

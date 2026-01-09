@@ -1,39 +1,25 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-<<<<<<< HEAD
-import { Crown, X } from "lucide-react";
-=======
 import { HelpCircle, X, Crown, ChevronRight } from "lucide-react";
 import SidebarFeedbackCard from "../../../sections/SidebarFeedbackCard";
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 import { createLinks, getCurrentContext } from "./links";
 import BottomLinks from "../BottomLinks";
 
 const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
   const location = useLocation();
 
-<<<<<<< HEAD
   const [links, setLinks] = useState(() => createLinks(unreadMessagesCount));
   const [expandedItems, setExpandedItems] = useState({});
-=======
-  // Build links once per unread count change
-  const [links, setLinks] = useState(() => createLinks(unreadMessagesCount));
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
 
   useEffect(() => {
     setLinks(createLinks(unreadMessagesCount));
   }, [unreadMessagesCount]);
 
-<<<<<<< HEAD
-=======
-  // Identify current context
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   const currentContextId = useMemo(
     () => getCurrentContext(location.pathname),
     [location.pathname]
   );
 
-<<<<<<< HEAD
   const CHAT_CONTEXT_ID = 4;
 
   // Auto-expand active context
@@ -45,23 +31,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
 
   const toggleExpand = (linkId) => {
     setExpandedItems(prev => ({ ...prev, [linkId]: !prev[linkId] }));
-=======
-  // If your "Chat" context id is different, change this value.
-  // (From your earlier Options code, contextId === 4 looked like Chat.)
-  const CHAT_CONTEXT_ID = 4;
-
-  // Close sidebar on mobile when navigating
-  const handleMobileLinkClick = () => setIsOpen(false);
-
-  // Render subitems only for non-chat contexts
-  const shouldShowSubItems = (link, isActive) => {
-    const hasSubItems = Array.isArray(link.subItems) && link.subItems.length > 0;
-    if (!hasSubItems) return false;
-    if (!isActive) return false;
-    // Do NOT show subitems for Chat
-    if (link.id === CHAT_CONTEXT_ID) return false;
-    return true;
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
   };
 
   const handleMobileLinkClick = () => setIsOpen(false);
@@ -82,7 +51,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
       <div className="flex flex-col gap-1 items-center px-1">
         {links.map((link) => {
           const isActive = link.id === currentContextId;
-<<<<<<< HEAD
           const showSubs = shouldShowSubItems(link);
 
           return (
@@ -232,52 +200,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
 
               {showSubs && (
                 <div className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50">
-=======
-
-          return (
-            <div key={link.id} className="w-full">
-              {/* Main nav link */}
-              <Link
-                to={link.href}
-                onClick={onLinkClick}
-                className={`w-full flex items-center gap-3 px-2 py-3 rounded-lg transition-colors relative ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400"
-                    : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                }`}
-              >
-                <div className="flex items-center justify-center relative">
-                  {link.icon}
-                  {link.unreadCount}
-                </div>
-
-                {/* Show labels only on mobile */}
-                {isMobile && (
-                  <span className="text-sm font-medium">{link.label}</span>
-                )}
-
-                {/* Optional chevron hint on mobile when active + has subitems */}
-                {isMobile &&
-                  Array.isArray(link.subItems) &&
-                  link.subItems.length > 0 &&
-                  link.id !== CHAT_CONTEXT_ID && (
-                    <ChevronRight
-                      size={16}
-                      className={`ml-auto transition-transform ${
-                        isActive ? "rotate-90" : ""
-                      }`}
-                    />
-                  )}
-              </Link>
-
-              {/* Sub-items (ICONS ONLY) */}
-              {shouldShowSubItems(link, isActive) && (
-                <div
-                  className={`flex flex-col gap-1 mt-1 ${
-                    isMobile ? "pl-6" : "pl-0"
-                  }`}
-                >
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
                   {link.subItems.map((subItem) => {
                     const isSubActive = location.pathname === subItem.href;
 
@@ -286,7 +208,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
                         key={subItem.id}
                         to={subItem.href}
                         onClick={onLinkClick}
-<<<<<<< HEAD
                         className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
                           isSubActive
                             ? "bg-blue-600/30 text-white"
@@ -297,35 +218,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
                           <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                         )}
                         <span className="text-xs font-medium">{subItem.label}</span>
-=======
-                        className={`
-                          ${isMobile ? "justify-start" : "justify-center"}
-                          flex items-center gap-2 px-2 py-2 rounded-md transition-colors
-                          ${
-                            isSubActive
-                              ? "bg-blue-600/30 text-white"
-                              : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
-                          }
-                        `}
-                        title={subItem.label}
-                        aria-label={subItem.label}
-                      >
-                        {/* ICON ONLY on desktop, icon + label on mobile */}
-                        {subItem.icon ? (
-                          <span className="inline-flex items-center justify-center">
-                            {subItem.icon}
-                          </span>
-                        ) : (
-                          // If no icon exists in data, show a tiny dot as fallback
-                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                        )}
-
-                        {isMobile && (
-                          <span className="text-xs font-medium">
-                            {subItem.label}
-                          </span>
-                        )}
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
                       </Link>
                     );
                   })}
@@ -352,10 +244,6 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
       </div>
 
       <BottomLinks onLinkClick={onLinkClick} />
-<<<<<<< HEAD
-=======
-
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
     </div>
   );
 
@@ -406,25 +294,14 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
             </button>
           </div>
 
-<<<<<<< HEAD
           <div className="h-[calc(100vh-65px)] overflow-y-auto">
             <MobileSidebarContent onLinkClick={handleMobileLinkClick} />
-=======
-          {/* Sidebar Content */}
-          <div className="px-2">
-            <SidebarContent onLinkClick={handleMobileLinkClick} isMobile />
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
           </div>
         </div>
       </div>
 
-<<<<<<< HEAD
       {/* Spacer */}
       <div className="hidden lg:block w-[60px] flex-shrink-0" />
-=======
-      {/* Content spacer */}
-      <div className="hidden lg:block w-[70px]" />
->>>>>>> 12c024d7788f45bdba0aa399169bdb5745008692
     </>
   );
 };

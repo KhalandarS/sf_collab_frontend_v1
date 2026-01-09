@@ -124,7 +124,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   // ✅ Raw websocket client (optional)
   useEffect(() => {
     const userId = user?.id;
-    if (!userId || wsClient) return;
+    if (!userId) return;
 
     const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
@@ -142,10 +142,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     client.on("error", () => toast.error("Realtime connection error"));
 
     client.connect();
-    setWsClient(client);
+    
 
     return () => client.disconnect();
-  }, [user?.id, wsClient]);
+  }, [user?.id]);
   const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
   // ✅ Profile completion reminder
   useEffect(() => {
