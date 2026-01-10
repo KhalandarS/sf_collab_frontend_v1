@@ -90,6 +90,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem('activeRole', activeRole);
   }, [activeRole]);
+  if (import.meta.env.PROD) {
+  console.log = () => {}
+  console.warn = () => {}
+}
+
   useEffect(() => {
     async function fetchUserRoles() {
       if (access_token) {

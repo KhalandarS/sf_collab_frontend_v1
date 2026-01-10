@@ -10,8 +10,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-
-import NavBar from "../components/sections/NavBar";
 import Options from "../components/sections/Options";
 
 import UserSidebar from "../components/pages/sidebars/sidebar/SideBar";
@@ -38,6 +36,8 @@ import { SOCKET_API_URL } from "@/utils/config";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { isUserProfileComplete } from "@/utils/getUserComplete";
+import Navbar from "@/components/sections/NavBar";
+
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -244,11 +244,11 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           ref={navContainerRef}
           onMouseEnter={handleNavAreaEnter}
           onMouseLeave={handleNavAreaLeave}
-          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+          className={`w-full z-999999999 overflow-hidden transition-[max-height] duration-300 ease-in-out ${
             isNavHidden ? "h-0" : "h-[60px]"
           }`}
         >
-          <NavBar
+          <Navbar
             setIsOpen={setIsOpen}
             isOpen={isOpen}
             isHidden={isNavHidden}

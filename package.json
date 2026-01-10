@@ -52,7 +52,7 @@
     "clsx": "^2.1.1",
     "country-flag-icons": "^1.5.21",
     "date-fns": "^4.1.0",
-    "fabric": "^7.0.0",
+    "fabric": "^7.1.0",
     "fabricjs-react": "^1.2.2",
     "framer-motion": "^10.16.4",
     "google-auth-library": "^10.2.1",
