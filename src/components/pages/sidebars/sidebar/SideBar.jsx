@@ -56,43 +56,42 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
           return (
             <div key={link.id} className="w-full">
               {/* Main nav item with tooltip */}
-              <div className="relative group">
-                {hasSubItems(link) ? (
-                  <button
-                    onClick={() => toggleExpand(link.id)}
-                    className={`w-full flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-blue-600/20 text-blue-400"
-                        : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center relative">
-                      {link.icon}
-                      {link.unreadCount}
-                    </div>
-                  </button>
-                ) : (
-                  <Link
-                    to={link.href}
-                    className={`w-full flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-blue-600/20 text-blue-400"
-                        : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
-                    }`}
-                  >
-                    <div className="flex items-center justify-center relative">
-                      {link.icon}
-                      {link.unreadCount}
-                    </div>
-                  </Link>
-                )}
+              <div className="relative group w-full flex justify-center">
+  {hasSubItems(link) ? (
+    <button
+      onClick={() => toggleExpand(link.id)}
+      className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${
+        isActive
+          ? "bg-blue-600/20 text-blue-400"
+          : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+      }`}
+    >
+      {link.icon}
+      {link.unreadCount}
+    </button>
+  ) : (
+    <Link
+      to={link.href}
+      className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${
+        isActive
+          ? "bg-blue-600/20 text-blue-400"
+          : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+      }`}
+    >
+      {link.icon}
+      {link.unreadCount}
+    </Link>
+  )}
 
-                {/* Hover tooltip */}
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg">
-                  {link.label}
-                  <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-zinc-800" />
-                </div>
-              </div>
+  {/* Tooltip */}
+  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap 
+  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg z-[99999999999]">
+  {link.label}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full border-[6px] border-transparent border-b-zinc-800" />
+</div>
+
+</div>
+
 
               {/* Subitems */}
               {showSubs && (
@@ -267,22 +266,19 @@ const SideBar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
 
       {/* Mobile Sidebar */}
       <div
-        className={`lg:hidden fixed inset-0 transition-all duration-300 ease-in-out ${
-          isOpen ? "visible" : "invisible"
-        }`}
+        className={`lg:hidden fixed inset-0 transition-all duration-300 ease-in-out ${isOpen ? "visible" : "invisible"
+          }`}
         style={{ zIndex: 9999 }}
       >
         <div
-          className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
-            isOpen ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"
+            }`}
           onClick={() => setIsOpen(false)}
         />
 
         <div
-          className={`absolute left-0 top-0 h-screen w-[260px] bg-[#1A1A1A] shadow-2xl transition-transform duration-300 ease-in-out ${
-            isOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
+          className={`absolute left-0 top-0 h-screen w-[260px] bg-[#1A1A1A] shadow-2xl transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
         >
           <div className="flex justify-between items-center p-4 border-b border-zinc-800">
             <span className="text-white font-semibold">Menu</span>

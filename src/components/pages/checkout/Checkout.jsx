@@ -14,103 +14,58 @@ import { API_URL, STRIPE_PUBLIC_KEY } from "@/utils/config";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-// Load Stripe with your public key
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY); // <-- replace with your key
+const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
 
-// Checkout Form Component
 function CheckoutForm({ clientSecret }) {
-  const checkoutState = useCheckout();
-  const { user, access_token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
-  const handleSubmit = async (event) => {
-    // We don't want to let default form submission happen here,
-    // which would refresh the page.
-    event.preventDefault();
-    setLoading(true)
-    if (checkoutState.type === 'loading') {
-      return (
-        <div>Loading...</div>
-      );
-    } else if (checkoutState.type === 'error') {
-      return (
-        <div>Error: {checkoutState.error.message}</div>
-      );
-    }
 
-    // checkoutState.type === 'success'
-    const { checkout } = checkoutState;
-    const result = await checkout.confirm({
-      redirect: 'always',
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      billingAddress: checkoutState.billingAddress,
-      shippingAddress: checkoutState.shippingAddress,
-    });
-    
-    setLoading(false);
-    if (result.type === 'error') {
-      // Show error to your customer (for example, payment details incomplete)
-      toast.error(`Payment failed: ${result.error.message}`);
-      console.log(result.error.message);
-    } else {
-      toast.success("Payment successful! Thank you for your support.");
-      
-      // Your customer will be redirected to your `return_url`. For some payment
-      // methods like iDEAL, your customer will be redirected to an intermediate
-      // site first to authorize the payment, then redirected to the `return_url`.
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    // Payment confirmation handled via Stripe-hosted page
   };
 
   return (
-    <div className="max-w-7xl w-full bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl">
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-semibold text-slate-300 mb-3">
-            Payment Details
-          </label>
-          <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5">
-            <PaymentElement />
-          </div>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div>
+        <label className="block text-sm font-semibold text-slate-300 mb-3">
+          Payment Details
+        </label>
+        <div className="bg-slate-800/50 rounded-lg p-4 border border-white/5">
+          <PaymentElement />
         </div>
-        <button 
-          type="submit"
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
-        >
-          {loading ? "Processing..." : "Complete Payment"}
-        </button>
-      </form>
-    </div>
+      </div>
+      <button
+        type="submit"
+        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl"
+      >
+        {loading ? "Processing..." : "Complete Payment"}
+      </button>
+    </form>
   );
-};
+}
 
-// Main Checkout Page
 export default function Checkout() {
   const { tierId } = useParams();
-  const [tier, setTier] = useState(null);
-  const [loading, setLoading] = useState(true);
   const { user, access_token } = useSelector((state) => state.auth);
+
+  const [tier, setTier] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [clientSecret, setClientSecret] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     async function fetchTier() {
       try {
         const res = await axios.get(`${API_URL}/payments/plans/${tierId}`);
-        const data = res.data;
-        setTier(data);
+        setTier(res.data);
 
-        // Create PaymentIntent on the backend
-        // const intentRes = await axios.post(`${API_URL}/payments/create-payment-intent`, {
-        //   priceId: data.stripe_price_id,
-        // }, {
-        //   headers: {
-        //     'Content-Type': 'application/json',
-        //     'Authorization': `Bearer ${access_token}`,
-        //   }
-        // });
-
-        // console.log("intentRes:", intentRes);
-        // const intentData = intentRes.data;
-        // setClientSecret(intentData.clientSecret);
+        // Set default option if available
+        if (res.data.options?.length > 0) setSelectedOption(res.data.options[0]);
       } catch (err) {
         console.error(err);
+        toast.error("Failed to load tier details");
       } finally {
         setLoading(false);
       }
@@ -118,39 +73,40 @@ export default function Checkout() {
     fetchTier();
   }, [tierId]);
 
-  const [clientSecret, setClientSecret] = useState(null);
+  const handleCheckout = async () => {
+    if (!tier || !user) return;
 
-  useEffect(() => {
-    if (!tier) return;
+    try {
+      const payload = {
+        priceId: tier.stripe_price_id,
+        user_id: user.id,
+        id: tier.id,
+        title: tier.title,
+        description: tier.description,
+        currency: tier.currency || "usd",
+        features: tier.features,
+        price: tier.price,
+        option: selectedOption, 
+      };
 
-    if (!user) return;
-    async function createCheckoutSession() {
-      try {
-        const response = await axios.post(`${API_URL}/payments/create-checkout-session`, {
-          priceId: tier.stripe_price_id,
-          user_id: user.id,
-          id: tier.id,
-          title: tier.title,
-          description: tier.description,
-          currency: tier.currency,
-          features: tier.features,
-          price: tier.price,
-        }, {
+      const response = await axios.post(
+        `${API_URL}/payments/create-checkout-session`,
+        payload,
+        {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${access_token}`,
-          }
-        });
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      );
 
-        setClientSecret(response.data.checkoutSessionClientSecret);
-        window.location.href = response.data.url;
-      } catch (err) {
-        console.error(err);
-      }
+      // Redirect to Stripe-hosted checkout
+      window.location.href = response.data.url;
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to initiate checkout");
     }
-
-    createCheckoutSession();
-  }, [tier, access_token, user]);
+  };
 
   if (loading) return <div className="text-center mt-20">Loading...</div>;
   if (!tier) return <div className="text-center mt-20">Tier not found</div>;
@@ -159,38 +115,55 @@ export default function Checkout() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-8 flex flex-col items-center">
       {/* Tier Info */}
       <div className="bg-slate-900/70 backdrop-blur-xl border border-white/10 rounded-2xl p-8 w-full max-w-7xl text-center mb-10 shadow-xl">
-        {tier.crown && <div className="text-yellow-400 text-4xl mb-2">👑</div>}
-        <h1
-          className={`text-3xl font-bold mb-2 ${
-            tier.accent === "gold"
-              ? "text-yellow-400"
-              : "text-white"
-          }`}
-        >
-          {tier.title}
-        </h1>
+        <h1 className="text-3xl font-bold mb-2">{tier.title}</h1>
         <p className="text-slate-300 mb-4">{tier.description}</p>
         <p className="text-2xl font-semibold mb-4">
-          {(tier.price / 100).toFixed(2)} {tier.currency.toUpperCase()}{" "}
-          {tier.note && `• ${tier.note}`}
+          {(tier.price / 100).toFixed(2)} {tier.currency?.toUpperCase()}
         </p>
+
+        {/* Options Selection */}
+        {tier.options?.length > 0 && (
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-400/30 rounded-lg">
+            <h2 className="text-lg font-semibold mb-3 text-blue-300">Choose your option</h2>
+            <select
+              value={selectedOption?.title || ""}
+              onChange={(e) =>
+                setSelectedOption(
+                  tier.options.find((o) => o.title === e.target.value)
+                )
+              }
+              className="w-full bg-slate-800 border-2 border-blue-400 text-white p-3 rounded-lg focus:outline-none focus:border-blue-300 focus:ring-2 focus:ring-blue-500/50 cursor-pointer hover:border-blue-300 transition"
+            >
+              {tier.options.map((opt) => (
+                <option key={opt.title} value={opt.title}>
+                  {opt.title} • {opt.duration_months > 0 ? `${opt.duration_months} months` : "Lifetime"} - {opt.description}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {/* Features */}
         <ul className="text-left text-slate-300 mb-4 space-y-1">
-          {tier.features.map((f, i) => (
+          {tier.features?.map((f, i) => (
             <li key={i} className="flex items-center gap-2">
               <span className="text-blue-400">•</span>
               {f}
             </li>
           ))}
         </ul>
-        <p className="text-sm text-slate-500">
-          {tier.limit && `Limited to ${tier.limit} members`}
-        </p>
+
+        <button
+          onClick={handleCheckout}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition"
+        >
+          Proceed to Checkout
+        </button>
       </div>
 
       {/* Stripe Payment Form */}
       {clientSecret && (
-        <CheckoutProvider stripe={stripePromise} options={{clientSecret}}>
-
+        <CheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
           <CheckoutForm clientSecret={clientSecret} />
         </CheckoutProvider>
       )}

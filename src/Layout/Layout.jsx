@@ -65,9 +65,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    AOS.init({ duration: 800, easing: "ease-out", once: false });
-  }, []);
+  AOS.init({ duration: 800, easing: "ease-out", once: true });
+
 
   // Waitlist guard
   useEffect(() => {
@@ -200,7 +199,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
 
   return (
-    <div className="relative min-h-screen h-screen w-screen overflow-hidden flex flex-col">
+    <div className="relative min-h-screen w-screen flex flex-col">
       {/* Background */}
       <div
         className="absolute inset-0 z-0"
@@ -244,9 +243,8 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           ref={navContainerRef}
           onMouseEnter={handleNavAreaEnter}
           onMouseLeave={handleNavAreaLeave}
-          className={`w-full z-999999999 overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-            isNavHidden ? "h-0" : "h-[60px]"
-          }`}
+          className={`w-full z-50 overflow-hidden transition-height duration-300 ease-in-out ${isNavHidden ? "max-h-0" : "max-h-[60px]"}`}
+
         >
           <Navbar
             setIsOpen={setIsOpen}
@@ -270,7 +268,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {!isRootPath && !isChatRoute && (
             <div
               ref={optionsRef}
-              className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
+              className={`my-16 transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
                 isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
               }`}
               style={{ zIndex: 99999999 }}
