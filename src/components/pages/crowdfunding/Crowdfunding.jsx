@@ -1,28 +1,26 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import {
-  ArrowRight,
-  Crown,
-  Shield,
-  Star,
-  Loader2,
-} from "lucide-react";
+import { ArrowRight, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
 import { Link } from "react-router-dom";
 
 export default function CrowdfundingSection() {
-  const [tiers, setTiers] = useState([]);
+  const [roles, setRoles] = useState([]); // builder / founder
+  const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [currency, setCurrency] = useState("USD");
 
-  /* ================= FETCH PLANS ================= */
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/payments/plans`);
-        setTiers(res.data);
+        const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
+        if (res.data.length > 0) {
+          const plan = res.data[0];
+          setRoles(plan.roles || []);
+          setCurrency(plan.currency?.toUpperCase() || "USD");
+        }
       } catch (err) {
-        console.error("❌ Failed to load plans", err);
+        console.error("❌ Failed to load crowdfunding plans", err);
       } finally {
         setLoading(false);
       }
@@ -31,16 +29,9 @@ export default function CrowdfundingSection() {
     fetchPlans();
   }, []);
 
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("en-US", { style: "currency", currency, minimumFractionDigits: 0 }).format(price);
 
-  /* ================= PRICE FORMAT ================= */
-  const formatPrice = (price, currency) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 0,
-    }).format(price);
-
-  /* ================= LOADING ================= */
   if (loading) {
     return (
       <section className="py-32 flex justify-center">
@@ -49,131 +40,76 @@ export default function CrowdfundingSection() {
     );
   }
 
-  return (
-    <section className="relative py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
-      <div className="max-w-7xl mx-auto space-y-16">
+  const activeRole = roles[activeIndex] || { tiers: [] };
 
-        {/* ================= HEADER ================= */}
+  return (
+    <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
+      <div className="w-full px-6 md:px-40 mx-auto space-y-16">
+        {/* HEADER */}
         <header className="text-center space-y-4">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-            Support SFCollab.{" "}
-            <span className="text-indigo-400">Unlock the future.</span>
+            Support SFCollab. <span className="text-indigo-400">Unlock the future.</span>
           </h1>
           <p className="text-white/60 max-w-2xl mx-auto">
-            Early supporters unlock permanent advantages and help shape how
-            collaboration platforms are built.
+            Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
           </p>
         </header>
 
-        {/* ================= TIERS ================= */}
-        <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-          {tiers.length !== 0 && tiers.map((tier) => (
-            <div
-              key={tier?.id}
-              className={`relative rounded-2xl border backdrop-blur-sm p-6 flex flex-col
-                ${
-                  tier?.highlight
-                    ? "border-violet-400/40 bg-violet-500/10 shadow-xl"
-                    : tier?.accent === "gold"
-                    ? "border-yellow-500/40 bg-yellow-500/5"
-                    : "border-white/10 bg-white/5"
-                }`}
+        {/* ROLE TOGGLE */}
+        <div className="relative mt-12 bg-neutral-900 border border-neutral-800 rounded-full flex p-1 max-w-md mx-auto">
+          <div
+            className="absolute top-1 bottom-1 w-1/2 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all"
+            style={{ left: activeIndex === 0 ? "0%" : "50%" }}
+          />
+          {roles.map((role, i) => (
+            <button
+              key={role.role}
+              onClick={() => setActiveIndex(i)}
+              className={`relative z-10 w-1/2 py-3 text-sm font-semibold transition ${
+                activeIndex === i ? "text-white" : "text-neutral-400"
+              }`}
             >
-              {tier?.highlight && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full bg-violet-500 text-white font-semibold">
-                  Most Popular
-                </span>
-              )}
-
-              <div className="flex items-center gap-2 mb-2">
-
-                  <Crown className="w-5 h-5 text-yellow-400" />
-                <h3 className="text-lg font-semibold">{tier?.title}</h3>
-              </div>
-
-              <p className="text-xs text-white/50 mb-4">
-                {tier?.description}
-              </p>
-
-              <div className="mb-6">
-                <p className="text-3xl font-bold">
-                  {formatPrice(tier?.price, tier?.currency || "USD")}
-                </p>
-                <p className="text-xs text-white/40">{tier?.note}</p>
-              </div>
-
-              <ul className="space-y-2 text-sm text-white/70 flex-1">
-                {tier?.features.map((feature) => (
-                  <li key={feature} className="flex gap-2">
-                    <Star className="w-4 h-4 text-indigo-400" />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              {tier?.limit && (
-                <p className="mt-3 text-xs text-center text-red-400">
-                  🔥 Limited: {tier?.limit} spots
-                </p>
-              )}
-              <Link to={`/checkout/${tier?.id}`}>
-              <button
-                
-                disabled={checkoutLoading === tier?.id}
-                className={`mt-6 inline-flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition
-                  ${
-                    tier?.highlight
-                      ? "bg-violet-500 hover:bg-violet-600"
-                      : tier?.accent === "gold"
-                      ? "bg-yellow-500 text-black hover:opacity-90"
-                      : "border border-white/20 hover:bg-white/10"
-                  }
-                  disabled:opacity-60 disabled:cursor-not-allowed`}
-                >
-                  
-                {checkoutLoading === tier?.id ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Redirecting…
-                  </>
-                ) : (
-                  <>
-                    {tier?.cta}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-                </button>
-                </Link>
-            </div>
+              {role.role.charAt(0).toUpperCase() + role.role.slice(1)}
+            </button>
           ))}
         </div>
 
-        {/* ================= INVESTOR ================= */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-8 grid md:grid-cols-2 gap-8">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-5 h-5 text-indigo-400" />
-              <h2 className="text-xl font-semibold">Investor Partner</h2>
-            </div>
-            <p className="text-white/60 mb-4">
-              For strategic partners interested in equity or revenue alignment.
-            </p>
-            <ul className="space-y-2 text-sm text-white/70">
-              <li>• Equity or revenue participation</li>
-              <li>• Quarterly updates</li>
-              <li>• Founder communication channel</li>
-            </ul>
-          </div>
+        {/* TIERS */}
+        <div className="flex flex-row items-stretch justify-center flex-wrap gap-6 mt-12">
+          {activeRole.tiers.map((tier) => (
+            <Link key={tier.id} to={`/checkout/${tier.id}?`} className="min-w-[20rem] flex-1">
+              <div className="flex flex-col justify-between bg-gradient-to-br from-neutral-900 to-neutral-800 border border-neutral-700 rounded-2xl p-6 h-full">
+                <div>
+                  <h3 className="text-xl font-semibold mb-3">{tier.title}</h3>
+                  <p className="text-4xl font-bold text-blue-400 mb-2">{formatPrice(tier.price / 100)}</p>
 
-          <div className="flex flex-col justify-center">
-            <button className="rounded-xl border border-white/20 py-3 font-semibold hover:bg-white/10">
-              Request Investor Deck
-            </button>
-            <p className="text-xs text-white/40 mt-3">
-              Application-based · $1k – $50k
-            </p>
-          </div>
-        </section>
+                  {/* Money Before Fee */}
+                  {tier.money_before_fee && (
+                    <p className="text-xs text-white/50 mb-4">
+                      Potential earnings before platform fees: {formatPrice(tier.money_before_fee / 100)}
+                    </p>
+                  )}
+
+                  {/* Features */}
+                  {tier.features && (
+                    <ul className="space-y-2 text-sm text-neutral-300 mb-6">
+                      {tier.features.map((f, idx) => (
+                        <li key={idx} className="flex gap-2">
+                          <span className="text-green-400 flex-shrink-0">✓</span>
+                          <span>{f}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
+                <button className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 font-semibold hover:opacity-90 transition">
+                  Choose Plan <ArrowRight className="w-4 h-4 inline-block ml-2" />
+                </button>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );

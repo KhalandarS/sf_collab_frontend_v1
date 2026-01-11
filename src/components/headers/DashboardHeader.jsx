@@ -19,7 +19,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
 
   return (
     <>
-      <div className='w-full  p-4'>
+      <div className='w-full  p-4 mt-6 z-0'>
         <div className='flex flex-col sm:flex-row w-full justify-between items-start sm:items-center gap-4 sm:gap-0 h-full'>
           <div>
             <h1 className="text-2xl font-semibold text-white flex items-center gap-2"><LuLayoutDashboard/>
@@ -33,7 +33,7 @@ const DashboardHeader = ({ searchQuery, onSearchChange }) => {
             </h1>
           </div>
   
-          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto z-100'>
+          <div className='flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto'>
             {/* Search Bar with Glassmorphism */}
             <div className="relative w-full sm:w-auto">
               <div className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-full border border-white/20 shadow-lg"></div>

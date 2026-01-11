@@ -5,7 +5,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Play, X ,ArrowRight} from 'lucide-react';
 
 import { heroAssest } from '../utils';
-import ShinyText from '../../ui/ShinyText';
 import { motion } from 'framer-motion';
 import { ShineButton } from '../../lightswind/shine-button';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +14,7 @@ import {
   setupScrollTriggerRefresh,
   isMobile 
 } from '../utils/scrollTriggerConfig';
+import ShinyText from '@/components/ui/ShinyText';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -226,7 +226,7 @@ const Hero = () => {
             ref={mainHeadingRef}
             className="text-[12vw] sm:text-[10vw] md:text-[9vw] lg:text-[8vw] font-semibold uppercase text-white tracking-tight leading-[0.9]"
           >
-             <ShinyText 
+             <ShinyText
                   text="COLLABORATION" 
                   // disabled={false} 
                   speed={3} 

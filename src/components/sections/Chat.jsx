@@ -18,6 +18,7 @@ import {
 import io from "socket.io-client";
 import RecordRTC from "recordrtc";
 import React from "react";
+import { SOCKET_API_URL } from "@/utils/config";
 
 // Default contacts data
 const defaultContacts = [
@@ -114,8 +115,7 @@ export default function Chat() {
   const messagesEndRef = useRef(null);
 
   // Configuration
-  const SOCKET_URL =
-    import.meta.env.REACT_APP_SOCKET_URL || "http://localhost:5001";
+  const SOCKET_URL = SOCKET_API_URL
 
   // Toggle search input
   const toggleInput = () => {

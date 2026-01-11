@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X, Minus, MessageCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAppSocket } from "@/context/SocketProvider";
@@ -58,17 +59,14 @@ export default function ChatDock({ maxWindows = 2 }) {
     }
   }, []);
 
-  // Panel (Chats list popup)
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("all"); // all | online
+  const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
-  const [consideredActive, setConsideredActive] = useState(true); // window focus + visibility
+  const [consideredActive, setConsideredActive] = useState(true);
 
-  // Data
   const [conversations, setConversations] = useState([]);
   const [isLoadingConvos, setIsLoadingConvos] = useState(false);
 
-  // Windows: [{ conversationId, title, minimized, messages, loading, draft }]
   const [windows, setWindows] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
     return Array.isArray(saved)
@@ -83,21 +81,15 @@ export default function ChatDock({ maxWindows = 2 }) {
       : [];
   });
 
-  // Unread counts: { [conversationId]: number }
   const [unread, setUnread] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_UNREAD_KEY), {});
     return saved && typeof saved === "object" ? saved : {};
   });
 
-  // Typing: { [conversationId]: { [userId]: true } }
   const [typingByConversation, setTypingByConversation] = useState({});
-  const typingTimeoutsRef = useRef({}); // { [conversationId]: timeoutId }
+  const typingTimeoutsRef = useRef({});
+  const messageEndRefs = useRef({});
 
-  const messageEndRefs = useRef({}); // conversationId -> element
-
-  // -----------------------------
-  // Helpers
-  // -----------------------------
   const persistWindows = useCallback((nextWindows) => {
     const minimal = nextWindows.map((w) => ({
       conversationId: w.conversationId,
@@ -145,7 +137,6 @@ export default function ChatDock({ maxWindows = 2 }) {
     });
   }, []);
 
-  // "active" = user is looking at tab
   useEffect(() => {
     const onFocus = () => setConsideredActive(true);
     const onBlur = () => setConsideredActive(false);
@@ -162,9 +153,6 @@ export default function ChatDock({ maxWindows = 2 }) {
     };
   }, []);
 
-  // -----------------------------
-  // REST: conversations + history
-  // -----------------------------
   const fetchConversations = useCallback(async () => {
     if (!token) return;
     setIsLoadingConvos(true);
@@ -209,7 +197,6 @@ export default function ChatDock({ maxWindows = 2 }) {
 
           setTimeout(() => scrollToBottom(cid), 30);
 
-          // If user is active and window not minimized, clear unread + mark_read
           if (consideredActive && !isConvMinimized(cid)) {
             clearUnread(cid);
             socket?.emit?.("mark_read", { conversation_id: cid });
@@ -229,43 +216,32 @@ export default function ChatDock({ maxWindows = 2 }) {
     [token, scrollToBottom, socket, consideredActive, isConvMinimized, clearUnread]
   );
 
-  // Load conversations when panel opens
   useEffect(() => {
-  fetchConversations();
-}, [fetchConversations]);
+    fetchConversations();
+  }, [fetchConversations]);
 
-
-  // -----------------------------
-  // Rooms: join/leave opened windows
-  // -----------------------------
   const joinedRef = useRef(new Set());
 
-useEffect(() => {
-  if (!socket) return;
+  useEffect(() => {
+    if (!socket) return;
 
-  const currentIds = new Set(windows.map((w) => String(w.conversationId)));
+    const currentIds = new Set(windows.map((w) => String(w.conversationId)));
 
-  // join new
-  for (const id of currentIds) {
-    if (!joinedRef.current.has(id)) {
-      socket.emit("join_conversation", { conversation_id: id });
-      joinedRef.current.add(id);
+    for (const id of currentIds) {
+      if (!joinedRef.current.has(id)) {
+        socket.emit("join_conversation", { conversation_id: id });
+        joinedRef.current.add(id);
+      }
     }
-  }
 
-  // leave removed
-  for (const id of Array.from(joinedRef.current)) {
-    if (!currentIds.has(id)) {
-      socket.emit("leave_conversation", { conversation_id: id });
-      joinedRef.current.delete(id);
+    for (const id of Array.from(joinedRef.current)) {
+      if (!currentIds.has(id)) {
+        socket.emit("leave_conversation", { conversation_id: id });
+        joinedRef.current.delete(id);
+      }
     }
-  }
-}, [socket, windows]);
+  }, [socket, windows]);
 
-
-  // -----------------------------
-  // Windows management
-  // -----------------------------
   const openWindow = useCallback(
     async ({ conversationId, title }) => {
       if (!conversationId) return;
@@ -331,7 +307,6 @@ useEffect(() => {
     [persistWindows]
   );
 
-  // When user becomes active again, clear unread for open + not minimized windows
   useEffect(() => {
     if (!consideredActive) return;
     windows.forEach((w) => {
@@ -342,9 +317,6 @@ useEffect(() => {
     });
   }, [consideredActive, windows, clearUnread, socket]);
 
-  // -----------------------------
-  // WebSocket: typing
-  // -----------------------------
   useEffect(() => {
     if (!socket) return;
 
@@ -358,7 +330,6 @@ useEffect(() => {
       const cid = String(conversationId);
       const uid = String(userId);
 
-      // don’t show yourself as typing
       if (currentUser?.id && String(currentUser.id) === uid) return;
 
       setTypingByConversation((prev) => {
@@ -380,52 +351,41 @@ useEffect(() => {
     return () => socket.off("user_typing", onUserTyping);
   }, [socket, currentUser?.id]);
 
-  // -----------------------------
-  // WebSocket: incoming messages
-  // -----------------------------
   useEffect(() => {
-  if (!socket) return;
+    if (!socket) return;
 
-  const onNewMessage = (payload) => {
-    // 1. Properly extract the message data
-    const messageData = payload?.message || payload; 
-    const cid = String(payload?.conversation_id || messageData?.conversation_id);
-    
-    // 2. Normalize it (using your helper)
-    const messageNorm = normalizeMessage(messageData);
+    const onNewMessage = (payload) => {
+      const messageData = payload?.message || payload;
+      const cid = String(payload?.conversation_id || messageData?.conversation_id);
 
-    if (!cid || !messageNorm) return;
+      const messageNorm = normalizeMessage(messageData);
 
-    // 3. Update the state ONLY if it's for an open window
-    setWindows((prev) => {
-      return prev.map((w) => {
-        if (String(w.conversationId) === cid) {
-          // Prevent duplicates (checks by ID)
-          const exists = w.messages.some(m => String(m.id) === String(messageNorm.id));
-          if (exists) return w;
-          return { ...w, messages: [...(w.messages || []), messageNorm] };
-        }
-        return w;
+      if (!cid || !messageNorm) return;
+
+      setWindows((prev) => {
+        return prev.map((w) => {
+          if (String(w.conversationId) === cid) {
+            const exists = w.messages.some(m => String(m.id) === String(messageNorm.id));
+            if (exists) return w;
+            return { ...w, messages: [...(w.messages || []), messageNorm] };
+          }
+          return w;
+        });
       });
-    });
 
-    // Handle unread/scroll
-    if (!isConvOpen(cid) || isConvMinimized(cid) || !consideredActive) {
-      bumpUnread(cid);
-    } else {
-      clearUnread(cid);
-      socket.emit("mark_read", { conversation_id: cid });
-    }
-    setTimeout(() => scrollToBottom(cid), 50);
-  };
+      if (!isConvOpen(cid) || isConvMinimized(cid) || !consideredActive) {
+        bumpUnread(cid);
+      } else {
+        clearUnread(cid);
+        socket.emit("mark_read", { conversation_id: cid });
+      }
+      setTimeout(() => scrollToBottom(cid), 50);
+    };
 
-  socket.on("new_message", onNewMessage);
-  return () => socket.off("new_message", onNewMessage);
-}, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive]);
+    socket.on("new_message", onNewMessage);
+    return () => socket.off("new_message", onNewMessage);
+  }, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive]);
 
-  // -----------------------------
-  // WebSocket: send message
-  // -----------------------------
   const sendMessage = useCallback(
     (conversationId, content) => {
       if (!socket) return;
@@ -435,7 +395,6 @@ useEffect(() => {
 
       socket.emit("send_message", { conversation_id: cid, content: text });
 
-      // clear draft
       setWindows((prev) =>
         prev.map((w) => (String(w.conversationId) === cid ? { ...w, draft: "" } : w))
       );
@@ -448,9 +407,6 @@ useEffect(() => {
     [socket, consideredActive, isConvMinimized, clearUnread]
   );
 
-  // -----------------------------
-  // Filter convos (All vs Online)
-  // -----------------------------
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
@@ -477,7 +433,6 @@ useEffect(() => {
     });
   }, [conversations, searchTerm, activeTab, onlineUsers, currentUser?.id]);
 
-  // Total unread badge on launcher
   const totalUnread = useMemo(() => {
     return Object.values(unread || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
   }, [unread]);
@@ -485,138 +440,239 @@ useEffect(() => {
   if (!currentUser) return null;
 
   return (
-    // CHANGE 1: Main container uses flex-row-reverse
-    // This makes the FIRST child (the Launcher/Panel) stick to the far RIGHT.
     <div className="fixed bottom-4 right-4 z-[9999] flex flex-row-reverse items-end gap-3 pointer-events-none">
-      
-      {/* SECTION A: LAUNCHER & PANEL (Always First Child = Far Right) */}
       <div className="flex flex-col items-end gap-3 pointer-events-auto">
-        {isPanelOpen && (
-          <div className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-              <div className="flex items-center gap-2">
-                <div className="text-sm font-semibold text-white">Chats</div>
-                <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
+        <AnimatePresence>
+          {isPanelOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+            >
+              <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+                <div className="flex items-center gap-2">
+                  <div className="text-sm font-semibold text-white">Chats</div>
+                  <motion.span
+                    animate={{ opacity: [0.6, 1, 0.6] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`}
+                  />
+                </div>
+                <button onClick={() => setIsPanelOpen(false)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"><X size={16} /></button>
               </div>
-              <button onClick={() => setIsPanelOpen(false)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"><X size={16} /></button>
-            </div>
 
-            <div className="p-3 border-b border-zinc-800">
-              <input 
-                value={searchTerm} 
-                onChange={(e) => setSearchTerm(e.target.value)} 
-                placeholder="Search chats..." 
-                className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none" 
-              />
-              <div className="flex gap-2 mt-2">
-                {["all", "online"].map((id) => (
-                  <button 
-                    key={id} 
-                    onClick={() => setActiveTab(id)} 
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${activeTab === id ? "bg-indigo-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"}`}
-                  >
-                    {id.charAt(0).toUpperCase() + id.slice(1)}
-                  </button>
-                ))}
+              <div className="p-3 border-b border-zinc-800">
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search chats..."
+                  className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none"
+                />
+                <div className="flex gap-2 mt-2">
+                  {["all", "online"].map((id) => (
+                    <motion.button
+                      key={id}
+                      onClick={() => setActiveTab(id)}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeTab === id ? "bg-indigo-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"}`}
+                    >
+                      {id.charAt(0).toUpperCase() + id.slice(1)}
+                    </motion.button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            <div className="max-h-[420px] overflow-y-auto p-2">
-              {isLoadingConvos ? (
-                <div className="p-4 text-zinc-500 text-sm">Loading…</div>
-              ) : filteredConversations.map((conv) => {
-                const title = conv.name || conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName || "Chat";
-                const unreadCount = unread?.[String(conv.id)] || 0;
-                return (
-                  <button key={conv.id} onClick={() => openWindow({ conversationId: conv.id, title })} className="w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between">
-                    <div className="min-w-0">
-                      <div className="text-white text-sm font-medium truncate">{title}</div>
-                      <div className="text-zinc-500 text-xs truncate">{conv.conversation_type}</div>
-                    </div>
-                    {unreadCount > 0 && <div className="min-w-[18px] h-[18px] rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center">{unreadCount}</div>}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
+              <div className="max-h-[420px] overflow-y-auto p-2">
+                {isLoadingConvos ? (
+                  <div className="p-4 text-zinc-500 text-sm">Loading…</div>
+                ) : (
+                  <motion.div layout>
+                    {filteredConversations.map((conv) => {
+                      const title = conv.name || conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName || "Chat";
+                      const unreadCount = unread?.[String(conv.id)] || 0;
+                      return (
+                        <motion.button
+                          key={conv.id}
+                          layout
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.6)" }}
+                          onClick={() => openWindow({ conversationId: conv.id, title })}
+                          className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-white text-sm font-medium truncate">{title}</div>
+                            <div className="text-zinc-500 text-xs truncate">{conv.conversation_type}</div>
+                          </div>
+                          <AnimatePresence>
+                            {unreadCount > 0 && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                exit={{ scale: 0 }}
+                                className="min-w-[18px] h-[18px] rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center"
+                              >
+                                {unreadCount}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </motion.button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Launcher Button */}
-        <button
+        <motion.button
           onClick={() => setIsPanelOpen((v) => !v)}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
           className="relative w-12 h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center pointer-events-auto"
         >
           <MessageCircle size={20} />
-          {totalUnread > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-zinc-900 text-amber-400 text-[10px] font-bold flex items-center justify-center border border-amber-500/40">
-              {totalUnread > 99 ? "99+" : totalUnread}
-            </span>
-          )}
-        </button>
+          <AnimatePresence>
+            {totalUnread > 0 && (
+              <motion.span
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-zinc-900 text-amber-400 text-[10px] font-bold flex items-center justify-center border border-amber-500/40"
+              >
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </motion.button>
       </div>
 
-      {/* SECTION B: CHAT WINDOWS (These will stack to the LEFT of the Launcher) */}
       <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
-        {windows.map((w) => {
-          const cid = String(w.conversationId);
-          const unreadCount = unread?.[cid] || 0;
-          const typingCount = Object.keys(typingByConversation?.[cid] || {}).length;
+        <AnimatePresence>
+          {windows.map((w) => {
+            const cid = String(w.conversationId);
+            const unreadCount = unread?.[cid] || 0;
+            const typingCount = Object.keys(typingByConversation?.[cid] || {}).length;
 
-          return (
-            <div key={cid} className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto">
-              {/* Header */}
-              <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-white truncate">{w.title}</div>
-                  {w.minimized && unreadCount > 0 && <div className="text-[11px] text-amber-400">{unreadCount} new</div>}
+            return (
+              <motion.div
+                key={cid}
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+              >
+                <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white truncate">{w.title}</div>
+                    <AnimatePresence>
+                      {w.minimized && unreadCount > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          className="text-[11px] text-amber-400"
+                        >
+                          {unreadCount} new
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <motion.button
+                      whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => toggleMinimize(cid)}
+                      className="p-2 rounded-xl text-zinc-400"
+                    >
+                      <Minus size={16} />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => closeWindow(cid)}
+                      className="p-2 rounded-xl text-zinc-400"
+                    >
+                      <X size={16} />
+                    </motion.button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={() => toggleMinimize(cid)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"><Minus size={16} /></button>
-                  <button onClick={() => closeWindow(cid)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"><X size={16} /></button>
-                </div>
-              </div>
 
-              {!w.minimized && (
-                <>
-                  <div className="h-80 overflow-y-auto p-3 bg-zinc-950 space-y-2">
-                    {w.loading ? (
-                      <div className="text-sm text-zinc-500">Loading…</div>
-                    ) : (
-                      (w.messages || []).map((m, i) => (
-                        <MessageBubble 
-                          key={m.id || `${cid}-${i}`} 
-                          message={m} 
-                          isOwn={String(m.sender_id) === String(currentUser?.id)} 
-                          currentUserId={currentUser?.id} 
+                <AnimatePresence>
+                  {!w.minimized && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="h-80 overflow-y-auto p-3 bg-zinc-950 space-y-2">
+                        {w.loading ? (
+                          <div className="text-sm text-zinc-500">Loading…</div>
+                        ) : (
+                          <motion.div layout>
+                            {(w.messages || []).map((m, i) => (
+                              <motion.div
+                                key={m.id || `${cid}-${i}`}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: i * 0.02 }}
+                              >
+                                <MessageBubble
+                                  message={m}
+                                  isOwn={String(m.sender_id) === String(currentUser?.id)}
+                                  currentUserId={currentUser?.id}
+                                />
+                              </motion.div>
+                            ))}
+                          </motion.div>
+                        )}
+                        <AnimatePresence>
+                          {typingCount > 0 && (
+                            <motion.div
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                              className="text-xs text-zinc-500 px-1 italic"
+                            >
+                              Typing…
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <div ref={(el) => (messageEndRefs.current[cid] = el)} />
+                      </div>
+
+                      <div className="bg-zinc-900">
+                        <ChatInput
+                          value={w.draft || ""}
+                          onChange={(val) => {
+                            setWindows(prev => prev.map(x => String(x.conversationId) === cid ? { ...x, draft: val } : x));
+                            if (socket) {
+                              socket.emit("typing_start", { conversation_id: cid });
+                              if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
+                              typingTimeoutsRef.current[cid] = setTimeout(() => socket.emit("typing_stop", { conversation_id: cid }), 1200);
+                            }
+                          }}
+                          onSend={(content) => {
+                            if (socket) socket.emit("typing_stop", { conversation_id: cid });
+                            sendMessage(cid, content);
+                          }}
                         />
-                      ))
-                    )}
-                    {typingCount > 0 && <div className="text-xs text-zinc-500 px-1 italic">Typing…</div>}
-                    <div ref={(el) => (messageEndRefs.current[cid] = el)} />
-                  </div>
-
-                  <div className="bg-zinc-900">
-                    <ChatInput
-                      value={w.draft || ""}
-                      onChange={(val) => {
-                        setWindows(prev => prev.map(x => String(x.conversationId) === cid ? { ...x, draft: val } : x));
-                        if (socket) {
-                          socket.emit("typing_start", { conversation_id: cid });
-                          if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
-                          typingTimeoutsRef.current[cid] = setTimeout(() => socket.emit("typing_stop", { conversation_id: cid }), 1200);
-                        }
-                      }}
-                      onSend={(content) => {
-                        if (socket) socket.emit("typing_stop", { conversation_id: cid });
-                        sendMessage(cid, content);
-                      }}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
     </div>
   );

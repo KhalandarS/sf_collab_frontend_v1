@@ -1,9 +1,10 @@
+import { SOCKET_API_URL } from "@/utils/config";
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 const SocketContext = createContext(null);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
+const SOCKET_URL = SOCKET_API_URL
 
 export function SocketProvider({ token, children }) {
   const socketRef = useRef(null);

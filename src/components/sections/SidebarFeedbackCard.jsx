@@ -156,7 +156,13 @@ const SidebarFeedbackCard = () => {
                 We'd love to hear your thoughts
               </DialogDescription>
             </DialogHeader>
-
+          {/* Points Info Banner */}
+          <div className="mt-4 flex items-start gap-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+            <FcAbout className="w-5 h-5 shrink-0 mt-0.5" />
+            <p className="text-xs text-blue-400">
+              You can earn 10-50 points for helpful feedback that helps us improve!
+            </p>
+          </div>
             {/* Warning Banner */}
             <div className="mt-4 flex items-start gap-3 p-3 bg-red-900/20 border border-red-700/30 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />

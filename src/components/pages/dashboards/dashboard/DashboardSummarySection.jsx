@@ -29,7 +29,13 @@ export default function DashboardSummaryCard({ userData }) {
             glareSize={300}
             transitionDuration={800}
             playOnce={true}
-          ><h1 className="text-3xl lg:text-4xl font-bold text-white mb-2">
+          >
+            <div className="w-full group relative flex flex-col lg:flex-row items-start lg:items-center justify-around gap-2 p-4">
+              <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300`} />
+              <img src="/design.png" className="absolute group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
+              {/* Welcome Text */}
+              <div className="relative flex flex-col justify-start items-start">
+                <h1 className="text-3xl lg:text-4xl text-center font-bold text-white mb-2 w-full">
                   Welcome back, &nbsp;
                   <span className='relative whitespace-nowrap'>
                     <svg
@@ -40,12 +46,6 @@ export default function DashboardSummaryCard({ userData }) {
                     <span className="relative bg-linear-to-r from-blue-200 to-purple-200 bg-clip-text text-transparent">{userData ? userData?.firstName : "Alex"}!</span>
                   </span>
                 </h1>
-            <div className="w-full group relative flex flex-col lg:flex-row items-start lg:items-center justify-around gap-2 p-4">
-              <div className={`absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300`} />
-              <img src="/design.png" className="absolute group-hover:opacity-50 transition-all duration-1000 -z-50 opacity-15" />
-              {/* Welcome Text */}
-              <div className="flex-1 relative">
-                
                 <p className="text-lg text-white/80 max-w-2xl">
                   Here's what's happening with your startups today. You have <span className="font-semibold text-white">{userData ? userData?.notificationsCount : "3"} new notification{userData && userData?.notificationsCount > 1 ? "'s" : ""}</span> and <span className="font-semibold text-white">{userData ? userData?.pendingTasksCount : "12"} pending task{userData && userData?.pendingTasksCount > 1 ? "'s" : ""}</span> to review.
                 </p>

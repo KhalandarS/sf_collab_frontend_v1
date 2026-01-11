@@ -222,13 +222,13 @@ useEffect(() => {
       
       if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
         toast.info(
-          <Link to="/apply-influencer" target="_blank" className="flex items-center gap-2">
-            <div>
-            <span>To complete your Influencer application, please fill out the Influencer Application Form.</span>
-            <ExternalLink className="w-4 h-4" />
-            
-            </div>
-          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <span>Complete your Influencer application to enable this role.</span>
+            <Link to="/apply-influencer" target="_blank" className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-2 whitespace-nowrap">
+              Apply Now
+              <ExternalLink className="w-4 h-4" />
+            </Link>
+          </div>
         )
         return
       }

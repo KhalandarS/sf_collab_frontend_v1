@@ -99,17 +99,37 @@ const Navbar = () => {
     gsap.to(barRefs.current, { scaleY: 1, duration: 0.3 });
   };
 
-  useEffect(() => setUserInteracted(false), []);
+  if (loaderState) return (
+    <nav
+      className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
+        isHidden ? "-translate-y-full" : "translate-y-0"
+      } lg:translate-y-0`}
+      style={{ zIndex: 9999999 }}
+    >
+      <div
+        className="absolute inset-0 z-0"
+        style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
+      />
+    </nav>
+  );
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScroll = window.scrollY;
-      setShowNavbar(!(currentScroll > lastScrollY.current && currentScroll > 100));
-      lastScrollY.current = currentScroll;
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  return (
+    <nav
+      className={`fixed top-0 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${
+        isHidden ? "-translate-y-full" : "translate-y-0"
+      }`}
+      style={{ zIndex: 9999999 }}
+    >
+      <div
+        className="absolute inset-0 z-0"
+        style={{ background: "radial-gradient(125% 125% at 50% 90%, #000000 40%, #0d1a36 100%)" }}
+      />
+
+      <div className="logo h-full z-50 scale-140">
+        <Link to={user?.id ? `/dashboard` : '/'} className="group h-full cursor-pointer flex items-center">
+          <img data-aos="fade-right" data-aos-duration="600" src="/logo_white.svg" className="w-full h-full" alt="sf collab" />
+        </Link>
+      </div>
 
   useEffect(() => {
     if (!overlayRef.current) return;
