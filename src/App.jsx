@@ -80,6 +80,14 @@ import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
 
+// Builder Dashboard Routes - Phase 2
+import BrowseStartups from "./components/pages/dashboards/builderDashboard/BrowseStartups.jsx";
+import SavedStartups from "./components/pages/dashboards/builderDashboard/SavedStartups.jsx";
+import MyApplications from "./components/pages/dashboards/builderDashboard/MyApplications.jsx";
+import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
+import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx";
+import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
+
 
 
 
@@ -174,6 +182,17 @@ function App() {
               )
             }
             {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
+            
+            {/* ===== BUILDER DASHBOARD ROUTES ===== */}
+            <Route path="builder/browse-startups" element={<BrowseStartups />} />
+            <Route path="builder/saved-startups" element={<SavedStartups />} />
+            <Route path="builder/my-applications" element={<MyApplications />} />
+            <Route path="builder/my-work" element={<MyWork />} />
+            <Route path="builder/rewards" element={<Rewards />} />
+            <Route path="builder/profile-skills" element={<SkillProfile />} />
+            <Route path="builder/profile" element={<SkillProfile />} />
+            {/* ===== END BUILDER ROUTES ===== */}
+            
             <Route path="ai-dashboard" element={<AIDashboard />} />
             <Route path="waitlist" element={<Waitlist />} />
             <Route path="waitlist-terms" element={<WaitlistTerms />} />

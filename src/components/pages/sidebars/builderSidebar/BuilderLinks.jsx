@@ -1,4 +1,4 @@
-import { Badge, BarChart3, Briefcase, LucideLayoutDashboard, Star, User } from 'lucide-react';
+import { Badge, BarChart3, Briefcase, LucideLayoutDashboard, Star, User, Heart, CheckCircle } from 'lucide-react';
 import { IoChatbubbles } from 'react-icons/io5';
 
 export function createBuilderLinks(unreadMessagesCount) {
@@ -14,38 +14,42 @@ export function createBuilderLinks(unreadMessagesCount) {
     },
     {
       id: 2,
-      icon: <LucideLayoutDashboard
-      
-        size={22} />,
-      href: "/tasks",
-      label: "Tasks Available",
+      icon: <Briefcase size={22} />,
+      href: "/builder/browse-startups",
+      label: "Browse Startups",
     },
     {
       id: 3,
-      icon: <Briefcase size={22} />,
-      href: "/my-applications",
-      label: "My Applications",
+      icon: <Heart size={22} />,
+      href: "/builder/saved-startups",
+      label: "Saved Startups",
     },
     {
       id: 4,
-      icon: <Star size={22} />,
-      href: "/my-work",
-      label: "My Work",
+      icon: <CheckCircle size={22} />,
+      href: "/builder/my-applications",
+      label: "My Applications",
     },
     {
       id: 5,
-      icon: <User size={22} />,
-      href: "/rewards",
-      label: "Rewards",
+      icon: <LucideLayoutDashboard size={22} />,
+      href: "/builder/my-work",
+      label: "My Work",
     },
     {
       id: 6,
-      icon: <User size={22} />,
-      href: "/profile-skills",
-      label: "Profile / Skills",
+      icon: <Star size={22} />,
+      href: "/builder/rewards",
+      label: "Rewards",
     },
     {
       id: 7,
+      icon: <User size={22} />,
+      href: "/builder/profile-skills",
+      label: "Skill Profile",
+    },
+    {
+      id: 8,
       icon: <IoChatbubbles size={23} />,
       href: "/chat",
       label: "Messages",

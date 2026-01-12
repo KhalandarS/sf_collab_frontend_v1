@@ -59,6 +59,57 @@ export default function BuilderDashboard({
           </div>
         </div>
 
+        {/* ================= QUICK NAVIGATION BUTTONS ================= */}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <Link
+            to="/builder/browse-startups"
+            className="rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30 p-4 hover:border-blue-400/60 transition text-white"
+          >
+            <div className="font-semibold">🔍 Browse Startups</div>
+            <div className="text-xs text-white/60 mt-1">Discover opportunities</div>
+          </Link>
+
+          <Link
+            to="/builder/saved-startups"
+            className="rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-400/30 p-4 hover:border-red-400/60 transition text-white"
+          >
+            <div className="font-semibold">❤️ Saved Startups</div>
+            <div className="text-xs text-white/60 mt-1">Your bookmarks</div>
+          </Link>
+
+          <Link
+            to="/builder/my-applications"
+            className="rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-400/30 p-4 hover:border-green-400/60 transition text-white"
+          >
+            <div className="font-semibold">✓ My Applications</div>
+            <div className="text-xs text-white/60 mt-1">Track status</div>
+          </Link>
+
+          <Link
+            to="/builder/my-work"
+            className="rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 p-4 hover:border-cyan-400/60 transition text-white"
+          >
+            <div className="font-semibold">📋 My Work</div>
+            <div className="text-xs text-white/60 mt-1">Active tasks</div>
+          </Link>
+
+          <Link
+            to="/builder/rewards"
+            className="rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-400/30 p-4 hover:border-yellow-400/60 transition text-white"
+          >
+            <div className="font-semibold">💰 Rewards</div>
+            <div className="text-xs text-white/60 mt-1">Earnings & equity</div>
+          </Link>
+
+          <Link
+            to="/builder/profile-skills"
+            className="rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-400/30 p-4 hover:border-purple-400/60 transition text-white"
+          >
+            <div className="font-semibold">⭐ Skill Profile</div>
+            <div className="text-xs text-white/60 mt-1">Your profile</div>
+          </Link>
+        </div>
+
         {/* ================= TASKS AVAILABLE ================= */}
         <Section
           icon={Briefcase}

@@ -1,9 +1,9 @@
 // Profile.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   User, Settings, Award, BarChart3,
-  Rocket, TrendingUp, Zap, Globe, Briefcase
+  Rocket, TrendingUp, Zap, Globe, Briefcase, ExternalLink
 } from 'lucide-react';
 
 import ProfileHeader from './ProfileHeader';
@@ -14,13 +14,37 @@ import ActivityFeed from './ActivityFeed';
 import ProfileSettings from '../profileSettings/ProfileSettings';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
+import { builderProfileAPI } from '@/services/builderAPI';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
   const [queryParams] = useSearchParams();
   const [showSettings, setShowSettings] = useState(queryParams.get("page") === "settings");
+  const [portfolio, setPortfolio] = useState([]);
+  const [loadingPortfolio, setLoadingPortfolio] = useState(false);
+
+  // Fetch portfolio when component loads
+  useEffect(() => {
+    const fetchPortfolio = async () => {
+      if (!user || !access_token) return;
+      
+      setLoadingPortfolio(true);
+      try {
+        const response = await builderProfileAPI.getProfile(access_token);
+        if (response.success && response.data) {
+          setPortfolio(response.data.portfolio_items || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch portfolio:', err);
+      } finally {
+        setLoadingPortfolio(false);
+      }
+    };
+
+    fetchPortfolio();
+  }, [user, access_token]);
 
   if (!user) {
     return (
@@ -231,11 +255,78 @@ const Profile = () => {
 
               {activeTab === 'projects' && (
                 <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
-                  <h3 className="text-xl font-semibold mb-6">Projects & Startups</h3>
-                  <div className="text-center text-gray-500 py-12">
-                    <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                    <p>Projects showcase coming soon...</p>
-                  </div>
+                  <h3 className="text-xl font-semibold mb-6">Portfolio & Projects</h3>
+                  
+                  {loadingPortfolio ? (
+                    <div className="flex justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                    </div>
+                  ) : portfolio && portfolio.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {portfolio.map((project) => (
+                        <motion.div
+                          key={project.id}
+                          whileHover={{ scale: 1.02 }}
+                          className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all duration-300"
+                        >
+                          {/* Project Image */}
+                          <div className="relative w-full h-48 rounded-t-2xl bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
+                            {project.image_url ? (
+                              <img src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                            ) : (
+                              <div className="text-5xl">📦</div>
+                            )}
+                            {/* Link Overlay */}
+                            {project.url && (
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <a
+                                  href={project.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="p-3 bg-blue-600 hover:bg-blue-700 rounded-full transition-colors"
+                                >
+                                  <ExternalLink className="w-5 h-5 text-white" />
+                                </a>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Project Details */}
+                          <div className="p-6 space-y-4">
+                            <div>
+                              <h4 className="text-lg font-bold mb-2 line-clamp-2">{project.title}</h4>
+                              <p className="text-gray-400 text-sm line-clamp-3">{project.description}</p>
+                            </div>
+
+                            {/* Skills Tags */}
+                            {project.skills_used && project.skills_used.length > 0 && (
+                              <div className="flex flex-wrap gap-2">
+                                {project.skills_used.slice(0, 3).map((skill, idx) => (
+                                  <span key={idx} className="px-2 py-1 text-xs rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                    {skill}
+                                  </span>
+                                ))}
+                                {project.skills_used.length > 3 && (
+                                  <span className="px-2 py-1 text-xs text-gray-400">+{project.skills_used.length - 3}</span>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Stats */}
+                            <div className="flex gap-4 text-xs text-gray-400 pt-4 border-t border-white/10">
+                              <span>👀 {project.views || 0}</span>
+                              <span>❤️ {project.likes || 0}</span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-500 py-12">
+                      <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>No portfolio projects yet. Go to Skill Profile to add your first project!</p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
