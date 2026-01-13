@@ -83,7 +83,7 @@ const ProfileHeader = ({
             </motion.button> */}
             
             {/* Level Badge */}
-            <div className="absolute z-100 -bottom-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full border-2 border-gray-800">
+            <div className="absolute z-1 -bottom-2 -right-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full border-2 border-gray-800">
               <Trophy className="w-3 h-3 inline mr-1" />
               Lvl {level}
             </div>
@@ -91,9 +91,9 @@ const ProfileHeader = ({
         </div>
 
         {/* User Info */}
-        <div className="flex justify-between items-start -mt-6">
+        <div className="flex flex-wrap justify-between items-start -mt-6">
           <div className="flex-1">
-            <div className="flex items-center gap-4 mb-2">
+            <div className="flex flex-wrap items-center gap-4 mb-2">
               <h1 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 {user?.firstName} {user?.lastName}
               </h1>
@@ -189,7 +189,7 @@ const ProfileHeader = ({
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onSettingsClick}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
+              className="flex items-center gap-2 my-4 mx-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
             >
               <Settings className="w-4 h-4" />
               Edit Profile

@@ -38,7 +38,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
   };
 
   const shouldShowSubItems = (link) => {
-    return hasSubItems(link) && expandedItems[link.id] || getAllRoutes(link).includes(location.pathname);
+    return getAllRoutes(link).includes(location.pathname);
   };
 
 

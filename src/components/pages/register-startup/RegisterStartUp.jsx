@@ -252,10 +252,10 @@ export default function RegisterStartUp() {
         }
         return true;
       case 5:
-        if (!logoFile) {
-          toast.error('Please upload a company logo');
-          return false;
-        }
+        // if (!logoFile) {
+        //   toast.error('Please upload a company logo');
+        //   return false;
+        // }
         return true;
       case 6:
         // Documents step - all fields are optional, no validation needed

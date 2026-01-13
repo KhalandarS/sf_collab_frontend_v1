@@ -68,8 +68,8 @@ export function createLinks(unreadMessagesCount) {
       href: "/dashboard",
       label: "Dashboard",
       subItems: [
-        { id: "overview", href: "/dashboard", label: "Overview", icon: <LuEye size={18} /> },
-        { id: "my-startup", href: "/discover-startups", label: "My Startup", icon: <BriefcaseBusiness size={18} /> },
+        // { id: "overview", href: "/dashboard", label: "Overview", icon: <LuEye size={18} /> },
+        // { id: "my-startup", href: "/discover-startups", label: "My Startup", icon: <BriefcaseBusiness size={18} /> },
       ],
     },
     {
@@ -80,6 +80,9 @@ export function createLinks(unreadMessagesCount) {
       subItems: [
         { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
         { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
+        // { id: "startup-teams", href: "/startup-teams", label: "Teams", icon: <TiSocialAtCircular size={18} /> },
+        // { id: "startup-documents", href: "/startup-documents", label: "Documents", icon: <FileText size={18} /> },
+        // { id: "startup-details", href: "/startup-details", label: "Details", icon: <Database size={18} /> },
       ],
     },
     {

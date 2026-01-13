@@ -2,6 +2,7 @@
 import { Badge, BarChart2, ChartNoAxesGanttIcon, Eye, LucideLayoutDashboard } from 'lucide-react';
 import { FcDocument } from 'react-icons/fc';
 import { IoChatbubbles } from 'react-icons/io5';
+import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
 
 export function createInvestorLinks(unreadMessagesCount) {
   return [
@@ -41,15 +42,17 @@ export function createInvestorLinks(unreadMessagesCount) {
       subItems: []
     },
     {
-      id: 6,
-      icon: <IoChatbubbles size={22} />,
-      href: "/chat",
-      label: "Messages",
-      unreadCount: (
-        <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
-          {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
-        </Badge>
-      )
-    },
+          id: 6,
+          icon: <BrainCircuit size={23} />,
+          href: "/ai-dashboard",
+          label: "AI Tools",
+          subItems: [
+            { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
+            { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
+            { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
+            { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
+            { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
+          ],
+        },
   ];
 }

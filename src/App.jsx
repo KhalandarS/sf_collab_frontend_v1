@@ -220,8 +220,10 @@ export default function App() {
         
                 {/* Help */}
                 <Route path="help" element={<Help />} />
-                {/* Chat */}
+                <Route path="video-tutorials" element={<VideoTutorials />} />
+                {/* Chat and notifications */}
                 <Route path="chat" element={<ChatPage />} />
+                <Route path="notifications" element={<Notifications />} />
                 {/* Posts */}
                 <Route path="posts" element={<Posts />} />
         

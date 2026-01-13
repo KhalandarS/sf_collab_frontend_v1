@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Options from "../components/sections/Options";
-
+import { motion } from "framer-motion";
 import UserSidebar from "@/components/pages/sidebars/sidebar/GeneralSidebar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
@@ -186,6 +186,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     setIsOptionsVisible(false);
   };
+  const isMobile = window.matchMedia("(max-width: 1024px)").matches;
 
   return (
     <div className="relative min-h-screen w-screen flex flex-col">
@@ -247,7 +248,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         </div>
       )}
 
-      <div className="relative flex-1 w-full flex overflow-hidden">
+      <motion.div className="relative flex-1 w-full flex overflow-hidden">
         {/* Left sidebar */}
         {!isRootPath && <SideBar />}
 
@@ -279,7 +280,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             <Outlet />
             
             {/* Chat dock - persistent on right side */}
-            {!isRootPath && !isChatRoute && (
+            {(!isRootPath && !isChatRoute && !isMobile) && (
               <div 
                 className="fixed right-0 bottom-0 z-[999999]"
                 style={{ right: '16px', bottom: '16px' }}
@@ -289,7 +290,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 };

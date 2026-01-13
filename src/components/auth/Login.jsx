@@ -218,10 +218,11 @@ export default function Login() {
         }))
       }
     } catch (error) {
-      console.error('Login error:', error)
+      // console.error('Login error:', error)
+      // console.log('Error response data:', error.response?.data);
       setErrors(prev => ({
         ...prev,
-        submit: "An unexpected error occurred"
+        submit: error?.response?.data?.message || "An error occurred during login"
       }))
     } finally {
       setIsLoading(false)

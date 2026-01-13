@@ -152,7 +152,7 @@ const ReferPage = () => {
   );
   const [leaderboard, setLeaderboard] = useState([]);
   const [mvpDeadline] = useState(new Date("2026-01-20"));
-
+  
   // Fetch waitlist status
   useEffect(() => {
     const checkWaitlistStatus = async () => {
@@ -516,7 +516,7 @@ const currentTier = RANK_REWARDS.find(
             key={idx}
             className={`rounded-lg p-4 border transition-all ${
           item.highlight
-            ? "bg-green-500/10 border-green-500/50 col-span-2"
+            ? "bg-green-500/10 border-green-500/50 md:col-span-2"
             : "bg-neutral-900 border-neutral-700"
             }`}
           >

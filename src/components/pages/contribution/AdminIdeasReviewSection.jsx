@@ -87,7 +87,7 @@ export default function AdminIdeasReviewSection() {
         {ideas.length === 0 && (
           <p className="text-gray-400">No pending ideas 🎉</p>
         )}
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button
             onClick={() => setFilteredIdeas(ideas)}
             className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-sm font-medium"

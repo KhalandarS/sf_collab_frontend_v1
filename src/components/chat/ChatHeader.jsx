@@ -10,6 +10,8 @@ const ChatHeader = ({
   conversation, 
   currentUserId,
   isOnline = false,
+  onBack,
+  showBack = false
 }) => {
   if (!conversation) return null;
 
@@ -47,6 +49,12 @@ const ChatHeader = ({
     <div className="h-14 px-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50">
       {/* Left: User info */}
       <div className="flex items-center gap-3">
+        {showBack && (
+  <button onClick={onBack} className="lg:hidden p-2">
+    ←
+  </button>
+)}
+
         <Avatar
           src={avatarUrl}
           name={displayName}

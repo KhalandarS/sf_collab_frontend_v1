@@ -179,9 +179,8 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${
-        isHidden ? "-translate-y-full" : "translate-y-0"
-      }`}
+      className={`fixed top-0 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"
+        }`}
       style={{ zIndex: 9999999 }}
     >
       <div
@@ -249,10 +248,12 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="click"
+                trigger="mouseenter"
                 placement="bottom"
                 interactive={true}
+                delay={[100, 150]} // small delay to avoid flicker
                 appendTo={document.body}
+                onClickOutside={() => { }}
               >
                 <button className="relative p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
                   <BellIcon />
@@ -306,10 +307,12 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="click"
+                trigger="mouseenter"
                 placement="bottom"
                 interactive={true}
+                delay={[100, 150]} // small delay to avoid flicker
                 appendTo={document.body}
+                onClickOutside={() => { }}
               >
                 <button className="flex items-center gap-2.5 w-11 h-11 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20 overflow-hidden hover:from-blue-500/30 hover:to-cyan-500/20 transition-all duration-200 ring-2 ring-transparent hover:ring-blue-500/30">
                   <img
@@ -321,12 +324,13 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
               </Tippy>
             </div>
 
-            <div className="lg:hidden">
-              <ShineButton 
+            <div className="lg:hidden border border-blue-500/20 rounded-lg">
+              <ShineButton
                 onClick={() => setIsOpen(!isOpen)}
                 icon={<TiThMenu size={15} />}
-                size="sm" 
-                bgColor="linear-gradient(325deg, #2563eb 0%, #60a5fa 55%, #2563eb 90%)" 
+                size="sm"
+                className=" border border-blue-500/20 rounded-lg"
+                bgColor="linear-gradient(325deg, #2563eb 0%, #60a5fa 55%, #2563eb 90%)"
               />
             </div>
           </>
