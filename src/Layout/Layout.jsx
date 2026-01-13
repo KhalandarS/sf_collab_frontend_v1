@@ -282,7 +282,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           )}
 
           <div
-            className={`relative w-full h-full ${
+            className={`relative mt-16 w-full h-full ${
               !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
             } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
             onScroll={isRootPath ? undefined : onScroll}
