@@ -1,4 +1,6 @@
-export default function SidebarContent({ onLinkClick, isMobile = false }) {
+import { Link } from "react-router-dom";
+
+export default function SidebarContent({ onLinkClick, isMobile = false, links, currentContextId, isAdmin, location, CHAT_CONTEXT_ID, shouldShowSubItems }) {
   return (
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       {/* Main navigation */}

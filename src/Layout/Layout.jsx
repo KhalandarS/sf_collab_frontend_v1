@@ -12,7 +12,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import Options from "../components/sections/Options";
 
-import UserSidebar from "../components/pages/sidebars/sidebar/SideBar";
+import UserSidebar from "../components/pages/sidebars/SideBar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
 import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/InfluencerSidebar";
 import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
