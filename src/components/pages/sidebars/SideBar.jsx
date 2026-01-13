@@ -5,7 +5,7 @@ import { getCurrentContext } from "./sidebar/links";
 import DesktopSidebarContent from "./DesktopSidebarContent";
 import MobileSidebarContent from "./MobileSidebarContent";
 
-export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, links }) {
+export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, links = [] }) {
   const location = useLocation();
 
 

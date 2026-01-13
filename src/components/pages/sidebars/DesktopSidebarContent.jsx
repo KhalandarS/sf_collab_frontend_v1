@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import BottomLinks from "./BottomLinks";
 import { Crown } from "lucide-react";
 
-export default function DesktopSidebarContent({ links, currentContextId, toggleExpand, hasSubItems, shouldShowSubItems, isAdmin }) {
+export default function DesktopSidebarContent({ links = [], currentContextId, toggleExpand, hasSubItems, shouldShowSubItems, isAdmin }) {
   const location = useLocation();
   return (
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
