@@ -28,6 +28,7 @@ const Contact = () => {
 
   return (
     <>
+      <NavBar />
       <div ref={main} className="bg-[#0b0b0b] text-white py-20 px-6 lg:px-20">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
@@ -70,7 +71,7 @@ const Contact = () => {
           </div>
         </div>
       </div>
-
+      <Footer />
     </>
   );
 };

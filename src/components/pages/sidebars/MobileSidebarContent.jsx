@@ -1,9 +1,10 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import BottomLinks from "./BottomLinks";
 import { Crown } from "lucide-react";
 
 export default function MobileSidebarContent({ onLinkClick, links = [], currentContextId, isAdmin, toggleExpand, hasSubItems, shouldShowSubItems }) {
   const location = useLocation();
+  const navigate = useNavigate(); 
   return (
     <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       <div className="flex flex-col gap-1 px-2">
@@ -15,7 +16,14 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
             <div key={link.id} className="w-full">
               {hasSubItems(link) ? (
                 <button
-                  onClick={() => toggleExpand(link.id)}
+                  onClick={() => {
+                    if (link.href) {
+                      navigate(link.href);
+                      return
+                    }
+                    toggleExpand(link.id)
+                  }
+                  }
                   className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${isActive
                       ? "bg-blue-600/20 text-blue-400"
                       : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
@@ -46,7 +54,7 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
 
               {showSubs && (
                 <div className="flex flex-col gap-0.5 mt-1 ml-4 pl-3 border-l border-zinc-700/50">
-                  {link.subItems.map((subItem) => {
+                  {(link?.subItems || []).map((subItem) => {
                     const isSubActive = location.pathname === subItem.href;
 
                     return (

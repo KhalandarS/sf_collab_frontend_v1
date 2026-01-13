@@ -38,7 +38,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const isConnectionsRoute = location.pathname.startsWith("/connections");
 
   const { user, access_token } = useSelector((state) => state.auth);
-  const isAdmin = hasPermission(user, "admin");
+  const [isAdmin] = useState(hasPermission(user, "admin_access"));
 
   const { onlineUsers, socket, isConnected } = useAppSocket();
   const { friends } = useChatContacts();

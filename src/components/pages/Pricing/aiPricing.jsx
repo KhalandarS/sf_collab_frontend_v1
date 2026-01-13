@@ -2,7 +2,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const aiExtras = {
   bundle: {
     name: "AI Power Bundle",
-    price: "$49",
+    price: "$69",
     period: "/ month",
     highlight: true,
     includes: [
@@ -20,6 +20,9 @@ const aiExtras = {
     { name: "Pitch Deck Generator", price: "$19", desc: "Create compelling pitch decks to attract investors" },
     { name: "Image Generator", price: "$15", desc: "Generate high-quality images for your projects" },
     { name: "Video Generator", price: "$29", desc: "Produce engaging videos to showcase your ideas" },
+    { name: "Content Creator", price: "$25", desc: "AI-powered content creation for blogs, social media, and more" },
+    { name: "Logo Generator", price: "$10", desc: "Design unique logos for your brand or project" },
+    { name:" Outreaching Automation", price:" $29", desc:"Automate outreach emails and follow-ups to potential collaborators" },
   ],
 };
 const ExtrasSection = () => (
@@ -43,7 +46,7 @@ const ExtrasSection = () => (
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-2xl font-bold">🤖 AI Power Bundle</h3>
-        <span className="text-3xl font-bold text-purple-400">$49/mo</span>
+        <span className="text-3xl font-bold text-purple-400">$69/mo</span>
       </div>
 
       <p className="text-neutral-300 mb-4">

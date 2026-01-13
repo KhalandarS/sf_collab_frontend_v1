@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { X } from "lucide-react";
-import { getCurrentContext } from "./sidebar/links";
+import { getAllRoutes, getCurrentContext } from "./sidebar/links";
 import DesktopSidebarContent from "./DesktopSidebarContent";
 import MobileSidebarContent from "./MobileSidebarContent";
 
@@ -38,7 +38,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
   };
 
   const shouldShowSubItems = (link) => {
-    return hasSubItems(link) && expandedItems[link.id];
+    return hasSubItems(link) && expandedItems[link.id] || getAllRoutes(link).includes(location.pathname);
   };
 
 

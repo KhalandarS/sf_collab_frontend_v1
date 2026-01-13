@@ -10,11 +10,15 @@ import {
   Wand2,
   Database,
   BookOpen,
+  Earth,
+  MessageSquareHeart,
 } from "lucide-react";
 
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
 import { Badge } from "@/components/ui/badge";
+import { TiSocialAtCircular } from "react-icons/ti";
+import { MdSocialDistance } from "react-icons/md";
 
 // ✅ theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
@@ -69,15 +73,6 @@ export function createLinks(unreadMessagesCount) {
       ],
     },
     {
-      id: 2,
-      icon: <Lightbulb size={22} />,
-      href: "/ideation",
-      label: "Ideation",
-      subItems: [
-        { id: "ideas-feed", href: "/ideation", label: "Ideas Feed", icon: <Lightbulb size={18} /> },
-      ],
-    },
-    {
       id: 3,
       icon: <Rocket size={21} />,
       href: "/discover-startups",
@@ -88,24 +83,43 @@ export function createLinks(unreadMessagesCount) {
       ],
     },
     {
-      id: 4,
-      icon: <IoChatbubbles size={23} />,
-      href: "/chat",
-      label: "Chat",
-      unreadCount: (
-        <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
-          {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
-        </Badge>
-      ),
+      id: 2,
+      icon: <Lightbulb size={22} />,
+      href: "/ideation",
+      label: "Idea Incubator",
+      subItems: [
+        { id: "ideas-feed", href: "/ideation", label: "Ideas Feed", icon: <Lightbulb size={18} /> },
+      ],
     },
+    
+    // {
+    //   id: 4,
+    //   icon: <IoChatbubbles size={23} />,
+    //   href: "/chat",
+    //   label: "Chat",
+    //   unreadCount: (
+    //     <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
+    //       {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
+    //     </Badge>
+    //   ),
+    // },
     {
       id: 5,
-      icon: <FileText size={22} />,
+      icon: <MessageSquareHeart size={22} />,
       href: "/posts",
-      label: "Posts",
+      label: "Social",
       subItems: [
-        { id: "posts-feed", href: "/posts", label: "Posts Feed", icon: <FileText size={18} /> },
+        { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
         { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
+      ],
+    },
+    {
+      id: 7,
+      icon: <BookOpen size={22} />,
+      href: "/knowledge",
+      label: "Learning",
+      subItems: [
+        { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
       ],
     },
     {
@@ -116,7 +130,6 @@ export function createLinks(unreadMessagesCount) {
           subItems: [
             { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
             { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-            { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
             { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
             { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
             { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
@@ -124,6 +137,22 @@ export function createLinks(unreadMessagesCount) {
         },
   ];
 };
+
+export function getAllRoutes(element) {
+  let routes = [];
+
+  if (element.href) {
+    routes.push(element.href);
+  }
+
+  if (Array.isArray(element.subItems)) {
+    for (const item of element.subItems) {
+      routes = routes.concat(getAllRoutes(item));
+    }
+  }
+
+  return routes;
+}
 
 export function getCurrentContext(pathname) {
   //if (pathname.startsWith("/chat")) return null;

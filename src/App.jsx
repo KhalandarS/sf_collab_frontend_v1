@@ -41,7 +41,7 @@ import DataCollection from "./components/pages/termsAndConditions/legalDataColle
 import LandingPage from "./components/landing-page/pages/Home.jsx";
 import AboutPage from "./components/landing-page/pages/About.jsx";
 import TeamPage from "./components/landing-page/pages/team/TeamPage.jsx";
-import ContactPage from "./components/landing-page/pages/Contact.jsx";
+import ContactPage from "./components/landing-page/pages/ContactPage.jsx";
 import StartupPage from "./components/landing-page/pages/StartupPage.jsx";
 import ProductsPage from "./components/landing-page/pages/Products.jsx";
 import Pricing from "./components/pages/Pricing/Pricing.jsx";

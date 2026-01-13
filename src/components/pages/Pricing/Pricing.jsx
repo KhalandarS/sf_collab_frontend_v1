@@ -147,8 +147,13 @@ const Pricing = () => {
         <p className="text-neutral-400 text-center mt-4 max-w-2xl mx-auto">
           Choose how you participate. Builders earn. Founders build.
         </p>
+        <p className="text-neutral-300 text-center mt-2 text-sm italic">
+          Prices are subject to change after release.
+        </p>
+      </div>
 
-        {/* TOGGLE */}
+      {/* TOGGLE */}
+      <div className="w-full mx-auto px-6 lg:px-40 mt-12">
         <div className="relative mt-12 bg-neutral-900 border border-neutral-800 rounded-full flex p-1 max-w-md mx-auto">
           <motion.div
             layout

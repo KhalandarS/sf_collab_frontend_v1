@@ -68,9 +68,9 @@ const Dashboard = ({
     { id: "overview", component: <DashboardSection /> },
     { id: "worldclock", component: <WorldClock /> },
     { id: "calendar", component: <Calendar /> },
-    { id: "tasks", component: <Tasks searchQuery={query} /> },
+    // { id: "tasks", component: <Tasks searchQuery={query} /> },
     { id: "progress", component: <TaskProgress /> },
-  ], [query]);
+  ], []);
 
   const [sections, setSections] = useState(initialSections);
 

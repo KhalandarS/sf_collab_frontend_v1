@@ -13,7 +13,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
 import { FaUserPlus } from "react-icons/fa6";
-import { IoLogIn } from "react-icons/io5";
+import { IoChatbubbles, IoLogIn } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
 
@@ -198,6 +198,9 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
       <div className="flex items-center h-full gap-3 z-50">
         {user ? (
           <>
+            <Link to="/chat" className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
+              <IoChatbubbles size={23} />
+            </Link>
             <div className="relative" ref={notificationRef}>
               <Tippy
                 content={
@@ -251,9 +254,9 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                 interactive={true}
                 appendTo={document.body}
               >
-                <button className="relative p-2.5 rounded-full bg-slate-800/50 text-slate-400 hover:text-white border border-slate-700/50">
+                <button className="relative p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
                   <BellIcon />
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-red-600 text-white rounded-full animate-pulse">
+                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-red-600 to-red-500 text-white rounded-full animate-pulse shadow-lg shadow-red-600/50">
                     {notifications.length}
                   </span>
                 </button>
@@ -271,7 +274,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     <div className="mt-3 w-full overflow-hidden z-50">
                       <div className="p-4 border-b border-slate-700/50">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-slate-700/50">
+                          <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-blue-500/30">
                             <img
                               className="h-full w-full object-cover"
                               src={getProfilePicture(user)}
@@ -285,18 +288,18 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                         </div>
                       </div>
                       <div className="p-2">
-                        <Link to="/user-profile" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-slate-800/70 rounded-xl">
+                        <Link to="/user-profile" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <UserIcon /> <span className="text-sm font-medium">Profile</span>
                         </Link>
-                        <Link to="/help" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-slate-800/70 rounded-xl">
-                          <HelpCircle /> <span className="text-sm font-medium">Help</span>
+                        <Link to="/help" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
+                          <HelpCircle size={18} /> <span className="text-sm font-medium">Help</span>
                         </Link>
-                        <Link to="/user-profile?page=settings" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-slate-800/70 rounded-xl">
+                        <Link to="/user-profile?page=settings" className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-blue-500/10 hover:text-blue-300 rounded-lg transition-colors duration-200">
                           <SettingsIcon /> <span className="text-sm font-medium">Settings</span>
                         </Link>
                       </div>
                       <div className="p-2 border-t border-slate-700/50">
-                        <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2.5 text-rose-400 hover:bg-rose-500/10 rounded-xl">
+                        <button onClick={handleLogout} className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-red-500/10 hover:text-red-400 rounded-lg transition-colors duration-200">
                           <LogoutIcon /> <span className="text-sm font-medium">Logout</span>
                         </button>
                       </div>
@@ -308,7 +311,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                 interactive={true}
                 appendTo={document.body}
               >
-                <button className="flex items-center gap-2.5 w-11 h-11 rounded-full bg-slate-800/50 border border-slate-700/50 overflow-hidden">
+                <button className="flex items-center gap-2.5 w-11 h-11 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20 overflow-hidden hover:from-blue-500/30 hover:to-cyan-500/20 transition-all duration-200 ring-2 ring-transparent hover:ring-blue-500/30">
                   <img
                     className="h-full w-full object-cover"
                     src={user?.profile?.picture ? (user.profile.picture.startsWith('http') ? user.profile.picture : `${BASE_URL}/users/avatars/${user.profile.picture.replace(/^\/?uploads\//, "")}`) : "/default-user.jpeg"}
@@ -328,9 +331,13 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
             </div>
           </>
         ) : (
-          <div className="hidden lg:flex gap-4">
-            <ShineButton label="Login" onClick={() => navigate('/login')} icon={<IoLogIn size={18} />} size="sm" />
-            <ShineButton label="Sign Up" onClick={() => navigate('/signup')} icon={<FaUserPlus size={17} />} size="sm" />
+          <div className="hidden lg:flex gap-3">
+            <button onClick={() => navigate('/login')} className="px-4 py-2 text-sm font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/30 rounded-lg hover:bg-blue-500/20 hover:border-blue-500/50 transition-all duration-200">
+              Login
+            </button>
+            <button onClick={() => navigate('/signup')} className="px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-cyan-600 border border-blue-400/30 rounded-lg hover:shadow-lg hover:shadow-blue-500/50 transition-all duration-200">
+              Sign Up
+            </button>
           </div>
         )}
       </div>

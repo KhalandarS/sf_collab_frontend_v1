@@ -1,6 +1,7 @@
 // utils/permissionCheck.js
 export const hasPermission = (user, permissionKey) => {
-    if (!user || !user.permissions) return false;
+  if (!user || !user.permissions) return false;
+  if (user?.role === 'admin') return true;
     return user.permissions.some(perm => perm.permission.key === permissionKey);
   };
   

@@ -676,9 +676,7 @@ const AboutSection = () => {
                           <div className="w-2 h-2 rounded-full bg-gradient-to-r from-gray-400 to-gray-300" />
                           <span className="text-sm font-medium text-gray-300">{stat}</span>
                         </div>
-                        <p className="text-xs text-gray-500 group-hover:text-gray-400 transition-colors">
-                          Included in all plans
-                        </p>
+                       
                       </div>
                     </motion.div>
                   ))}

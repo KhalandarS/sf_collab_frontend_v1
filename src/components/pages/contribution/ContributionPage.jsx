@@ -7,116 +7,487 @@ import {
   ArrowRight,
   Lock,
   Gift,
+  Zap,
+  CheckCircle,
+  TrendingUp,
+  Heart,
 } from "lucide-react";
+import { motion } from "framer-motion";
+import { useEffect } from "react";
 
 /* ================= DATA ================= */
 
 const contributionActions = [
-  {
-    title: "Submit an Idea",
-    description:
-      "Propose product ideas, features, or improvements that shape SFCollab.",
-    points: "10-50 points",
-    icon: Lightbulb,
-    cta: "Submit Idea",
-    to: "/contribution-ideas",
-    tone: "primary",
-    available: true,
-  },
-  {
-    title: "Refer Friends",
-    description:
-      "Invite builders or founders. Earn points for every verified referral.",
-    points: "5 points / referral",
-    bonus: "+25 points every 5 referrals",
-    icon: Users,
-    cta: "Get Referral Link",
-    to: "/refer",
-    tone: "neutral",
-    available: true,
-  },
-  {
-    title: "Vote in Polls",
-    description:
-      "Help guide product decisions by voting on community polls.",
-    points: "1–3 points per vote",
-    icon: Vote,
-    cta: "View Polls",
-    to: "/contribution-polls",
-    tone: "neutral",
-    available: true,
-  },
+  
   {
     title: "Crowdfunding Access",
     description:
-      "Support SFCollab early and unlock discounted lifetime access.",
-    points: "Early access + bonuses",
+      "Skip the Hustle, Secure your access, Help us grow by investing in cheaper future workspace for you and your fellow founders and builders, shape SFCollab's future.",
+    points: "Early access plus bonuses",
+    important: true,
+    pointsDetail: "Priority ranking and bonus points",
     icon: Rocket,
     cta: "Contribute Now",
     to: "/crowdfunding",
     tone: "locked",
     available: true,
+    verified: true,
+    repeatable: false,
+    impact: "Provides a significant boost to your ranking",
   },
+  {
+    title: "Submit an Idea",
+    description:
+      "Propose innovative product ideas, features, or enhancements that will shape the future of SFCollab.",
+    points: "10-50 points",
+    pointsDetail: "Based on impact and feasibility",
+    icon: Lightbulb,
+    cta: "Submit Your Idea",
+    to: "/contribution-ideas",
+    tone: "primary",
+    available: true,
+    verified: true,
+    repeatable: true,
+    impact: "Affects your ranking immediately",
+  },
+  {
+    title: "Refer Friends",
+    description:
+      "Invite fellow builders or founders. Earn points for every verified referral you make.",
+    points: "5 points per referral",
+    bonus: "+25 points for every 5 successful referrals",
+    pointsDetail: "Only verified signups count",
+    icon: Users,
+    cta: "Get Your Referral Link",
+    to: "/refer",
+    tone: "neutral",
+    available: true,
+    verified: true,
+    repeatable: true,
+    impact: "Affects your ranking immediately",
+  },
+  {
+    title: "Vote in Polls",
+    description:
+      "Influence product decisions by participating in community polls.",
+    points: "1–10 points per vote",
+    pointsDetail: "Recurring engagement reward",
+    icon: Vote,
+    cta: "View Community Polls",
+    to: "/contribution-polls",
+    tone: "neutral",
+    available: true,
+    verified: true,
+    repeatable: true,
+    impact: "Affects your ranking immediately",
+  },
+  {
+    title: "Register Your Startup",
+    description:
+      "Create a profile for your startup and join the vibrant SFCollab community.",
+    points: "15 points per startup",
+    pointsDetail: "Points awarded for one startup registration per day",
+    icon: Rocket,
+    cta: "Register or join a Startup",
+    to: "/register-startup",
+    tone: "primary",
+    available: true,
+    verified: true,
+    repeatable: false,
+    impact: "Affects ranking immediately",
+  },
+  {
+    title: "Idea Incubator",
+    description:
+      "Develop and refine ideas daily with community feedback and guidance.",
+    points: "10 points / day",
+    pointsDetail: "Points awarded for one idea submission per day",
+    icon: Lightbulb,
+    cta: "Access Incubator",
+    to: "/ideation",
+    tone: "primary",
+    available: true,
+    verified: true,
+    repeatable: true,
+    impact: "Affects ranking immediately",
+  },
+  {
+    title: "Report Bugs & Feedback",
+    description:
+      "Help improve SFCollab by reporting bugs and sharing constructive feedback, click on the button on the lower-left part of the screen.",
+    points: "10-30 points",
+    pointsDetail: "Based on severity & quality",
+    icon: Zap,
+    cta: "Submit Report",
+    to: null,
+    tone: "neutral",
+    available: true,
+    verified: true,
+    repeatable: true,
+    impact: "Affects ranking immediately",
+  },
+  
 ];
+
+const pointRanges = [
+  { action: "Submit Ideas", range: "10–50 pts", detail: "Based on quality & impact" },
+  { action: "Bug Reports & Testing", range: "10-30 pts", detail: "Verified issues only" },
+  { action: "Polls & Engagement", range: "1–10 pts", detail: "Per vote or submission" },
+  { action: "Referrals", range: "5 pts each", detail: "Verified signups only" },
+  { action: "Referral Bonus", range: "+25 pts", detail: "Every 5 successful referrals" },
+  { action: "Documentation & Guides", range: "10–50 pts", detail: "Community-approved content" },
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: { opacity: 1, y: 0 },
+};
 
 /* ================= PAGE ================= */
 
 export default function ContributionPage() {
   const userPoints = 42;
+
   const currentStage = "Waitlist — Stage 2";
   const nextUnlock = "Stage 3 (75 points)";
+  const progressPercentage = (userPoints / 75) * 100;
 
   return (
-    <div className="min-h-screen bg-radial from-purple-950 to-black px-6 py-10 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-purple-950/20 to-neutral-950 px-6 py-10 text-white">
       <div className="max-w-7xl mx-auto space-y-12">
 
         {/* ================= HEADER ================= */}
-        <section className="space-y-4">
-          <h1 className="text-4xl font-semibold">
-            Contribute to Unlock Access
-          </h1>
-          <p className="text-gray-400 max-w-2xl">
-            Meaningful contributions move you forward. Earn points to unlock
-            features, access, and early benefits.
-          </p>
+        <motion.section
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <div>
+            <h1 className="text-5xl font-bold mb-3">
+              Earn Points. Unlock Access.
+            </h1>
+            <p className="text-lg text-gray-400 max-w-3xl">
+              Your contributions shape SFCollab's future. Earn points through ideas, feedback, testing, and community engagement. Contributions matter more than referrals—quality always wins.
+            </p>
+          </div>
 
-          <div className="flex flex-wrap gap-4 pt-6">
+          {/* Progress Section */}
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
             <StatusCard label="Your Points" value={userPoints} />
             <StatusCard label="Current Stage" value={currentStage} />
             <StatusCard label="Next Unlock" value={nextUnlock} />
+          </div> */}
+
+          {/* Progress Bar */}
+          {/* <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="bg-neutral-900 border border-neutral-800 rounded-xl p-4"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-gray-300">Progress to Next Stage</p>
+              <p className="text-sm font-bold text-purple-400">{userPoints} / 75 pts</p>
+            </div>
+            <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercentage}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {75 - userPoints} points remaining to unlock Stage 3 rewards
+            </p>
+          </motion.div> */}
+        </motion.section>
+      {/* ================= ACTIONS ================= */}
+        <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="space-y-6"
+        >
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold">
+            Ways to Contribute
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {contributionActions.map((action) => (
+              <Link to={action.to || "#"} key={action.title} className={`w-full ${action.important ? 'md:col-span-2' : ''}`}>
+                <ActionCard key={action.title} action={action} />
+                </Link>
+            ))}
           </div>
-        </section>
+        </motion.section>
 
-        {/* ================= ACTIONS ================= */}
-        <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {contributionActions.map((action) => (
-            <ActionCard key={action.title} action={action} />
-          ))}
-        </section>
-
-        {/* ================= INFO ================= */}
-        <section className="rounded-2xl border border-white/10 bg-white/5 p-6 space-y-4">
-          <h2 className="text-xl font-semibold flex items-center gap-2">
-            <Gift className="h-5 w-5 text-indigo-400" />
+        {/* ================= POINTS OVERVIEW ================= */}
+        <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="rounded-2xl border border-purple-500/30 bg-gradient-to-br from-purple-600/10 to-purple-900/10 backdrop-blur p-8 space-y-6"
+        >
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
+            <Zap className="h-6 w-6 text-yellow-400" />
             How Points Work
-          </h2>
+          </motion.h2>
 
-          <ul className="text-sm text-gray-400 space-y-2 list-disc list-inside">
-            <li>Small contributions: <b>10 points</b></li>
-            <li>Medium contributions: <b>25 points</b></li>
-            <li>High-impact contributions: <b>50 points</b></li>
-            <li>
-              Every <b>5 referrals</b> grants a <b>25-point bonus</b>
-            </li>
-            <li>Points affect waitlist priority and feature access</li>
-          </ul>
-        </section>
+          <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-2">🎯 Points Determine</p>
+              <p className="font-semibold text-white">Your Rank</p>
+              <p className="text-xs text-gray-500 mt-2">Higher points = higher position on leaderboard</p>
+            </div>
+            <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-2">🔓 Rank Determines</p>
+              <p className="font-semibold text-white">Access & Rewards</p>
+              <p className="text-xs text-gray-500 mt-2">Top ranks get lifetime discounts & early access</p>
+            </div>
+            <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
+              <p className="text-sm text-gray-400 mb-2">⭐ Contributions</p>
+              <p className="font-semibold text-white">&gt; Referrals</p>
+              <p className="text-xs text-gray-500 mt-2">Quality feedback beats quantity every time</p>
+            </div>
+          </motion.div>
 
-        {/* ================= FOOT NOTE ================= */}
-        <p className="text-sm text-gray-500 max-w-3xl">
-          Access is released in stages. Active contributors progress
-          significantly faster than inactive users.
-        </p>
+          {/* <motion.div
+            variants={itemVariants}
+            className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 font-mono text-sm text-blue-300"
+          >
+            <p className="mb-2">Your Rank Score Formula:</p>
+            <p>Referrals + Contributions + Engagement + Early Bonus</p>
+          </motion.div> */}
+        </motion.section>
+
+        {/* ================= CONTRIBUTION POINT RANGES ================= */}
+        {/* <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="space-y-6"
+        >
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
+            <TrendingUp className="h-6 w-6 text-green-400" />
+            Contribution Point Ranges
+          </motion.h2>
+
+          <p className="text-gray-400 max-w-2xl">
+            Different contributions have different values. Here's the complete breakdown:
+          </p>
+
+          <motion.div
+            variants={containerVariants}
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          >
+            {pointRanges.map((item, idx) => (
+              <motion.div
+                key={idx}
+                variants={itemVariants}
+                className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all"
+              >
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-white">{item.action}</p>
+                    <p className="text-xs text-gray-500 mt-1">{item.detail}</p>
+                  </div>
+                  <span className="text-lg font-bold text-purple-400 whitespace-nowrap ml-4">
+                    {item.range}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm text-blue-300"
+          >
+            <p className="font-semibold mb-2">💡 Point Transparency</p>
+            <p>
+              All points are verified by our team. One-time contributions like ideas may earn more than recurring engagement like polls. Both count toward your rank immediately.
+            </p>
+          </motion.div>
+        </motion.section> */}
+
+        
+        {/* ================= WHY CONTRIBUTIONS MATTER ================= */}
+        <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="rounded-2xl border border-red-500/30 bg-gradient-to-br from-red-600/10 to-red-900/10 backdrop-blur p-8 space-y-6"
+        >
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
+            <Heart className="h-6 w-6 text-red-400" />
+            Why Contributions Matter More Than Referrals
+          </motion.h2>
+
+          <motion.div
+            variants={containerVariants}
+            className="space-y-4"
+          >
+            <motion.div variants={itemVariants} className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/20 border border-red-500/50">
+                  <CheckCircle className="h-6 w-6 text-red-400" />
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Builders Shape the Product</p>
+                <p className="text-sm text-gray-400">
+                  Your feedback, ideas, and testing directly influence feature prioritization and product direction. You're not just a user—you're a co-builder.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/20 border border-red-500/50">
+                  <CheckCircle className="h-6 w-6 text-red-400" />
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Quality Feedback Prevents Bad Launches</p>
+                <p className="text-sm text-gray-400">
+                  Early testing and bug reports catch critical issues before they reach users. This protects both quality and reputation.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/20 border border-red-500/50">
+                  <CheckCircle className="h-6 w-6 text-red-400" />
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Quality Users Deserve Priority Access</p>
+                <p className="text-sm text-gray-400">
+                  Contributors, testers, and engaged members move up the queue. We launch with people who care, not just with early signups.
+                </p>
+              </div>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="flex gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-500/20 border border-red-500/50">
+                  <CheckCircle className="h-6 w-6 text-red-400" />
+                </div>
+              </div>
+              <div>
+                <p className="font-semibold text-white mb-1">Referrals Are Optional, Not Required</p>
+                <p className="text-sm text-gray-400">
+                  Introverts, solo builders, and independent thinkers can earn top ranks purely through quality contributions. No pressure to be a salesperson.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </motion.section>
+
+        {/* ================= WHAT UNLOCKS NEXT ================= */}
+        {/* <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="rounded-2xl border border-neutral-800 bg-neutral-900/50 backdrop-blur p-8 space-y-6"
+        >
+          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
+            <Gift className="h-6 w-6 text-blue-400" />
+            What Unlocks Next
+          </motion.h2>
+
+          <motion.div variants={containerVariants} className="space-y-3">
+            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-white">Stage 3 Unlock</p>
+                <span className="text-sm text-purple-400 font-bold">75 points</span>
+              </div>
+              <p className="text-sm text-gray-400">
+                Priority support access, voting weight increases, exclusive Discord channel, early feature previews
+              </p>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-white">Top 1,000 Rank</p>
+                <span className="text-sm text-yellow-400 font-bold">MVP Access</span>
+              </div>
+              <p className="text-sm text-gray-400">
+                Guaranteed early access, lifetime discount (1-2 months free), "Bronze MVP" badge, founding member benefits
+              </p>
+            </motion.div>
+
+            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="font-semibold text-white">Top 100 Rank</p>
+                <span className="text-sm text-blue-400 font-bold">Gold Tier</span>
+              </div>
+              <p className="text-sm text-gray-400">
+                12 months free access, ×2 voting weight, priority support, "Gold Member" status with lifetime benefits
+              </p>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            variants={itemVariants}
+            className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 text-sm text-purple-300"
+          >
+            <p className="font-semibold mb-2">📊 Your Progress</p>
+            <p>
+              You have <span className="font-bold text-white">{userPoints} points</span>. Keep contributing to reach Stage 3 and unlock even better rewards!
+            </p>
+          </motion.div>
+        </motion.section> */}
+
+        {/* ================= FINAL CTAs ================= */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="space-y-4"
+        >
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Link to="/waitlist" className="w-full">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full px-6 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-purple-700 text-white font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              >
+                <Lightbulb className="h-5 w-5" />
+                Go to Waitlist Details
+              </motion.button>
+            </Link>
+            <Link to="/refer" className="w-full">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full px-6 py-4 rounded-xl border-2 border-purple-500/50 text-white font-semibold hover:bg-purple-500/10 transition-all flex items-center justify-center gap-2"
+              >
+                <Users className="h-5 w-5" />
+                View Rankings
+              </motion.button>
+            </Link>
+          </div>
+
+          {/* <p className="text-center text-sm text-gray-500">
+            💡 Tip: Start with ideas or bug reports. They have the highest point potential and make the biggest impact.
+          </p> */}
+        </motion.section>
       </div>
     </div>
   );
@@ -127,64 +498,111 @@ export default function ContributionPage() {
 function ActionCard({ action }) {
   const Icon = action.icon;
 
-  const toneStyles = {
-    primary:
-      "border-indigo-400/30 bg-indigo-500/10 hover:bg-indigo-500/15",
-    neutral:
-      "border-white/10 bg-white/5 hover:bg-white/10",
-    locked:
-      "border-amber-400/20 bg-amber-500/10 opacity-70",
-  };
+const toneStyles = {
+  primary: `
+    relative
+    border border-amber-400/60
+    bg-gradient-to-br from-amber-500/50 via-amber-500/40 to-transparent
+    backdrop-blur-md
+    shadow-[0_0_40px_-10px_rgba(251,191,36,0.35)]
+    hover:border-amber-400/60
+    hover:shadow-[0_0_55px_-10px_rgba(251,191,36,0.55)]
+    transition-all duration-300
+  `,
+
+  neutral: `
+    relative
+    border border-indigo-400/30
+    bg-gradient-to-br from-indigo-500/60 via-purple-600/20 to-transparent
+    backdrop-blur-md
+    shadow-[0_0_40px_-10px_rgba(99,102,241,0.35)]
+    hover:border-indigo-400/60
+    hover:shadow-[0_0_55px_-10px_rgba(99,102,241,0.55)]
+    transition-all duration-300
+  `,
+
+  locked: `
+    relative
+    border border-white/10
+    bg-white/5
+    backdrop-blur-sm
+    opacity-60
+    cursor-not-allowed
+  `,
+};
+
 
   return (
-    <div
-      className={`rounded-2xl border p-6 transition-colors ${toneStyles[action.tone]}`}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className={`rounded-2xl ${action.important ? "col-span-2 bg-blue-600/60 hover:bg-blue-500 border-blue-400/40 text-white shadow-[0_0_40px_-10px_rgba(59,130,246,0.55)] hover:shadow-[0_0_55px_-10px_rgba(59,130,246,0.75)]" : ""} border p-6 transition-all ${!action.important && toneStyles[action.tone]}`}
     >
-      <div className="flex items-center gap-3 mb-4">
-        <div className="p-3 rounded-xl bg-black/40 border border-white/10">
-          <Icon className="h-5 w-5 text-indigo-300" />
+      <div className="flex items-start justify-between mb-4 text-white">
+        <div className="flex items-center gap-3 flex-1">
+          <div className="p-3 rounded-xl bg-black/40 border border-neutral-700">
+            <Icon className="h-5 w-5 text-purple-300" />
+          </div>
+          <h3 className="text-lg font-semibold">{action.title}</h3>
         </div>
-        <h3 className="text-lg font-semibold">{action.title}</h3>
       </div>
 
-      <p className="text-sm text-gray-400 mb-4">
+      <p className="text-sm text-white mb-5">
         {action.description}
       </p>
 
-      <div className="text-sm space-y-1">
-        <p className="text-white font-medium">{action.points}</p>
+      <div className="mb-5 space-y-3 bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/50">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-white">Points:</p>
+          <p className="text-white font-semibold">{action.points}</p>
+        </div>
         {action.bonus && (
-          <p className="text-emerald-400 text-xs">{action.bonus}</p>
-        )}
-      </div>
-
-      <div className="mt-6">
-        {action.available ? (
-          <Link
-            to={action.to}
-            className="inline-flex items-center gap-2 text-sm font-medium text-indigo-300 hover:text-indigo-200"
-          >
-            {action.cta}
-            <ArrowRight className="h-4 w-4" />
-          </Link>
-        ) : (
-          <div className="inline-flex items-center gap-2 text-sm text-gray-400">
-            <Lock className="h-4 w-4" />
-            Coming Soon
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-white">Bonus:</p>
+            <p className="text-emerald-400 text-xs font-semibold">{action.bonus}</p>
           </div>
         )}
+        <div className="pt-2 border-t border-neutral-700/50 space-y-1 text-xs text-white">
+          {action.verified && <p>✓ Verified by team</p>}
+          
+          <p>✓ {action.pointsDetail}</p>
+          <p>✓ {action.impact}</p>
+        </div>
       </div>
-    </div>
+      { action.to !== null &&
+        <div className="mt-6">
+          {action.available ? (
+            <Link
+              to={action.to}
+              className="inline-flex items-center gap-2 text-sm font-medium text-purple-300 hover:text-purple-200 transition-colors"
+            >
+              {action.cta}
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            <div className="inline-flex items-center gap-2 text-sm text-gray-400">
+              <Lock className="h-4 w-4" />
+              Coming Soon
+            </div>
+          )}
+        </div>
+      }
+    </motion.div>
   );
 }
 
 function StatusCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-white/5 px-6 py-4 min-w-[160px]">
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="rounded-xl border border-neutral-700 bg-neutral-900/50 backdrop-blur px-6 py-4 min-w-[160px]"
+    >
       <p className="text-xs uppercase tracking-wide text-gray-500">
         {label}
       </p>
-      <p className="text-lg font-semibold mt-1">{value}</p>
-    </div>
+      <p className="text-2xl font-bold mt-2 text-purple-400">{value}</p>
+    </motion.div>
   );
 }

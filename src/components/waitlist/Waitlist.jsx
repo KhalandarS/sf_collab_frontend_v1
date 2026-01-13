@@ -1,302 +1,459 @@
 import { Link } from "react-router-dom";
 import { WaitlistSignup } from "./components/WaitlistSignup";
 import { Toaster } from "./components/ui/toaster";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./components/ui/card";
 import { Button } from "./components/ui/button";
-import { Sparkles, Users, Award, Zap, Heart } from "lucide-react";
+import {
+  Sparkles,
+  Users,
+  Award,
+  Zap,
+  Heart,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 
+/* =========================
+   CONFIG / CONSTANTS
+========================= */
+
 const POINT_VALUES = {
-  referral: { points: 2, label: "Valid Referral" },
-  small_contribution: { points: 10, label: "Small Contribution" },
-  contribution: { points: 25, label: "Medium Contribution" },
-  large_contribution: { points: 50, label: "High-Impact Contribution" },
-  // engagement: { points: 1, label: "Weekly Engagement" },
-  early_signup: { points: 15, label: "Early Signup Bonus" },
+  startup: { points: 15, label: "Create a Startup", daily: true },
+  idea: { points: 10, label: "Post an Idea", daily: true },
+  referral: { points: 5, label: "Referral" },
+  referral_bonus: { points: 25, label: "Referral Pack (5 referrals)" },
+  poll_vote: { points: "1-10", label: "Poll Voting" },
 };
 
 const RANK_REWARDS = [
-  { rank: "Top 10", reward: "Lifetime free access", badge: "🔑 Keyholder", perks: ["Private team channel", "×3 voting weight", "Guaranteed early access"] },
-  { rank: "Top 100", reward: "12 months free", badge: "🥇 Gold", perks: ["Priority support", "×2 voting weight"] },
-  { rank: "Top 300", reward: "6 months free", badge: "🥈 Silver", perks: ["Priority support"] },
-  { rank: "Top 1,000", reward: "1–2 months free", badge: "🥉 Bronze (MVP)", perks: ["Early feature access", "Founding Member badge"] },
+  {
+    rank: "Top 1",
+    badge: "🌠 Stardust Overlord",
+    points: "600+",
+    reward: "Lifetime full access + 0% builder fees",
+    perks: [
+      "Ultra-premium animated profile background (1/1, never reused)",
+      "Animated elite profile border (1/1)",
+      "Animated nickname (1/1)",
+      "Animated custom title next to name “Stardust Overlord” or a custom permanent title",
+      "1/1 Overlord sigil",
+    ],
+    access: [
+      "Full platform lifetime access (all features) + 0% builder fees",
+      "Direct founder communication",
+      "×5 governance voting weight",
+      "Permanent legacy recognition",
+    ],
+    description: "This rank carries significant real-world value and is reserved for the most committed contributors.",
+  },
+  {
+    rank: "Top 10",
+    badge: "🔑 Void Keymaster",
+    points: "350+",
+    reward: "Lifetime Founder Pro + 0% builder fees",
+    perks: [
+      "Animated void-style profile background (Top-10 exclusive)",
+      "Animated elite profile border",
+      "Animated nickname (shared Top-10 style)",
+      "Keymaster sigil",
+    ],
+    access: [
+      "Lifetime Founder Pro Access (3 selected premium features) + 0% builder fees",
+      "Core Circle channel",
+      "×3 governance voting weight",
+      "Guaranteed early access",
+    ],
+  },
+  {
+    rank: "Top 50",
+    badge: "☀ Solar Warlord",
+    points: "250+",
+    reward: "18 months Founder Pro + 0% builder fees",
+    perks: [
+      "Animated tier-exclusive background",
+      "Animated tier-exclusive border",
+      "Animated nickname (shared Top-50 style)",
+      "Core Circle channel",
+      "Warlord insignia",
+    ],
+    access: [
+      "18 months Founder Pro Access (3 selected premium features) + 0% builder fees",
+      "Priority support",
+      "×2.5 governance voting weight",
+    ],
+  },
+  {
+    rank: "Top 150",
+    badge: "🌙 Lunar Dominator",
+    points: "150+",
+    reward: "6 months Founder Pro + 2% builder fees",
+    perks: [
+      "Animated background (tier-unique)",
+      "Animated profile border (tier-unique)",
+      "Static nickname",
+      "Dominator crest",
+    ],
+    access: [
+      "6 months Founder Pro Access (3 selected premium features) + 2% builder fees",
+      "Priority support",
+      "×2 governance voting weight",
+      "Early access",
+    ],
+  },
+  {
+    rank: "Top 1,000",
+    badge: "🛠 Nebula Forgelord",
+    points: "75+",
+    reward: "6 months Founder Starter + 5% builder fees",
+    perks: [
+      "Tier-unique standard background",
+      "Tier-unique standard border",
+      "Static nickname",
+      "Forgelord badge",
+    ],
+    access: [
+      "6 months Founder Starter access + 5% builder fees",
+      "Feature voting access",
+      "Early access",
+    ],
+  },
+  {
+    rank: "Top 10,000",
+    badge: "✦ Astral Vanguard",
+    points: "25+",
+    reward: "1 month Founder Starter + 5% builder fees",
+    perks: [
+      "Tier-unique standard background",
+      "Tier-unique standard border",
+      "Static nickname",
+      "Vanguard mark",
+      "Founding-era badge",
+    ],
+    access: [
+      "1 month Founder Starter Access + 5% builder fees first month",
+    ],
+  },
 ];
 
 const CONTRIBUTION_PATHS = [
-  { icon: "🔗", title: "Referrals", description: "Invite verified users (+5 pts each), each 5 users invited you get +25 extra points", fastest: true },
-  { icon: "🛠", title: "Contributions", description: "Bug reports, features, testing, docs (+5–20 pts)", valuable: true },
-  { icon: "💬", title: "Engagement", description: "Polls, feedback, active testing (+1 pt recurring)" },
-  { icon: "⏳", title: "Early Commitment", description: "Stay active before launch (one-time bonus)" },
+  {
+    icon: "🚀",
+    title: "Crowdfunding Access",
+    description: "Secure your access and help us grow by investing in future workspace.",
+    fastest: true,
+  },
+  {
+    icon: "💡",
+    title: "Submit an Idea",
+    description: "Propose innovative ideas that will shape SFCollab's future.",
+    valuable: true,
+  },
+  {
+    icon: "👥",
+    title: "Refer Friends",
+    description: "Invite builders or founders and earn points for every verified referral.",
+  },
+  {
+    icon: "🗳",
+    title: "Vote in Polls",
+    description: "Influence product decisions by participating in community polls.",
+  },
+  {
+    icon: "🚀",
+    title: "Register Your Startup",
+    description: "Create a profile for your startup and join the SFCollab community.",
+  },
+  {
+    icon: "💡",
+    title: "Idea Incubator",
+    description: "Develop and refine ideas daily with community feedback.",
+  },
+  {
+    icon: "⚡",
+    title: "Report Bugs & Feedback",
+    description: "Help improve SFCollab by reporting bugs and sharing feedback.",
+  },
 ];
+
+const QUICK_RANK_TIPS = [
+  { action: "Create 1 Startup", points: "+15 pts/day", icon: "🏗" },
+  { action: "Post 1 Idea", points: "+10 pts/day", icon: "💡" },
+  { action: "5 Referrals", points: "+50 pts", icon: "🔗" },
+];
+
+/* =========================
+   ANIMATION VARIANTS
+========================= */
+
+const containerVariants = {
+  hidden: { opacity: 0, y: 30 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { staggerChildren: 0.12 },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 15 },
+  show: { opacity: 1, y: 0 },
+};
+
+/* =========================
+   COMPONENT
+========================= */
 
 export default function Waitlist() {
   const { user } = useSelector((state) => state.auth);
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 30 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: { staggerChildren: 0.15 },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 15 },
-    show: { opacity: 1, y: 0 },
-  };
-
   return (
-    <div className="bg-neutral-950 h-full text-white relative min-h-screen overflow-y-auto">
-      {/* Floating blobs background */}
+    <div className="bg-neutral-950 min-h-screen text-white relative overflow-y-auto w-full">
+      {/* Background blobs */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute top-20 left-10 w-64 h-64 bg-linear-to-r from-blue-600/20 to-purple-700/30 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-10 right-10 w-72 h-72 bg-linear-to-r from-purple-600/20 to-blue-600/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-24 left-10 w-72 h-72 bg-blue-600/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-16 right-10 w-80 h-80 bg-purple-600/20 rounded-full blur-3xl animate-pulse" />
       </div>
 
-      <div className="container mx-auto px-4 py-12 w-full relative z-10">
-        <div className="text-center mb-12 animate-fade-in-down">
-          <div className="flex items-center justify-center gap-2 mb-4 animate-bounce-in">
-            <Sparkles className="h-8 w-8 text-blue-400 animate-pulse" />
-            <h1 className="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Waitlist Program
+      <div className="container px-4 py-14 relative z-10 w-full">
+        {/* ================= HERO ================= */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          className="text-center mb-14"
+        >
+          <motion.div variants={itemVariants} className="flex justify-center gap-2 mb-4">
+            <Sparkles className="h-8 w-8 text-blue-400" />
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Prestige Rank System
             </h1>
-          </div>
-          <p className="text-xl text-neutral-400 max-w-2xl mx-auto">
-            Access is earned. Climb the ranks through contributions, referrals, and early commitment.
-          </p>
-        </div>
+          </motion.div>
 
-        <div className="w-full mx-auto mb-12">
+          <motion.p
+            variants={itemVariants}
+            className="text-xl text-neutral-400 max-w-2xl mx-auto"
+          >
+            Compete for exclusive ranks through meaningful contributions, consistency, and impact—not payments.
+          </motion.p>
+        </motion.div>
+
+        {/* ================= SIGNUP ================= */}
+        <div className="mb-14">
           <WaitlistSignup />
         </div>
-      <motion.div
+
+        {/* ================= HOW IT WORKS ================= */}
+        <motion.section
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="rounded-2xl bg-neutral-900 border border-neutral-800 backdrop-blur-sm p-6 hover:border-neutral-700 transition-all duration-300 w-full mx-auto mb-12"
+          className="rounded-2xl bg-gradient-to-r from-blue-600/10 to-purple-600/10 border border-blue-500/30 p-8 mb-14"
         >
-          <motion.h3 variants={itemVariants} className="text-xl font-semibold flex items-center gap-2 text-white mb-4">
-            <Zap className="h-5 w-5 text-yellow-400" />
-            Waitlist Scarcity Explanation
+          <motion.h2
+            variants={itemVariants}
+            className="text-2xl font-bold text-center mb-8"
+          >
+            How Prestige Ranks Work
+          </motion.h2>
+
+          <div className="grid md:grid-cols-3 gap-6 mb-8">
+            {[
+              { step: "1", title: "Contribute", desc: "Earn points daily through startups, ideas, referrals & voting." },
+              {
+                step: "2",
+                title: "Climb Rankings",
+                desc: "Reach point thresholds and maintain activity requirements.",
+              },
+              {
+                step: "3",
+                title: "Unlock Rewards",
+                desc: "Competitive ranks unlock lifetime access, voting weight & exclusive benefits.",
+              },
+            ].map((s) => (
+              <motion.div
+                key={s.step}
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="w-12 h-12 mx-auto rounded-full bg-blue-600 flex items-center justify-center font-bold mb-3">
+                  {s.step}
+                </div>
+                <h3 className="font-semibold mb-1">{s.title}</h3>
+                <p className="text-sm text-neutral-400">{s.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Link to="/contribution">
+              <Button className="bg-blue-600 hover:bg-blue-700 flex gap-2">
+                Start Contributing <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/refer">
+              <Button variant="outline" className="border-blue-500/50 text-black">
+                View Rankings <TrendingUp className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div> */}
+        </motion.section>
+
+        {/* ================= FAST TRACK ================= */}
+        {/* <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 mb-14"
+        >
+          <motion.h3 variants={itemVariants} className="text-xl font-semibold mb-6">
+            Fastest Ways to Rank Up (Daily)
           </motion.h3>
-          <ul className="space-y-3 text-sm">
-            <motion.li variants={itemVariants} className="text-white/80">
-              Remaining waitlist users are added in stages.
-            </motion.li>
-            <motion.li variants={itemVariants} className="text-white/80">
-              Without participation, users may wait months for access.
-            </motion.li>
-            <motion.li variants={itemVariants} className="text-white/80">
-              Crowdfunding investment can provide earlier access.
-            </motion.li>
-          </ul>
-        </motion.div>
-        {/* Four Paths to Rank */}
-        <motion.div
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {QUICK_RANK_TIPS.map((t, i) => (
+              <motion.div
+                key={i}
+                variants={itemVariants}
+                className="bg-neutral-800/40 border border-neutral-700 rounded-lg p-4"
+              >
+                <div className="text-3xl mb-2">{t.icon}</div>
+                <div className="font-semibold">{t.action}</div>
+                <div className="text-yellow-400 font-bold">{t.points}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.section> */}
+
+        {/* ================= CONTRIBUTION PATHS ================= */}
+        <motion.section
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 w-full mx-auto"
+          className="grid md:grid-cols-2 gap-4 mb-14"
         >
-          {CONTRIBUTION_PATHS.map((path, idx) => (
+          {CONTRIBUTION_PATHS.map((p, i) => (
             <motion.div
-              key={idx}
+              key={i}
               variants={itemVariants}
-              className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 transition-all"
+              className="bg-neutral-900 border border-neutral-800 rounded-lg p-5"
             >
-              <div className="text-2xl mb-2">{path.icon}</div>
-              <h3 className="font-semibold text-white mb-1">{path.title}</h3>
-              <p className="text-sm text-neutral-400">{path.description}</p>
-              {path.fastest && <span className="text-xs text-blue-400 font-semibold mt-2 inline-block">⚡ Fastest</span>}
-              {path.valuable && <span className="text-xs text-purple-400 font-semibold mt-2 inline-block">✨ Most Valuable</span>}
+              <div className="text-2xl mb-2">{p.icon}</div>
+              <h3 className="font-semibold mb-1">{p.title}</h3>
+              <p className="text-sm text-neutral-400">{p.description}</p>
+              {p.fastest && (
+                <span className="text-xs text-yellow-400 font-semibold block mt-2">
+                  ⚡ Fastest (Daily)
+                </span>
+              )}
+              {p.valuable && (
+                <span className="text-xs text-purple-400 font-semibold block mt-2">
+                  ✨ Most Valuable (Daily)
+                </span>
+              )}
             </motion.div>
           ))}
-        </motion.div>
+        </motion.section>
 
-        {/* Rank & Rewards Tiers */}
-        <motion.div
+        {/* ================= RANK TIERS & REWARDS ================= */}
+        <motion.section
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="mb-12 w-full mx-auto"
+          className="mb-14"
         >
-          <motion.h2 variants={itemVariants} className="text-2xl font-bold text-center mb-6 flex items-center justify-center gap-2">
-            <Award className="h-6 w-6 text-blue-400" />
-            Rank-Based Rewards (Lifetime)
+          <motion.h2
+            variants={itemVariants}
+            className="text-2xl font-bold text-center mb-6"
+          >
+            Competitive Rank Tiers & Rewards
           </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {RANK_REWARDS.map((tier, idx) => (
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {RANK_REWARDS.map((r, i) => (
               <motion.div
-                key={idx}
+                key={i}
                 variants={itemVariants}
-                className="bg-neutral-900 border border-neutral-800 rounded-lg p-4 hover:border-neutral-700 transition-all"
+                className={`bg-gradient-to-br ${r.color} border border-neutral-700 rounded-lg p-5 hover:border-neutral-600 transition-all`}
               >
-                <div className="text-lg font-bold text-blue-300 mb-1">{tier.badge}</div>
-                <div className="text-sm text-neutral-400 mb-2">{tier.rank}</div>
-                <div className="font-semibold text-white mb-3">{tier.reward}</div>
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <div className="text-lg font-bold text-white mb-1">
+                      {r.badge}
+                    </div>
+                    <div className="text-sm text-neutral-300">{r.rank}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-xs text-neutral-400 mb-1">Min Points</div>
+                    <div className="text-lg font-bold text-cyan-400">{r.points}</div>
+                  </div>
+                </div>
+                <div className="font-semibold text-sm mb-3 text-neutral-200">{r.reward}</div>
                 <ul className="text-xs text-neutral-400 space-y-1">
-                  {tier.perks.map((perk, i) => (
-                    <li key={i}>✓ {perk}</li>
+                  {r.perks.map((p, idx) => (
+                    <li key={idx}>✓ {p}</li>
                   ))}
                 </ul>
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </motion.section>
 
-        {/* Points System */}
-        <motion.div
+        {/* ================= INTEGRITY ================= */}
+        <motion.section
           variants={containerVariants}
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
-          className="rounded-2xl bg-neutral-900 border border-neutral-800 backdrop-blur-sm p-6 hover:border-neutral-700 transition-all duration-300 w-full mx-auto mb-12 relative overflow-hidden"
+          className="rounded-2xl border border-neutral-700 bg-neutral-900/50 p-6 mb-14"
         >
-          <div className="z-10 relative">
-            <motion.h3
-              variants={itemVariants}
-              className="text-xl font-semibold flex items-center gap-2 text-white mb-4"
-            >
-              <Zap className="h-5 w-5 text-yellow-400" />
-              Rank Score Formula
-            </motion.h3>
-            <motion.div
-              variants={itemVariants}
-              className="bg-neutral-800/50 rounded p-3 mb-6 border border-neutral-700 font-mono text-sm text-blue-300"
-            >
-              Score = (Referrals × 2) + Contributions + Engagement + Early Bonus
-            </motion.div>
-
-            <motion.h4 variants={itemVariants} className="text-sm font-semibold text-white mb-3">
-              How to Earn Points
-            </motion.h4>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {Object.entries(POINT_VALUES).map(([key, { points, label }]) => (
-                <motion.div key={key} variants={itemVariants} className="flex justify-between bg-neutral-800/30 p-2 rounded">
-                  <span className="text-neutral-400">{label}</span>
-                  <span className="text-blue-300 font-semibold">+{points} pts</span>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-
-          {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/10 rounded-full -translate-x-12 translate-y-12"></div>
-        </motion.div>
-        
-        {/* Key Principles */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true }}
-          className="rounded-2xl bg-neutral-900 border border-neutral-800 backdrop-blur-sm p-6 hover:border-neutral-700 transition-all duration-300 w-full mx-auto mb-12"
-        >
-          <motion.h3 variants={itemVariants} className="text-xl font-semibold flex items-center gap-2 text-white mb-4">
-            <Heart className="h-5 w-5 text-red-400" />
-            Core Principles
+          <motion.h3 variants={itemVariants} className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-yellow-400" />
+            Fair Play & System Integrity
           </motion.h3>
-          <ul className="space-y-3 text-sm">
-            {[
-              "Access is earned, not promised",
-              "Contributions matter as much as referrals",
-              "Early users are co-builders, not customers",
-              "Rank snapshots lock rewards fairly",
-              "No fake urgency or empty promises"
-            ].map((principle, idx) => (
-              <motion.li key={idx} variants={itemVariants} className="flex items-start gap-3">
-                <span className="text-green-400 font-bold mt-0.5">✓</span>
-                <span className="text-white/80">{principle}</span>
-              </motion.li>
-            ))}
-          </ul>
-        </motion.div>
-
-        <div className="my-8 w-full mx-auto">
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            className="rounded-2xl bg-neutral-900 border border-neutral-800 backdrop-blur-sm p-6 hover:border-neutral-700 transition-all duration-300"
-          >
-            <div className="z-10">
-              <div className="mb-6">
-                <motion.h3
-                  variants={itemVariants}
-                  className="text-xl font-semibold flex items-center gap-2 text-white mb-2"
-                >
-                  <Users className="h-5 w-5 text-blue-400" />
-                  Release Timeline
-                </motion.h3>
-                <p className="text-neutral-400 text-sm">
-                  Quality over speed. Your early actions determine your access.
-                </p>
-              </div>
-
-              <ul className="space-y-3 text-sm mb-6">
-                <motion.li
-                  variants={itemVariants}
-                  className="flex items-center gap-3"
-                >
-                  <span className="text-blue-400 font-bold">1.</span>
-                  <span className="text-white/80">
-                    <span className="font-semibold text-blue-300">MVP (Jan 10)</span> — Top 1,000 ranked users + contributors
-                  </span>
-                </motion.li>
-                <motion.li
-                  variants={itemVariants}
-                  className="flex items-center gap-3"
-                >
-                  <span className="text-purple-400 font-bold">2.</span>
-                  <span className="text-white/80">
-                    <span className="font-semibold text-purple-300">V1 (Feb 7th)</span> — 2,500 users (MVP + top referrers + active contributors)
-                  </span>
-                </motion.li>
-                <motion.li
-                  variants={itemVariants}
-                  className="flex items-center gap-3"
-                >
-                  <span className="text-pink-400 font-bold">3.</span>
-                  <span className="text-white/80">
-                    Permanent status labels: <span className="font-semibold text-pink-300">"Founding 1K"</span> & <span className="font-semibold text-pink-300">"Early 10K"</span>
-                  </span>
-                </motion.li>
-              </ul>
-
-              <div className="pt-4 border-t border-white/10 flex flex-col gap-2">
-                {user?.role === "admin" && (
-                  <div className="pt-4 border-t border-neutral-800 flex flex-col gap-2">
-                    <Link to="/admin" className="w-full">
-                      <motion.div variants={itemVariants}>
-                        <Button className="w-full bg-blue-600/80 hover:bg-blue-700 text-white border border-blue-400/50 hover:border-blue-300">
-                          Admin Dashboard
-                        </Button>
-                      </motion.div>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-400/10 rounded-full -translate-x-12 translate-y-12"></div>
+          <motion.div variants={containerVariants} className="space-y-3 text-sm text-neutral-300">
+            <motion.p variants={itemVariants}>✓ Unlimited startups & ideas allowed—only first of each per day earns points</motion.p>
+            <motion.p variants={itemVariants}>✓ Ranks are competitive and actively maintained</motion.p>
+            <motion.p variants={itemVariants}>✓ Abuse, automation, or farming may result in rank loss</motion.p>
+            <motion.p variants={itemVariants}>✓ Prestige status must be maintained through ongoing participation</motion.p>
           </motion.div>
-        </div>
+        </motion.section>
+
+        {/* ================= FINAL CTA ================= */}
+        {/* <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true }}
+          className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
+        >
+          <Link to="/contribution" className="flex-1">
+            <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700">
+              Start Contributing <ArrowRight className="h-5 w-5 ml-2" />
+            </Button>
+          </Link>
+          <Link to="/refer" className="flex-1">
+            <Button size="lg" variant="outline" className="w-full text-black">
+              View Rankings <TrendingUp className="h-5 w-5 ml-2" />
+            </Button>
+          </Link>
+        </motion.div> */}
+
+        {user?.role === "admin" && (
+          <div className="mb-12">
+            <Link to="/admin">
+              <Button className="w-full bg-blue-600/80 hover:bg-blue-700">
+                Admin Dashboard
+              </Button>
+            </Link>
+          </div>
+        )}
       </div>
+
       <Toaster />
     </div>
   );

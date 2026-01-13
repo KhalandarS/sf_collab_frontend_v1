@@ -73,9 +73,9 @@ export function WaitlistSignup() {
       setName((user.fullName || user.firstName || '').trim())
     }
   }, [user]);
-  const secondsLeft = useCountdown(expiresAt || 5, result, () => {
-    navigate(`/refer`)
-  })
+  // const secondsLeft = useCountdown(expiresAt || 5, result, () => {
+  //   navigate(`/refer`)
+  // })
   useEffect(() => {
     async function checkWaitlist() {
       if (!email) return;
@@ -168,10 +168,19 @@ export function WaitlistSignup() {
         <p className="text-neutral-400">
           You are already on the waitlist. Thank you for your interest! Stay tuned for updates and referral opportunities.
         </p>
-        <p className="text-lg font-medium text-white mt-4">Your Position: <span className="font-bold text-green-400">#{result.position}</span></p>
-        <p className="text-sm text-slate-400">
-          Redirecting to referral page in <span className="font-bold text-white">{secondsLeft}</span> seconds...
-        </p>
+        <p className="text-lg font-medium mb-4 text-white mt-4">Your Position: <span className="font-bold text-green-400">#{result.position}</span></p>
+        <Button
+                onClick={() => navigate('/refer')}
+                className="p-4 m-4 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
+              >
+                Ranking
+        </Button>
+        <Button
+          onClick={() => navigate('/contribution')}
+          className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
+        >
+          Contribute
+        </Button>
       </div>
     );
   }
@@ -223,9 +232,22 @@ export function WaitlistSignup() {
               </div>
 
               <p className="text-lg font-medium text-white">🚀 The competition has started!</p>
-              <p className="text-sm text-slate-400">
+
+              <Button
+                onClick={() => navigate('/refer')}
+                className="p-4 m-4 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
+              >
+                Ranking
+        </Button>
+        <Button
+          onClick={() => navigate('/contribution')}
+          className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
+        >
+          Contribute
+        </Button>
+              {/* <p className="text-sm text-slate-400">
                 Redirecting to referral page in <span className="font-bold text-white">{secondsLeft}</span> seconds...
-              </p>
+              </p> */}
             </CardContent>
           </Card>
         </motion.div>

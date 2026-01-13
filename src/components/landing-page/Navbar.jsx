@@ -103,7 +103,7 @@ const Navbar = () => {
     { href: '/about', name: 'Platform' },
     { href: '/pricing', name: 'Pricing' },
     { href: '/explore_section', name: 'Explore' },
-    { href: '/startuppage', name: 'Startups' },
+    { href: '/discover-startups', name: 'Startups' },
     { href: '/team', name: 'Team' },
     { href: '/contact', name: 'Contact' },
   ];
