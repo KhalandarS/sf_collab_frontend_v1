@@ -220,6 +220,9 @@ export default function ChatDock({ maxWindows = 2 }) {
     fetchConversations();
   }, [fetchConversations]);
 
+  // -----------------------------
+  // Rooms: join/leave opened windows
+  // -----------------------------
   const joinedRef = useRef(new Set());
 
   useEffect(() => {
@@ -227,6 +230,7 @@ export default function ChatDock({ maxWindows = 2 }) {
 
     const currentIds = new Set(windows.map((w) => String(w.conversationId)));
 
+    // join new
     for (const id of currentIds) {
       if (!joinedRef.current.has(id)) {
         socket.emit("join_conversation", { conversation_id: id });
@@ -234,6 +238,7 @@ export default function ChatDock({ maxWindows = 2 }) {
       }
     }
 
+    // leave removed
     for (const id of Array.from(joinedRef.current)) {
       if (!currentIds.has(id)) {
         socket.emit("leave_conversation", { conversation_id: id });
@@ -242,6 +247,9 @@ export default function ChatDock({ maxWindows = 2 }) {
     }
   }, [socket, windows]);
 
+  // -----------------------------
+  // Windows management
+  // -----------------------------
   const openWindow = useCallback(
     async ({ conversationId, title }) => {
       if (!conversationId) return;
@@ -317,6 +325,24 @@ export default function ChatDock({ maxWindows = 2 }) {
     });
   }, [consideredActive, windows, clearUnread, socket]);
 
+  // -----------------------------
+  // Listen for navbar mini inbox open events
+  // -----------------------------
+  useEffect(() => {
+    const handleOpenFromNavbar = (e) => {
+      const { conversationId, title } = e.detail || {};
+      if (conversationId) {
+        openWindow({ conversationId, title });
+      }
+    };
+
+    window.addEventListener('chatDock:open', handleOpenFromNavbar);
+    return () => window.removeEventListener('chatDock:open', handleOpenFromNavbar);
+  }, [openWindow]);
+
+  // -----------------------------
+  // WebSocket: typing
+  // -----------------------------
   useEffect(() => {
     if (!socket) return;
 
@@ -330,6 +356,7 @@ export default function ChatDock({ maxWindows = 2 }) {
       const cid = String(conversationId);
       const uid = String(userId);
 
+      // don't show yourself as typing
       if (currentUser?.id && String(currentUser.id) === uid) return;
 
       setTypingByConversation((prev) => {
@@ -355,17 +382,21 @@ export default function ChatDock({ maxWindows = 2 }) {
     if (!socket) return;
 
     const onNewMessage = (payload) => {
+      // 1. Properly extract the message data
       const messageData = payload?.message || payload;
       const cid = String(payload?.conversation_id || messageData?.conversation_id);
 
+      // 2. Normalize it (using your helper)
       const messageNorm = normalizeMessage(messageData);
 
       if (!cid || !messageNorm) return;
 
+      // 3. Update the state ONLY if it's for an open window
       setWindows((prev) => {
         return prev.map((w) => {
           if (String(w.conversationId) === cid) {
-            const exists = w.messages.some(m => String(m.id) === String(messageNorm.id));
+            // Prevent duplicates (checks by ID)
+            const exists = w.messages.some((m) => String(m.id) === String(messageNorm.id));
             if (exists) return w;
             return { ...w, messages: [...(w.messages || []), messageNorm] };
           }
@@ -373,6 +404,7 @@ export default function ChatDock({ maxWindows = 2 }) {
         });
       });
 
+      // Handle unread/scroll
       if (!isConvOpen(cid) || isConvMinimized(cid) || !consideredActive) {
         bumpUnread(cid);
       } else {
@@ -384,7 +416,7 @@ export default function ChatDock({ maxWindows = 2 }) {
 
     socket.on("new_message", onNewMessage);
     return () => socket.off("new_message", onNewMessage);
-  }, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive]);
+  }, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive, bumpUnread, clearUnread, scrollToBottom]);
 
   const sendMessage = useCallback(
     (conversationId, content) => {
@@ -441,6 +473,7 @@ export default function ChatDock({ maxWindows = 2 }) {
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999] flex flex-row-reverse items-end gap-3 pointer-events-none">
+      {/* SECTION A: LAUNCHER & PANEL (Always First Child = Far Right) */}
       <div className="flex flex-col items-end gap-3 pointer-events-auto">
         <AnimatePresence>
           {isPanelOpen && (
@@ -613,7 +646,7 @@ export default function ChatDock({ maxWindows = 2 }) {
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <div className="h-80 overflow-y-auto p-3 bg-zinc-950 space-y-2">
+                      <div className="h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-2">
                         {w.loading ? (
                           <div className="text-sm text-zinc-500">Loading…</div>
                         ) : (

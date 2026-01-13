@@ -540,7 +540,9 @@ const ChatPage = () => {
                         isOwn={isOwn}
                         showAvatar={shouldShowAvatar(message, index)}
                         currentUserId={currentUser.id}
+                        conversationType={activeConversation?.conversation_type}
                       />
+
                     </React.Fragment>
                   );
                 })

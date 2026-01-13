@@ -22,7 +22,8 @@ const MessageBubble = ({ message, isOwn, showAvatar }) => {
   const senderName =
     message?.sender
       ? `${message.sender.firstName || ''} ${message.sender.lastName || ''}`.trim()
-      : '';
+      : message?.sender_name || message?.senderName || '';
+
 
   if (message.message_type === 'system') {
     return (

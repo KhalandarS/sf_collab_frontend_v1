@@ -1,45 +1,90 @@
+import React from 'react';
 import { motion } from 'framer-motion';
-import { API_URL } from "@/utils/config";
-import { MessageCircle } from 'lucide-react';
+import { ConnectionButton } from '@/components/connection/ConnectionButton';
 
-export default function UserCard({ user, onOpen }) {
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+const UserCard = ({ user, onOpen }) => {
+  const fullName = user.fullName || 
+    `${user.first_name || ''} ${user.last_name || ''}`.trim() || 
+    'Unknown';
+
+  const getAvatarUrl = () => {
+    if (user.profile?.picture) {
+      return user.profile.picture.startsWith('http') 
+        ? user.profile.picture 
+        : `${API_URL}${user.profile.picture}`;
+    }
+    return null;
+  };
+
+  const avatarUrl = getAvatarUrl();
+  const initials = `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase();
+
   return (
     <motion.div
-      whileHover={{ scale: 1.02, y: -2 }}
-      className="bg-gray-900 border border-gray-700 rounded-xl p-5 cursor-pointer
-                hover:border-blue-600 transition-all w-full h-full"
-      onClick={() => onOpen(user)}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4 }}
+      className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-4 
+                 hover:border-blue-500/30 transition-all cursor-pointer group"
     >
-      {/* Profile Picture */}
-      <div className="flex flex-col items-center text-center">
-        <div className="relative mb-4">
-          <img
-            src={user.profile?.picture ? `${API_URL}${user.profile.picture}` : "/default-user.jpeg"}
-            alt={user.fullName}
-            className="w-20 h-20 rounded-full object-cover border-2 border-gray-700"
-            onError={(e) => {
-              e.target.src = "/default-user.jpeg";
-            }}
-          />
-          <div className={`absolute bottom-0 right-0 w-5 h-5 ${user.status === 'active' ? 'bg-green-500' : 'bg-gray-500'} rounded-full border-2 border-gray-900`} />
+      {/* Click to open modal */}
+      <div onClick={() => onOpen(user)}>
+        {/* Avatar */}
+        <div className="flex justify-center mb-3">
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={fullName}
+                className="w-full h-full object-cover"
+                onError={(e) => { e.target.style.display = 'none'; }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
+                {initials || '?'}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Name & Role */}
-        <h3 className="text-white font-semibold text-base truncate w-full mb-1">{user.fullName}</h3>
-        <p className="text-sm text-gray-400 capitalize mb-4">{user.role}</p>
+        {/* Name */}
+        <h3 className="text-white font-semibold text-center truncate group-hover:text-blue-400 transition-colors">
+          {fullName}
+        </h3>
 
-        {/* Message Button */}
-        <button 
-          className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm py-2.5 px-4 rounded-lg transition-colors"
-          onClick={(e) => {
-            e.stopPropagation();
-            onOpen(user);
-          }}
-        >
-          <MessageCircle size={16} />
-          Message
-        </button>
+        {/* Role */}
+        {user.role && (
+          <p className="text-gray-400 text-xs text-center capitalize mt-1">
+            {user.role}
+          </p>
+        )}
+
+        {/* Company */}
+        {user.profile?.company && (
+          <p className="text-gray-500 text-xs text-center truncate mt-1">
+            {user.profile.company}
+          </p>
+        )}
+
+        {/* Stats */}
+        <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
+          <span>{user.xp_points || 0} XP</span>
+          <span>{user.active_startups_count || 0} Startups</span>
+        </div>
+      </div>
+
+      {/* Connection Button - Outside the click area for modal */}
+      <div className="mt-3 pt-3 border-t border-gray-700/50" onClick={(e) => e.stopPropagation()}>
+        <ConnectionButton 
+          userId={user.id} 
+          size="sm"
+          className="w-full"
+        />
       </div>
     </motion.div>
   );
-}
+};
+
+export default UserCard;

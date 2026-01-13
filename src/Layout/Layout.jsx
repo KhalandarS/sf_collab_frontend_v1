@@ -1,12 +1,3 @@
-/**
- * Layout.jsx - FIXED VERSION
- * 
- * FIXES:
- * 1. Proper sidebar spacing (60px on desktop)
- * 2. Removed the ChatDock from fixed position (it was overlapping)
- * 3. Clean structure
- */
-
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -21,7 +12,6 @@ import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/Investo
 import useScrollHide from "../hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
-
 
 import ChatDock from "@/components/chat-dock/ChatDock";
 import { useAppSocket } from "@/context/SocketProvider";
@@ -45,13 +35,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   const isRootPath = location.pathname === "/";
   const isChatRoute = location.pathname.startsWith("/chat");
+  const isConnectionsRoute = location.pathname.startsWith("/connections");
 
   const { user, access_token } = useSelector((state) => state.auth);
   const isAdmin = hasPermission(user, "admin");
 
-  const { onlineUsers } = useAppSocket();
+  const { onlineUsers, socket, isConnected } = useAppSocket();
   const { friends } = useChatContacts();
-
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
     deltaThreshold: 4,
@@ -197,7 +187,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     setIsOptionsVisible(false);
   };
 
-
   return (
     <div className="relative min-h-screen w-screen flex flex-col">
       {/* Background */}
@@ -259,13 +248,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       )}
 
       <div className="relative flex-1 w-full flex overflow-hidden">
-        {/* Left sidebar - Fixed position, handled internally */}
+        {/* Left sidebar */}
         {!isRootPath && <SideBar />}
 
-        {/* Main content area - offset by sidebar width on desktop */}
+        {/* Main content area */}
         <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
-          {/* Options bar: never show on chat */}
-          {!isRootPath && !isChatRoute && (
+          {/* Options bar: never show on chat or connections */}
+          {!isRootPath && !isChatRoute && !isConnectionsRoute && (
             <div
               ref={optionsRef}
               className={`my-16 transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${

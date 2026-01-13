@@ -135,6 +135,7 @@ const ConnectWithUsers = () => {
 
             {/* Search Bar */}
             <div className="relative max-w-2xl">
+import { useNavigate } from 'react-router-dom';
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <Input
                 placeholder="Search by name, company, title, skills..."

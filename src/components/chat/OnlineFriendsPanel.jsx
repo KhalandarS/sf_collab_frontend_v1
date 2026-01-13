@@ -72,7 +72,10 @@ export default function OnlineFriendsPanel() {
       if (tab === "online" && !isOnline(f.id)) return false;
 
       if (q) {
-        const name = `${f.firstName || ""} ${f.lastName || ""}`.trim().toLowerCase();
+        const first = f.firstName ?? f.first_name ?? "";
+        const last = f.lastName ?? f.last_name ?? "";
+        const name = `${first} ${last}`.trim().toLowerCase();
+
         if (!name.includes(q.toLowerCase())) return false;
       }
       return true;
@@ -83,8 +86,9 @@ export default function OnlineFriendsPanel() {
       const ao = isOnline(a.id) ? 1 : 0;
       const bo = isOnline(b.id) ? 1 : 0;
       if (bo !== ao) return bo - ao;
-      const an = `${a.firstName || ""} ${a.lastName || ""}`.trim();
-      const bn = `${b.firstName || ""} ${b.lastName || ""}`.trim();
+      const an = `${a.firstName ?? a.first_name ?? ""} ${a.lastName ?? a.last_name ?? ""}`.trim();
+      const bn = `${b.firstName ?? b.first_name ?? ""} ${b.lastName ?? b.last_name ?? ""}`.trim();
+
       return an.localeCompare(bn);
     });
 
@@ -240,7 +244,9 @@ export default function OnlineFriendsPanel() {
               ) : (
                 filteredFriends.map((f) => {
                   const online = isOnline(f.id);
-                  const name = `${f.firstName || ""} ${f.lastName || ""}`.trim() || "User";
+                  const first = f.firstName ?? f.first_name ?? "";
+                  const last = f.lastName ?? f.last_name ?? "";
+                  const name = `${first} ${last}`.trim().toLowerCase();
 
                   return (
                     <button
@@ -282,7 +288,7 @@ export default function OnlineFriendsPanel() {
           <div className="p-2 flex flex-col gap-2 overflow-y-auto h-[calc(100%-56px)]">
             {filteredFriends.slice(0, 20).map((f) => {
               const online = isOnline(f.id);
-              const name = `${f.firstName || ""} ${f.lastName || ""}`.trim() || "User";
+              const name = `${f.firstName ?? f.first_name ?? ""} ${f.lastName ?? f.last_name ?? ""}`.trim() || "User";
 
               return (
                 <button

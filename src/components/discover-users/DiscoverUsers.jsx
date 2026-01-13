@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Filter, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Sheet, SheetContent, SheetTrigger } from '../ui/sheet';
@@ -13,6 +13,9 @@ import { usersAPI } from '@/utils/APIs/userAPI';
 import FilterSidebar from './FilterSidebar';
 import UserCard from './UserCard';
 import { chatAPI } from '@/utils/APIs/chatApi';
+
+// NEW: Import ConnectionButton
+import { ConnectionButton } from '@/components/connection/ConnectionButton';
 
 const DiscoverUsers = () => {
   const [users, setUsers] = useState([]);
@@ -61,7 +64,6 @@ const DiscoverUsers = () => {
     }
   };
 
-
   useEffect(() => {
     fetchUsers(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -78,7 +80,6 @@ const DiscoverUsers = () => {
     selectedStatus !== "",
     searchQuery !== ""
   ].filter(Boolean).length;
-
 
   const sendMessage = async () => {
     if (!messageText.trim()) {
@@ -113,8 +114,6 @@ const DiscoverUsers = () => {
       setSendingMessage(false);
     }
   };
-
-
 
   const getVisiblePages = () => {
     const delta = 2;
@@ -356,10 +355,10 @@ const DiscoverUsers = () => {
               className="flex flex-col w-full items-center justify-center"
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
-                {users.map(user => (
+                {users.map(userItem => (
                   <UserCard
-                    key={user.id}
-                    user={user}
+                    key={userItem.id}
+                    user={userItem}
                     onOpen={(user) => {
                       setSelectedUser(user);
                       setShowModal(true);
@@ -425,17 +424,12 @@ const DiscoverUsers = () => {
           )}
         </AnimatePresence>
 
-        {/* User Detail Modal */}
+        {/* User Detail Modal - UPDATED with ConnectionButton */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
           <DialogContent className="max-w-md bg-gray-900 border-gray-800 text-white">
             <DialogHeader>
               <DialogTitle className="flex items-center justify-between">
                 <span>{selectedUser?.fullName}</span>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                </button>
               </DialogTitle>
             </DialogHeader>
 
@@ -466,6 +460,7 @@ const DiscoverUsers = () => {
                     <p><span className="font-semibold">Startups:</span> {selectedUser.active_startups_count}</p>
                   )}
                 </div>
+
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-700">
                   <div className="text-center">
@@ -476,6 +471,15 @@ const DiscoverUsers = () => {
                     <p className="font-bold text-blue-400">{selectedUser.streak_days || 0}</p>
                     <p className="text-xs text-gray-400">Streak Days</p>
                   </div>
+                </div>
+
+                {/* NEW: Connection Button */}
+                <div className="pt-2 border-t border-gray-700">
+                  <ConnectionButton 
+                    userId={selectedUser.id} 
+                    size="default"
+                    className="w-full"
+                  />
                 </div>
 
                 {/* Message Input */}
@@ -490,7 +494,7 @@ const DiscoverUsers = () => {
                   />
                 </div>
 
-                {/* Action Button */}
+                {/* Send Message Button */}
                 <Button
                   onClick={sendMessage}
                   disabled={sendingMessage || !messageText.trim()}

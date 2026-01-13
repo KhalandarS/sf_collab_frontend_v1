@@ -159,6 +159,24 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
     </nav>
   );
 
+  // const handleOpenChat = useCallback((chatData) => {
+  //   window.dispatchEvent(new CustomEvent('chatDock:open', { detail: chatData }));
+  // }, []);
+
+  // // Close connections dropdown when opening messages (and vice versa)
+  // const handleMessagesClick = () => {
+  //   setIsConnectionsOpen(false);
+  //   setIsMiniInboxOpen(!isMiniInboxOpen);
+  // };
+
+  // const handleConnectionsClick = () => {
+  //   setIsMiniInboxOpen(false);
+  //   setIsConnectionsOpen(!isConnectionsOpen);
+  //   if (hasNewConnectionRequest) {
+  //     setHasNewConnectionRequest(false);
+  //   }
+  // };
+
   return (
     <nav
       className={`fixed top-0 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${
