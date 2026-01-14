@@ -23,23 +23,18 @@ import {
 } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import IdeationHeader from "../headers/IdeationHeader";
-import ScrollToTop from "../sections/ScrollToTop";
+import IdeationHeader from "./IdeationHeader";
+import ScrollToTop from "../../sections/ScrollToTop";
+import axios from "axios";
+import { ideaAPI } from "@/utils/APIs/ideaAPI";
+import { useSelector } from "react-redux";
+import { API_BASE_URL } from "@/utils/config";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
-// API Configuration - Single base URL for all ideation API calls
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
-const BASE_URL = `${API_URL}/ideas`;
 
-// Helper to decode JWT and get user ID
-const parseJwt = (token) => {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return null;
-  }
-};
 
-const Ideation = () => {
+const Ideation = ({ activeRole}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
@@ -51,61 +46,54 @@ const Ideation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [networkError, setNetworkError] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState(null);
+  const [showNewIdeaForm, setShowNewIdeaForm] = useState(false);
 
-  // Get current user ID from token
-  useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    if (token) {
-      const decoded = parseJwt(token);
-      setCurrentUserId(decoded?.userId || decoded?.id || null);
-    }
-  }, []);
+  const { user, access_token } = useSelector((state) => state.auth);
 
-  // Load ideas on mount
   useEffect(() => {
     fetchIdeas();
-  }, []);
+  }, [selectedIndustry, selectedStage, searchQuery]);
 
-  // Fetch ideas from API
   const fetchIdeas = async () => {
     try {
       setIsLoading(true);
       setError(null);
       setNetworkError(false);
 
-      const response = await fetch(
-        `${BASE_URL}?page=1&per_page=20&category=${
-          selectedIndustry === "All Industries" ? "" : selectedIndustry
-        }&search=${searchQuery || ""}&sortBy=${
-          sortBy === "trending" ? "likes" : sortBy
-        }&sortOrder=desc`
-      );
+      const params = new URLSearchParams({
+        page: 1,
+        per_page: 20,
+      });
 
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
+      if (selectedIndustry !== "All Industries") {
+        params.append("industry", selectedIndustry);
+      }
+      if (selectedStage !== "All Stages") {
+        params.append("stage", selectedStage);
+      }
+      if (searchQuery) {
+        params.append("search", searchQuery);
       }
 
-      const data = await response.json();
-
-      // Handle different response structures: local uses data.data.ideas, deployed uses data.ideas
-      const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const ideasArray = isLocal 
-        ? (data.data?.ideas || data.ideas || [])
-        : (data.ideas || data.data?.ideas || []);
+      const response = await ideaAPI.getAllIdeas(access_token, params);
+      if (!response.success) {
+        throw new Error(response.message || "Failed to fetch ideas");
+      }
+      const data = response.data;
+      const ideasArray = data.data?.ideas || data.ideas || [];
 
       const mappedIdeas = ideasArray.map((idea) => ({
-        id: idea.id || idea._id,
+        id: idea.id,
         title: idea.title,
-        description: idea.description || "No description available.",
+        description: idea.description,
         stage: idea.stage,
-        category: idea.industry || idea.category,
-        privacy: idea.privacy || "public",
-        creatorId: idea.creator?.id || idea.creatorId,
+        category: idea.industry,
+        privacy: idea.privacy,
+        creatorId: idea.creator?.id,
         author: {
           name: `${idea.creator.firstName} ${idea.creator.lastName}`,
-          role: idea.creator.position || "Contributor",
-          avatar: idea.creator.avatar || "https://i.pravatar.cc/150?img=11",
+          role: activeRole,
+          avatar: getProfilePicture(user),
         },
         createdAt: new Date(idea.createdAt).toLocaleDateString("en-US", {
           month: "long",
@@ -113,14 +101,10 @@ const Ideation = () => {
           year: "numeric",
         }),
         timeAgo: calculateTimeAgo(idea.createdAt),
-        likes: idea.likes || 0,
-        comments: idea.commentsCount || idea.comments || 0,
-        collaborators: idea.teamSize || idea.collaborators || 1,
-        tags: Array.isArray(idea.tags)
-          ? idea.tags
-          : typeof idea.tags === "string"
-          ? [idea.tags]
-          : [],
+        likes: idea.likes,
+        comments: idea.commentsCount,
+        collaborators: idea.teamSize,
+        tags: idea.tags || [],
       }));
 
       setIdeas(mappedIdeas);
@@ -134,65 +118,64 @@ const Ideation = () => {
     }
   };
 
-  // Calculate time ago
   const calculateTimeAgo = (createdAt) => {
     const now = new Date();
     const created = new Date(createdAt);
     const diffMs = now - created;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffHours = Math.abs(Math.floor(diffMs / (1000 * 60 * 60)));
     if (diffHours < 24)
       return `${diffHours} hour${diffHours === 1 ? "" : "s"} ago`;
     const diffDays = Math.floor(diffHours / 24);
     return `${diffDays} day${diffDays === 1 ? "" : "s"} ago`;
   };
-
-  // Handle idea creation
   const handleCreateIdea = async (payload) => {
     try {
-      const token = localStorage.getItem("authToken");
-      if (!token) throw new Error("Unauthorized: No token found");
+      if (!user || !access_token) {
+        throw new Error("You must be logged in to create an idea.");
+      }
+      const response = await ideaAPI.createIdea({
+        title: payload.title,
+        description: payload.description,
+        project_details: payload.projectDetails || "",
+        industry: payload.industry,
+        stage: payload.stage,
+        tags: payload.tags || [],
+        creator_id: user?.id,
+        creator_first_name: user.firstName || "",
+        creator_last_name: user.lastName || "",
+        created_at: new Date().toISOString(),
+      }, access_token);
 
-      const response = await fetch(`${BASE_URL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: payload.title,
-          description: payload.description,
-          projectDetails: payload.projectDetails || "",
-          industry: payload.industry,
-          stage: payload.stage,
-          teamMembers: payload.teamMembers || [],
-          tags: payload.tags || [],
-        }),
-      });
-
-      if (!response.ok) {
-        if (response.status === 401)
-          throw new Error("Unauthorized: Invalid token");
-        throw new Error("Failed to create idea");
+      if (!response.success) {
+        throw new Error(response.message || "Failed to create idea");
       }
 
-      const newIdea = await response.json();
+
+      const newIdea = response.data?.idea || response.idea;
 
       const formattedIdea = {
-        ...newIdea,
+        id: newIdea.id,
+        title: newIdea.title,
+        description: newIdea.description,
+        stage: newIdea.stage,
+        category: newIdea.industry,
+        privacy: newIdea.privacy,
+        creatorId: newIdea.creator.id,
         author: {
-          name: "You",
-          role: "Contributor",
-          avatar: "https://i.pravatar.cc/150?img=11",
+          name: `${newIdea.creator.firstName} ${newIdea.creator.lastName}`,
+          role: activeRole,
+          avatar: getProfilePicture(newIdea.creator),
         },
         timeAgo: "just now",
-        createdAt: new Date().toLocaleDateString("en-US", {
+        createdAt: new Date(newIdea.createdAt).toLocaleDateString("en-US", {
           month: "long",
           day: "numeric",
           year: "numeric",
         }),
-        likes: 0,
-        comments: 0,
-        collaborators: 1,
+        likes: newIdea.likes,
+        comments: newIdea.commentsCount,
+        collaborators: newIdea.teamSize,
+        tags: newIdea.tags || [],
       };
 
       setIdeas((prev) => [formattedIdea, ...prev]);
@@ -204,7 +187,6 @@ const Ideation = () => {
     }
   };
 
-  // Re-fetch when filters change
   useEffect(() => {
     fetchIdeas();
   }, [selectedStage, selectedIndustry, sortBy, searchQuery]);
@@ -220,31 +202,23 @@ const Ideation = () => {
     return colors[stage] || "bg-gray-500/20 text-gray-400";
   };
 
-  // ✅ Fetch Bookmarks — now matches backend object structure
   useEffect(() => {
     const fetchBookmarks = async () => {
       try {
         const token = localStorage.getItem("authToken");
         if (!token) return;
 
-        const response = await fetch(`${BASE_URL}/bookmarks`, {
+        const response = await fetch(`${API_BASE_URL}/bookmarks`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (!response.ok) throw new Error("Failed to fetch bookmarks");
 
         const data = await response.json();
-
-        // ✅ Handle object or array gracefully
-        let bookmarkArray = [];
-        if (Array.isArray(data.bookmarks)) {
-          bookmarkArray = data.bookmarks;
-        } else if (data.bookmarks?.ideas) {
-          bookmarkArray = data.bookmarks.ideas;
-        }
+        const bookmarkArray = data.data?.bookmarks || data.bookmarks || [];
 
         const bookmarkSet = new Set(
-          bookmarkArray.map((b) => b.ideaId?.toString())
+          bookmarkArray.map((b) => String(b.idea_id || b.ideaId))
         );
 
         setBookmarks(bookmarkSet);
@@ -256,9 +230,8 @@ const Ideation = () => {
     fetchBookmarks();
   }, []);
 
-  // Toggle bookmark — communicates with backend toggle endpoint
   const handleBookmark = async (idea) => {
-    const ideaId = idea.id || idea._id;
+    const ideaId = idea.id;
     const token = localStorage.getItem("authToken");
 
     if (!token) {
@@ -267,14 +240,13 @@ const Ideation = () => {
       return;
     }
 
-    // Optimistic update
     setBookmarks((prev) => {
       const newSet = new Set(prev);
-      if (newSet.has(ideaId)) {
-        newSet.delete(ideaId);
+      if (newSet.has(String(ideaId))) {
+        newSet.delete(String(ideaId));
         setBookmarkNotification("Bookmark removed");
       } else {
-        newSet.add(ideaId);
+        newSet.add(String(ideaId));
         setBookmarkNotification("Idea bookmarked!");
       }
       setTimeout(() => setBookmarkNotification(""), 2000);
@@ -282,16 +254,13 @@ const Ideation = () => {
     });
 
     try {
-      const response = await fetch(
-        `${BASE_URL}/${ideaId}/bookmark`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await fetch(`${API_BASE_URL}/${ideaId}/bookmark`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) throw new Error("Failed to toggle bookmark");
     } catch (error) {
@@ -301,7 +270,6 @@ const Ideation = () => {
     }
   };
 
-  // Share idea
   const handleShare = async (idea) => {
     try {
       const url = `${window.location.origin}/ideation-details?id=${idea.id}`;
@@ -321,7 +289,6 @@ const Ideation = () => {
 
   const handleRetry = () => fetchIdeas();
 
-  // === UI ===
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -386,6 +353,8 @@ const Ideation = () => {
           sortBy={sortBy}
           setSortBy={setSortBy}
           onCreateIdea={handleCreateIdea}
+          setShowNewIdeaForm={setShowNewIdeaForm}
+          showNewIdeaForm={showNewIdeaForm}
         />
       </div>
 
@@ -398,11 +367,10 @@ const Ideation = () => {
         </div>
       )}
 
-      {/* Idea cards grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-4 max-sm:p-2">
         {ideas.map((content) => {
           const isPrivate = content.privacy === "private";
-          const isCreator = currentUserId && content.creatorId && currentUserId === content.creatorId;
+          const isCreator = user?.id && content.creatorId && user.id === content.creatorId;
           const shouldBlur = isPrivate && !isCreator;
           const canAccess = !isPrivate || isCreator;
 
@@ -599,9 +567,9 @@ const Ideation = () => {
 
               {canAccess && (
                 <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                  <button
+                  {/* <button
                     className={`bg-white/20 p-2 rounded-lg transition-colors ${
-                      bookmarks.has(content.id)
+                      bookmarks.has(String(content.id))
                         ? "bg-blue-500/10 text-blue-400 border border-blue-400"
                         : "hover:bg-white/30"
                     }`}
@@ -612,12 +580,12 @@ const Ideation = () => {
                   >
                     <Bookmark
                       className={`h-4 w-4 ${
-                        bookmarks.has(content.id)
+                        bookmarks.has(String(content.id))
                           ? "text-blue-400 fill-current"
                           : "text-white"
                       }`}
                     />
-                  </button>
+                  </button> */}
 
                   <button
                     className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
@@ -646,7 +614,9 @@ const Ideation = () => {
               Be the first to share an innovative idea! Try adjusting your
               filters or create a new idea to get the conversation started.
             </p>
-            <button className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+            <button
+              onClick={() => setShowNewIdeaForm(true)}
+              className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
               Share Your Idea
             </button>
           </div>

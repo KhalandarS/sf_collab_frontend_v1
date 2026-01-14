@@ -7,12 +7,19 @@ import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'luc
 export function createInvestorLinks(unreadMessagesCount) {
   return [
     {
-      id: 1,
+      id: 0,
       icon: <LucideLayoutDashboard size={22} />,
-      href: "/portfolio",
-      label: "Portfolio",
+      href: "/dashboard",
+      label: "Dashboard",
       subItems: []
     },
+    // {
+    //   id: 1,
+    //   icon: <Portfolio size={22} />,
+    //   href: "/portfolio",
+    //   label: "Portfolio",
+    //   subItems: []
+    // },
     {
       id: 2,
       icon: <BarChart2 size={22} />,

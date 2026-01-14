@@ -40,7 +40,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const { user, access_token } = useSelector((state) => state.auth);
   const [isAdmin] = useState(hasPermission(user, "admin_access"));
 
-  const { onlineUsers, socket, isConnected } = useAppSocket();
+  // const { onlineUsers, socket, isConnected } = useAppSocket();
   const { friends } = useChatContacts();
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
@@ -67,7 +67,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
         if (
           !res?.on_waitlist &&
-          !["/waitlist", "/waitlist-terms", "/user-profile"].includes(location.pathname)
+          !["/waitlist", "/waitlist-terms", "/user-profile", "/apply-influencer", "/joinsf"].includes(location.pathname)
         ) {
           toast.info("You should join the waitlist to access this section.");
           navigate("/waitlist");
@@ -261,7 +261,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
               className={`my-16 transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
                 isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
               }`}
-              style={{ zIndex: 99999999 }}
+              style={{ zIndex: 10 }}
             >
               <Options
                 isHidden={isNavHidden}

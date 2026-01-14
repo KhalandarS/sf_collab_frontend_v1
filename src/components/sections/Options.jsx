@@ -8,8 +8,7 @@ const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
   const subLinks = getTopNavLinks(location.pathname, unreadMessagesCount);
 
   const showSubItems = Array.isArray(subLinks) && subLinks.length > 0;
-
-  // ✅ If no subitems and not admin -> render nothing (no top bar on Chat)
+  const isMobile = window.matchMedia("(max-width: 1024px)").matches;
   if (!showSubItems && !isAdmin) return null;
 
   return (
@@ -18,8 +17,9 @@ const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
         isHidden ? "-translate-y-6 opacity-0" : "translate-y-0 opacity-100"
         } lg:translate-y-0 lg:opacity-100 bg-white/5 backdrop-blur-3xl px-2 rounded-full`}
     >
+
       <div className="flex items-center gap-1 overflow-x-auto text-sm py-2">
-        {showSubItems &&
+        {(showSubItems && !isMobile) &&
           subLinks.map((link) => (
             <Link
               key={link.id}
@@ -33,6 +33,7 @@ const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
               {link.label}
             </Link>
           ))}
+          
 
         {isAdmin && (
           <Link

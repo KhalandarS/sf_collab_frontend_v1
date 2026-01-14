@@ -57,6 +57,7 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
                   onClick={() => {
                     if (link.href) {
                       navigate(link.href);
+                      onLinkClick();
                       return;
                     }
                     toggleExpand(link.id);

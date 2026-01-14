@@ -14,7 +14,8 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { IoOptionsOutline } from "react-icons/io5";
-import SearchBar from "../sections/SearchBar";
+import SearchBar from "../../sections/SearchBar";
+import NewIdeaForm from "./NewIdeaForm";
 
 const IdeationHeader = ({
   searchQuery,
@@ -26,19 +27,16 @@ const IdeationHeader = ({
   sortBy,
   setSortBy,
   onCreateIdea,
+  showNewIdeaForm,
+  setShowNewIdeaForm, 
 }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const [showNewIdeaForm, setShowNewIdeaForm] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Use refs instead of controlled state to prevent focus loss
-  const titleRef = useRef("");
-  const descriptionRef = useRef("");
-  const industryRef = useRef("");
-  const stageRef = useRef("");
-  const tagsRef = useRef("");
+
   const searchTimeoutRef = useRef(null);
-  const projectDetailsRef = useRef("");
+  
 
   const stages = [
     "All Stages",
@@ -73,36 +71,7 @@ const IdeationHeader = ({
     setActiveDropdown(activeDropdown === dropdownName ? null : dropdownName);
   };
 
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    const tagsArray = tagsRef.current
-      ? tagsRef.current
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
 
-    const payload = {
-      title: titleRef.current.trim(),
-      description: descriptionRef.current.trim(),
-      projectDetails:
-        projectDetailsRef.current.trim() || "No additional details provided.",
-      industry: industryRef.current || "Technology",
-      stage: stageRef.current || "Idea Stage",
-      tags: tagsArray.length > 0 ? tagsArray : ["General"],
-    };
-
-    if (typeof onCreateIdea === "function") {
-      onCreateIdea(payload);
-    }
-    setShowNewIdeaForm(false);
-    // Clear refs
-    titleRef.current = "";
-    descriptionRef.current = "";
-    industryRef.current = "";
-    stageRef.current = "";
-    tagsRef.current = "";
-  };
 
   const FilterButton = ({
     icon,
@@ -174,156 +143,7 @@ const IdeationHeader = ({
     </div>
   );
 
-  const NewIdeaForm = () => (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1A1A1A] border border-white/20 rounded-2xl p-6 w-full max-w-lg max-h-[500px] overflow-y-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-xl font-semibold">Share Your Brilliant Idea</h2>
-          <button
-            onClick={() => setShowNewIdeaForm(false)}
-            className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        <form onSubmit={handleFormSubmit} className="space-y-5" noValidate>
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Idea Title *
-            </label>
-            <input
-              type="text"
-              defaultValue=""
-              onChange={(e) => {
-                titleRef.current = e.target.value;
-              }}
-              placeholder="What's your big idea?"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs"
-              required
-              autoFocus
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Description *
-            </label>
-            <textarea
-              defaultValue=""
-              onChange={(e) => {
-                descriptionRef.current = e.target.value;
-              }}
-              placeholder="Describe your idea in detail. What problem does it solve? How does it work?"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 h-32 resize-none placeholder:text-xs"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Project Details
-            </label>
-            <textarea
-              defaultValue=""
-              onChange={(e) => {
-                projectDetailsRef.current = e.target.value;
-              }}
-              placeholder="Add more technical or business details about your idea"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 h-24 resize-none placeholder:text-xs"
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Industry *
-              </label>
-              <select
-                defaultValue=""
-                onChange={(e) => {
-                  industryRef.current = e.target.value;
-                }}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs"
-                required
-              >
-                <option value="" className="bg-gray-800">
-                  Select Industry
-                </option>
-                {industries
-                  .filter((industry) => industry !== "All Industries")
-                  .map((industry, index) => (
-                    <option
-                      key={index}
-                      value={industry}
-                      className="bg-gray-800"
-                    >
-                      {industry}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Stage *
-              </label>
-              <select
-                defaultValue=""
-                onChange={(e) => {
-                  stageRef.current = e.target.value;
-                }}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs"
-                required
-              >
-                <option value="" className="bg-gray-800">
-                  Select Stage
-                </option>
-                {stages
-                  .filter((stage) => stage !== "All Stages")
-                  .map((stage, index) => (
-                    <option key={index} value={stage} className="bg-gray-800">
-                      {stage}
-                    </option>
-                  ))}
-              </select>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Tags
-            </label>
-            <input
-              type="text"
-              defaultValue=""
-              onChange={(e) => {
-                tagsRef.current = e.target.value;
-              }}
-              placeholder="e.g., AI, Mobile, Sustainability (comma separated)"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs"
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4 max-sm:text-sm">
-            <button
-              type="button"
-              onClick={() => setShowNewIdeaForm(false)}
-              className="px-6 py-2.5 bg-white/10 shadow-md hover:bg-white/20 rounded-xl transition-colors font-medium"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-6 py-2.5 bg-gray-200 shadow-md hover:bg-gray-300 rounded-xl transition-all duration-200 font-medium text-black shadow-lg"
-            >
-              Share Idea
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
 
   return (
     <div className="w-full p-4 px-2 space-y-4">
@@ -409,7 +229,12 @@ const IdeationHeader = ({
         </div>
       </div>
 
-      {showNewIdeaForm && <NewIdeaForm />}
+      {showNewIdeaForm && <NewIdeaForm
+        onClose={() => setShowNewIdeaForm(false)}
+        onCreateIdea={onCreateIdea}
+        industries={industries}
+        stages={stages}
+      />}
     </div>
   );
 };

@@ -91,9 +91,9 @@ const SidebarFeedbackCard = () => {
               // onMouseLeave={() => setTooltipOpen(false)}
             >
               <div 
-                className="w-13 h-13 group transition-all text-gray-400 duration-700 flex items-center justify-center hover:scale-110"
+                className="w-13 h-13 group  transition-all text-gray-400 duration-700 flex items-center justify-center hover:scale-110"
               >
-                <RiFeedbackLine size={25}/>
+                <RiFeedbackLine size={25} className='text-purple-500'/>
               </div>
             </div>
           </TooltipTrigger>

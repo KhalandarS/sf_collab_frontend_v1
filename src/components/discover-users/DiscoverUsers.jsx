@@ -16,6 +16,8 @@ import { chatAPI } from '@/utils/APIs/chatApi';
 
 // NEW: Import ConnectionButton
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
+import { getProfilePicture } from '@/utils/getProfilePicture';
+import { Link } from 'react-router-dom';
 
 const DiscoverUsers = () => {
   const [users, setUsers] = useState([]);
@@ -199,7 +201,7 @@ const DiscoverUsers = () => {
             Build your network and discover new opportunities.
           </motion.p>
         
-          <motion.div
+          {/* <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -221,7 +223,7 @@ const DiscoverUsers = () => {
               <div className="text-2xl font-bold text-white mb-1">98%</div>
               <div className="text-sm text-gray-400">Satisfaction Rate</div>
             </div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
 
         {/* Filters Section */}
@@ -434,20 +436,19 @@ const DiscoverUsers = () => {
             </DialogHeader>
 
             {selectedUser && (
-              <div className="space-y-4">
+              <div className="space-y-4 flex flex-col items-center justify-center">
                 {/* Profile Picture */}
-                {selectedUser.profile?.picture && (
+                <Link to={`/users/${selectedUser.id}`} className="w-full">
                   <div className="flex justify-center">
                     <img
-                      src={selectedUser.profile.picture}
+                      src={getProfilePicture(selectedUser)}
                       alt={selectedUser.fullName}
                       className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
                     />
                   </div>
-                )}
 
                 {/* User Info */}
-                <div className="space-y-2 text-sm">
+                <div className="space-y-2 text-sm w-full text-center">
                   <p><span className="font-semibold">Role:</span> {selectedUser.role}</p>
                   <p><span className="font-semibold">Status:</span> {selectedUser.status}</p>
                   {selectedUser.profile?.company && (
@@ -460,9 +461,9 @@ const DiscoverUsers = () => {
                     <p><span className="font-semibold">Startups:</span> {selectedUser.active_startups_count}</p>
                   )}
                 </div>
-
+                  </Link>
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-700">
+                <div className="grid w-full grid-cols-2 gap-2 pt-2 border-t border-gray-700">
                   <div className="text-center">
                     <p className="font-bold text-blue-400">{selectedUser.xp_points || 0}</p>
                     <p className="text-xs text-gray-400">XP Points</p>
@@ -483,7 +484,7 @@ const DiscoverUsers = () => {
                 </div>
 
                 {/* Message Input */}
-                <div className="space-y-2 pt-2 border-t border-gray-700">
+                <div className="space-y-2 pt-2 border-t w-full border-gray-700">
                   <label className="text-sm font-medium text-gray-300">Send a Message</label>
                   <textarea
                     value={messageText}

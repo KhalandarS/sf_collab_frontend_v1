@@ -1,11 +1,12 @@
 import { Badge, BarChart3, Briefcase, LucideLayoutDashboard, Star, User, Heart, CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
 import { IoChatbubbles } from 'react-icons/io5';
+import { LuLayoutDashboard } from 'react-icons/lu';
 
 export function createBuilderLinks(unreadMessagesCount) {
   return [
   {
       id: 1,
-      icon: <BarChart3 size={22} />,
+      icon: <LuLayoutDashboard size={22} />,
       href: "/dashboard",
       label: "Dashboard",
       subItems: [

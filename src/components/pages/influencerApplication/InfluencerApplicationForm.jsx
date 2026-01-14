@@ -42,7 +42,6 @@ export default function InfluencerApplicationForm() {
         return;
       }
       setLoading(true);
-      console.log(form)
       if (!form.name || !form.email || !form.country || !form.profileLink || !form.followers || !form.niche || !form.contribution || !form.earlyPartner) {
         toast.error("Please fill in all required fields.");
         setLoading(false);
@@ -100,7 +99,7 @@ export default function InfluencerApplicationForm() {
         >
           <Card className="bg-slate-800/50 border border-slate-700/50 backdrop-blur-xl shadow-2xl">
             <CardContent className="pt-8">
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleSubmit} noValidate className="space-y-8">
                 {/* Basic Info */}
                 <motion.section
                   initial={{ opacity: 0 }}
@@ -252,7 +251,7 @@ export default function InfluencerApplicationForm() {
                       <SelectTrigger className="bg-slate-700/50 border-slate-600 text-white">
                         <SelectValue placeholder="Select option" />
                       </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectContent className="bg-slate-800 border-slate-600 text-white">
                         <SelectItem value="yes">Yes</SelectItem>
                         <SelectItem value="no">No</SelectItem>
                       </SelectContent>

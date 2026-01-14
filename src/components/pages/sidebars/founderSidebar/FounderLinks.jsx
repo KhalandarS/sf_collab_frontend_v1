@@ -1,8 +1,8 @@
 import { Badge, File } from 'lucide-react';
 import { FaTasks } from 'react-icons/fa';
 import { FaMoneyBill } from 'react-icons/fa6';
-import { FcFeedback, FcStart } from 'react-icons/fc';
-import { IoChatbubbles } from "react-icons/io5";
+import { FcFeedback } from 'react-icons/fc';
+import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { LuLayoutDashboard } from 'react-icons/lu';
 import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
 
@@ -13,57 +13,49 @@ export function createFounderLinks(unreadMessagesCount) {
       icon: <LuLayoutDashboard size={22} />,
       href: "/dashboard",
       label: "Dashboard",
-      subItems: [
-        // { id: "overview", href: "/dashboard", label: "Overview" },
-      ]
+      subItems: []
     },
     {
       id: 2,
-      icon: <FcStart size={22} />, // Replace with actual icon
+      icon: <Rocket size={22} />,
       href: "/my-startups",
-      label: "My Startups",
-      subItems: []
+      label: "Startups",
+      subItems: [
+        { id: "discover-startups", href: "/my-startups", label: "Discover", icon: <Rocket size={18} /> },
+        { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
+      ]
     },
     {
       id: 3,
-      icon: <FaTasks size={22} />, // Replace with actual icon
-      href: "/tasks-team",
-      label: "Tasks & Team",
-      subItems: []
+      icon: <MessageSquareHeart size={22} />,
+      href: "/posts",
+      label: "Social",
+      subItems: [
+        { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
+        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
+      ]
     },
     {
       id: 4,
-      icon: <FaMoneyBill size={22} />, // Replace with actual icon
-      href: "/fundraising",
-      label: "Fundraising",
-      subItems: []
+      icon: <BookOpen size={22} />,
+      href: "/knowledge",
+      label: "Learning",
+      subItems: [
+        { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
+      ]
     },
     {
       id: 5,
-      icon: <FcFeedback size={22} />, // Replace with actual icon
-      href: "/reports",
-      label: "Reports",
-      subItems: []
+      icon: <BrainCircuit size={23} />,
+      href: "/ai-dashboard",
+      label: "AI Tools",
+      subItems: [
+        { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
+        { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
+        { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
+        { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
+        { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
+      ]
     },
-    {
-      id: 6,
-      icon: <File size={22} />, // Replace with actual icon
-      href: "/files",
-      label: "Files",
-      subItems: []
-    },
-    {
-          id: 7,
-          icon: <BrainCircuit size={23} />,
-          href: "/ai-dashboard",
-          label: "AI Tools",
-          subItems: [
-            { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
-            { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-            { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
-            { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
-            { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
-          ],
-        },
   ];
 }

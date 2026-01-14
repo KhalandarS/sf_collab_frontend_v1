@@ -41,6 +41,19 @@ api.interceptors.response.use(
 
 // Startup API
 export const startupAPI = {
+  getAll: async (accessToken, params) => {
+    const response = await api.get('/startups', {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params,
+      },
+    })
+    return response.data
+  },
   getStartup: async (startupId, accessToken) => {
     const response = await api.get(`/startups/${startupId}`, {
       headers: {

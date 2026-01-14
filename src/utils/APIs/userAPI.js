@@ -53,8 +53,12 @@ export const usersAPI = {
     return response.data;
   },
 
-  getById: async (userId) => {
-    const response = await api.get(`/users/${userId}`);
+  getById: async (userId, accessToken) => {
+    const response = await api.get(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
     return response.data.data;
   },
 

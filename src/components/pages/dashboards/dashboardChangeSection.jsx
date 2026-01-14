@@ -10,7 +10,7 @@ export default function DashboardChangeSection({ sections = [], onSectionChange,
 
   return (
 
-    <div className="z-50 flex gap-4 px-4 my-4">
+    <div className="z-50 flex flex-wrap gap-4 px-4 my-4">
       <span className="text-2xl gap-2 flex items-center text-white font-semibold">
         
         Select your dashboard
@@ -20,7 +20,7 @@ export default function DashboardChangeSection({ sections = [], onSectionChange,
           
           key={section.id}
           onClick={() => handleSectionChange(section.id)}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
+          className={`px-4 py-2 flex-1 md:flex-auto rounded-lg font-semibold transition-all ${
             activeSection === section.id
               ? "bg-blue-600 text-white shadow-lg"
               : "bg-gray-700 text-gray-300 hover:bg-gray-600"

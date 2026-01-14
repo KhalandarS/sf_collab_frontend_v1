@@ -222,20 +222,19 @@ const ChatPage = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSelectConversation = (conversation) => {
+  const handleSelectConversation = async (conversation) => {
     if (activeConversation?.id !== conversation.id) {
       if (socket && activeConversation) {
         socket.emit('leave_conversation', { conversation_id: activeConversation.id });
       }
 
-      setActiveConversation(conversation);
-      // setMessages([]); // Add this line
+      setMessages([]);
       setTypingUsers([]);
       setIsMessagesLoading(true);
-  fetchMessages(conversation.id).finally(() => {
-    setIsMessagesLoading(false);
-  });
-
+      
+      await fetchMessages(conversation.id);
+      setActiveConversation(conversation);
+      setIsMessagesLoading(false);
 
       if (isMobile) {
         setShowChat(true);
@@ -565,6 +564,7 @@ setTimeout(() => {
                   animate={{ opacity: 1 }}
                   className="flex-1 overflow-y-auto py-4"
                 >
+                  {console.log(messages)}
                   {messages.length === 0 ? (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}

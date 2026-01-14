@@ -31,7 +31,7 @@ const contributionActions = [
     to: "/crowdfunding",
     tone: "locked",
     available: true,
-    verified: true,
+    verified: false,
     repeatable: false,
     impact: "Provides a significant boost to your ranking",
   },
@@ -46,6 +46,7 @@ const contributionActions = [
     to: "/contribution-ideas",
     tone: "primary",
     available: true,
+    contribution: true,
     verified: true,
     repeatable: true,
     impact: "Affects your ranking immediately",
@@ -76,6 +77,7 @@ const contributionActions = [
     cta: "View Community Polls",
     to: "/contribution-polls",
     tone: "neutral",
+    contribution: true,
     available: true,
     verified: true,
     repeatable: true,
@@ -106,6 +108,7 @@ const contributionActions = [
     cta: "Access Incubator",
     to: "/ideation",
     tone: "primary",
+    contribution: true,
     available: true,
     verified: true,
     repeatable: true,
@@ -123,6 +126,7 @@ const contributionActions = [
     tone: "neutral",
     available: true,
     verified: true,
+    contribution: true,
     repeatable: true,
     impact: "Affects ranking immediately",
   },
@@ -229,8 +233,23 @@ export default function ContributionPage() {
                 </Link>
             ))}
           </div>
-        </motion.section>
+          <motion.div
+  variants={itemVariants}
+  className="rounded-xl border border-blue-400/40 bg-gradient-to-br from-blue-500/15 to-purple-500/10 p-5 text-sm text-blue-200"
+>
+  <p className="font-semibold text-white mb-2">Important Contribution Rules</p>
+  <ul className="space-y-1 text-blue-200/90">
+    <li>• You can contribute without limits across SFCollab.</li>
+    <li>• To keep rankings fair, points are capped per contribution type per day.</li>
+    <li>
+      • Until February/March launch, you may create multiple startups, ideas, and
+      submissions freely — only the <b>first verified action per day</b> grants points.
+    </li>
+  </ul>
+</motion.div>
 
+        </motion.section>
+          
         {/* ================= POINTS OVERVIEW ================= */}
         <motion.section
           variants={containerVariants}
@@ -498,79 +517,115 @@ export default function ContributionPage() {
 function ActionCard({ action }) {
   const Icon = action.icon;
 
-const toneStyles = {
-  primary: `
-    relative
-    border border-amber-400/60
-    bg-gradient-to-br from-amber-500/50 via-amber-500/40 to-transparent
-    backdrop-blur-md
-    shadow-[0_0_40px_-10px_rgba(251,191,36,0.35)]
-    hover:border-amber-400/60
-    hover:shadow-[0_0_55px_-10px_rgba(251,191,36,0.55)]
-    transition-all duration-300
-  `,
-
-  neutral: `
-    relative
-    border border-indigo-400/30
-    bg-gradient-to-br from-indigo-500/60 via-purple-600/20 to-transparent
-    backdrop-blur-md
-    shadow-[0_0_40px_-10px_rgba(99,102,241,0.35)]
-    hover:border-indigo-400/60
-    hover:shadow-[0_0_55px_-10px_rgba(99,102,241,0.55)]
-    transition-all duration-300
-  `,
-
-  locked: `
-    relative
-    border border-white/10
-    bg-white/5
-    backdrop-blur-sm
-    opacity-60
-    cursor-not-allowed
-  `,
-};
-
+  const toneStyles = {
+    primary: `
+      relative
+      border border-amber-400/60
+      bg-gradient-to-br from-amber-500/50 via-amber-500/40 to-transparent
+      backdrop-blur-md
+      shadow-[0_0_40px_-10px_rgba(251,191,36,0.35)]
+      hover:border-amber-400/60
+      hover:shadow-[0_0_55px_-10px_rgba(251,191,36,0.55)]
+      transition-all duration-300
+    `,
+    neutral: `
+      relative
+      border border-indigo-400/30
+      bg-gradient-to-br from-indigo-500/60 via-purple-600/20 to-transparent
+      backdrop-blur-md
+      shadow-[0_0_40px_-10px_rgba(99,102,241,0.35)]
+      hover:border-indigo-400/60
+      hover:shadow-[0_0_55px_-10px_rgba(99,102,241,0.55)]
+      transition-all duration-300
+    `,
+    locked: `
+      relative
+      border border-white/10
+      bg-white/5
+      backdrop-blur-sm
+      opacity-60
+      cursor-not-allowed
+    `,
+    contribution: `
+      relative
+      border border-emerald-400/60
+      bg-gradient-to-br from-emerald-500/40 via-emerald-400/20 to-transparent
+      backdrop-blur-md
+      shadow-[0_0_40px_-10px_rgba(52,211,153,0.45)]
+      hover:border-emerald-400
+      hover:shadow-[0_0_55px_-10px_rgba(52,211,153,0.65)]
+      transition-all duration-300
+    `
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className={`rounded-2xl ${action.important ? "col-span-2 bg-blue-600/60 hover:bg-blue-500 border-blue-400/40 text-white shadow-[0_0_40px_-10px_rgba(59,130,246,0.55)] hover:shadow-[0_0_55px_-10px_rgba(59,130,246,0.75)]" : ""} border p-6 transition-all ${!action.important && toneStyles[action.tone]}`}
+      className={`
+        rounded-2xl
+        border
+        p-6
+        transition-all
+        ${action.important
+          ? `
+            col-span-2
+            bg-blue-600/60
+            hover:bg-blue-500
+            border-blue-400/40
+            text-white
+            shadow-[0_0_40px_-10px_rgba(59,130,246,0.55)]
+            hover:shadow-[0_0_55px_-10px_rgba(59,130,246,0.75)]
+          `
+          : toneStyles[action.tone]
+        }
+      `}
     >
+      {/* Header */}
       <div className="flex items-start justify-between mb-4 text-white">
         <div className="flex items-center gap-3 flex-1">
           <div className="p-3 rounded-xl bg-black/40 border border-neutral-700">
-            <Icon className="h-5 w-5 text-purple-300" />
+            {Icon && <Icon className="h-5 w-5 text-purple-300" />}
           </div>
-          <h3 className="text-lg font-semibold">{action.title}</h3>
+          <h3 className="text-lg font-semibold">
+            {action.title}
+          </h3>
         </div>
       </div>
 
+      {/* Description */}
       <p className="text-sm text-white mb-5">
         {action.description}
       </p>
 
+      {/* Points Box */}
       <div className="mb-5 space-y-3 bg-neutral-800/30 rounded-lg p-3 border border-neutral-700/50">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-white">Points:</p>
-          <p className="text-white font-semibold">{action.points}</p>
+          <p className="text-sm text-white">Points</p>
+          <p className="text-white font-semibold">
+            {action.points}
+          </p>
         </div>
+
         {action.bonus && (
           <div className="flex items-center justify-between">
-            <p className="text-xs text-white">Bonus:</p>
-            <p className="text-emerald-400 text-xs font-semibold">{action.bonus}</p>
+            <p className="text-xs text-white">Bonus</p>
+            <p className="text-emerald-400 text-xs font-semibold">
+              {action.bonus}
+            </p>
           </div>
         )}
+
         <div className="pt-2 border-t border-neutral-700/50 space-y-1 text-xs text-white">
           {action.verified && <p>✓ Verified by team</p>}
-          
-          <p>✓ {action.pointsDetail}</p>
-          <p>✓ {action.impact}</p>
+          {action.pointsDetail && <p>✓ {action.pointsDetail}</p>}
+          {action.impact && <p>✓ {action.impact}</p>}
         </div>
       </div>
-      { action.to !== null &&
+
+      {/* CTA */}
+      {action.to !== null && (
         <div className="mt-6">
           {action.available ? (
             <Link
@@ -587,11 +642,10 @@ const toneStyles = {
             </div>
           )}
         </div>
-      }
+      )}
     </motion.div>
   );
 }
-
 function StatusCard({ label, value }) {
   return (
     <motion.div

@@ -1,8 +1,21 @@
 import { motion } from "framer-motion";
 import { Loader2, Sparkles } from "lucide-react";
 import InfluencerApplicationForm from "./InfluencerApplicationForm";
+import { use, useEffect, useState } from "react";
+import { applicationAPI } from "@/utils/APIs/applicationAPI";
+import { useSelector } from "react-redux";
 
 export default function InfluencerApplication() {
+  const [allApplications, setAllApplications] = useState([]);
+  const { access_token, user } = useSelector((state) => state.auth);
+  useEffect(() => {
+    async function fetchApplications() {
+      const response = await applicationAPI.getAll(access_token, { page: 1, per_page: 1000 });
+      setAllApplications(response.data.applications || []);
+    }
+    fetchApplications();
+  }, [access_token]);
+
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden py-12 px-4 sm:px-6 lg:px-8">
       {/* Animated Background */}
@@ -35,6 +48,38 @@ export default function InfluencerApplication() {
         {/* Form Card */}
         <InfluencerApplicationForm />
         
+
+        {/* Influencer Applications Review for Admins */}
+        {
+          user?.role === 'admin' && (
+        
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="mt-8 p-6 bg-gradient-to-br from-slate-800/40 to-slate-700/20 rounded-xl border border-slate-700/50"
+            >
+              <h3 className="text-lg font-semibold mb-4 text-purple-300">⭐ Influencer Applications</h3>
+              <ul className="space-y-3 max-h-96 overflow-y-auto">
+                {allApplications
+                  .filter(item => item.application_type === 'influencer')
+                  .map((app) => (
+                    <li key={app.id} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition">
+                      <div className="font-medium text-purple-300">{app.name}</div>
+                      <p className="text-xs text-slate-400 mt-1">📧 {app.email}</p>
+                      <p className="text-xs text-slate-400">🌍 {app.country}</p>
+                      <div className="text-xs text-slate-300 mt-2">
+                        <p><strong>Niche:</strong> {app.data?.niche}</p>
+                        <p><strong>Followers:</strong> {app.data?.followers}</p>
+                        <p><strong>Audience Fit:</strong> {app.data?.audienceFit}</p>
+                        <p><strong>Early Partner:</strong> {app.data?.earlyPartner}</p>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-2">{new Date(app.created_at).toLocaleDateString()}</p>
+                    </li>
+                  ))}
+              </ul>
+            </motion.div>
+          )}
       </div>
     </div>
   );

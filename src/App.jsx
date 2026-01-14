@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
-import Ideation from "./components/pages/Ideation.jsx";
+import Ideation from "./components/pages/ideation/Ideation.jsx";
 import Knowledge from "./components/pages/Knowledge.jsx";
 import Setting from "./components/pages/Setting.jsx";
 import ProfileSetting from "./components/pages/ProfileSetting.jsx";
@@ -87,6 +87,7 @@ import MyApplications from "./components/pages/dashboards/builderDashboard/MyApp
 import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
 import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx";
 import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
+import UserPage from "./components/pages/usersPage/UsersPage.jsx";
 
 
 
@@ -203,6 +204,7 @@ export default function App() {
                 <Route path="join-sf" element={<JoinSF />} />
                 <Route path="apply-influencer" element={<InfluencerApplication />} />
                 <Route path="profile-setup" element={<ProfileSetup />} />
+                <Route path="users/:id" element={<UserPage />} />
                 <Route path="user-profile" element={<Profile />} />
                 {/* Projects */}
 
@@ -211,7 +213,7 @@ export default function App() {
                 <Route path="project-details" element={<ProjectDetails />} />
         
                 {/* Ideation */}
-                <Route path="ideation" element={<Ideation />} />
+                <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
                 <Route path="ideation-details" element={<Idationdetails />} />
         
                 {/* Knowledge */}
@@ -250,6 +252,7 @@ export default function App() {
                 {/* Startups */}
                 <Route path="register-startup" element={<RegisterStartUp />} />
                 <Route path="discover-startups" element={<DiscoverStartups />} />
+                <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                 <Route path="startup-details/:id" element={<StartupDetailPage />} />
         
                 {/* Tools */}

@@ -4,7 +4,7 @@ import {
   Search, Filter, X, Building2, Users, MapPin, TrendingUp, 
   Code, Mail, ExternalLink, Sparkles, Check, Eye,
   ChevronLeft, ChevronRight, Plus, DollarSign,
-  Rocket
+  Rocket, Edit3
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -18,10 +18,10 @@ import ShinyText from "../ui/ShinyText";
 
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { startupAPI } from './startupDetails/startUpAPI';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
-// Funding range presets
 const FUNDING_RANGES = [
   { label: 'Any', min: null, max: null },
   { label: 'Bootstrapped ($0)', min: 0, max: 0 },
@@ -32,7 +32,42 @@ const FUNDING_RANGES = [
   { label: 'Custom', min: null, max: null, custom: true }
 ];
 
-const DiscoverStartups = () => {
+// Mode configuration
+const MODES = {
+  discover: {
+    headerTitle: 'Discover Your Next',
+    headerSubtitle: 'Career Adventure',
+    subtitle: 'Join thousands of innovators building the future at fast-growing startups. From pre-seed to Series C, find your perfect match.',
+    ctaButton: 'Add Startup',
+    ctaRoute: '/register-startup',
+    cardCta: 'View Details',
+    stats: [
+      // { value: '1.2K+', label: 'Active Startups' },
+      // { value: '$4.8B', label: 'Total Funding' },
+      // { value: '15K+', label: 'Open Roles' },
+      // { value: '94%', label: 'Hire Success Rate' }
+    ],
+    emptyState: {
+      title: 'No startups found',
+      message: 'Try adjusting your filters or search query to discover more opportunities'
+    }
+  },
+  myStartups: {
+    headerTitle: 'My',
+    headerSubtitle: 'Startups',
+    subtitle: 'Manage and grow your startup portfolio. Monitor your companies, edit details, and track performance.',
+    ctaButton: 'Create New Startup',
+    ctaRoute: '/register-startup',
+    cardCta: 'Manage',
+    stats: null, // Dynamic based on user data
+    emptyState: {
+      title: "You haven't created any startups yet",
+      message: 'Create your first startup to get started. Build something amazing and find the right talent.'
+    }
+  }
+};
+
+const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [startups, setStartups] = useState([]);
   const [industries, setIndustries] = useState([]);
   const [stages, setStages] = useState([]);
@@ -49,11 +84,12 @@ const DiscoverStartups = () => {
   const [selectedStartup, setSelectedStartup] = useState(null);
   const navigate = useNavigate();
   
-  const {user,access_token,refreshToken} = useSelector((state) => state.auth);
+  const { user, access_token, refreshToken } = useSelector((state) => state.auth);
   
   const itemsPerPage = 9;
+  const mode = myStartupsOnly ? 'myStartups' : 'discover';
+  const modeConfig = MODES[mode];
 
-  // Get current funding range values
   const getFundingRangeValues = () => {
     if (selectedFundingRange === 'Custom') {
       return {
@@ -69,7 +105,6 @@ const DiscoverStartups = () => {
     };
   };
 
-  // Fetch startups data
   const fetchStartups = async (page = 1) => {
     try {
       setLoading(true);
@@ -91,15 +126,11 @@ const DiscoverStartups = () => {
       if (selectedStage !== 'All') params.append('stage', selectedStage);
       if (fundingRange.min !== null) params.append('min_funding', fundingRange.min.toString());
       if (fundingRange.max !== null) params.append('max_funding', fundingRange.max.toString());
-  
-      const response = await fetch(`${API_URL}/startups?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      if (myStartupsOnly && user?.id) params.append('my_startups', true);
       
-      const data = await response.json();
+      const response = await startupAPI.getAll(token, params);
+      
+      const data = response;
   
       if (data.success) {
         setStartups(data.data.startups);
@@ -113,8 +144,6 @@ const DiscoverStartups = () => {
     }
   };
 
-
-  // Fetch industries and stages
   const fetchFilters = async () => {
     try {
       const token = access_token;
@@ -145,15 +174,16 @@ const DiscoverStartups = () => {
     }
   };
 
-
   useEffect(() => {
     fetchStartups();
-    fetchFilters();
+    if (mode === 'discover') {
+      fetchFilters();
+    }
   }, []);
 
   useEffect(() => {
     fetchStartups(1);
-  }, [searchQuery, selectedIndustry, selectedStage, selectedFundingRange, customMinFunding, customMaxFunding]);
+  }, [searchQuery, selectedIndustry, selectedStage, selectedFundingRange, customMinFunding, customMaxFunding, myStartupsOnly]);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -165,6 +195,7 @@ const DiscoverStartups = () => {
   };
 
   const handleStartupClick = (startup) => {
+
     navigate(`/startup-details/${startup.id}`);
   };
 
@@ -197,43 +228,44 @@ const DiscoverStartups = () => {
 
   return (
     <div className="min-h-screen">
-
-      <div className="w-fullmx-auto px-4 sm:px-6 py-2">
+      <div className="w-full mx-auto px-4 sm:px-6 py-2">
         {/* Navigation */}
         <motion.nav 
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="sticky top-0 z-50"
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="sticky top-0 z-50"
         >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
-                {/* Badge */}
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6   backdrop-blur-sm"
-              >
-                <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
-                <Rocket className="w-4 h-4 mr-1" />
-                <span className="text-xs flex items-center font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                   1,200+ Startups Ready to Hire
-                </span>
-              </motion.div>
-            
-            <div className="hidden md:flex items-center gap-4">
-                <Button 
-                variant="ghost" 
-                size="sm"
-                className="text-gray-300 hover:text-black"
-                onClick={() => navigate('/register-startup')}
+              {/* Badge - Only show in discover mode */}
+              {/* {mode === 'discover' && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6 backdrop-blur-sm"
                 >
-                <Plus className="w-4 h-4 mr-1" />
-                Add Startup
+                  <div className="w-2 h-2 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full animate-pulse" />
+                  <Rocket className="w-4 h-4 mr-1" />
+                  <span className="text-xs flex items-center font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
+                    1,200+ Startups Ready to Hire
+                  </span>
+                </motion.div>
+              )} */}
+            
+              <div className="hidden md:flex items-center gap-4 ml-auto">
+                <Button 
+                  variant={mode === 'myStartups' ? "default" : "ghost"}
+                  size="sm"
+                  className={mode === 'myStartups' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-gray-300 hover:text-black"}
+                  onClick={() => navigate(modeConfig.ctaRoute)}
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  {modeConfig.ctaButton}
                 </Button>
+              </div>
             </div>
-            </div>
-        </div>
+          </div>
         </motion.nav>
         
         {/* Header */}
@@ -241,50 +273,50 @@ const DiscoverStartups = () => {
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
-          className=" text-center  mb-2 pb-2 relative overflow-hidden"
+          className="text-center mb-2 pb-2 relative overflow-hidden"
         >
-          {/* Background Elements */}
-          <div className="absolute inset-0 overflow-hidden">
-            {/* Animated gradient orbs */}
-            <motion.div
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.5, 0.3],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl"
-            />
-            <motion.div
-              animate={{
-                scale: [1.2, 1, 1.2],
-                opacity: [0.4, 0.2, 0.4],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
-            />
-            <motion.div
-              animate={{
-                scale: [1, 1.1, 1],
-                opacity: [0.2, 0.4, 0.2],
-              }}
-              transition={{
-                duration: 12,
-                repeat: Infinity,
-                ease: "easeInOut"
-              }}
-              className="absolute bottom-10 left-1/4 w-24 h-24 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-2xl"
-            />
-          </div>
+          {/* Background Elements - Only in discover mode */}
+          {mode === 'discover' && (
+            <div className="absolute inset-0 overflow-hidden">
+              <motion.div
+                animate={{
+                  scale: [1, 1.2, 1],
+                  opacity: [0.3, 0.5, 0.3],
+                }}
+                transition={{
+                  duration: 8,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl"
+              />
+              <motion.div
+                animate={{
+                  scale: [1.2, 1, 1.2],
+                  opacity: [0.4, 0.2, 0.4],
+                }}
+                transition={{
+                  duration: 10,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
+              />
+              <motion.div
+                animate={{
+                  scale: [1, 1.1, 1],
+                  opacity: [0.2, 0.4, 0.2],
+                }}
+                transition={{
+                  duration: 12,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+                className="absolute bottom-10 left-1/4 w-24 h-24 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-2xl"
+              />
+            </div>
+          )}
         
-          
           {/* Main Heading */}
           <motion.h1 
             initial={{ y: 30, opacity: 0 }}
@@ -293,27 +325,24 @@ const DiscoverStartups = () => {
             className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
           >
             <span className="">
-                <ShinyText 
-                  text="Discover Your Next" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText 
+                text={modeConfig.headerTitle}
+                disabled={false} 
+                speed={3} 
+              />
             </span>
             <br />
             <motion.span
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
-            //   className="bg-gradient-to-r from-purple-400/70 via-blue-400/70 to-purple-400/70 bg-clip-text text-transparent"
             >
-                <ShinyText 
-                  text="Career Adventure" 
-                  disabled={false} 
-                  speed={3} 
-                  className='custom-title' 
-                />
-              
+              <ShinyText 
+                text={modeConfig.headerSubtitle}
+                disabled={false} 
+                speed={3} 
+                className='custom-title' 
+              />
             </motion.span>
           </motion.h1>
         
@@ -324,55 +353,57 @@ const DiscoverStartups = () => {
             transition={{ delay: 0.4 }}
             className="text-xl sm:text-2xl text-gray-300 mb-8 max-w-4xl mx-auto leading-relaxed"
           >
-            Join <span className="font-semibold text-white">thousands of innovators</span> building the future at 
-            fast-growing startups. From pre-seed to Series C, find your perfect match.
+            {mode === 'discover' && (
+              <>
+                Join <span className="font-semibold text-white">thousands of innovators</span> building the future at 
+                fast-growing startups. From pre-seed to Series C, find your perfect match.
+              </>
+            )}
+            {mode === 'myStartups' && (
+              <>
+                <span className="font-semibold text-white">Manage and grow</span> your startup portfolio. Monitor your companies, edit details, and track performance.
+              </>
+            )}
           </motion.p>
         
-          {/* Stats Grid */}
-          <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-2xl mx-auto"
-          >
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">1.2K+</div>
-              <div className="text-sm text-gray-400">Active Startups</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">$4.8B</div>
-              <div className="text-sm text-gray-400">Total Funding</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">15K+</div>
-              <div className="text-sm text-gray-400">Open Roles</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">94%</div>
-              <div className="text-sm text-gray-400">Hire Success Rate</div>
-            </div>
-          </motion.div>
-        {/* Scroll Indicator */}
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
-          >
+          {/* Stats Grid - Only in discover mode */}
+          {mode === 'discover' && (
             <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 2, repeat: Infinity }}
-                
-              className="w-6 h-10 border-2 border-gray-600 rounded-full flex justify-center"
+              initial={{ y: 30, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              className="grid grid-cols-2 lg:grid-cols-4 gap-6 max-w-2xl mx-auto"
+            >
+              {modeConfig.stats.map((stat, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-sm text-gray-400">{stat.label}</div>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Scroll Indicator - Only in discover mode */}
+          {mode === 'discover' && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              className="absolute bottom-2 left-1/2 transform -translate-x-1/2"
             >
               <motion.div
-                animate={{ y: [0, 12, 0] }}
+                animate={{ y: [0, 8, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="w-1 h-3 bg-gray-400 rounded-full mt-2"
-              />
+                className="w-6 h-10 border-2 border-gray-600 rounded-full flex justify-center"
+              >
+                <motion.div
+                  animate={{ y: [0, 12, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="w-1 h-3 bg-gray-400 rounded-full mt-2"
+                />
+              </motion.div>
             </motion.div>
-          </motion.div>
-          
+          )}
         </motion.div>
 
         {/* Search & Mobile Filter Toggle */}
@@ -382,29 +413,53 @@ const DiscoverStartups = () => {
           transition={{ delay: 0.2 }}
           className="mb-6 flex gap-3"
         >
-          {/* <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <Input
-              placeholder="Search startups by name or description..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 h-12 bg-gray-800 border-gray-600 text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-            />
-          </div> */}
-          
-          <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" className="md:hidden h-12 relative border-gray-600 bg-gray-800 text-gray-300">
-                <Filter className="w-5 h-5" />
-                {activeFiltersCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {activeFiltersCount}
-                  </span>
-                )}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-80 overflow-y-auto bg-gray-800 border-gray-700">
-              <MobileFilterSidebar
+          {mode === 'discover' && (
+            <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" className="md:hidden h-12 relative border-gray-600 bg-gray-800 text-gray-300">
+                  <Filter className="w-5 h-5" />
+                  {activeFiltersCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-80 overflow-y-auto bg-gray-800 border-gray-700">
+                <MobileFilterSidebar
+                  industries={industries}
+                  stages={stages}
+                  searchQuery={searchQuery}
+                  setSearchQuery={setSearchQuery}
+                  selectedIndustry={selectedIndustry}
+                  setSelectedIndustry={setSelectedIndustry}
+                  selectedStage={selectedStage}
+                  setSelectedStage={setSelectedStage}
+                  selectedFundingRange={selectedFundingRange}
+                  setSelectedFundingRange={setSelectedFundingRange}
+                  customMinFunding={customMinFunding}
+                  setCustomMinFunding={setCustomMinFunding}
+                  customMaxFunding={customMaxFunding}
+                  setCustomMaxFunding={setCustomMaxFunding}
+                  clearFilters={clearFilters}
+                  activeFiltersCount={activeFiltersCount}
+                  formatCurrency={formatCurrency}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
+        </motion.div>
+        
+        {/* Desktop Filters Sidebar - Only in discover mode */}
+        {mode === 'discover' && (
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="hidden md:block shrink-0 w-full"
+          >
+            <div className="w-full">
+              <FilterSidebar
                 industries={industries}
                 stages={stages}
                 searchQuery={searchQuery}
@@ -423,41 +478,11 @@ const DiscoverStartups = () => {
                 activeFiltersCount={activeFiltersCount}
                 formatCurrency={formatCurrency}
               />
-            </SheetContent>
-          </Sheet>
-        </motion.div>
-        
-        {/* Desktop Filters Sidebar */}
-        <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="hidden md:block  shrink-0 w-full"
-        >
-            <div className="w-full">
-                <FilterSidebar
-                    industries={industries}
-                    stages={stages}
-                    searchQuery={searchQuery}
-                    setSearchQuery={setSearchQuery}
-                    selectedIndustry={selectedIndustry}
-                    setSelectedIndustry={setSelectedIndustry}
-                    selectedStage={selectedStage}
-                    setSelectedStage={setSelectedStage}
-                    selectedFundingRange={selectedFundingRange}
-                    setSelectedFundingRange={setSelectedFundingRange}
-                    customMinFunding={customMinFunding}
-                    setCustomMinFunding={setCustomMinFunding}
-                    customMaxFunding={customMaxFunding}
-                    setCustomMaxFunding={setCustomMaxFunding}
-                    clearFilters={clearFilters}
-                    activeFiltersCount={activeFiltersCount}
-                    formatCurrency={formatCurrency}
-                />
             </div>
-        </motion.div>
+          </motion.div>
+        )}
 
-        <div className="flex flex-wrap relative  gap-8">
+        <div className="flex flex-wrap relative gap-8">
         
           {/* Startup Grid */}
           <div className="flex-1">
@@ -465,7 +490,7 @@ const DiscoverStartups = () => {
               <p className="text-sm text-gray-400">
                 {startups.length} {startups.length === 1 ? 'startup' : 'startups'} found
               </p>
-              {activeFiltersCount > 0 && (
+              {mode === 'discover' && activeFiltersCount > 0 && (
                 <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-400 hover:text-white">
                   Clear all filters
                 </Button>
@@ -487,23 +512,39 @@ const DiscoverStartups = () => {
                   className="flex flex-col items-center justify-center py-20"
                 >
                   <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
-                    <Search className="w-10 h-10 text-blue-500" />
+                    {mode === 'discover' ? (
+                      <Search className="w-10 h-10 text-blue-500" />
+                    ) : (
+                      <Building2 className="w-10 h-10 text-blue-500" />
+                    )}
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-2">No startups found</h3>
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {modeConfig.emptyState.title}
+                  </h3>
                   <p className="text-gray-400 mb-6 text-center max-w-md">
-                    Try adjusting your filters or search query to discover more opportunities
+                    {modeConfig.emptyState.message}
                   </p>
-                  <Button onClick={clearFilters} variant="outline" className="border-gray-600 text-gray-300">
-                    Clear all filters
-                  </Button>
+                  {mode === 'discover' ? (
+                    <Button onClick={clearFilters} variant="outline" className="border-gray-600 text-gray-300">
+                      Clear all filters
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={() => navigate(modeConfig.ctaRoute)}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {modeConfig.ctaButton}
+                    </Button>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div 
                   layout
-                className="grid gap-6 w-full"
-                style={{
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
-                }}
+                  className="grid gap-6 w-full"
+                  style={{
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
+                  }}
                 >
                   {startups.map((startup, index) => (
                     <StartupCard
@@ -513,6 +554,7 @@ const DiscoverStartups = () => {
                       onClick={() => handleStartupClick(startup)}
                       formatCurrency={formatCurrency}
                       getStageBadgeVariant={getStageBadgeVariant}
+                      mode={mode}
                     />
                   ))}
                 </motion.div>
@@ -654,8 +696,6 @@ const FilterSidebar = ({
           </SelectContent>
         </Select>
 
-
-        {/* Show selected range for non-custom options */}
         {selectedFundingRange !== 'Custom' && selectedFundingRange !== 'Any' && (
           <div className="mt-1">
             <div className="text-xs text-gray-400">
@@ -673,10 +713,10 @@ const FilterSidebar = ({
             </div>
           </div>
         )}
-        {/* Custom funding range inputs */}
+
         {selectedFundingRange === 'Custom' && (
-          <div className="mt-2 h-full bg-red-500">
-            <div className="flex gap-2  items-center">
+          <div className="mt-2 space-y-2">
+            <div className="flex gap-2 items-center">
               <div className="relative flex-1">
                 <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
                 <Input
@@ -850,14 +890,14 @@ const MobileFilterSidebar = ({
 );
 
 // Startup Card Component
-const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVariant }) => (
+const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVariant, mode }) => (
   <motion.div
     layout
     initial={{ opacity: 0, y: 20 }}
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: 20 }}
     transition={{ delay: index * 0.05 }}
-    className="flex-1 "
+    className="flex-1"
   >
     <Card 
       className="group h-full flex flex-col p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"
@@ -955,17 +995,24 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
               <Users className="w-3 h-3" />
               {startup.positions} roles
             </span>
-            <span className="flex items-center gap-1">
-              <Eye className="w-3 h-3" />
-              {startup.views}
-            </span>
+            {mode === 'discover' && (
+              <span className="flex items-center gap-1">
+                <Eye className="w-3 h-3" />
+                {startup.views}
+              </span>
+            )}
           </div>
           <Button 
             size="sm" 
             variant="ghost"
             className="text-white underline cursor-pointer group-hover:bg-blue-500 group-hover:text-white transition-all border-gray-600"
           >
-            View Details
+            {mode === 'discover' ? 'View Details' : (
+              <>
+                <Edit3 className="w-3 h-3 mr-1" />
+                Manage
+              </>
+            )}
           </Button>
         </div>
       </div>
