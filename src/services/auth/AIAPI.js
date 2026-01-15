@@ -61,6 +61,27 @@ export class AIAPI {
     })
     return data
   }
+  static async uploadDocument(file, accessToken) {
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const { data } = await aiApiInstance.post('/assistant/documents', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+      },
+    })
+    return data
+  }
+
+  static async queryAssistant(question, accessToken) {
+    const { data } = await aiApiInstance.post('/assistant/query', {
+      question,
+    }, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+    return data
+  }
 }
 
 export const healthAI = AIAPI.health

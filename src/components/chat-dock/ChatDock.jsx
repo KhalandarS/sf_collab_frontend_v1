@@ -472,7 +472,7 @@ export default function ChatDock({ maxWindows = 2 }) {
   if (!currentUser) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-row-reverse items-end gap-3 pointer-events-none">
+    <div className="fixed bottom-4 right-4 z-100 flex flex-row-reverse items-end gap-3 pointer-events-none">
       {/* SECTION A: LAUNCHER & PANEL (Always First Child = Far Right) */}
       <div className="flex flex-col items-end gap-3 pointer-events-auto">
         <AnimatePresence>

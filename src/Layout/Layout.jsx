@@ -29,6 +29,7 @@ import { isUserProfileComplete } from "@/utils/getUserComplete";
 import Navbar from "@/components/sections/NavBar";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteEmailPopUp from "./CompleteEmailPopUp";
+import AIAssistant from "./AIAssistant";
 
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
@@ -191,6 +192,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const isMobile = window.matchMedia("(max-width: 1024px)").matches;
 
   return (
+    <>
     <div className="relative min-h-screen w-screen flex flex-col">
       {/* Background */}
       <div
@@ -258,20 +260,18 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             onScroll={isRootPath ? undefined : onScroll}
           >
             <Outlet />
-            
-            {/* Chat dock - persistent on right side */}
-            {(!isRootPath && !isChatRoute && !isMobile) && (
-              <div 
-                className="fixed right-0 bottom-0 z-[999999]"
-                style={{ right: '16px', bottom: '16px' }}
-              >
-                <ChatDock maxWindows={2} />
-              </div>
-            )}
           </div>
         </div>
+
+        
       </motion.div>
-    </div>
+      </div>
+      {/* Chat docks */}
+            <AIAssistant />
+        {!isRootPath && !isChatRoute && !isMobile && (
+            <ChatDock maxWindows={2} />
+        )}
+    </>
   );
 };
 
