@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { Camera, Edit, Settings, MapPin, Calendar, Mail, Sparkles, Trophy } from 'lucide-react';
 import './background.css';
 import { Link } from 'react-router-dom';
+
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 
@@ -52,6 +54,7 @@ const ProfileHeader = ({
 
       {/* Dark Glass Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-900/80 via-black/80 to-gray-900/80 backdrop-blur-xl" />
+
 
       {/* Cover Photo */}
       <div className="relative h-48 dashboard-bg">

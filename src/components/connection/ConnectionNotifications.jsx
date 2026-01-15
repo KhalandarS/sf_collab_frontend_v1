@@ -1,4 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { 
   Users, UserPlus, Check, X, Loader2, 
@@ -8,11 +9,14 @@ import { useConnectionNotifications } from '../hooks/useConnectionNotifications'
 import { toast } from '@/hooks/use-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_HOST = API_URL.replace(/\/api\/?$/, "");
+
 
 export function ConnectionNotifications({ isOpen, onClose }) {
   const navigate = useNavigate();
   const dropdownRef = useRef(null);
   const [actionLoading, setActionLoading] = useState(null);
+  const { user: currentUser } = useSelector((state) => state.auth);
   
   const { 
     incomingRequests, 
@@ -20,6 +24,33 @@ export function ConnectionNotifications({ isOpen, onClose }) {
     isLoading, 
     actions 
   } = useConnectionNotifications();
+
+  const getUserId = (u) => u?.id ?? u?.user_id ?? u?._id ?? null;
+  
+  const getRequestId = (r) =>
+    r?.id ??
+    r?.request_id ??
+    r?.friend_request_id ??
+    r?.connection_request_id ??
+    r?.connectionRequestId ??
+    null;
+  
+  const getReceiverId = (r) => {
+    const receiverObjId = getUserId(r?.receiver ?? r?.to_user ?? r?.requested);
+    if (receiverObjId != null) return receiverObjId;
+  
+    return (
+      r?.receiver_id ??
+      r?.to_user_id ??
+      r?.requested_user_id ??
+      r?.requested_id ??
+      r?.recipient_id ??
+      r?.toUserId ??
+      r?.receiverId ??
+      null
+    );
+  };
+
 
   // Fetch when dropdown opens
   useEffect(() => {
@@ -45,6 +76,7 @@ export function ConnectionNotifications({ isOpen, onClose }) {
    * Accept request handler
    */
   const handleAccept = async (e, requestId, senderName) => {
+    if (!requestId) return;
     e.stopPropagation();
     setActionLoading(requestId);
     
@@ -65,6 +97,7 @@ export function ConnectionNotifications({ isOpen, onClose }) {
    * Decline request handler
    */
   const handleDecline = async (e, requestId) => {
+    if (!requestId) return;
     e.stopPropagation();
     setActionLoading(requestId);
     
@@ -84,9 +117,11 @@ export function ConnectionNotifications({ isOpen, onClose }) {
    * Navigate to user profile
    */
   const handleViewProfile = (userId) => {
-    onClose();
-    navigate(`/user-profile/${userId}`);
-  };
+  onClose();
+  if (!userId) return;
+  navigate(`/user-profile?userId=${userId}`);
+};
+
 
   /**
    * Navigate to connections page
@@ -99,12 +134,28 @@ export function ConnectionNotifications({ isOpen, onClose }) {
   /**
    * Get avatar URL
    */
-  const getAvatarUrl = (user) => {
-    if (!user) return null;
-    const pic = user.profile_picture || user.avatar_url;
-    if (!pic) return null;
-    return pic.startsWith('http') ? pic : `${API_URL}${pic}`;
-  };
+  const getAvatarUrl = (u) => {
+  if (!u) return null;
+
+  const pic =
+    u.profilePicture ||
+    u.profile_picture ||
+    u.avatar_url ||
+    u.profile?.picture ||
+    u.profile?.avatar ||
+    u.picture ||
+    u.avatar ||
+    null;
+
+  if (!pic) return null;
+
+  const s = String(pic);
+  if (s.startsWith("http")) return s;
+
+  return `${API_HOST}${s.startsWith("/") ? "" : "/"}${s}`;
+};
+
+
 
   /**
    * Get user name
@@ -142,6 +193,15 @@ export function ConnectionNotifications({ isOpen, onClose }) {
   };
 
   if (!isOpen) return null;
+
+  const meId = getUserId(currentUser);
+  
+  const incomingRequestsFiltered = meId
+    ? (incomingRequests || []).filter((r) => {
+        const rid = getReceiverId(r);
+        return rid == null ? true : rid === meId;
+      })
+    : (incomingRequests || []);
 
   return (
     <div
@@ -191,7 +251,7 @@ export function ConnectionNotifications({ isOpen, onClose }) {
             <Loader2 className="w-6 h-6 text-blue-400 animate-spin mx-auto" />
             <p className="text-zinc-500 text-sm mt-2">Loading requests...</p>
           </div>
-        ) : incomingRequests.length === 0 ? (
+        ) : incomingRequestsFiltered.length === 0 ? (
           <div className="p-8 text-center">
             <div className="w-12 h-12 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-3">
               <Users className="w-6 h-6 text-zinc-600" />
@@ -202,16 +262,17 @@ export function ConnectionNotifications({ isOpen, onClose }) {
             </p>
           </div>
         ) : (
-          incomingRequests.map((request) => {
+          incomingRequestsFiltered.map((request) => {
             const sender = request.sender;
             const avatarUrl = getAvatarUrl(sender);
             const name = getUserName(sender);
             const initials = getInitials(sender);
-            const isProcessing = actionLoading === request.id;
+            const requestId = getRequestId(request);
+            const isProcessing = actionLoading === requestId;
 
             return (
               <div
-                key={request.id}
+                key={requestId || request.id}
                 onClick={() => handleViewProfile(sender?.id)}
                 className={`
                   flex items-center gap-3 px-4 py-3 
@@ -228,14 +289,23 @@ export function ConnectionNotifications({ isOpen, onClose }) {
                       src={avatarUrl}
                       alt={name}
                       className="w-full h-full object-cover"
-                      onError={(e) => { e.target.style.display = 'none'; }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextSibling;
+                        if (fallback) fallback.style.display = "flex";
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-white font-bold">
-                      {initials}
-                    </div>
-                  )}
+                  ) : null}
+
+                  <div
+                    className={`w-full h-full items-center justify-center text-white font-bold ${
+                      avatarUrl ? "hidden" : "flex"
+                    }`}
+                  >
+                    {initials}
+                  </div>
                 </div>
+
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
@@ -260,14 +330,14 @@ export function ConnectionNotifications({ isOpen, onClose }) {
                   ) : (
                     <>
                       <button
-                        onClick={(e) => handleAccept(e, request.id, name)}
+                        onClick={(e) => requestId && handleAccept(e, requestId, name)}
                         className="p-2 bg-green-600 hover:bg-green-700 text-white rounded-full transition-colors"
                         title="Accept"
                       >
                         <Check className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={(e) => handleDecline(e, request.id)}
+                        onClick={(e) => requestId && handleDecline(e, requestId)}
                         className="p-2 bg-zinc-700 hover:bg-red-600 text-white rounded-full transition-colors"
                         title="Decline"
                       >
@@ -283,7 +353,7 @@ export function ConnectionNotifications({ isOpen, onClose }) {
       </div>
 
       {/* Footer */}
-      {incomingRequests.length > 0 && (
+      {incomingRequestsFiltered.length > 0 && (
         <div className="px-4 py-3 bg-zinc-950 border-t border-zinc-800">
           <button
             onClick={handleViewAll}

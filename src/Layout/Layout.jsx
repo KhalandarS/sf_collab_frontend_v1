@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+import NavBar from "../components/sections/NavBar";
 import Options from "../components/sections/Options";
 import { motion } from "framer-motion";
 import UserSidebar from "@/components/pages/sidebars/sidebar/GeneralSidebar";
@@ -35,7 +37,7 @@ import AIAssistant from "./AIAssistant";
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const { socket, isConnected } = useSocket();
   const isRootPath = location.pathname === "/";
   const isChatRoute = location.pathname.startsWith("/chat");
   const isConnectionsRoute = location.pathname.startsWith("/connections");
@@ -57,9 +59,11 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const navContainerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
 
-  AOS.init({ duration: 800, easing: "ease-out", once: true });
-
+  useEffect(() => {
+    AOS.init({ duration: 800, easing: "ease-out", once: false });
+  }, []);
 
   // Waitlist guard
   useEffect(() => {
@@ -83,43 +87,124 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     checkWaitlist();
   }, [user, access_token, location.pathname, navigate]);
 
-  // ✅ Socket.io global notifications (skip if already in chat)
-  // useEffect(() => {
-  //   if (!socket || !isConnected || !user) return;
+  // ==========================================================================
+  // CONNECTION NOTIFICATIONS VIA SOCKET.IO
+  // ==========================================================================
+  useEffect(() => {
+    if (!socket || !isConnected || !user) return;
 
-  //   const handleConversationMessage = (data) => {
-  //     if (!data?.message?.sender) return;
-  //     if (data.message.sender.id === user.id) return;
-  //     if (location.pathname.startsWith("/chat")) return;
-
-  //     const content = data.message.content || "";
-  //     const short = content.length > 80 ? content.slice(0, 80) + "..." : content;
-
-  //     // toast.info(
-  //     //   <div className="flex flex-col gap-1">
-  //     //     <p className="font-semibold">
-  //     //       {data.message.sender.firstName} {data.message.sender.lastName}
-  //     //     </p>
-  //     //     <p className="text-sm opacity-90">{short}</p>
-  //     //   </div>,
-  //     //   { onClick: () => navigate("/chat") }
-  //     // );
-  //     console.log("Dispatching chat:new_message", data);
+    /**
+     * Handle new connection request received
+     * Someone wants to connect with us
+     */
+    const handleNewConnectionRequest = (data) => {
+      if (!data) return;
       
+      const senderName = data.sender_name || 
+        `${data.sender?.first_name || ''} ${data.sender?.last_name || ''}`.trim() ||
+        'Someone';
+      
+      // Show toast notification
+      toast.info(
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold">New Connection Request</p>
+          <p className="text-sm opacity-90">{senderName} wants to connect with you</p>
+        </div>,
+        { 
+          onClick: () => navigate("/connections?tab=incoming"),
+          autoClose: 5000,
+        }
+      );
+      
+      // Dispatch event for NavBar to update badge
+      window.dispatchEvent(new CustomEvent('connection:new_request', { 
+        detail: data 
+      }));
+    };
 
-  //   };
+    /**
+     * Handle connection request accepted
+     * Someone accepted our connection request
+     */
+    const handleRequestAccepted = (data) => {
+      if (!data) return;
+      
+      const accepterName = data.accepter_name ||
+        `${data.accepter?.first_name || ''} ${data.accepter?.last_name || ''}`.trim() ||
+        'Someone';
+      
+      // Show toast notification
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <p className="font-semibold">Connection Accepted!</p>
+          <p className="text-sm opacity-90">{accepterName} accepted your connection request</p>
+        </div>,
+        { 
+          onClick: () => navigate(`/user-profile/${data.accepter_id || data.accepter?.id}`),
+          autoClose: 5000,
+        }
+      );
+      
+      // Dispatch event for NavBar/hook to update counts
+      window.dispatchEvent(new CustomEvent('connection:request_accepted', { 
+        detail: data 
+      }));
+    };
 
-  //   socket.on("conversation_message", handleConversationMessage);
-  //   return () => socket.off("conversation_message", handleConversationMessage);
-  // }, [socket, isConnected, user, location.pathname, navigate]);
+    /**
+     * Handle connection request declined
+     * Someone declined our connection request (optional notification)
+     */
+    const handleRequestDeclined = (data) => {
+      if (!data) return;
+      
+      // Dispatch event to update counts (no toast - declined is silent)
+      window.dispatchEvent(new CustomEvent('connection:request_declined', { 
+        detail: data 
+      }));
+    };
 
-  // ✅ Raw websocket client (optional)
+    /**
+     * Handle connection removed
+     * Someone removed us from their connections
+     */
+    const handleConnectionRemoved = (data) => {
+      if (!data) return;
+      
+      // Dispatch event to update counts (no toast - removal is silent)
+      window.dispatchEvent(new CustomEvent('connection:removed', { 
+        detail: data 
+      }));
+    };
+
+    // Register socket listeners
+    socket.on('connection_request', handleNewConnectionRequest);
+    socket.on('connection_request_received', handleNewConnectionRequest); // Alternative event name
+    socket.on('connection_accepted', handleRequestAccepted);
+    socket.on('connection_request_accepted', handleRequestAccepted); // Alternative event name
+    socket.on('connection_declined', handleRequestDeclined);
+    socket.on('connection_removed', handleConnectionRemoved);
+
+    return () => {
+      socket.off('connection_request', handleNewConnectionRequest);
+      socket.off('connection_request_received', handleNewConnectionRequest);
+      socket.off('connection_accepted', handleRequestAccepted);
+      socket.off('connection_request_accepted', handleRequestAccepted);
+      socket.off('connection_declined', handleRequestDeclined);
+      socket.off('connection_removed', handleConnectionRemoved);
+    };
+  }, [socket, isConnected, user, navigate]);
+
+  // ==========================================================================
+  // RAW WEBSOCKET CLIENT (Alternative if not using Socket.io)
+  // ==========================================================================
   useEffect(() => {
     const userId = user?.id;
     if (!userId) return;
 
     const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
+    // Chat events
     client.on("new_message", (data) => {
       toast.info("New message received");
       window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
@@ -131,30 +216,43 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     client.on("user_offline", (data) =>
       toast.info(`${data?.user_name || "User"} went offline`)
     );
+
+    // Connection events via raw WebSocket
+    client.on("connection_request", (data) => {
+      const senderName = data.sender_name || 'Someone';
+      toast.info(`${senderName} wants to connect with you`, {
+        onClick: () => navigate("/connections?tab=incoming"),
+      });
+      window.dispatchEvent(new CustomEvent('connection:new_request', { detail: data }));
+    });
+
+    client.on("connection_accepted", (data) => {
+      const accepterName = data.accepter_name || 'Someone';
+      toast.success(`${accepterName} accepted your connection request!`);
+      window.dispatchEvent(new CustomEvent('connection:request_accepted', { detail: data }));
+    });
+
     client.on("error", () => toast.error("Realtime connection error"));
 
     client.connect();
-    
 
     return () => client.disconnect();
-  }, [user?.id]);
-  const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
-  // ✅ Profile completion reminder
+  }, [user?.id, navigate]);
+
+  // Profile completion reminder
   useEffect(() => {
     if (!user || !access_token) return;
 
     const checkProfileCompletion = async () => {
-
-      // Check if the last reminder was more than a week ago
-      console.log(isUserProfileComplete(user));
       if (!isUserProfileComplete(user) && !location.pathname.startsWith("/user-profile")) {
         setCompletePopupVisible(true);
       }
     };
 
     checkProfileCompletion();
-  }, [user, access_token]);
-  // ✅ Sidebar resolver
+  }, [user, access_token, location.pathname]);
+
+  // Sidebar resolver
   const SideBar = () => {
     const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
 
@@ -215,10 +313,11 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           ref={navContainerRef}
           onMouseEnter={handleNavAreaEnter}
           onMouseLeave={handleNavAreaLeave}
-          className={`w-full z-50 overflow-hidden transition-height duration-300 ease-in-out ${isNavHidden ? "max-h-0" : "max-h-[60px]"}`}
-
+          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
+            isNavHidden ? "h-0" : "h-[60px]"
+          }`}
         >
-          <Navbar
+          <NavBar
             setIsOpen={setIsOpen}
             isOpen={isOpen}
             isHidden={isNavHidden}
@@ -240,7 +339,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {!isRootPath && !isChatRoute && !isConnectionsRoute && (
             <div
               ref={optionsRef}
-              className={`my-16 transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
+              className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
                 isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
               }`}
               style={{ zIndex: 10 }}

@@ -79,6 +79,8 @@ import Crowdfunding from "./components/pages/crowdfunding/Crowdfunding.jsx";
 import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
+import ConnectionsPage from './components/pages/connections/ConnectionsPage';
+import MyStartups from "./components/pages/dashboards/founderDashboard/MyStartups";
 
 // Builder Dashboard Routes - Phase 2
 import BrowseStartups from "./components/pages/dashboards/builderDashboard/BrowseStartups.jsx";
@@ -155,7 +157,6 @@ export default function App() {
               <Route path='membership-benefits' element={<MembershipBenefits />} />
               <Route path='implementation-plans' element={<ImplementationPlans />} />
               <Route path='featured-projects' element={<FeaturedProjects />} />
-
               {/* Terms and conditions and privacy policy */}
               <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -225,6 +226,7 @@ export default function App() {
                 <Route path="video-tutorials" element={<VideoTutorials />} />
                 {/* Chat and notifications */}
                 <Route path="chat" element={<ChatPage />} />
+                <Route path="connections" element={<ConnectionsPage />} />
                 <Route path="notifications" element={<Notifications />} />
                 {/* Posts */}
                 <Route path="posts" element={<Posts />} />

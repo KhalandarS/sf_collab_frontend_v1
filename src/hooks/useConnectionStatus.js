@@ -13,26 +13,37 @@ export const ConnectionStatus = {
   LOADING: 'loading',
 };
 
+const resolveRequestId = (fr) =>
+  fr?.id ?? fr?.request_id ?? fr?.friend_request_id ?? fr?.friendRequestId ?? null;
+
+const extractErrorMessage = (err, fallback) =>
+  err?.response?.data?.message ||
+  err?.response?.data?.error ||
+  err?.response?.data?.msg ||
+  err?.response?.data?.detail ||
+  err?.message ||
+  fallback;
+
+
 export function useConnectionStatus(targetUserId) {
   const { user: currentUser, access_token } = useSelector((state) => state.auth);
   
   const [status, setStatus] = useState(ConnectionStatus.LOADING);
   const [requestId, setRequestId] = useState(null);
+  const [friendRequest, setFriendRequest] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Fetch current status from backend
-   */
+  // Fetch current status
   const fetchStatus = useCallback(async () => {
     if (!targetUserId || !currentUser?.id) {
       setStatus(ConnectionStatus.LOADING);
       return;
     }
     
+    // Self check
     if (Number(targetUserId) === Number(currentUser.id)) {
       setStatus(ConnectionStatus.SELF);
-      setRequestId(null);
       return;
     }
     
@@ -46,19 +57,29 @@ export function useConnectionStatus(targetUserId) {
       const response = await connectionAPI.getStatus(targetUserId, access_token);
       const data = response.data || response;
       
-      // Map backend status to frontend status
+      console.log('Status response:', data); // Debug
+      
       const backendStatus = data.status;
-      if (backendStatus === 'connected') {
+      const fr = data.request;
+      setRequestId(fr.id);
+      setFriendRequest(fr);
+
+      
+      //setFriendRequest(fr);
+      //setRequestId(resolveRequestId(fr));
+
+      if (backendStatus === 'accepted' || backendStatus === 'friends') {
         setStatus(ConnectionStatus.CONNECTED);
-      } else if (backendStatus === 'request_sent') {
-        setStatus(ConnectionStatus.REQUEST_SENT);
-      } else if (backendStatus === 'request_received') {
-        setStatus(ConnectionStatus.REQUEST_RECEIVED);
+      } else if (backendStatus === 'pending' && fr) {
+        // Check if we sent it or received it
+        if (Number(fr.sender_id) === Number(currentUser.id)) {
+          setStatus(ConnectionStatus.REQUEST_SENT);
+        } else {
+          setStatus(ConnectionStatus.REQUEST_RECEIVED);
+        }
       } else {
         setStatus(ConnectionStatus.NONE);
       }
-      
-      setRequestId(data.request_id || null);
     } catch (err) {
       console.error('Failed to fetch connection status:', err);
       setError('Failed to load status');
@@ -70,21 +91,20 @@ export function useConnectionStatus(targetUserId) {
     fetchStatus();
   }, [fetchStatus]);
 
-  /**
-   * SEND REQUEST
-   */
+  // SEND REQUEST
   const sendRequest = useCallback(async () => {
     if (!access_token || !targetUserId) return { success: false, error: 'Not authenticated' };
     
     setIsLoading(true);
-    setError(null);
-
     try {
       const response = await connectionAPI.sendRequest(targetUserId, access_token);
       const data = response.data || response;
       
       setStatus(ConnectionStatus.REQUEST_SENT);
-      setRequestId(data.request?.id || null);
+      const fr = data.friend_request || data.request || data.friendRequest;
+      setRequestId(resolveRequestId(fr));
+      setFriendRequest(fr);
+
       
       return { success: true, data };
     } catch (err) {
@@ -97,88 +117,76 @@ export function useConnectionStatus(targetUserId) {
     }
   }, [access_token, targetUserId, fetchStatus]);
 
-  /**
-   * ACCEPT REQUEST
-   */
-  const acceptRequest = useCallback(async () => {
-    if (!access_token || !requestId) {
-      console.error('Cannot accept: missing token or requestId', { access_token: !!access_token, requestId });
-      return { success: false, error: 'Missing request ID' };
+  // ACCEPT REQUEST
+  const acceptRequest = useCallback(
+  async (overrideRequestId) => {
+    const idToUse = overrideRequestId ?? requestId;
+
+    if (!idToUse) {
+      return { success: false, error: "Missing request ID" };
     }
-    
-    setIsLoading(true);
-    setError(null);
 
     try {
-      const response = await connectionAPI.acceptRequest(requestId, access_token);
-      
+      await connectionAPI.acceptRequest(idToUse, access_token);
       setStatus(ConnectionStatus.CONNECTED);
-      
-      return { success: true, data: response.data || response };
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to accept request';
-      console.error('Accept request error:', err);
-      setError(errorMsg);
-      await fetchStatus();
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
-    }
-  }, [access_token, requestId, fetchStatus]);
-
-  /**
-   * DECLINE REQUEST
-   */
-  const declineRequest = useCallback(async () => {
-    if (!access_token || !requestId) {
-      console.error('Cannot decline: missing token or requestId', { access_token: !!access_token, requestId });
-      return { success: false, error: 'Missing request ID' };
-    }
-    
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      await connectionAPI.declineRequest(requestId, access_token);
-      
-      setStatus(ConnectionStatus.NONE);
       setRequestId(null);
-      
       return { success: true };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to decline request';
-      console.error('Decline request error:', err);
-      setError(errorMsg);
-      await fetchStatus();
-      return { success: false, error: errorMsg };
-    } finally {
-      setIsLoading(false);
+      return {
+        success: false,
+        error:
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to accept request",
+      };
     }
-  }, [access_token, requestId, fetchStatus]);
+  },
+  [access_token, requestId]
+);
 
-  /**
-   * CANCEL REQUEST (sender only)
-   */
+
+
+  // DECLINE REQUEST
+  const declineRequest = useCallback(
+  async (overrideRequestId) => {
+    const idToUse = overrideRequestId ?? requestId;
+
+    if (!idToUse) {
+      return { success: false, error: "Missing request ID" };
+    }
+
+    try {
+      await connectionAPI.declineRequest(idToUse, access_token);
+      setStatus(ConnectionStatus.NONE);
+      setRequestId(null);
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error:
+          err.response?.data?.message ||
+          err.response?.data?.error ||
+          "Failed to decline request",
+      };
+    }
+  },
+  [access_token, requestId]
+);
+
+  // CANCEL REQUEST
   const cancelRequest = useCallback(async () => {
     if (!access_token || !requestId) {
-      console.error('Cannot cancel: missing token or requestId', { access_token: !!access_token, requestId });
       return { success: false, error: 'Missing request ID' };
     }
     
     setIsLoading(true);
-    setError(null);
-
     try {
       await connectionAPI.cancelRequest(requestId, access_token);
-      
       setStatus(ConnectionStatus.NONE);
       setRequestId(null);
-      
       return { success: true };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to cancel request';
-      console.error('Cancel request error:', err);
-      setError(errorMsg);
+      const errorMsg = err.response?.data?.message || 'Failed to cancel';
       await fetchStatus();
       return { success: false, error: errorMsg };
     } finally {
@@ -186,38 +194,38 @@ export function useConnectionStatus(targetUserId) {
     }
   }, [access_token, requestId, fetchStatus]);
 
-  /**
-   * REMOVE CONNECTION
-   */
-  const removeConnection = useCallback(async () => {
-    if (!access_token || !targetUserId) {
-      return { success: false, error: 'Not authenticated' };
+  // REMOVE CONNECTION
+  const removeConnection = useCallback(
+  async (otherUserId) => {
+    if (!access_token || !otherUserId) {
+      return { success: false, error: "Missing user ID" };
     }
-    
-    setIsLoading(true);
-    setError(null);
 
+    setIsLoading(true);
     try {
-      await connectionAPI.removeConnection(targetUserId, access_token);
-      
+      await connectionAPI.removeConnection(otherUserId, access_token);
       setStatus(ConnectionStatus.NONE);
       setRequestId(null);
-      
       return { success: true };
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to remove connection';
-      console.error('Remove connection error:', err);
-      setError(errorMsg);
+      const errorMsg =
+        err.response?.data?.message ||
+        err.response?.data?.error ||
+        "Failed to remove connection";
       await fetchStatus();
       return { success: false, error: errorMsg };
     } finally {
       setIsLoading(false);
     }
-  }, [access_token, targetUserId, fetchStatus]);
+  },
+  [access_token, fetchStatus]
+);
+
 
   return {
     status,
     requestId,
+    friendRequest,
     isLoading,
     error,
     actions: {

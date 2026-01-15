@@ -1,80 +1,108 @@
-/**
- * ChatHeader.jsx - FIXED VERSION
- * REMOVED: Phone, Video, Info icons as requested
- */
+import React, { useEffect, useRef, useState } from "react";
+import Avatar from "./Avatar";
 
-import React from 'react';
-import Avatar from './Avatar';
+
 
 const ChatHeader = ({ 
   conversation, 
   currentUserId,
-  isOnline = false,
+  statusText="",
+  presenceStatus="offline",
+  onAvatarClick,
   onBack,
   showBack = false
 }) => {
   if (!conversation) return null;
 
-  // Get other participant for direct messages
-  const otherParticipant = conversation.conversation_type === 'direct'
-    ? conversation.participants?.find(p => p.id !== currentUserId)
-    : null;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null);
 
-  // Display name
-  const displayName = conversation.name || 
-    (otherParticipant 
-      ? `${otherParticipant.firstName || otherParticipant.first_name || ''} ${otherParticipant.lastName || otherParticipant.last_name || ''}`.trim()
-      : 'Unknown'
-    );
+  useEffect(() => {
+    const onDoc = (e) => {
+      if (!menuRef.current) return;
+      if (!menuRef.current.contains(e.target)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
 
-  // Avatar
-  const avatarUrl = otherParticipant?.profilePicture || otherParticipant?.profile_picture || conversation.avatar_url;
+  // ...your existing otherParticipant, displayName, avatarUrl, statusColor...
 
-  // Status text
-  const getStatusText = () => {
-    if (conversation.conversation_type === 'group') {
-      return `${conversation.participants?.length || 0} members`;
-    }
-    if (conversation.conversation_type === 'general') {
-      return `${conversation.participants?.length || 0} community members`;
-    }
-    if (conversation.conversation_type === 'team') {
-      return `${conversation.participants?.length || 0} team members`;
-    }
-    // Direct message
-    return isOnline ? 'Active now' : 'Offline';
-  };
+  const otherParticipant =
+    conversation.conversation_type === "direct"
+      ? conversation.participants?.find((p) => String(p.id) !== String(currentUserId))
+      : null;
+
+  const displayName =
+    conversation.name ||
+    (otherParticipant
+      ? `${otherParticipant.firstName || otherParticipant.first_name || ""} ${otherParticipant.lastName || otherParticipant.last_name || ""}`.trim()
+      : "Chat");
+
+  const avatarUrl = otherParticipant?.profilePicture || otherParticipant?.profile_picture || null;
+
+  const statusColor =
+    presenceStatus === "online"
+      ? "text-emerald-500"
+      : presenceStatus === "idle"
+        ? "text-yellow-400"
+        : "text-zinc-500";
 
   return (
-    <div className="h-14 px-4 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50">
-      {/* Left: User info */}
+    <div className="h-16 px-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        {showBack && (
-  <button onClick={onBack} className="lg:hidden p-2">
-    ←
-  </button>
-)}
 
-        <Avatar
-          src={avatarUrl}
-          name={displayName}
-          size="md"
-          isOnline={isOnline}
-          showStatus={conversation.conversation_type === 'direct'}
-        />
-        <div>
-          <h2 className="font-semibold text-white text-sm">
-            {displayName}
-          </h2>
-          <p className={`text-xs ${isOnline && conversation.conversation_type === 'direct' ? 'text-emerald-500' : 'text-zinc-500'}`}>
-            {getStatusText()}
-          </p>
+        <div className="relative" ref={menuRef}>
+          {showBack && (
+            <button onClick={onBack} className="lg:hidden p-2">
+              ←
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              if (!onAvatarClick) return;
+              setMenuOpen((v) => !v);
+            }}
+            disabled={!onAvatarClick}
+            className={`rounded-full ${onAvatarClick ? "cursor-pointer" : "cursor-default"}`}
+            aria-label="Open profile menu"
+          >
+            <Avatar
+              src={avatarUrl}
+              name={displayName}
+              size="md"
+              presenceStatus={presenceStatus}
+              showStatus={conversation.conversation_type === "direct"}
+            />
+          </button>
+
+          {menuOpen && (
+            <div className="absolute left-0 top-12 z-50 w-44 rounded-xl border border-zinc-700/60 bg-zinc-900/95 shadow-xl backdrop-blur">
+              <button
+                className="w-full text-left px-3 py-2 text-sm text-zinc-100 hover:bg-zinc-800/70 rounded-xl"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onAvatarClick?.();
+                }}
+              >
+                View profile
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div className="min-w-0">
+          <h2 className="font-semibold text-white text-sm truncate">{displayName}</h2>
+          {conversation.conversation_type === "direct" && (
+            <p className={`text-xs ${statusColor}`}>{statusText}</p>
+          )}
+
         </div>
       </div>
-
-      {/* REMOVED: Phone, Video, Info buttons - as requested */}
     </div>
   );
 };
 
 export default ChatHeader;
+

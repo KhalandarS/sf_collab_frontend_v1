@@ -50,12 +50,32 @@ import { ConversationsCardSkeleton, MessagesSkeleton } from './Skeletons';
 import { API_BASE_URL, SOCKET_API_URL } from '@/utils/config';
 import { chatAPI } from '@/utils/APIs/chatApi';
 
+import { toAbsoluteFileUrl } from "@/utils/toAbsoluteFileUrl";
 
 
 
 
 
-// Add this component for reusability
+
+async function downloadViaBlob(url, filename) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Download failed: ${res.status}`);
+
+  const blob = await res.blob();
+  const blobUrl = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = blobUrl;
+  a.download = filename || "download";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  window.URL.revokeObjectURL(blobUrl);
+}
+
+
+//component for reusability
 const RightSidebarContent = ({ 
     selectedConversation, 
     users, 
@@ -159,9 +179,7 @@ const RightSidebarContent = ({
               .filter(file => file.file_type?.startsWith('image/'))
               .slice(0, 4)
               .map((file, idx) => {
-                const imageUrl = file.file_url.startsWith('http') 
-                  ? file.file_url 
-                  : `${SOCKET_API_URL}${file.file_url}`;
+                const imageUrl = toAbsoluteFileUrl(file.file_url);
                 
                 return (
                   <div 
@@ -224,7 +242,7 @@ const RightSidebarContent = ({
                     </div>
                   </div>
                   <a 
-                    href={file.file_url} 
+                    href={toAbsoluteFileUrl(file.file_url)} 
                     download
                     className="flex-shrink-0 p-2 rounded-lg hover:bg-gray-700 transition-all duration-200"
                     onClick={(e) => e.stopPropagation()}
@@ -264,6 +282,8 @@ const ChatComponent = () => {
   const [isTyping, setIsTyping] = useState({});
   const [onlineUsers, setOnlineUsers] = useState(new Set());
   const [isConnected, setIsConnected] = useState(false);
+
+  const [imagePreview, setImagePreview] = useState(null);
     
   // Add these state variables
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -2660,13 +2680,23 @@ const ChatComponent = () => {
                                 {message.file_url && (
                                   <div className="mb-2">
                                     {message.file_type?.startsWith('image/') ? (
-                                      <img
-                                        src={message.file_url.startsWith("http")
-                                          ? message.file_url
-                                          : `${SOCKET_API_URL}${message.file_url}`}
-                                        alt={message.file_name}
-                                        className="max-w-full rounded-lg max-h-60 object-contain"
-                                      />
+                                      <button
+                                        type="button"
+                                        className="block"
+                                        onClick={() =>
+                                          setImagePreview({
+                                            url: toAbsoluteFileUrl(message.file_url),
+                                            name: message.file_name || "image",
+                                          })
+                                        }
+                                      >
+                                        <img
+                                          src={toAbsoluteFileUrl(message.file_url)}
+                                          alt={message.file_name || "image"}
+                                          className="max-w-full rounded-lg max-h-60 object-contain"
+                                        />
+                                      </button>
+
                                     ) : (
                                       <div className="flex items-center gap-2 bg-black/20 p-2 rounded-lg">
                                         {getFileIcon(message.file_type)}
@@ -2675,7 +2705,7 @@ const ChatComponent = () => {
                                           <div className="text-xs opacity-70">{formatFileSize(message.file_size)}</div>
                                         </div>
                                         <a
-                                          href={message.file_url}
+                                          href={toAbsoluteFileUrl(message.file_url)}
                                           download
                                           className="p-1 rounded-lg hover:bg-black/20"
                                         >
@@ -2685,9 +2715,12 @@ const ChatComponent = () => {
                                     )}
                                   </div>
                                 )}
-                                <div className="break-words whitespace-pre-wrap">
-                                  {formatMessageContent(message.content)}
-                                </div>
+                                {!(message.file_url && message.content === message.file_name) && (
+                                  <div className="break-words whitespace-pre-wrap">
+                                    {formatMessageContent(message.content)}
+                                  </div>
+                                )}
+
                                 {message.is_edited && (
                                   <div className="mt-1 text-xs opacity-70 italic">
                                     (edited)
@@ -2851,6 +2884,46 @@ const ChatComponent = () => {
                     </button>
                 </div>
             )} */}
+
+            {imagePreview && (
+              <div
+                className="fixed inset-0 z-[9999] bg-black/80"
+                onClick={() => setImagePreview(null)}
+              >
+                <div
+                  className="absolute top-0 left-0 right-0 flex items-center justify-between p-3"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    onClick={() => downloadViaBlob(imagePreview.url, imagePreview.name)}
+                    className="p-2 rounded-xl bg-black/40 text-white hover:bg-black/60"
+                    title="Download"
+                  >
+                    <Download size={20} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setImagePreview(null)}
+                    className="p-2 rounded-xl bg-black/40 text-white hover:bg-black/60"
+                    title="Close"
+                  >
+                    <X size={20} />
+                  </button>
+                </div>
+
+                <div className="w-full h-full flex items-center justify-center p-6">
+                  <img
+                    src={imagePreview.url}
+                    alt={imagePreview.name}
+                    className="max-h-[90vh] max-w-[95vw] object-contain rounded-2xl"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            )}
+
     </div>
   )
 };

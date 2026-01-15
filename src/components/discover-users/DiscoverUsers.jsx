@@ -13,9 +13,35 @@ import { usersAPI } from '@/utils/APIs/userAPI';
 import FilterSidebar from './FilterSidebar';
 import UserCard from './UserCard';
 import { chatAPI } from '@/utils/APIs/chatApi';
+import { useNavigate, Link } from "react-router-dom";
+
+
+// NEW: Import ConnectionButton
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
-import { getProfilePicture } from '@/utils/getProfilePicture';
-import { Link } from 'react-router-dom';
+
+const getProfilePicture = (user) => {
+  return getAvatarUrl(user);
+};
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+const getAvatarUrl = (u) => {
+  if (!u) return null;
+
+  const pic =
+    u.profilePicture ||
+    u.profile_picture ||
+    u.avatar_url ||
+    u.profile?.picture ||
+    u.profile?.avatar ||
+    u.picture ||
+    u.avatar ||
+    null;
+
+  if (!pic) return null;
+  return String(pic).startsWith("http") ? pic : `${API_URL}${pic}`;
+};
+
 
 const DiscoverUsers = () => {
   const [users, setUsers] = useState([]);
@@ -32,6 +58,12 @@ const DiscoverUsers = () => {
   const [sendingMessage, setSendingMessage] = useState(false);
 
   const { user, access_token } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const goToProfile = (userId) => {
+    if (!userId) return;
+    navigate(`/user-profile?userId=${userId}`);
+  };
+
   const ITEMS_PER_PAGE = 20;
 
   // ✅ FIXED FETCH (pagination + filters)
@@ -137,7 +169,7 @@ const DiscoverUsers = () => {
     <div className="min-h-screen">
       <div className="w-full mx-auto px-4 sm:px-6 py-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
@@ -170,17 +202,17 @@ const DiscoverUsers = () => {
             />
           </div>
         
-          <motion.h1 
+          <motion.h1
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-4 leading-tight"
           >
             <span className="">
-              <ShinyText 
-                text="Discover Amazing" 
-                disabled={false} 
-                speed={3} 
+              <ShinyText
+                text="Discover Amazing"
+                disabled={false}
+                speed={3}
               />
             </span>
             <br />
@@ -189,10 +221,10 @@ const DiscoverUsers = () => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <ShinyText 
-                text="People & Innovators" 
-                disabled={false} 
-                speed={3} 
+              <ShinyText
+                text="People & Innovators"
+                disabled={false}
+                speed={3}
               />
             </motion.span>
           </motion.h1>
@@ -233,7 +265,7 @@ const DiscoverUsers = () => {
         </motion.div>
 
         {/* Filters Section */}
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -358,21 +390,26 @@ const DiscoverUsers = () => {
               </Button>
             </motion.div>
           ) : (
-            <motion.div 
+            <motion.div
               layout
               className="flex flex-col w-full items-center justify-center"
             >
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
-                {users.map(userItem => (
-                  <UserCard
-                    key={userItem.id}
-                    user={userItem}
-                    onOpen={(user) => {
-                      setSelectedUser(user);
-                      setShowModal(true);
-                    }}
-                  />
-                ))}
+                {users.map((userItem) => {
+                  const avatarUrl = getAvatarUrl(userItem);
+
+                  return (
+                    <UserCard
+                      key={userItem.id}
+                      user={{ ...userItem, profilePicture: avatarUrl }}
+                      onOpen={(user) => {
+                        setSelectedUser(user);
+                        setShowModal(true);
+                      }}
+                    />
+                  );
+                })}
+
               </div>
 
               {/* PAGINATION */}
@@ -380,8 +417,8 @@ const DiscoverUsers = () => {
                 <div className="flex justify-center items-center gap-2 mt-10">
                   <Button
                     variant="outline"
-                        size="sm"
-                        className="text-black"
+                    size="sm"
+                    className="text-black"
                     disabled={currentPage === 1}
                     onClick={() => fetchUsers(currentPage - 1)}
                   >
@@ -421,8 +458,8 @@ const DiscoverUsers = () => {
 
                   <Button
                     variant="outline"
-                        size="sm"
-                        className="text-black"
+                    size="sm"
+                    className="text-black"
                     disabled={currentPage === totalPages}
                     onClick={() => fetchUsers(currentPage + 1)}
                   >
@@ -454,22 +491,29 @@ const DiscoverUsers = () => {
                       className="w-24 h-24 rounded-full object-cover border-2 border-blue-500"
                     />
                   </div>
+                </Link>
 
                 {/* User Info */}
                 <div className="space-y-2 text-sm w-full text-center">
                   <p><span className="font-semibold">Role:</span> {selectedUser.role}</p>
                   <p><span className="font-semibold">Status:</span> {selectedUser.status}</p>
+
                   {selectedUser.profile?.company && (
                     <p><span className="font-semibold">Company:</span> {selectedUser.profile.company}</p>
                   )}
+
                   {selectedUser.profile?.bio && (
                     <p><span className="font-semibold">Bio:</span> {selectedUser.profile.bio}</p>
                   )}
-                  {(selectedUser.active_startups_count !== 0) && (
-                    <p><span className="font-semibold">Startups:</span> {selectedUser.active_startups_count}</p>
+
+                  {selectedUser.active_startups_count !== 0 && (
+                    <p>
+                      <span className="font-semibold">Startups:</span>{" "}
+                      {selectedUser.active_startups_count}
+                    </p>
                   )}
                 </div>
-                  </Link>
+
                 {/* Stats */}
                 <div className="grid w-full grid-cols-2 gap-2 pt-2 border-t border-gray-700">
                   <div className="text-center">
@@ -482,10 +526,18 @@ const DiscoverUsers = () => {
                   </div>
                 </div>
 
-                {/* NEW: Connection Button */}
-                <div className="pt-2 border-t border-gray-700">
-                  <ConnectionButton 
-                    userId={selectedUser.id} 
+                <Button
+                  type="button"
+                  onClick={() => goToProfile(selectedUser.id)}
+                  className="w-full bg-gray-800 hover:bg-gray-700 text-white"
+                >
+                  View Profile
+                </Button>
+
+                {/* Connection Button */}
+                <div className="pt-2 border-t border-gray-700 w-full">
+                  <ConnectionButton
+                    userId={selectedUser.id}
                     size="default"
                     className="w-full"
                   />
@@ -499,7 +551,7 @@ const DiscoverUsers = () => {
                     onChange={(e) => setMessageText(e.target.value)}
                     placeholder="Write your message..."
                     className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500"
-                    rows="3"
+                    rows={3}
                   />
                 </div>
 
@@ -513,6 +565,7 @@ const DiscoverUsers = () => {
                 </Button>
               </div>
             )}
+
           </DialogContent>
         </Dialog>
       </div>

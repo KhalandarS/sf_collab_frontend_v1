@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { countries } from "./countries";
 import { useEffect, useState } from "react";
-import { usersAPI } from "@/utils/APIs/userApi";
+import { usersAPI } from "@/utils/APIs/userAPI";
 import { useSelector } from "react-redux";
 import { getRenderImageUrl } from "./getRenderImageUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
@@ -252,7 +252,14 @@ const handleAutoDetectTimezone = () => {
         </div>
       </div>
 
-      
+      <div>
+        <label className="block text-sm font-medium text-gray-400 mb-2">Role Type</label>
+        <select value={formData.roleType || ''} onChange={(e) => setFormData(prev => ({ ...prev, roleType: e.target.value }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
+          <option value="">Select role type</option>
+          <option value="development">Development</option>
+          <option value="marketing">Marketing</option>
+        </select>
+      </div>
     </div>
   );
 };

@@ -1,8 +1,8 @@
 // Profile.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  User, Settings, Award, BarChart3,
+  User, Award, BarChart3,
   Rocket, TrendingUp, Zap, Globe, Briefcase, ExternalLink
 } from 'lucide-react';
 
@@ -15,20 +15,20 @@ import ProfileSettings from '../profileSettings/ProfileSettings';
 import { useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { builderProfileAPI } from '@/services/builderAPI';
+import { API_BASE_URL } from '@/utils/config';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const { user, access_token } = useSelector((state) => state.auth);
+  const { user: authUser, access_token } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
   const [queryParams] = useSearchParams();
-  const [showSettings, setShowSettings] = useState(queryParams.get("page") === "settings");
   const [portfolio, setPortfolio] = useState([]);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
 
   // Fetch portfolio when component loads
   useEffect(() => {
     const fetchPortfolio = async () => {
-      if (!user || !access_token) return;
+      if (!authUser || !access_token) return;
       
       setLoadingPortfolio(true);
       try {
@@ -44,9 +44,57 @@ const Profile = () => {
     };
 
     fetchPortfolio();
-  }, [user, access_token]);
+  }, [authUser, access_token]);
 
-  if (!user) {
+  const viewedUserId = queryParams.get("userId");
+
+  const [viewedUser, setViewedUser] = useState(null);
+  const [loadingViewedUser, setLoadingViewedUser] = useState(false);
+
+  const token = useMemo(() => localStorage.getItem("access_token"), []);
+
+  const isOtherUser =
+    viewedUserId && authUser?.id && String(viewedUserId) !== String(authUser.id);
+
+  const user = isOtherUser ? viewedUser : authUser;
+
+  useEffect(() => {
+    const loadOtherUser = async () => {
+      if (!isOtherUser) {
+        setViewedUser(null);
+        return;
+      }
+      if (!token) return;
+
+      setLoadingViewedUser(true);
+      try {
+        const res = await fetch(`${API_BASE_URL}/users/${viewedUserId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = await res.json();
+        const fetchedUser = data?.data?.user || data?.data || null;
+
+        if (data?.success && fetchedUser) {
+          setViewedUser(fetchedUser);
+        } else {
+          setViewedUser(null);
+        }
+      } catch (e) {
+        console.error("Failed to load viewed user:", e);
+        setViewedUser(null);
+      } finally {
+        setLoadingViewedUser(false);
+      }
+    };
+
+    loadOtherUser();
+  }, [isOtherUser, viewedUserId, token]);
+
+  if (!user || loadingViewedUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
         <p>Loading profile...</p>
@@ -54,9 +102,14 @@ const Profile = () => {
     );
   }
 
+  // Only allow settings page for your own profile
+  if (showSettings && !isOtherUser) {
+    return <ProfileSettings user={authUser} back={() => window.history.back()} />;
+  }
+
   const calculateLevel = (xp) => Math.floor(xp / 1000) + 1;
   const level = calculateLevel(user?.xpPoints || 0);
-  const xpToNextLevel = (level * 1000) - (user?.xpPoints || 0);
+  const xpToNextLevel = level * 1000 - (user?.xpPoints || 0);
   const levelProgress = (((user?.xpPoints || 0) % 1000) / 1000) * 100;
 
   const tabs = [
@@ -67,32 +120,22 @@ const Profile = () => {
     // { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-  if (showSettings) {
-    return <ProfileSettings user={user} back={() => setShowSettings(false)} />;
-  }
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-900 text-white">
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
   return (
     <div className="min-h-screen text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
-      
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
+
       <div className="relative w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ProfileHeader 
+        <ProfileHeader
           user={user}
           level={level || 0}
           levelProgress={levelProgress}
           xpToNextLevel={xpToNextLevel}
           isEditing={isEditing}
           onEditToggle={() => setIsEditing(!isEditing)}
-          onSettingsClick={() => setShowSettings(true)}
+          onSettingsClick={() => window.location.assign("/user-profile?page=settings")}
         />
 
-        <ProfileStats 
+        <ProfileStats
           user={user}
           streakDays={user.streakDays}
           activeStartups={user.activeStartupsCount}
@@ -100,7 +143,6 @@ const Profile = () => {
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-1 space-y-6">
-            {/* Level Card */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -120,14 +162,14 @@ const Profile = () => {
                 </div>
                 <h3 className="mt-4 text-lg font-semibold">Level {level}</h3>
                 <p className="text-sm text-gray-400">{user.xpPoints} XP</p>
-                
+
                 <div className="mt-4">
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
                     <span>Next: Level {level + 1}</span>
                     <span>{xpToNextLevel} XP needed</span>
                   </div>
                   <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div 
+                    <div
                       className="bg-linear-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
                       style={{ width: `${levelProgress}%` }}
                     ></div>
@@ -136,7 +178,6 @@ const Profile = () => {
               </div>
             </motion.div>
 
-            {/* Quick Stats */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -170,7 +211,6 @@ const Profile = () => {
               </div>
             </motion.div>
 
-            {/* Social Links */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -180,20 +220,26 @@ const Profile = () => {
               <h4 className="font-semibold mb-4">Connect</h4>
               <div className="space-y-2">
                 {user.profile?.socialLinks?.linkedin && (
-                  <a href={`https://linkedin.com/in/${user?.profile?.socialLinks?.linkedin}`} 
-                     className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition-colors">
+                  <a
+                    href={`https://linkedin.com/in/${user?.profile?.socialLinks?.linkedin}`}
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-blue-400 transition-colors"
+                  >
                     LinkedIn
                   </a>
                 )}
                 {user.profile?.socialLinks?.github && (
-                  <a href={`https://github.com/${user?.profile?.socialLinks?.github}`}
-                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 transition-colors">
+                  <a
+                    href={`https://github.com/${user?.profile?.socialLinks?.github}`}
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-300 transition-colors"
+                  >
                     GitHub
                   </a>
                 )}
                 {user.profile?.socialLinks?.portfolio && (
-                  <a href={`https://${user?.profile?.socialLinks?.portfolio}`}
-                     className="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors">
+                  <a
+                    href={`https://${user?.profile?.socialLinks?.portfolio}`}
+                    className="flex items-center gap-2 text-sm text-gray-400 hover:text-purple-400 transition-colors"
+                  >
                     <Globe className="w-4 h-4" />
                     Portfolio
                   </a>
@@ -202,19 +248,14 @@ const Profile = () => {
             </motion.div>
           </div>
 
-          {/* Main Content Area */}
           <div className="lg:col-span-3 space-y-6">
-            <ProfileTabs 
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-            />
+            <ProfileTabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
 
             <div className="min-h-150">
-              {activeTab === 'overview' && (
+              {activeTab === "overview" && (
                 <div className="space-y-6">
                   <ActivityFeed activities={user?.recentActivity || []} />
-                  
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -227,7 +268,10 @@ const Profile = () => {
                     {user.relationships?.assignedTasks?.length > 0 ? (
                       <div className="grid gap-4">
                         {user.relationships.assignedTasks.map((task, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl">
+                          <div
+                            key={idx}
+                            className="flex items-center justify-between p-4 bg-gray-700/30 rounded-xl"
+                          >
                             <div>
                               <h4 className="font-semibold">{task.title}</h4>
                               <p className="text-sm text-gray-400">In progress</p>
@@ -242,11 +286,11 @@ const Profile = () => {
                 </div>
               )}
 
-              {activeTab === 'achievements' && (
+              {activeTab === "achievements" && (
                 <AchievementSection achievements={user.relationships?.achievements || []} />
               )}
 
-              {activeTab === 'activity' && (
+              {activeTab === "activity" && (
                 <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
                   <h3 className="text-xl font-semibold mb-6">Detailed Activity</h3>
                   <div className="text-center text-gray-500 py-12">
@@ -256,7 +300,7 @@ const Profile = () => {
                 </div>
               )}
 
-              {activeTab === 'projects' && (
+              {activeTab === "projects" && (
                 <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
                   <h3 className="text-xl font-semibold mb-6">Portfolio & Projects</h3>
                   
@@ -270,10 +314,10 @@ const Profile = () => {
                         <motion.div
                           key={project.id}
                           whileHover={{ scale: 1.02 }}
-                          className="group relative bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all duration-300"
+                          className="group relative bg-linear-to-br from-white/5 to-white/2 border border-white/10 rounded-2xl overflow-hidden hover:border-blue-500/50 transition-all duration-300"
                         >
                           {/* Project Image */}
-                          <div className="relative w-full h-48 rounded-t-2xl bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
+                          <div className="relative w-full h-48 rounded-t-2xl bg-linear-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 flex items-center justify-center overflow-hidden">
                             {project.image_url ? (
                               <img src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                             ) : (

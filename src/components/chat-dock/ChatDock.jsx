@@ -1,14 +1,109 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X, Minus, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Avatar from "@/components/chat/Avatar";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAppSocket } from "@/context/SocketProvider";
+
+
+// show name only on first message in a run (group/general/startup)
+function shouldShowSenderName(messages, index) {
+  if (index === 0) return true;
+
+  const prev = messages[index - 1];
+  const curr = messages[index];
+
+  const prevId = String(prev?.sender_id ?? prev?.sender?.id ?? "");
+  const currId = String(curr?.sender_id ?? curr?.sender?.id ?? "");
+
+  return prevId !== currId;
+}
+
+
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const LS_WINDOWS_KEY = "chatDock:windows";
 const LS_UNREAD_KEY = "chatDock:unread";
+const LS_PRESENCE_KEY = "chatDock:presence:lastSeen";
+const LS_UNREAD_USERS_KEY = "chatDock:unreadUsers";
+
+const toMs = (ts) => {
+  if (!ts) return null;
+  if (typeof ts === "number") return ts;
+  const n = Number(ts);
+  if (!Number.isNaN(n)) return n;
+  const d = new Date(ts);
+  return Number.isNaN(d.getTime()) ? null : d.getTime();
+};
+
+const formatLastSeen = (ts, nowTs) => {
+  const ms = toMs(ts);
+  if (!ms) return "offline";
+
+  const now = new Date(nowTs || Date.now());
+  const d = new Date(ms);
+
+  const diffMs = Math.max(0, now.getTime() - d.getTime());
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "last seen just now";
+  if (mins < 60) return mins === 1 ? "last seen 1 min ago" : `last seen ${mins} mins ago`;
+
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+
+  const yesterday = (() => {
+    const y = new Date(now);
+    y.setDate(now.getDate() - 1);
+    return (
+      d.getFullYear() === y.getFullYear() &&
+      d.getMonth() === y.getMonth() &&
+      d.getDate() === y.getDate()
+    );
+  })();
+
+  const timeStr = d
+    .toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })
+    .replace("AM", "am")
+    .replace("PM", "pm");
+
+  if (sameDay) return `last seen ${timeStr}`;
+  if (yesterday) return `last seen yesterday, ${timeStr}`;
+
+  const day = d.getDate();
+  const month = d.getMonth() + 1;
+  const yy = String(d.getFullYear()).slice(-2);
+  return `last seen ${day}/${month}/${yy} ${timeStr}`;
+};
+
+const getPresenceForDirect = ({ conv, currentUserId, onlineUsers, lastActiveAt, lastSeenAt, nowTs }) => {
+  const other = conv?.participants?.find((p) => String(p.id) !== String(currentUserId));
+  const otherId = other?.id ? String(other.id) : null;
+  if (!otherId) return { presenceStatus: "offline", statusText: "" };
+
+  const connected = (onlineUsers || []).map(String).includes(otherId);
+  const lastActiveTs = toMs(lastActiveAt?.[otherId]);
+  const lastSeenTs = toMs(
+    lastSeenAt?.[otherId] ??
+      other?.last_seen ??
+      other?.lastSeen ??
+      other?.last_login ??
+      other?.lastLogin
+  );
+
+  const diff = lastActiveTs ? Math.max(0, nowTs - lastActiveTs) : null;
+
+  if (connected) {
+    if (diff == null || diff < 5 * 60 * 1000) return { presenceStatus: "online", statusText: "online" };
+    if (diff < 6 * 60 * 1000) return { presenceStatus: "idle", statusText: "idle" };
+    return { presenceStatus: "offline", statusText: formatLastSeen(lastActiveTs, nowTs) };
+  }
+
+  return { presenceStatus: "offline", statusText: formatLastSeen(lastSeenTs || lastActiveTs, nowTs) };
+};
 
 function safeJsonParse(value, fallback) {
   try {
@@ -17,6 +112,35 @@ function safeJsonParse(value, fallback) {
     return fallback;
   }
 }
+
+const handleFileUpload = async ({ file, conversationId, token }) => {
+  if (!token || !file || !conversationId) return null;
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("content", file.name);
+  formData.append("message_type", file.type.startsWith("image/") ? "image" : "file");
+
+  try {
+    const res = await fetch(
+      `${API_BASE_URL}/chat/conversations/${conversationId}/messages`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
+
+    const data = await res.json();
+    if (data?.success && data?.data?.message) {
+      return data.data.message.file_url;
+    }
+    return null;
+  } catch (e) {
+    console.error("ChatDock: file upload failed:", e);
+    return null;
+  }
+};
 
 function normalizeMessage(m) {
   if (!m) return m;
@@ -35,7 +159,12 @@ function normalizeMessage(m) {
     m.user ||
     m.from ||
     (m.sender_id
-      ? { id: m.sender_id, firstName: m.sender_name || m.firstName || m.senderFirstName || "" }
+      ? { 
+          id: m.sender_id, 
+          firstName: m.sender_name || m.firstName || m.senderFirstName || "",
+          lastName: m.sender_last_name || m.senderLastName || m.lastName || "",
+          profilePicture: m.sender_profile_picture || m.profilePicture || null,
+        }
       : null);
 
   return {
@@ -44,8 +173,30 @@ function normalizeMessage(m) {
     sender,
     sender_id: m.sender_id || sender?.id,
     content: m.content ?? m.original_content ?? m.message ?? "",
+    file_url: m.file_url || m.fileUrl || m.url || null,
+    file_name: m.file_name || m.fileName || m.filename || null,
+    file_type: m.file_type || m.fileType || null,
+    is_image:
+      typeof m.is_image === "boolean"
+        ? m.is_image
+        : typeof m.isImage === "boolean"
+          ? m.isImage
+          : null,
+    message_type: m.message_type || m.messageType || null,
   };
 }
+
+// Helper: Should show avatar (like ChatPage)
+function shouldShowAvatar(messages, message, index, currentUserId) {
+  if (index === 0) return true;
+
+  const prevMessage = messages[index - 1];
+  if (!prevMessage) return true;
+
+  // only when sender changes
+  return String(prevMessage.sender_id) !== String(message.sender_id);
+}
+
 
 export default function ChatDock({ maxWindows = 2 }) {
   const { socket, isConnected, onlineUsers } = useAppSocket();
@@ -59,13 +210,26 @@ export default function ChatDock({ maxWindows = 2 }) {
     }
   }, []);
 
+  const buildProfileUrl = (userId) =>
+    userId ? `/user-profile?userId=${userId}` : "/user-profile";
+  const goToProfile = (userId) => {
+    if (!userId) return;
+    window.location.assign(`/user-profile?userId=${userId}`);
+  };
+
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [consideredActive, setConsideredActive] = useState(true);
+  // Track if browser tab is visible (not minimized)
+  const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
 
   const [conversations, setConversations] = useState([]);
   const [isLoadingConvos, setIsLoadingConvos] = useState(false);
+
+  const [lastActiveAt, setLastActiveAt] = useState({});
+  const [lastSeenAt, setLastSeenAt] = useState(() => safeJsonParse(localStorage.getItem(LS_PRESENCE_KEY), {}));
+  const [nowTs, setNowTs] = useState(Date.now());
 
   const [windows, setWindows] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
@@ -81,14 +245,53 @@ export default function ChatDock({ maxWindows = 2 }) {
       : [];
   });
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {}));
+    } catch {}
+  }, [lastSeenAt]);
+
+  // Tick every 30s so idle/last-seen text updates automatically
+  useEffect(() => {
+    const t = setInterval(() => setNowTs(Date.now()), 30000);
+    return () => clearInterval(t);
+  }, []);
+
   const [unread, setUnread] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_UNREAD_KEY), {});
     return saved && typeof saved === "object" ? saved : {};
   });
 
+  // Track users with unread messages (for avatar badge)
+  // Structure: { odipus: { odipus: { name, avatar, count } } }
+  const [unreadUsers, setUnreadUsers] = useState(() => {
+    const saved = safeJsonParse(localStorage.getItem(LS_UNREAD_USERS_KEY), {});
+    return saved && typeof saved === "object" ? saved : {};
+  });
+
+  // Persist unreadUsers
+  useEffect(() => {
+    try {
+      localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(unreadUsers || {}));
+    } catch {}
+  }, [unreadUsers]);
+
+  // Typing: { [conversationId]: { [userId]: { name, timestamp } } }
   const [typingByConversation, setTypingByConversation] = useState({});
   const typingTimeoutsRef = useRef({});
   const messageEndRefs = useRef({});
+
+  // Refs to track real-time state for socket handlers (avoids stale closures)
+  const windowsRef = useRef(windows);
+  const isTabVisibleRef = useRef(isTabVisible);
+  const conversationsRef = useRef(conversations);
+  const consideredActiveRef = useRef(consideredActive);
+
+  // Keep refs in sync
+  useEffect(() => { windowsRef.current = windows; }, [windows]);
+  useEffect(() => { isTabVisibleRef.current = isTabVisible; }, [isTabVisible]);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+  useEffect(() => { consideredActiveRef.current = consideredActive; }, [consideredActive]);
 
   const persistWindows = useCallback((nextWindows) => {
     const minimal = nextWindows.map((w) => ({
@@ -117,7 +320,7 @@ export default function ChatDock({ maxWindows = 2 }) {
     [windows]
   );
 
-  const bumpUnread = useCallback((conversationId) => {
+  const bumpUnread = useCallback((conversationId, senderInfo = null) => {
     const key = String(conversationId);
     setUnread((prev) => {
       const next = { ...prev, [key]: (prev[key] || 0) + 1 };
@@ -125,6 +328,27 @@ export default function ChatDock({ maxWindows = 2 }) {
       window.dispatchEvent(new CustomEvent("chat:unread", { detail: { conversationId: key, unread: next } }));
       return next;
     });
+
+    // Track the user who sent the message for avatar badge
+    if (senderInfo?.id) {
+      const senderId = String(senderInfo.id);
+      setUnreadUsers((prev) => {
+        const convUsers = prev[key] || {};
+        const existingUser = convUsers[senderId] || { count: 0 };
+        return {
+          ...prev,
+          [key]: {
+            ...convUsers,
+            [senderId]: {
+              id: senderId,
+              name: senderInfo.name || senderInfo.firstName || "",
+              avatar: senderInfo.avatar || senderInfo.profilePicture || null,
+              count: existingUser.count + 1,
+            },
+          },
+        };
+      });
+    }
   }, []);
 
   const clearUnread = useCallback((conversationId) => {
@@ -135,12 +359,28 @@ export default function ChatDock({ maxWindows = 2 }) {
       window.dispatchEvent(new CustomEvent("chat:unread", { detail: { conversationId: key, unread: next } }));
       return next;
     });
+
+    // Clear unread users for this conversation
+    setUnreadUsers((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(next));
+      return next;
+    });
   }, []);
 
+  // Track tab visibility and focus
   useEffect(() => {
-    const onFocus = () => setConsideredActive(true);
+    const onFocus = () => {
+      setConsideredActive(true);
+      setIsTabVisible(true);
+    };
     const onBlur = () => setConsideredActive(false);
-    const onVis = () => setConsideredActive(!document.hidden);
+    const onVis = () => {
+      const visible = !document.hidden;
+      setConsideredActive(visible);
+      setIsTabVisible(visible);
+    };
 
     window.addEventListener("focus", onFocus);
     window.addEventListener("blur", onBlur);
@@ -161,13 +401,37 @@ export default function ChatDock({ maxWindows = 2 }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      if (data?.success) setConversations(data.data.conversations || []);
+      if (data?.success) {
+        const convos = data.data.conversations || [];
+        console.log("[ChatDock] Fetched conversations:", convos.length);
+        setConversations(convos);
+
+        setLastSeenAt((prev) => {
+          const next = { ...prev };
+          for (const c of convos) {
+            if (c?.conversation_type !== "direct") continue;
+            const other = c.participants?.find((p) => String(p.id) !== String(currentUser?.id));
+            if (!other?.id) continue;
+
+            const ts =
+              other.last_seen ??
+              other.lastSeen ??
+              other.last_login ??
+              other.lastLogin ??
+              null;
+
+            const ms = toMs(ts);
+            if (ms) next[String(other.id)] = ms;
+          }
+          return next;
+        });
+      }
     } catch (e) {
       console.error("ChatDock: fetch conversations failed:", e);
     } finally {
       setIsLoadingConvos(false);
     }
-  }, [token]);
+  }, [token, currentUser?.id]);
 
   const fetchMessages = useCallback(
     async (conversationId) => {
@@ -252,6 +516,8 @@ export default function ChatDock({ maxWindows = 2 }) {
   // -----------------------------
   const openWindow = useCallback(
     async ({ conversationId, title }) => {
+      console.log("[ChatDock] openWindow called:", { conversationId, title });
+      
       if (!conversationId) return;
       const cid = String(conversationId);
 
@@ -259,6 +525,7 @@ export default function ChatDock({ maxWindows = 2 }) {
         const exists = prev.find((w) => String(w.conversationId) === cid);
         if (exists) {
           const without = prev.filter((w) => String(w.conversationId) !== cid);
+          // Always un-minimize when opening
           const next = [...without, { ...exists, minimized: false }];
           persistWindows(next);
           return next;
@@ -326,22 +593,65 @@ export default function ChatDock({ maxWindows = 2 }) {
   }, [consideredActive, windows, clearUnread, socket]);
 
   // -----------------------------
-  // Listen for navbar mini inbox open events
+  // Listen for "open dock" events (notifications, navbar, etc.)
   // -----------------------------
   useEffect(() => {
     const handleOpenFromNavbar = (e) => {
-      const { conversationId, title } = e.detail || {};
-      if (conversationId) {
-        openWindow({ conversationId, title });
-      }
+      const { conversationId, title } = e?.detail || {};
+      if (!conversationId) return;
+
+      setIsPanelOpen(true);
+      openWindow({ conversationId, title });
     };
 
-    window.addEventListener('chatDock:open', handleOpenFromNavbar);
-    return () => window.removeEventListener('chatDock:open', handleOpenFromNavbar);
+    window.addEventListener("chatDock:open", handleOpenFromNavbar);
+    return () => window.removeEventListener("chatDock:open", handleOpenFromNavbar);
   }, [openWindow]);
 
   // -----------------------------
-  // WebSocket: typing
+  // WebSocket: presence (online/idle/last seen)
+  // -----------------------------
+  useEffect(() => {
+    if (!socket) return;
+
+    const now = () => Date.now();
+
+    const onUserStatus = (data) => {
+      const id = String(data?.user_id ?? "");
+      if (!id) return;
+
+      if (data.status === "online") {
+        setLastActiveAt((prev) => ({ ...prev, [id]: now() }));
+      }
+      if (data.status === "offline") {
+        setLastSeenAt((prev) => ({ ...prev, [id]: now() }));
+      }
+    };
+
+    const onUserActivity = (data) => {
+      const id = String(data?.user_id ?? "");
+      if (!id) return;
+      const ts = toMs(data?.ts) || now();
+      setLastActiveAt((prev) => ({ ...prev, [id]: ts }));
+    };
+
+    socket.on("user_status", onUserStatus);
+    socket.on("user_activity", onUserActivity);
+
+    const ping = () => socket.emit("user_activity", { ts: now() });
+    window.addEventListener("keydown", ping);
+    const interval = setInterval(ping, 20000);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("keydown", ping);
+      socket.off("user_status", onUserStatus);
+      socket.off("user_activity", onUserActivity);
+    };
+  }, [socket]);
+
+  // -----------------------------
+  // WebSocket: typing with user names
   // -----------------------------
   useEffect(() => {
     if (!socket) return;
@@ -350,6 +660,12 @@ export default function ChatDock({ maxWindows = 2 }) {
       const conversationId = data?.conversation_id;
       const userId = data?.user_id;
       const isTyping = !!data?.is_typing;
+      const userName =
+        data?.user_name ||
+        data?.name ||
+        data?.firstName ||
+        data?.username ||
+        "";
 
       if (!conversationId || !userId) return;
 
@@ -364,8 +680,9 @@ export default function ChatDock({ maxWindows = 2 }) {
         const next = { ...prev };
 
         if (isTyping) {
-          next[cid] = { ...current, [uid]: true };
-        } else {
+          // Store user info for display
+          next[cid] = { ...current, [uid]: { name: (userName || "").trim(), timestamp: Date.now() } };
+       } else {
           const copy = { ...current };
           delete copy[uid];
           next[cid] = copy;
@@ -378,24 +695,40 @@ export default function ChatDock({ maxWindows = 2 }) {
     return () => socket.off("user_typing", onUserTyping);
   }, [socket, currentUser?.id]);
 
+  // -----------------------------
+  // WebSocket: incoming messages
+  // Listen for BOTH events:
+  // - 'new_message' = sent to conversation room (only if window is open)
+  // - 'conversation_message' = sent to user's personal room (ALWAYS received)
+  // -----------------------------
   useEffect(() => {
-    if (!socket) return;
+    if (!socket) {
+      console.log("[ChatDock] No socket available yet");
+      return;
+    }
+    
+    console.log("[ChatDock] Socket connected:", socket.connected);
 
-    const onNewMessage = (payload) => {
-      // 1. Properly extract the message data
+    const handleIncomingMessage = (payload) => {
+      console.log("[ChatDock] Received message event:", payload);
+      
       const messageData = payload?.message || payload;
       const cid = String(payload?.conversation_id || messageData?.conversation_id);
 
       // 2. Normalize it (using your helper)
       const messageNorm = normalizeMessage(messageData);
 
-      if (!cid || !messageNorm) return;
+      if (!cid || !messageNorm) {
+        console.log("[ChatDock] Invalid message data, skipping");
+        return;
+      }
 
-      // 3. Update the state ONLY if it's for an open window
+      console.log("[ChatDock] Processing message for conversation:", cid);
+
+      // Update messages for open window
       setWindows((prev) => {
         return prev.map((w) => {
           if (String(w.conversationId) === cid) {
-            // Prevent duplicates (checks by ID)
             const exists = w.messages.some((m) => String(m.id) === String(messageNorm.id));
             if (exists) return w;
             return { ...w, messages: [...(w.messages || []), messageNorm] };
@@ -405,23 +738,94 @@ export default function ChatDock({ maxWindows = 2 }) {
       });
 
       // Handle unread/scroll
-      if (!isConvOpen(cid) || isConvMinimized(cid) || !consideredActive) {
-        bumpUnread(cid);
-      } else {
-        clearUnread(cid);
-        socket.emit("mark_read", { conversation_id: cid });
+      const isOwnMessage = String(messageNorm.sender_id) === String(currentUser?.id);
+
+      if (!isOwnMessage) {
+        // Use refs to get real-time state (avoids stale closures)
+        const currentWindows = windowsRef.current;
+        const currentIsTabVisible = isTabVisibleRef.current;
+        const currentConversations = conversationsRef.current;
+        const currentConsideredActive = consideredActiveRef.current;
+
+        const isOpen = currentWindows.some((w) => String(w.conversationId) === cid);
+        const isMin = currentWindows.some((w) => String(w.conversationId) === cid && w.minimized);
+
+        // Extract sender info for avatar badge
+        const senderInfo = {
+          id: messageNorm.sender_id,
+          name: messageNorm.sender?.firstName || messageNorm.sender?.name || "",
+          avatar: messageNorm.sender?.profilePicture || messageNorm.sender?.profile_picture || null,
+        };
+
+        // Always count unread if it's not actively open and visible
+        if (!isOpen || isMin || !currentConsideredActive) {
+          bumpUnread(cid, senderInfo);
+
+          // AUTO-OPEN: Only if chat window does NOT exist at all
+          // - If window is minimized → do NOT unminimize, just show unread badge
+          // - If browser tab is hidden/minimized → do NOT pop open
+          // - If window doesn't exist + tab is visible → OPEN the window
+          console.log("[ChatDock] Auto-open check:", { 
+            isOpen, 
+            isMin, 
+            currentIsTabVisible,
+            shouldOpen: currentIsTabVisible && !isOpen 
+          });
+          
+          if (currentIsTabVisible && !isOpen) {
+            const conv = (currentConversations || []).find((c) => String(c.id) === String(cid));
+            const title =
+              conv?.name ||
+              conv?.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
+              "Chat";
+
+            console.log("[ChatDock] Opening window for conversation:", cid, "title:", title);
+            openWindow({ conversationId: cid, title });
+          }
+        } else {
+          clearUnread(cid);
+          socket.emit("mark_read", { conversation_id: cid });
+        }
       }
+      
       setTimeout(() => scrollToBottom(cid), 50);
     };
 
-    socket.on("new_message", onNewMessage);
-    return () => socket.off("new_message", onNewMessage);
-  }, [socket, currentUser?.id, isConvOpen, isConvMinimized, consideredActive, bumpUnread, clearUnread, scrollToBottom]);
+    // Listen for BOTH events
+    console.log("[ChatDock] Registering socket listeners for new_message and conversation_message");
+    socket.on("new_message", handleIncomingMessage);
+    socket.on("conversation_message", handleIncomingMessage);
+    
+    return () => {
+      socket.off("new_message", handleIncomingMessage);
+      socket.off("conversation_message", handleIncomingMessage);
+    };
+  },[
+  socket,
+  currentUser?.id,
+  bumpUnread,
+  clearUnread,
+  scrollToBottom,
+  openWindow,
+]); 
 
+  // -----------------------------
+  // WebSocket: send message
+  // -----------------------------
   const sendMessage = useCallback(
     (conversationId, content) => {
       if (!socket) return;
       const cid = String(conversationId);
+      
+      // Handle object payload (with file)
+      if (typeof content === "object" && content !== null) {
+        const text = content.content?.trim();
+        if (text) {
+          socket.emit("send_message", { conversation_id: cid, content: text });
+        }
+        return;
+      }
+      
       const text = content?.trim();
       if (!cid || !text) return;
 
@@ -439,6 +843,9 @@ export default function ChatDock({ maxWindows = 2 }) {
     [socket, consideredActive, isConvMinimized, clearUnread]
   );
 
+  // -----------------------------
+  // Filter conversations
+  // -----------------------------
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
@@ -469,6 +876,35 @@ export default function ChatDock({ maxWindows = 2 }) {
     return Object.values(unread || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
   }, [unread]);
 
+  // Get unique users with unread messages for avatar badge
+  const unreadUsersList = useMemo(() => {
+    const usersMap = new Map();
+    Object.values(unreadUsers || {}).forEach((convUsers) => {
+      Object.values(convUsers || {}).forEach((user) => {
+        if (user?.id && !usersMap.has(user.id)) {
+          usersMap.set(user.id, user);
+        }
+      });
+    });
+    // Return up to 3 users for display
+    return Array.from(usersMap.values()).slice(0, 3);
+  }, [unreadUsers]);
+
+  // Helper to get typing names for a conversation
+  const getTypingNames = (conversationId) => {
+    const typing = typingByConversation[String(conversationId)] || {};
+    const users = Object.values(typing);
+    if (users.length === 0) return null;
+    
+    const names = users.map((u) => (u?.name || "").trim()).filter(Boolean);
+    if (names.length === 0) {
+      return null;
+    }
+    if (names.length === 1) return `${names[0]} is typing...`;
+    if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
+    return `${names[0]} and ${names.length - 1} others are typing...`;
+  };
+
   if (!currentUser) return null;
 
   return (
@@ -478,22 +914,19 @@ export default function ChatDock({ maxWindows = 2 }) {
         <AnimatePresence>
           {isPanelOpen && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 10 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
               className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
                 <div className="flex items-center gap-2">
                   <div className="text-sm font-semibold text-white">Chats</div>
-                  <motion.span
-                    animate={{ opacity: [0.6, 1, 0.6] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`}
-                  />
+                  <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
                 </div>
-                <button onClick={() => setIsPanelOpen(false)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"><X size={16} /></button>
+                <button onClick={() => setIsPanelOpen(false)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
+                  <X size={16} />
+                </button>
               </div>
 
               <div className="p-3 border-b border-zinc-800">
@@ -505,15 +938,15 @@ export default function ChatDock({ maxWindows = 2 }) {
                 />
                 <div className="flex gap-2 mt-2">
                   {["all", "online"].map((id) => (
-                    <motion.button
+                    <button
                       key={id}
                       onClick={() => setActiveTab(id)}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${activeTab === id ? "bg-indigo-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"}`}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+                        activeTab === id ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"
+                      }`}
                     >
                       {id.charAt(0).toUpperCase() + id.slice(1)}
-                    </motion.button>
+                    </button>
                   ))}
                 </div>
               </div>
@@ -522,119 +955,186 @@ export default function ChatDock({ maxWindows = 2 }) {
                 {isLoadingConvos ? (
                   <div className="p-4 text-zinc-500 text-sm">Loading…</div>
                 ) : (
-                  <motion.div layout>
-                    {filteredConversations.map((conv) => {
-                      const title = conv.name || conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName || "Chat";
-                      const unreadCount = unread?.[String(conv.id)] || 0;
-                      return (
-                        <motion.button
-                          key={conv.id}
-                          layout
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          exit={{ opacity: 0, x: -20 }}
-                          whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.6)" }}
-                          onClick={() => openWindow({ conversationId: conv.id, title })}
-                          className="w-full text-left px-3 py-2 rounded-xl flex items-center justify-between transition-colors"
-                        >
-                          <div className="min-w-0">
-                            <div className="text-white text-sm font-medium truncate">{title}</div>
-                            <div className="text-zinc-500 text-xs truncate">{conv.conversation_type}</div>
+                  filteredConversations.map((conv) => {
+                    const title =
+                      conv.name ||
+                      conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
+                      "Chat";
+                    const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
+
+                    // Get last message preview
+                    const lastMsg = conv.last_message || conv.lastMessage;
+                    let lastMessagePreview = "No messages yet";
+                    if (lastMsg) {
+                      const content = lastMsg.content || lastMsg.original_content || "";
+                      const senderId = lastMsg.sender_id || lastMsg.sender?.id;
+                      const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
+                      const isOwn = String(senderId) === String(currentUser?.id);
+                      const displayName = isOwn ? "You" : senderName;
+
+                      if (displayName) {
+                        const preview = `${displayName}: ${content}`;
+                        lastMessagePreview = preview.length > 30 ? preview.slice(0, 30) + "..." : preview;
+                      } else {
+                        lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
+                      }
+                    }
+
+                    return (
+                      <button
+                        key={conv.id}
+                        onClick={() => openWindow({ conversationId: conv.id, title })}
+                        className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
+                          unreadCount > 0 ? "bg-zinc-800/50" : ""
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
+                            {title}
                           </div>
-                          <AnimatePresence>
-                            {unreadCount > 0 && (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                exit={{ scale: 0 }}
-                                className="min-w-[18px] h-[18px] rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center"
-                              >
-                                {unreadCount}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </motion.button>
-                      );
-                    })}
-                  </motion.div>
+                          <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
+                            {lastMessagePreview}
+                          </div>
+                        </div>
+                        {unreadCount > 0 && (
+                          <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })
                 )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
+        {/* Launcher Button with Avatar Badge */}
         <motion.button
-          onClick={() => setIsPanelOpen((v) => !v)}
-          whileHover={{ scale: 1.1 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="relative w-12 h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center pointer-events-auto"
+          onClick={() => setIsPanelOpen((v) => !v)}
+          className="relative w-12 h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center"
         >
           <MessageCircle size={20} />
-          <AnimatePresence>
-            {totalUnread > 0 && (
-              <motion.span
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-zinc-900 text-amber-400 text-[10px] font-bold flex items-center justify-center border border-amber-500/40"
-              >
+          
+          {/* Avatar-based notification badge */}
+          {totalUnread > 0 && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-2 -right-2"
+            >
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
                 {totalUnread > 99 ? "99+" : totalUnread}
-              </motion.span>
-            )}
-          </AnimatePresence>
+              </span>
+            </motion.div>
+          )}
         </motion.button>
       </div>
 
+      {/* SECTION B: CHAT WINDOWS */}
       <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
         <AnimatePresence>
           {windows.map((w) => {
             const cid = String(w.conversationId);
             const unreadCount = unread?.[cid] || 0;
-            const typingCount = Object.keys(typingByConversation?.[cid] || {}).length;
+            const typingText = getTypingNames(cid);
+            const conv = (conversations || []).find((c) => String(c.id) === cid);
+            const isDirect = conv?.conversation_type === "direct";
+
+            const { presenceStatus, statusText } = isDirect
+              ? getPresenceForDirect({
+                  conv,
+                  currentUserId: currentUser?.id,
+                  onlineUsers,
+                  lastActiveAt,
+                  lastSeenAt,
+                  nowTs,
+                })
+              : { presenceStatus: "offline", statusText: "" };
 
             return (
               <motion.div
                 key={cid}
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-[380px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
               >
+                {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-white truncate">{w.title}</div>
-                    <AnimatePresence>
-                      {w.minimized && unreadCount > 0 && (
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="text-[11px] text-amber-400"
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    {/* Avatar for direct chats */}
+                    {isDirect && (() => {
+                      const other = conv?.participants?.find(
+                        (p) => String(p.id) !== String(currentUser?.id)
+                      );
+                      const avatarUrl =
+                        other?.profilePicture ||
+                        other?.profile_picture ||
+                        other?.profile?.picture ||
+                        null;
+
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => goToProfile(other?.id)}
+                          className="flex-shrink-0"
                         >
-                          {unreadCount} new
-                        </motion.div>
+                          <Avatar
+                            src={avatarUrl}
+                            name={w.title}
+                            size="sm"
+                            presenceStatus={presenceStatus}
+                            showStatus={false}
+                          />
+                        </button>
+                      );
+                    })()}
+                    
+                    {/* Status indicator + Title */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`w-2 h-2 rounded-full flex-shrink-0  ${
+                            presenceStatus === "online"
+                              ? "bg-emerald-500"
+                              : presenceStatus === "idle"
+                                ? "bg-yellow-400"
+                                : "bg-zinc-500"
+                          }`}
+                        />
+                        <span className="text-sm font-semibold text-white truncate">{w.title}</span>
+                        
+                        {/* Unread badge in header when minimized */}
+                        {w.minimized && unreadCount > 0 && (
+                          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        )}
+                      </div>
+                      {isDirect && !w.minimized && (
+                        <div className="text-[11px] text-zinc-400 truncate">{statusText}</div>
                       )}
-                    </AnimatePresence>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <motion.button
-                      whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
-                      whileTap={{ scale: 0.9 }}
+                  
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
                       onClick={() => toggleMinimize(cid)}
-                      className="p-2 rounded-xl text-zinc-400"
+                      className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
                     >
                       <Minus size={16} />
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
-                      whileTap={{ scale: 0.9 }}
+                    </button>
+                    <button
                       onClick={() => closeWindow(cid)}
-                      className="p-2 rounded-xl text-zinc-400"
+                      className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
                     >
                       <X size={16} />
-                    </motion.button>
+                    </button>
                   </div>
                 </div>
 
@@ -650,53 +1150,63 @@ export default function ChatDock({ maxWindows = 2 }) {
                         {w.loading ? (
                           <div className="text-sm text-zinc-500">Loading…</div>
                         ) : (
-                          <motion.div layout>
-                            {(w.messages || []).map((m, i) => (
-                              <motion.div
+                          (w.messages || []).map((m, i) => {
+                            const isOwn = String(m.sender_id) === String(currentUser?.id);
+                            const showAvatar = shouldShowAvatar(w.messages, m, i, currentUser?.id);
+                            
+                            return (
+                              <MessageBubble
                                 key={m.id || `${cid}-${i}`}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.02 }}
-                              >
-                                <MessageBubble
-                                  message={m}
-                                  isOwn={String(m.sender_id) === String(currentUser?.id)}
-                                  currentUserId={currentUser?.id}
-                                />
-                              </motion.div>
-                            ))}
-                          </motion.div>
+                                message={m}
+                                isOwn={isOwn}
+                                showAvatar={showAvatar}
+                                showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
+                                conversationType={conv?.conversation_type}
+                                variant="dock"
+                              />
+                            );
+                          })
                         )}
-                        <AnimatePresence>
-                          {typingCount > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              exit={{ opacity: 0 }}
-                              className="text-xs text-zinc-500 px-1 italic"
-                            >
-                              Typing…
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        
+                        {/* Typing indicator with names */}
+                        {typingText && (
+                          <div className="flex items-center gap-2 px-2 py-1">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                            <span className="text-xs text-zinc-500 italic">{typingText}</span>
+                          </div>
+                        )}
+                        
                         <div ref={(el) => (messageEndRefs.current[cid] = el)} />
                       </div>
 
-                      <div className="bg-zinc-900">
+                      {/* Input */}
+                      <div className="bg-zinc-900 border-t border-zinc-800 p-2">
                         <ChatInput
                           value={w.draft || ""}
                           onChange={(val) => {
-                            setWindows(prev => prev.map(x => String(x.conversationId) === cid ? { ...x, draft: val } : x));
+                            setWindows((prev) =>
+                              prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
+                            );
                             if (socket) {
                               socket.emit("typing_start", { conversation_id: cid });
                               if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
-                              typingTimeoutsRef.current[cid] = setTimeout(() => socket.emit("typing_stop", { conversation_id: cid }), 1200);
+                              typingTimeoutsRef.current[cid] = setTimeout(
+                                () => socket.emit("typing_stop", { conversation_id: cid }),
+                                1200
+                              );
                             }
                           }}
-                          onSend={(content) => {
+                          onSend={(payload) => {
                             if (socket) socket.emit("typing_stop", { conversation_id: cid });
-                            sendMessage(cid, content);
+                            sendMessage(cid, payload);
                           }}
+                          socket={socket}
+                          conversationId={cid}
+                          onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
                         />
                       </div>
                     </motion.div>

@@ -22,13 +22,15 @@ export default function NotificationAvatar({ src, name, type }) {
     direct: null
   }[type];
 
-  if (TypeIcon && (type === 'general' || type === 'team')) {
+  if (!src && TypeIcon && (type === "general" || type === "team")) {
     return (
       <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${typeStyles[type]} flex items-center justify-center shadow-lg`}>
         <TypeIcon size={22} className="text-white" />
       </div>
     );
   }
+
+
 
   return src ? (
     <img 

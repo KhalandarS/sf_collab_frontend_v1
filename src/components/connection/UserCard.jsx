@@ -6,6 +6,8 @@ import { LinkIcon, MapPin, Users, MessageCircle } from 'lucide-react';
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_HOST = API_URL.replace(/\/api\/?$/, "");
+
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -28,21 +30,26 @@ export default function UserCard({
 
   // Get avatar URL
   const getAvatarUrl = () => {
-    if (user.avatar_url) {
-      return user.avatar_url.startsWith('http') 
-        ? user.avatar_url 
-        : `${API_URL}${user.avatar_url}`;
-    }
-    if (user.profile?.picture) {
-      return `${API_URL}${user.profile.picture}`;
-    }
-    if (user.profile_picture) {
-      return user.profile_picture.startsWith('http')
-        ? user.profile_picture
-        : `${API_URL}${user.profile_picture}`;
-    }
-    return null;
-  };
+  const pic =
+    user.avatar_url ||
+    user.profile?.picture ||
+    user.profile_picture ||
+    user.profile?.avatar ||
+    user.profilePicture ||
+    null;
+
+  if (!pic) return null;
+
+  const s = String(pic);
+
+  // already absolute
+  if (s.startsWith("http")) return s;
+
+  // relative path -> use host (NOT /api)
+  return `${API_HOST}${s.startsWith("/") ? "" : "/"}${s}`;
+};
+
+
 
   const avatarUrl = getAvatarUrl();
   const initials = `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase();
@@ -79,8 +86,9 @@ export default function UserCard({
                   alt={fullName}
                   className="w-full h-full object-cover"
                   onError={(e) => {
-                    e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'flex';
+                    ee.currentTarget.style.display = "none";
+                    const fallback = e.currentTarget.nextSibling;
+                    if (fallback) fallback.style.display = "flex";
                   }}
                 />
               ) : null}

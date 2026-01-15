@@ -8,30 +8,64 @@ import React, {
   useMemo
 } from "react";
 
-//import { io } from 'socket.io-client';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { X, MessageCircle, Users, Globe, Shield, Reply, Send, ChevronRight } from 'lucide-react';
+import { X, MessageCircle, Users, Globe, Shield, ChevronRight } from 'lucide-react';
 import { useAppSocket } from "@/context/SocketProvider";
-import NotificationAvatar from "./NotificationAvatar";
-import useChatNotifications from "./useChatNotiffications";
-
-const SocketContext = createContext(null);
-
+import Avatar from "@/components/chat/Avatar";
 
 // ============================================
 // CONFIGURATION
 // ============================================
+const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+const NOTIFICATION_DURATION = 5000;
+const MAX_NOTIFICATIONS = 2;
+const AUTO_POPUP_ENABLED = true; // Set to false to disable auto-popup
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000'; // Please do not change this line directly, change yout .env
-const NOTIFICATION_DURATION = 5000; // 5 seconds
-const MAX_NOTIFICATIONS = 2; // Max stacked notifications
 // ============================================
 // CONTEXT
 // ============================================
 const ChatNotificationContext = createContext(null);
 
+// ============================================
+// AVATAR COMPONENT FOR NOTIFICATIONS
+// ============================================
+const NotificationAvatar = ({ src, name, type }) => {
+  const initials = name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  
+  const typeStyles = {
+    general: 'from-emerald-500 to-teal-600',
+    team: 'from-violet-500 to-purple-600',
+    group: 'from-blue-500 to-indigo-600',
+    direct: 'from-amber-500 to-orange-600'
+  };
 
+  const TypeIcon = {
+    general: Globe,
+    team: Shield,
+    group: Users,
+    direct: null
+  }[type];
 
+  if (TypeIcon && (type === 'general' || type === 'team')) {
+    return (
+      <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${typeStyles[type]} flex items-center justify-center shadow-lg`}>
+        <TypeIcon size={22} className="text-white" />
+      </div>
+    );
+  }
+
+  return src ? (
+    <img 
+      src={src} 
+      alt={name} 
+      className="w-12 h-12 rounded-2xl object-cover shadow-lg ring-2 ring-white/10" 
+    />
+  ) : (
+    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${typeStyles[type] || typeStyles.direct} flex items-center justify-center shadow-lg font-semibold text-white`}>
+      {initials}
+    </div>
+  );
+};
 
 // ============================================
 // SINGLE TOAST NOTIFICATION
@@ -40,35 +74,19 @@ const ChatToast = ({
   notification, 
   onClose, 
   onNavigate, 
-  onQuickReply,
   index 
 }) => {
   const [isExiting, setIsExiting] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [replyText, setReplyText] = useState('');
-  const [isSending, setIsSending] = useState(false);
-  const inputRef = useRef(null);
-  const progressRef = useRef(null);
 
   const { message, conversation, sender } = notification;
 
-  // Auto-close timer
   useEffect(() => {
-    if (isExpanded) return; // Don't auto-close when expanded
-    
-    const timer = setTimeout(() => {
-      handleClose();
-    }, NOTIFICATION_DURATION);
+  const timer = setTimeout(() => {
+    handleClose();
+  }, NOTIFICATION_DURATION);
 
-    return () => clearTimeout(timer);
-  }, [isExpanded]);
-
-  // Focus input when expanded
-  useEffect(() => {
-    if (isExpanded && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isExpanded]);
+  return () => clearTimeout(timer);
+}, []);
 
   const handleClose = () => {
     setIsExiting(true);
@@ -80,21 +98,19 @@ const ChatToast = ({
     onNavigate(conversation.id);
   };
 
-  const handleReply = async (e) => {
-    e?.preventDefault();
-    if (!replyText.trim() || isSending) return;
-
-    setIsSending(true);
-    await onQuickReply(conversation.id, replyText.trim());
-    setReplyText('');
-    setIsSending(false);
-    handleClose();
-  };
+  
 
   const conversationType = conversation?.conversation_type || 'direct';
   const conversationName = conversation?.name || 
     `${sender?.firstName || ''} ${sender?.lastName || ''}`.trim() || 
     'Unknown';
+
+  // Get sender profile picture
+  const senderProfilePic = sender?.profilePicture || 
+    sender?.profile_picture || 
+    sender?.profile?.picture || 
+    sender?.profile?.avatar || 
+    null;
 
   return (
     <div
@@ -116,18 +132,6 @@ const ChatToast = ({
         animation: !isExiting ? `slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 0.1}s both` : undefined
       }}
     >
-      {/* Progress bar */}
-      {!isExpanded && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-zinc-800 overflow-hidden">
-          <div 
-            ref={progressRef}
-            className="h-full bg-gradient-to-r from-amber-500 to-orange-500"
-            style={{
-              animation: `shrink ${NOTIFICATION_DURATION}ms linear forwards`
-            }}
-          />
-        </div>
-      )}
 
       {/* Close button */}
       <button
@@ -141,8 +145,9 @@ const ChatToast = ({
       <div className="p-4">
         {/* Header */}
         <div className="flex items-start gap-3">
+          {/* Profile picture - using actual avatar */}
           <NotificationAvatar
-            src={sender?.profilePicture} 
+            src={senderProfilePic}
             name={conversationName}
             type={conversationType}
           />
@@ -181,54 +186,15 @@ const ChatToast = ({
           </div>
         </div>
 
-        {/* Quick actions */}
-        {!isExpanded ? (
-          <div className="flex items-center gap-2 mt-4">
-            <button
-              onClick={() => setIsExpanded(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-zinc-900 font-medium text-sm rounded-xl transition-all shadow-lg shadow-amber-500/20"
-            >
-              <Reply size={16} />
-              Quick Reply
-            </button>
-            <button
-              onClick={handleNavigate}
-              className="flex items-center justify-center gap-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white text-sm rounded-xl transition-all"
-            >
-              Open
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        ) : (
-          /* Expanded reply input */
-          <form onSubmit={handleReply} className="mt-4">
-            <div className="flex items-center gap-2 p-1 bg-zinc-800 rounded-xl">
-              <input
-                ref={inputRef}
-                type="text"
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="Type a quick reply..."
-                className="flex-1 bg-transparent px-3 py-2 text-white text-sm placeholder-zinc-500 focus:outline-none"
-                disabled={isSending}
-              />
-              <button
-                type="submit"
-                disabled={!replyText.trim() || isSending}
-                className="p-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-900 rounded-xl transition-all"
-              >
-                <Send size={16} className={isSending ? 'animate-pulse' : ''} />
-              </button>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className="w-full mt-2 text-xs text-zinc-500 hover:text-zinc-400"
-            >
-              Cancel
-            </button>
-          </form>
-        )}
+        {/* Actions */}
+        <div className="flex gap-2 mt-4">
+          <button
+            onClick={handleNavigate}
+            className="w-full px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl text-sm"
+          >
+            Open
+          </button>
+        </div>
       </div>
 
       {/* Ambient glow effect */}
@@ -240,7 +206,7 @@ const ChatToast = ({
 // ============================================
 // NOTIFICATION CONTAINER
 // ============================================
-const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickReply }) => {
+const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
   return (
     <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3">
       {notifications.slice(0, MAX_NOTIFICATIONS).map((notification, index) => (
@@ -250,7 +216,6 @@ const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickRepl
           index={index}
           onClose={onClose}
           onNavigate={onNavigate}
-          onQuickReply={onQuickReply}
         />
       ))}
       
@@ -274,14 +239,6 @@ const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickRepl
           }
         }
         
-        @keyframes shrink {
-          from {
-            width: 100%;
-          }
-          to {
-            width: 0%;
-          }
-        }
       `}</style>
     </div>
   );
@@ -291,7 +248,7 @@ const NotificationContainer = ({ notifications, onClose, onNavigate, onQuickRepl
 // PROVIDER COMPONENT
 // ============================================
 export const ChatNotificationProvider = ({ children }) => {
-  const { socket, isConnected } = useAppSocket(); // ✅ shared singleton socket
+  const { socket, isConnected } = useAppSocket();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -299,42 +256,39 @@ export const ChatNotificationProvider = ({ children }) => {
   const location = useLocation();
 
   const [currentUserId, setCurrentUserId] = useState(() => {
-  try {
-    return JSON.parse(localStorage.getItem("user") || "null")?.id ?? null;
-  } catch {
-    return null;
-  }
-});
-
-useEffect(() => {
-  const syncUser = () => {
     try {
-      setCurrentUserId(
-        JSON.parse(localStorage.getItem("user") || "null")?.id ?? null
-      );
+      return JSON.parse(localStorage.getItem("user") || "null")?.id ?? null;
     } catch {
-      setCurrentUserId(null);
+      return null;
     }
-  };
+  });
 
-  window.addEventListener("storage", syncUser);
-  syncUser();
+  useEffect(() => {
+    const syncUser = () => {
+      try {
+        setCurrentUserId(
+          JSON.parse(localStorage.getItem("user") || "null")?.id ?? null
+        );
+      } catch {
+        setCurrentUserId(null);
+      }
+    };
 
-  return () => window.removeEventListener("storage", syncUser);
-}, []);
+    window.addEventListener("storage", syncUser);
+    syncUser();
 
+    return () => window.removeEventListener("storage", syncUser);
+  }, []);
 
-
-  // Track route without rebinding socket listeners
   const isOnChatPageRef = useRef(false);
 
-useEffect(() => {
-  isOnChatPageRef.current = location.pathname === "/chat";
-}, [location.pathname]);
+  useEffect(() => {
+    isOnChatPageRef.current = location.pathname === "/chat";
+  }, [location.pathname]);
 
-useEffect(() => {
-  if (location.pathname === "/chat") setUnreadCount(0);
-}, [location.pathname]);
+  useEffect(() => {
+    if (location.pathname === "/chat") setUnreadCount(0);
+  }, [location.pathname]);
 
   const addNotification = useCallback((notification) => {
     setNotifications((prev) => [notification, ...prev]);
@@ -377,7 +331,31 @@ useEffect(() => {
     }
   }, []);
 
-  // ✅ Attach socket listeners once per socket instance
+  // Auto-popup ChatDock when new message arrives
+  const autoPopupChatDock = useCallback((data) => {
+    if (!AUTO_POPUP_ENABLED) return;
+    
+    const { message, conversation } = data;
+    const conversationId = data.conversation_id || conversation?.id;
+    
+    if (!conversationId) return;
+
+    // Get conversation title
+    const title = conversation?.name || 
+      `${message?.sender?.firstName || ''} ${message?.sender?.lastName || ''}`.trim() ||
+      'Chat';
+
+    // Dispatch event to ChatDock to auto-popup
+    window.dispatchEvent(new CustomEvent('chatDock:autoPopup', {
+      detail: {
+        conversationId,
+        title,
+        message
+      }
+    }));
+  }, []);
+
+  // Socket listeners
   useEffect(() => {
     if (!socket) return;
 
@@ -390,6 +368,7 @@ useEffect(() => {
 
       // Only show toast when not on chat page
       if (!isOnChatPageRef.current) {
+        // Add toast notification
         addNotification({
           id: `notif-${message.id}-${Date.now()}`,
           message,
@@ -400,6 +379,9 @@ useEffect(() => {
 
         playNotificationSound();
         setUnreadCount((prev) => prev + 1);
+
+        // Auto-popup ChatDock (like Facebook Messenger)
+        autoPopupChatDock(data);
       }
     };
 
@@ -422,7 +404,7 @@ useEffect(() => {
       socket.off("new_message", onNewMessage);
       socket.off("added_to_team_chat", onAddedToTeamChat);
     };
-  }, [socket, currentUserId]);
+  }, [socket, currentUserId, addNotification, playNotificationSound, autoPopupChatDock]);
 
   const sendQuickReply = useCallback(
     async (conversationId, content) => {
@@ -472,17 +454,20 @@ useEffect(() => {
   return (
     <ChatNotificationContext.Provider value={value}>
       {children}
-
-      <NotificationContainer
-        notifications={notifications}
-        onClose={removeNotification}
-        onNavigate={navigateToConversation}
-        onQuickReply={sendQuickReply}
-      />
     </ChatNotificationContext.Provider>
   );
 };
 
+// ============================================
+// HOOKS
+// ============================================
+export const useChatNotifications = () => {
+  const context = useContext(ChatNotificationContext);
+  if (!context) {
+    throw new Error('useChatNotifications must be used within ChatNotificationProvider');
+  }
+  return context;
+};
 
 export const ChatNotificationBadge = ({ className = "" }) => {
   const { unreadCount } = useChatNotifications();
@@ -506,6 +491,5 @@ export const ChatNotificationBadge = ({ className = "" }) => {
     </span>
   );
 };
-
 
 export default ChatNotificationProvider;

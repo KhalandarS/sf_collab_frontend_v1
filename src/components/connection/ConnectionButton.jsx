@@ -1,18 +1,21 @@
 
+
 import { useState } from 'react';
-import { Loader2, UserPlus, Clock, UserCheck, UserX, Check, X } from 'lucide-react';
+import { Loader2, UserPlus, Clock, UserCheck, X, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useConnectionStatus, ConnectionStatus } from '../hooks/useConnectionStatus';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'react-toastify';
 
 export function ConnectionButton({
   userId,
-  size = 'default',        // 'sm' | 'default' | 'lg'
-  onStatusChange,          // Callback when status changes
+  size = 'default',
+  onStatusChange,
   className = '',
 }) {
-  const { status, isLoading, error, actions } = useConnectionStatus(userId);
+  const { status, isLoading, actions } = useConnectionStatus(userId);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Size configurations
   const sizeConfig = {
@@ -23,32 +26,95 @@ export function ConnectionButton({
   const config = sizeConfig[size];
 
   /**
-   * Handle action with toast feedback
+   * Handle send request
    */
-  const handleAction = async (action, successMsg) => {
-    const result = await action();
+  const handleSendRequest = async () => {
+    setLocalLoading(true);
+    const result = await actions.sendRequest();
     
     if (result.success) {
-      toast.success?.({ title: successMsg }) || toast({ title: successMsg, variant: 'success' });
-      onStatusChange?.(status);
-    } else if (result.error) {
-      toast.destructive?.({ title: 'Error', description: result.error }) || 
-        toast({ title: 'Error', description: result.error, variant: 'destructive' });
+      toast.success('Connection request sent!');
+      onStatusChange?.('request_sent');
+    } else {
+      toast.error(result.error || 'Failed to send request');
     }
+    setLocalLoading(false);
+  };
+
+  /**
+   * Handle cancel request (for sender)
+   */
+  const handleCancelRequest = async () => {
+    setLocalLoading(true);
+    const result = await actions.cancelRequest();
     
+    if (result.success) {
+      toast.success('Request cancelled');
+      onStatusChange?.('none');
+    } else {
+      toast.error(result.error || 'Failed to cancel request');
+    }
+    setLocalLoading(false);
+    setShowCancelConfirm(false);
+  };
+
+  /**
+   * Handle accept request (for receiver)
+   */
+  const handleAcceptRequest = async () => {
+    setLocalLoading(true);
+    const result = await actions.acceptRequest();
+    
+    if (result.success) {
+      toast.success('Connection accepted!');
+      onStatusChange?.('connected');
+    } else {
+      toast.error(result.error || 'Failed to accept request');
+    }
+    setLocalLoading(false);
+  };
+
+  /**
+   * Handle decline request (for receiver)
+   */
+  const handleDeclineRequest = async () => {
+    setLocalLoading(true);
+    const result = await actions.declineRequest();
+    
+    if (result.success) {
+      toast.info('Request declined');
+      onStatusChange?.('none');
+    } else {
+      toast.error(result.error || 'Failed to decline request');
+    }
+    setLocalLoading(false);
+  };
+
+  /**
+   * Handle remove connection
+   */
+  const handleRemoveConnection = async () => {
+  setLocalLoading(true);
+  const result = await actions.removeConnection(userId);
+    
+    if (result.success) {
+      toast.success('Connection removed');
+      onStatusChange?.('none');
+    } else {
+      toast.error(result.error || 'Failed to remove connection');
+    }
+    setLocalLoading(false);
     setShowRemoveConfirm(false);
   };
 
-  // ==========================================================================
+  const isProcessing = isLoading || localLoading;
+
   // Don't render for own profile
-  // ==========================================================================
   if (status === ConnectionStatus.SELF) {
     return null;
   }
 
-  // ==========================================================================
-  // LOADING STATE
-  // ==========================================================================
+  // Loading state
   if (status === ConnectionStatus.LOADING) {
     return (
       <Button disabled variant="outline" className={`${config.button} ${className}`}>
@@ -64,8 +130,8 @@ export function ConnectionButton({
   if (status === ConnectionStatus.NONE) {
     return (
       <Button
-        onClick={() => handleAction(actions.sendRequest, 'Connection request sent!')}
-        disabled={isLoading}
+        onClick={handleSendRequest}
+        disabled={isProcessing}
         className={`
           ${config.button}
           bg-gradient-to-r from-blue-600 to-purple-600 
@@ -74,7 +140,7 @@ export function ConnectionButton({
           ${className}
         `}
       >
-        {isLoading ? (
+        {isProcessing ? (
           <Loader2 className="animate-spin" size={config.icon} />
         ) : (
           <UserPlus size={config.icon} />
@@ -85,23 +151,49 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // REQUEST SENT → "Request Sent" (disabled, click to cancel)
+  // REQUEST SENT → "Request Sent" with cancel option
   // ==========================================================================
   if (status === ConnectionStatus.REQUEST_SENT) {
+    // Show confirmation
+    if (showCancelConfirm) {
+      return (
+        <div className={`flex items-center gap-2 ${className}`}>
+          <span className="text-xs text-gray-400">Cancel request?</span>
+          <Button
+            onClick={handleCancelRequest}
+            disabled={isProcessing}
+            size="sm"
+            variant="destructive"
+            className="h-8 px-2"
+          >
+            {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+          </Button>
+          <Button
+            onClick={() => setShowCancelConfirm(false)}
+            size="sm"
+            variant="outline"
+            className="h-8 px-2 border-gray-600"
+          >
+            <X size={14} />
+          </Button>
+        </div>
+      );
+    }
+
     return (
       <Button
-        onClick={() => handleAction(actions.cancelRequest, 'Request cancelled')}
-        disabled={isLoading}
+        onClick={() => setShowCancelConfirm(true)}
+        disabled={isProcessing}
         variant="outline"
         className={`
           ${config.button}
-          border-slate-600 text-slate-400
-          hover:bg-slate-700 hover:text-white hover:border-red-500
+          border-gray-600 text-gray-400
+          hover:bg-gray-700 hover:text-white hover:border-red-500
           ${className}
         `}
         title="Click to cancel request"
       >
-        {isLoading ? (
+        {isProcessing ? (
           <Loader2 className="animate-spin" size={config.icon} />
         ) : (
           <Clock size={config.icon} />
@@ -119,14 +211,14 @@ export function ConnectionButton({
       <div className={`flex gap-2 ${className}`}>
         {/* Accept Button */}
         <Button
-          onClick={() => handleAction(actions.acceptRequest, 'Connection accepted!')}
-          disabled={isLoading}
+          onClick={handleAcceptRequest}
+          disabled={isProcessing}
           className={`
             ${config.button}
-            bg-green-600 hover:bg-green-700 text-white
+            bg-green-600 hover:bg-green-700 text-white flex-1
           `}
         >
-          {isLoading ? (
+          {isProcessing ? (
             <Loader2 className="animate-spin" size={config.icon} />
           ) : (
             <Check size={config.icon} />
@@ -136,13 +228,13 @@ export function ConnectionButton({
         
         {/* Decline Button */}
         <Button
-          onClick={() => handleAction(actions.declineRequest, 'Request declined')}
-          disabled={isLoading}
+          onClick={handleDeclineRequest}
+          disabled={isProcessing}
           variant="outline"
           className={`
             ${config.button}
             border-red-500/50 text-red-400
-            hover:bg-red-500/20 hover:border-red-500
+            hover:bg-red-500/20 hover:border-red-500 flex-1
           `}
         >
           <X size={config.icon} />
@@ -153,28 +245,28 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // CONNECTED → "Connected" / "Remove Connection"
+  // CONNECTED → "Connected" with remove option
   // ==========================================================================
   if (status === ConnectionStatus.CONNECTED) {
-    // Show confirmation dialog
+    // Show confirmation
     if (showRemoveConfirm) {
       return (
         <div className={`flex items-center gap-2 ${className}`}>
-          <span className="text-sm text-slate-400">Remove connection?</span>
+          <span className="text-xs text-gray-400">Remove connection?</span>
           <Button
-            onClick={() => handleAction(actions.removeConnection, 'Connection removed')}
-            disabled={isLoading}
+            onClick={handleRemoveConnection}
+            disabled={isProcessing}
             size="sm"
             variant="destructive"
             className="h-8 px-2"
           >
-            {isLoading ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
+            {isProcessing ? <Loader2 className="animate-spin" size={14} /> : <Check size={14} />}
           </Button>
           <Button
             onClick={() => setShowRemoveConfirm(false)}
             size="sm"
             variant="outline"
-            className="h-8 px-2 border-slate-600"
+            className="h-8 px-2 border-gray-600"
           >
             <X size={14} />
           </Button>
@@ -182,7 +274,6 @@ export function ConnectionButton({
       );
     }
 
-    // Normal connected state
     return (
       <Button
         onClick={() => setShowRemoveConfirm(true)}
@@ -201,7 +292,6 @@ export function ConnectionButton({
     );
   }
 
-  // Fallback
   return null;
 }
 

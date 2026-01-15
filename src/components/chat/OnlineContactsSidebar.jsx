@@ -1,16 +1,4 @@
-/**
- * OnlineContactsSidebar Component - FIXED VERSION
- * 
- * Features:
- * - ONLINE section (users who are online now)
- * - ALL USERS section (all friends/contacts)
- * - Last seen display for offline users
- * - Click to start chat
- * 
- * Put this in: src/components/chat/OnlineContactsSidebar.jsx
- */
-
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Search, Plus, Video, ChevronDown, ChevronRight, Users, Circle } from 'lucide-react';
 
 // Avatar component
@@ -106,6 +94,8 @@ const OnlineContactsSidebar = ({
   onlineUsers = [], // Array of online user IDs
   onOpenChat, 
   onNewMessage,
+  token,               
+  currentUserId,
   className = '' 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -114,8 +104,50 @@ const OnlineContactsSidebar = ({
     all: true 
   });
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+  const [fallbackContacts, setFallbackContacts] = useState([]);
+
+  // Normalize onlineUsers (works whether it’s an array or Set)
+  const onlineSet = React.useMemo(() => {
+    if (Array.isArray(onlineUsers)) return new Set(onlineUsers.map(String));
+    if (onlineUsers instanceof Set) return new Set([...onlineUsers].map(String));
+    return new Set();
+  }, [onlineUsers]);
+
+  React.useEffect(() => {
+    const run = async () => {
+      // If you already have friends or allUsers, no need for fallback
+      if (!token) return;
+      if ((friends || []).length > 0) return;
+      if ((allUsers || []).length > 0) return;
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/users`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        const users = data?.data?.users || data?.users || [];
+
+        // Remove current user
+        const cleaned = users.filter((u) => String(u.id) !== String(currentUserId));
+        setFallbackContacts(cleaned);
+      } catch {
+        setFallbackContacts([]);
+      }
+    };
+
+    run();
+  }, [token, friends, allUsers, currentUserId]);
+
+
   // Use allUsers if provided, otherwise use friends
-  const contactList = allUsers.length > 0 ? allUsers : friends;
+  const contactList =
+    (allUsers && allUsers.length > 0)
+      ? allUsers
+      : (friends && friends.length > 0)
+        ? friends
+        : fallbackContacts;
+
 
   // Filter by search
   const filterBySearch = (users) => {
@@ -127,12 +159,44 @@ const OnlineContactsSidebar = ({
     });
   };
 
+
+  // Helpers
+  const IDLE_MS = 5 * 60 * 1000;
+  const LAST_SEEN_MIN = 6;
+
+  const timeAgo = (ms) => {
+    const mins = Math.floor(ms / 60000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} mins ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    return `${days}d ago`;
+  };
+
+  const getStatus = (userId) => {
+    const id = String(userId);
+    const isOnlineNow = onlineSet.has(id);
+
+    if (!isOnlineNow) return "offline";
+
+    // if you later pass lastActiveAt map in, you can compute idle here
+    // for now: treat all online as "online"
+    return "online";
+  };
+
+  const getLastSeenDisplay = (userId) => {
+    // if you later pass lastSeenAt map in, you can show "last seen …"
+    return "";
+  };
+
   // Separate online and offline
   const onlineFriends = filterBySearch(
-    contactList.filter(u => onlineUsers.includes(u.id) || onlineUsers.includes(String(u.id)))
+    contactList.filter((u) => onlineSet.has(String(u.id)))
   );
-  
+
   const allContacts = filterBySearch(contactList);
+
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
