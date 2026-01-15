@@ -175,7 +175,7 @@ const ReferPage = () => {
     const fetchLeaderboard = async () => {
       if (!user?.id) return;
       try {
-        const data = await waitlistAPI.getLeaderboard();
+        const data = await waitlistAPI.getLeaderboard(50);
         const dataWithYouFlag = data.map((userEntry) => ({
           ...userEntry,
           isYou: userEntry.id === user.id,

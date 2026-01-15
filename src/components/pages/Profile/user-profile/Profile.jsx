@@ -64,7 +64,7 @@ const Profile = () => {
     { id: 'achievements', label: 'Achievements', icon: Award },
     { id: 'activity', label: 'Activity', icon: BarChart3 },
     { id: 'projects', label: 'Projects', icon: Briefcase },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    // { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
   if (showSettings) {
@@ -111,9 +111,12 @@ const Profile = () => {
                   <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold border-4 border-gray-800">
                     {level}
                   </div>
-                  <div className="absolute -top-2 -right-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
-                    PRO
-                  </div>
+                  {/* {
+                    user &&
+                    <div className="absolute -top-2 -right-2 bg-yellow-500 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full">
+                      PRO
+                    </div>
+                  } */}
                 </div>
                 <h3 className="mt-4 text-lg font-semibold">Level {level}</h3>
                 <p className="text-sm text-gray-400">{user.xpPoints} XP</p>

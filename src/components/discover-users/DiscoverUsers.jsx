@@ -13,8 +13,6 @@ import { usersAPI } from '@/utils/APIs/userAPI';
 import FilterSidebar from './FilterSidebar';
 import UserCard from './UserCard';
 import { chatAPI } from '@/utils/APIs/chatApi';
-
-// NEW: Import ConnectionButton
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { Link } from 'react-router-dom';
@@ -32,34 +30,36 @@ const DiscoverUsers = () => {
   const [showModal, setShowModal] = useState(false);
   const [messageText, setMessageText] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
-  
+
   const { user, access_token } = useSelector((state) => state.auth);
   const ITEMS_PER_PAGE = 20;
 
-  const fetchUsers = async (page) => {
+  // ✅ FIXED FETCH (pagination + filters)
+  const fetchUsers = async (page = 1) => {
     try {
       setLoading(true);
 
-      const params = new URLSearchParams({
-        page: page.toString(),
-        per_page: ITEMS_PER_PAGE.toString()
-      });
+      const params = {
+        page,
+        per_page: ITEMS_PER_PAGE,
+      };
 
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedRole) params.append('role', selectedRole);
-      if (selectedStatus) params.append('status', selectedStatus);
+      if (searchQuery) params.search = searchQuery;
+      if (selectedRole) params.role = selectedRole;
+      if (selectedStatus) params.status = selectedStatus;
 
-      const response = await usersAPI.getAll(access_token, params);
-      console.log("Fetch Users Response:", response);
-      if (response.success) {
+      const response = await usersAPI.getAll(params);
+
+      if (response?.success) {
         setUsers(
-          response.data.users.filter(u => u.id !== user?.id) || []
+          response.data.users?.filter(u => u.id !== user?.id) || []
         );
-        console.log(response);
-        setTotalPages(response.data.pagination.total);
-        setCurrentPage(page); 
+        setTotalPages(response.data.pagination.total ? Math.ceil(response.data.pagination.total / ITEMS_PER_PAGE) : 1);
+        console.log("Total: ", response.data.pagination.total );
+        setCurrentPage(page);
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       toast.error("Failed to load users");
     } finally {
       setLoading(false);
@@ -68,7 +68,7 @@ const DiscoverUsers = () => {
 
   useEffect(() => {
     fetchUsers(1);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery, selectedRole, selectedStatus]);
 
   const clearFilters = () => {
@@ -91,13 +91,20 @@ const DiscoverUsers = () => {
 
     try {
       setSendingMessage(true);
-      const response = await chatAPI.sendDirectMessage(selectedUser.id, messageText, access_token);
+      const response = await chatAPI.sendDirectMessage(
+        selectedUser.id,
+        messageText,
+        access_token
+      );
+
       if (response) {
         toast.success(
           <div className="flex items-center justify-between w-full">
             <span>Message sent successfully!</span>
             <button
-              onClick={() => window.location.href = `/chat?conversationId=${response.conversation.id}`}
+              onClick={() =>
+                (window.location.href = `/chat?conversationId=${response.conversation.id}`)
+              }
               className="ml-4 px-3 py-1 bg-white text-blue-600 rounded text-sm font-medium hover:bg-gray-100"
             >
               Go to Chat
@@ -105,12 +112,11 @@ const DiscoverUsers = () => {
           </div>,
           { autoClose: false }
         );
-      } else {
-        toast.error('Failed to send message');
       }
+
       setMessageText("");
       setShowModal(false);
-    } catch (error) {
+    } catch {
       toast.error('Failed to send message');
     } finally {
       setSendingMessage(false);
@@ -374,7 +380,8 @@ const DiscoverUsers = () => {
                 <div className="flex justify-center items-center gap-2 mt-10">
                   <Button
                     variant="outline"
-                    size="sm"
+                        size="sm"
+                        className="text-black"
                     disabled={currentPage === 1}
                     onClick={() => fetchUsers(currentPage - 1)}
                   >
@@ -403,7 +410,7 @@ const DiscoverUsers = () => {
                     </Button>
                   ))}
 
-                  {currentPage < totalPages - 2 && (
+                  {currentPage < (totalPages - 2) && (
                     <>
                       <span className="text-gray-500">…</span>
                       <Button variant="outline" size="sm" onClick={() => fetchUsers(totalPages)}>
@@ -414,7 +421,8 @@ const DiscoverUsers = () => {
 
                   <Button
                     variant="outline"
-                    size="sm"
+                        size="sm"
+                        className="text-black"
                     disabled={currentPage === totalPages}
                     onClick={() => fetchUsers(currentPage + 1)}
                   >

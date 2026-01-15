@@ -196,7 +196,6 @@ export default function Login() {
 
     setIsLoading(true)
     try {
-      console.log(formData);
       const result = await dispatch(loginUser(formData)).unwrap();
       
       if (result.success) { 
@@ -211,18 +210,18 @@ export default function Login() {
         }, 1000);
         
       } else {
-        
         setErrors(prev => ({
           ...prev,
-          submit: result.error || "Login failed"
+          submit: result?.message || result?.error || "Login failed"
         }))
+        
       }
     } catch (error) {
       // console.error('Login error:', error)
       // console.log('Error response data:', error.response?.data);
       setErrors(prev => ({
         ...prev,
-        submit: error?.response?.data?.message || "An error occurred during login"
+        submit: error?.message || "An error occurred during login"
       }))
     } finally {
       setIsLoading(false)

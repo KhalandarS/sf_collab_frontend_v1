@@ -29,7 +29,6 @@ const useFetchAdminData = (headers) => {
       if (!headers) {
         throw new Error('Authorization headers are required to fetch admin data');
       }
-      console.log('Got it');
       setLoading(true);
       const results = await Promise.allSettled([
         axios.get(`${API_BASE_URL}/users`, { headers }),
@@ -43,7 +42,6 @@ const useFetchAdminData = (headers) => {
         axios.get(`${API_BASE_URL}/achievements`, { headers }),
         axios.get(`${API_BASE_URL}/permissions`, { headers }),
       ]);
-      console.log('Admin data fetch results:', results);
       const getData = (result) => result.status === 'fulfilled' ? (result.value.data?.data || []) : [];
       console.log({
         users: getData(results[0]).users,

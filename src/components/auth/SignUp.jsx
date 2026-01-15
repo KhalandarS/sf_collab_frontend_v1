@@ -258,7 +258,6 @@ export default function SignUp() {
             navigate(`/verify-email?token=${response.verification_token}`);
             toast.info("Verification code sent to your email, continue to verify.");
         }
-        console.log(result);
       }else {
         setLoaderState(false);
       

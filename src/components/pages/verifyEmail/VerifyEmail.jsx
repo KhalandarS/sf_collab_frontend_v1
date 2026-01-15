@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { Mail, CheckCircle, ArrowRight, Lock } from "lucide-react";
 import { API_URL } from "@/utils/config";
 import { authAPI } from "@/services/auth/authAPI";
 import useCountdown from "@/components/waitlist/components/hooks/useCountdown";
+import { updateUser } from "@/services/auth/authSlice";
 
 "use client";
 
 
 const VerifyEmail = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, access_token } = useSelector((state) => state.auth);
   const [queryParams] = useSearchParams()
@@ -51,6 +53,7 @@ const VerifyEmail = () => {
       if (response.data.verified) {
         setVerified(true);
         toast.success("Email verified successfully!");
+        dispatch(updateUser({ ...user, isEmailVerified: true }));
         setTimeout(() => navigate("/dashboard"), 2000);
       }
       else {

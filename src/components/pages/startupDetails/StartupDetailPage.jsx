@@ -36,6 +36,8 @@ import ShinyText from '../../ui/ShinyText';
 import { useSelector } from 'react-redux';
 import { startupAPI } from './startUpAPI';
 import { toast } from 'react-toastify';
+import { getProfilePicture } from '@/utils/getProfilePicture';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -102,22 +104,18 @@ const StartupDetailPage = () => {
   
       const args = {
         startup_id: id,
-        user_id: user?.id
+        per_page: 100,
+        page: 1
       }
       const startupResult = await startupAPI.getStartup(id, token).catch(err => ({ success: false, error: err }));
-      const membersResult = await startupAPI.getMembers(token, args).catch(err => ({ success: false, error: err }));
+      const membersResult = await startupAPI.getMembersByStartupId(id, token, args).catch(err => ({ success: false, error: err }));
       const documentsResult = await startupAPI.getDocuments(id, token).catch(err => ({ success: false, error: err }));
       const statsResult = await startupAPI.getStats(id, token).catch(err => ({ success: false, error: err }));
-
       const startupData = startupResult.success ? startupResult : { success: false, data: null };
       const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
       const documentsData = documentsResult.success ? documentsResult : { success: false, data: { documents: [] } };
       const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
-      console.log(startupData);
 
-      console.log(membersData);
-      console.log(documentsData);
-      console.log(statsData);
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) setMembers(membersData.data.members);
       if (documentsData.success) setDocuments(documentsData.data.documents);
@@ -273,7 +271,6 @@ const StartupDetailPage = () => {
   useEffect(() => {
 
     if (user && members.length > 0) {
-      console.log(members);
       setIsCreator(members.find(m => m.userId === user?.id && ['creator', 'founder'].includes(m.role)) !== undefined);
     }
   }, [members, user]);
@@ -1216,15 +1213,15 @@ const CTASection = ({ onJoinClick }) => (
 
 // Modal Components
 const JoinRequestModal = ({ isOpen, onClose, startupName }) => {
+  const { user } = useSelector((state) => state.auth);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
+    name: user ? `${user.firstName} ${user.lastName}` : "",
+    email: user ? user.email : "",
     message: "",
     portfolio: "",
-    linkedin: "",
-    github: ""
+    linkedin: user?.profile?.socialLinks?.linkedin || "",
+    github: user?.profile?.socialLinks?.github || ""
   });
-
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -1351,68 +1348,112 @@ const JoinRequestModal = ({ isOpen, onClose, startupName }) => {
   );
 };
 
-const AddMemberModal = ({ isOpen, onClose, onSubmit, formData, onFormChange }) => (
-  <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="max-w-md bg-gray-800 border-gray-700">
-      <DialogHeader>
-        <DialogTitle className="text-white">Add Team Member</DialogTitle>
-      </DialogHeader>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="text-sm text-gray-300 mb-2 block">First Name</label>
-            <Input
-              required
-              value={formData.first_name}
-              onChange={(e) => onFormChange({ ...formData, first_name: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
-            />
+function AddMemberModal({ isOpen, onClose, onSubmit, formData, onFormChange }) {
+  const [userResults, setUserResults] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (formData.first_name || formData.last_name) {
+        try {
+          const response = await usersAPI.getAll({
+            search: formData.first_name || formData.last_name,
+            page: 1,
+            per_page: 10
+          });
+          
+          if (response.success && response.data?.users) {
+            setUserResults(response.data.users);
+          }
+        } catch (error) {
+          console.error('Error fetching users:', error);
+        }
+      }
+    }, 500);
+    
+    return () => clearTimeout(timer);
+  }, [formData.first_name, formData.last_name]);
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md bg-gray-800 border-gray-700">
+        <DialogHeader>
+          <DialogTitle className="text-white">Add Team Member</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={onSubmit} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-sm text-gray-300 mb-2 block">First Name</label>
+              <Input
+                required={!selectedUser}
+                value={formData.first_name}
+                onChange={(e) => onFormChange({ ...formData, first_name: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-300 mb-2 block">Last Name</label>
+              <Input
+                required={!selectedUser}
+                value={formData.last_name}
+                onChange={(e) => onFormChange({ ...formData, last_name: e.target.value })}
+                className="bg-gray-700 border-gray-600 text-white"
+              />
+            </div>
           </div>
+          <div className='flex flex-col gap-2 max-h-50 overflow-y-auto'>
+            {userResults.map((user,) => (
+              <div
+                onClick={() => {
+                  setSelectedUser(user.id)
+                  onFormChange({
+                    user_id: user.id,
+                    first_name: user.firstName,
+                    last_name: user.lastName,
+                  })
+                }}
+                key={user.id} className={`${selectedUser === user.id ? 'bg-blue-400/70 rounded-lg p-2' : 'bg-gray-700/50'} flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer`}>
+                <Avatar className="w-8 h-8">
+                  <AvatarImage src={getProfilePicture(user)} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold">
+                    {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
+                  <p className="text-gray-400 text-sm">{user.roles.join(' ')}</p>
+                </div>
+              </div>
+            ))}
+            </div>
+          
           <div>
-            <label className="text-sm text-gray-300 mb-2 block">Last Name</label>
-            <Input
-              required
-              value={formData.last_name}
-              onChange={(e) => onFormChange({ ...formData, last_name: e.target.value })}
-              className="bg-gray-700 border-gray-600 text-white"
-            />
+            <label className="text-sm text-gray-300 mb-2 block">Role</label>
+            <Select value={formData.role} onValueChange={(value) => onFormChange({ ...formData, role: value })}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-600">
+                <SelectItem value="member" className="text-white">Member</SelectItem>
+                <SelectItem value="founder" className="text-white">Builder</SelectItem>
+                <SelectItem value="advisor" className="text-white">Founder</SelectItem>
+                <SelectItem value="advisor" className="text-white">Investor</SelectItem>
+                <SelectItem value="advisor" className="text-white">Influencer</SelectItem>
+
+              </SelectContent>
+            </Select>
           </div>
-        </div>
-        <div>
-          <label className="text-sm text-gray-300 mb-2 block">User ID</label>
-          <Input
-            required
-            type="number"
-            value={formData.user_id}
-            onChange={(e) => onFormChange({ ...formData, user_id: e.target.value })}
-            className="bg-gray-700 border-gray-600 text-white"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-300 mb-2 block">Role</label>
-          <Select value={formData.role} onValueChange={(value) => onFormChange({ ...formData, role: value })}>
-            <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              <SelectItem value="member" className="text-white">Member</SelectItem>
-              <SelectItem value="founder" className="text-white">Founder</SelectItem>
-              <SelectItem value="advisor" className="text-white">Advisor</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-black">
-            Cancel
-          </Button>
-          <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-            Add Member
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
+          <div className="flex gap-3 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-black">
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+              Add Member
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const UploadDocumentModal = ({ isOpen, onClose, onSubmit, formData, onFormChange }) => (
   <Dialog open={isOpen} onOpenChange={onClose}>

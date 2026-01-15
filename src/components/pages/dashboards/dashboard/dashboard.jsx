@@ -38,6 +38,7 @@ import InfluencerSection from "./InfluencerSection";
 import AdminSection from "./AdminSection";
 import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../dashboardChangeSection";
+import DonationSection from "./DonationSection";
 const Dashboard = ({
   activeRole, setActiveRole, userRoles
 }) => {
@@ -117,6 +118,7 @@ const Dashboard = ({
     const stored = localStorage.getItem('preferences:showInfluencerInfo');
     return stored === 'true';
   });
+  
   const [showJobApplication, setShowJobApplication] = useState(() => {
     const stored = localStorage.getItem('preferences:showJobApplication');
     return stored === 'true';
@@ -130,10 +132,7 @@ const Dashboard = ({
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-        <div className="flex justify-center items-center p-4">
-          <p className="text-lg">We want to hear from you! If you like what we do, consider donating.</p>
-          <Link to="/donate" className="ml-4 text-blue-500 underline">Donate</Link>
-        </div>
+        <DonationSection />
         <DashboardChangeSection sections={userRoles.map(role => ({
           id: role,
           label: role.charAt(0).toUpperCase() + role.slice(1)

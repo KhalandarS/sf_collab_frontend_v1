@@ -134,7 +134,22 @@ export const startupAPI = {
     })
     return response.data
   },
-
+  getMembersByStartupId: async (startupId, accessToken, params) => {
+    const queryParams = new URLSearchParams()
+    if (params) {
+      if (params.startup_id) queryParams.append('startup_id', params.startup_id)
+      if (params.page) queryParams.append('page', params.page)
+      if (params.per_page) queryParams.append('per_page', params.per_page)
+      if (params.user_id) queryParams.append('user_id', params.user_id)
+      if (params.is_active !== undefined) queryParams.append('is_active', params.is_active)
+    }
+    const response = await api.get(`/startup-members?${queryParams.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    })
+    return response.data
+  },
   addMember: async (startupId, memberData, accessToken) => {
     const response = await api.post(`/startups/${startupId}/members`, memberData, {
       headers: {

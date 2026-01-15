@@ -58,6 +58,7 @@ export function WaitlistSignup() {
   useEffect(() => {
     async function fetchTotalCount() {
       const result = await waitlistAPI.getTotalCount()
+      console.log(result, "Total");
       setTotalCount(result.total)
       setMaxCount(result.max_allowed)
     }

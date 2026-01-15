@@ -29,7 +29,9 @@ const AdminDashboard = () => {
   const { access_token, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [startups, setStartups] = useState([]);
+  const [totalStartups, setTotalStartups] = useState(0);
   const [feedback, setFeedback] = useState([]);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -99,9 +101,11 @@ const AdminDashboard = () => {
       const usersData = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.users || [];
       const startupsData = Array.isArray(startupsRes.data.data) ? startupsRes.data.data : startupsRes.data.data.startups || [];
       const feedbackData = Array.isArray(feedbackRes.data.data) ? feedbackRes.data.data : feedbackRes.data.data.feedback || [];
-      console.log(usersData);
+      console.log(usersRes.data.pagination?.total);
       setUsers(usersData);
+      setTotalUsers(usersRes.data.pagination?.total || usersData.length);
       setStartups(startupsData);
+      setTotalStartups(startupsRes.data.pagination?.total || startupsData.length);
       setFeedback(feedbackData);
       setStats({
         totalUsers: usersData.length,
@@ -184,8 +188,8 @@ const AdminDashboard = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {[
-            { label: 'Total Users', value: stats.totalUsers, icon: '👥', color: 'from-green-500 to-green-600', accent: 'green' },
-            { label: 'Total Startups', value: stats.totalStartups, icon: '🚀', color: 'from-blue-500 to-blue-600', accent: 'blue' },
+            { label: 'Total Users', value: totalUsers, icon: '👥', color: 'from-green-500 to-green-600', accent: 'green' },
+            { label: 'Total Startups', value: totalStartups, icon: '🚀', color: 'from-blue-500 to-blue-600', accent: 'blue' },
             { label: 'Total Feedback', value: stats.totalFeedback, icon: '💬', color: 'from-yellow-500 to-yellow-600', accent: 'yellow' },
             { label: 'Revenue', value: `$${stats?.totalRevenue || 0}`, icon: '💰', color: 'from-purple-500 to-purple-600', accent: 'purple' },
           ].map((stat, idx) => (
@@ -337,7 +341,8 @@ const AdminDashboard = () => {
                   <div className="text-xs text-gray-400">✅ Verified {u.isEmailVerified ? '•' : '× Not'} • {new Date(u.createdAt).toLocaleDateString()}</div>
                 </li>
               ))}
-            </ul>
+              </ul>
+              
           </div>
           <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50">
             <h2 className="text-xl font-semibold mb-4 text-gray-100">🚀 Startups List</h2>

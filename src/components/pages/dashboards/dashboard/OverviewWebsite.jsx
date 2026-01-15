@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 
 export default function OverviewWebsite() {
-  const [accepted, setAccepted] = useState(localStorage.getItem("overviewAccepted") === "false");
+  const [accepted, setAccepted] = useState(localStorage.getItem("overviewAccepted") === "true");
   useEffect(() => {
     localStorage.setItem("overviewAccepted", accepted);
   }, [accepted]);

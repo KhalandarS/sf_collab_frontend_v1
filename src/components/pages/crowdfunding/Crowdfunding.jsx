@@ -3,19 +3,41 @@ import axios from "axios";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 export default function CrowdfundingSection() {
   const [roles, setRoles] = useState([]); // builder / founder
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
+  const [totalCrowdfunding, setTotalCrowdfunding] = useState(0);
+  const { access_token } = useSelector((state) => state.auth);
+  useEffect(() => {
+    const fetchTotalCrowdfunding = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/payments/total-crowdfunding`, {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+        );
+        
+        setTotalCrowdfunding(res?.data?.data?.total_crowdfunding || 0);
+      } catch (err) {
+        console.error("❌ Failed to load total crowdfunding amount", err);
+      }
+    };
 
+    fetchTotalCrowdfunding();
+  }, [access_token]);
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
+        console.log(res);
         if (res.data.length > 0) {
           const plan = res.data[0];
+          console.log(plan, "Plan");
           setRoles(plan.roles || []);
           setCurrency(plan.currency?.toUpperCase() || "USD");
         }
@@ -41,6 +63,12 @@ export default function CrowdfundingSection() {
   }
 
   const activeRole = roles[activeIndex] || { tiers: [] };
+  const FUNDING_GOAL = 250000; // USD goal (change anytime)
+
+const progressPercent = Math.min(
+  Math.round((totalCrowdfunding / FUNDING_GOAL) * 100),
+  100
+);
 
   return (
     <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
@@ -54,6 +82,39 @@ export default function CrowdfundingSection() {
             Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
           </p>
         </header>
+        {/* CROWDFUNDING METER */}
+        <div className="max-w-3xl mx-auto space-y-4">
+          <div className="flex justify-between text-sm text-white/70">
+            <span>
+              Raised{" "}
+              <span className="text-white font-semibold">
+                {formatPrice(totalCrowdfunding)}
+              </span>
+            </span>
+            <span>
+              Goal{" "}
+              <span className="text-white font-semibold">
+                {formatPrice(FUNDING_GOAL)}
+              </span>
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="relative h-4 rounded-full bg-neutral-800 overflow-hidden border border-neutral-700">
+            <div
+              className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_20px_rgba(139,92,246,0.6)] transition-all duration-700"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+
+          {/* Percentage + Hype */}
+          <div className="flex justify-between items-center text-xs text-white/60">
+            <span>{progressPercent}% funded</span>
+            <span className="text-indigo-400 font-medium">
+              Early supporters get permanent advantages 🚀
+            </span>
+          </div>
+        </div>
 
         {/* ROLE TOGGLE */}
         <div className="relative mt-12 bg-neutral-900 border border-neutral-800 rounded-full flex p-1 max-w-md mx-auto">
@@ -65,9 +126,8 @@ export default function CrowdfundingSection() {
             <button
               key={role.role}
               onClick={() => setActiveIndex(i)}
-              className={`relative z-10 w-1/2 py-3 text-sm font-semibold transition ${
-                activeIndex === i ? "text-white" : "text-neutral-400"
-              }`}
+              className={`relative z-10 w-1/2 py-3 text-sm font-semibold transition ${activeIndex === i ? "text-white" : "text-neutral-400"
+                }`}
             >
               {role.role.charAt(0).toUpperCase() + role.role.slice(1)}
             </button>

@@ -10,63 +10,164 @@ const api = axios.create({
   }
 });
 
+api.interceptors.request.use(
+  (config) => {
+    // console.log('API Request:', config.method?.toUpperCase(), config.url)
+    return config
+  },
+  (error) => {
+    console.error('API Request Error:', error)
+    return Promise.reject(error)
+  }
+)
+
 export class authAPI {
   static async loginRequest(credentials) {
-    // We only need '/auth/login' because 'api' already knows the baseURL
-    const { data } = await api.post('/auth/login', credentials);
-    return data;
+    try {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Login failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Login error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async loginGoogleRequest(credentials) {
-    const { data } = await api.post('/auth/google/login', credentials);
-    return data;
+    try {
+      const response = await api.post('/auth/google/login', credentials);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Google login failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Google login error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async registerRequest(userData) {
-    const { data } = await api.post('/auth/register', userData);
-    return data;
+    try {
+      const response = await api.post('/auth/register', userData);
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Registration failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Registration error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async refreshTokenRequest(refreshToken) {
-    const { data } = await api.post('/auth/refresh', { refreshToken });
-    return data;
+    try {
+      const response = await api.post('/auth/refresh', { refreshToken });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Token refresh failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Token refresh error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async getProfileRequest(token) {
-    const { data } = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    return data;
+    try {
+      const response = await api.get('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Get profile failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Get profile error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async logoutRequest(token) {
-    await api.post('/auth/logout', {}, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const response = await api.post('/auth/logout', {}, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Logout failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Logout error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async sendVerificationCodeRequest(accessToken) {
-    const { data } = await api.post('/auth/send-verification-code', {}, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    return data;
+    try {
+      const response = await api.post('/auth/send-verification-code', {}, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Send verification code failed:", error.response.data);
+        return error.response;
+      } else {
+        console.error("Send verification code error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async verifyEmailRequest(code, token) {
-    const { data } = await api.post('/auth/verify-code', { code }, {
+    try {
+      const response = await api.post('/auth/verify-code', { code }, {
         headers: { Authorization: `Bearer ${token}` },
-    });
-    return data;
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Email verification failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Email verification error:", error.message);
+        return error;
+      }
+    }
   }
 
   static async setupProfileRequest(profileData, token) {
-    const { data } = await api.post('/users/profile-setup', profileData, {
-      headers: { 
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return data;
+    try {
+      const response = await api.post('/users/profile-setup', profileData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (error.response) {
+        console.error("Setup profile failed:", error.response.data);
+        return error.response.data;
+      } else {
+        console.error("Setup profile error:", error.message);
+        return error;
+      }
+    }
   }
 }
 

@@ -210,11 +210,14 @@ useEffect(() => {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      if (!formData.firstName || !formData.lastName) {
-        throw new Error("First and Last name are required");
+      if (!formData.firstName) {
+        throw new Error("First name is required");
       }
       if (!formData.email) {
         throw new Error("Email is required");
+      }
+      if ((formData?.profile?.bio || '').length > 300) {
+        throw new Error("Bio cannot exceed 300 characters");
       }
       if (formData.roles.length === 0) {
         throw new Error("At least one role must be selected");
@@ -230,7 +233,7 @@ useEffect(() => {
             </Link>
           </div>
         )
-        return
+        formData.roles = formData.roles.filter(role => role !== 'influencer');
       }
       if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
         toast.error(

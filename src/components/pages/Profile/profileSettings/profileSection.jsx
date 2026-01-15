@@ -5,6 +5,7 @@ import { usersAPI } from "@/utils/APIs/userApi";
 import { useSelector } from "react-redux";
 import { getRenderImageUrl } from "./getRenderImageUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { builderFocusOptions } from "./builderFocus";
 
 /* ---------------------- ProfileSection ---------------------- */
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
@@ -162,36 +163,40 @@ const handleAutoDetectTimezone = () => {
         }
       </div>
       {formData.roles?.includes("builder") && (
-  <div>
-    <label className="block text-sm font-medium text-gray-400 mb-2">
-      Builder Focus
-    </label>
+        <div>
+          <label className="block text-sm font-medium text-gray-400 mb-2">
+            Builder Focus
+          </label>
 
-    <select
-      value={formData.preferences.builderPreferences || ""}
-      onChange={(e) =>
-        setFormData((prev) => ({
-          ...prev,
-          preferences: {
-            ...prev.preferences,
-            builderPreferences: e.target.value,
-          }
-        }))
-      }
-      className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3"
-    >
-      <option value="" disabled>
-        Select an option
-      </option>
-      <option value="development">Development</option>
-      <option value="marketing">Marketing</option>
-    </select>
-  </div>
-)}
+          <select
+            value={formData.preferences.builderPreferences || ""}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                preferences: {
+                  ...prev.preferences,
+                  builderPreferences: e.target.value,
+                }
+              }))
+            }
+            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3"
+          >
+            <option value="" disabled>
+              Select an option
+            </option>
+            {builderFocusOptions.map((option) => (
+              <option key={option} value={option}>
+                {option.charAt(0).toUpperCase() + option.slice(1)}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
         <textarea value={formData.profile.bio || ''} onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))} rows={4} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
+        <p>{(formData.profile.bio || '').length}/300 characters</p>
       </div>
       <div className="grid grid-cols-2 gap-6">
         <div>
@@ -234,13 +239,13 @@ const handleAutoDetectTimezone = () => {
       <div>
         <label className="block text-sm font-medium text-gray-400 mb-2">Social Links</label>
         <div className="grid grid-cols-2 gap-4">
-          {["linkedin","twitter","github","portfolio","facebook","instagram","youtube","dribbble","behance"].map(platform => (
+          {["linkedin", "twitter", "github", "portfolio", "facebook", "instagram", "youtube", "dribbble", "behance"].map(platform => (
             <input
               key={platform}
               type="text"
               placeholder={platform}
               value={formData.profile.socialLinks?.[platform] || ''}
-              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, socialLinks: { ...(prev.profile.socialLinks || {}), [platform]: e.target.value } } }))} 
+              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, socialLinks: { ...(prev.profile.socialLinks || {}), [platform]: e.target.value } } }))}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 capitalize"
             />
           ))}

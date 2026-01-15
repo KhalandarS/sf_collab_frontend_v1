@@ -248,12 +248,13 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="mouseenter"
+                trigger="click"
                 placement="bottom"
                 interactive={true}
                 delay={[100, 150]} // small delay to avoid flicker
                 appendTo={document.body}
                 onClickOutside={() => { }}
+                
               >
                 <button className="relative p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
                   <BellIcon />
@@ -307,7 +308,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="mouseenter"
+                trigger="click"
                 placement="bottom"
                 interactive={true}
                 delay={[100, 150]} // small delay to avoid flicker

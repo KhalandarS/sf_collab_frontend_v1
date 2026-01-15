@@ -27,6 +27,8 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { isUserProfileComplete } from "@/utils/getUserComplete";
 import Navbar from "@/components/sections/NavBar";
+import EmailVerifyPopUp from "./emailVerifyPopUp";
+import CompleteEmailPopUp from "./CompleteEmailPopUp";
 
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
@@ -198,35 +200,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
         }}
       />
-      {
-        isCompletePopupVisible && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
-            <div className="bg-gray-800 text-white p-6 rounded-lg max-w-md mx-4">
-              <h2 className="text-2xl font-semibold mb-4">Complete Your Profile</h2>
-              <p className="mb-4">
-                It looks like your profile is incomplete. Please take a moment to update your information to get the best experience.
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700"
-                  onClick={() => setCompletePopupVisible(false)}
-                >
-                  Later
-                </button>
-                <button
-                  className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
-                  onClick={() => {
-                    setCompletePopupVisible(false);
-                    navigate("/user-profile?page=settings");
-                  }}
-                >
-                  Complete Now
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-    }
+
+      {/* Email Verification Banner */}
+      {user && !user.is_email_verified && <EmailVerifyPopUp />}
+
+      {/* Profile Completion Modal */}
+      {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setCompletePopupVisible} />}
+
       {/* Top Nav */}
       {!isRootPath && (
         <div
