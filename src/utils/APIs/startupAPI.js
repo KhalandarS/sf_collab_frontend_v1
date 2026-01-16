@@ -42,7 +42,7 @@ api.interceptors.response.use(
 export const startupsAPI = {
   // Get all startups with filters
   getAll: async (params = {}) => {
-    const response = await api.get('/api/startups', {
+    const response = await api.get('/startups', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
@@ -54,13 +54,13 @@ export const startupsAPI = {
 
   // Get single startup
   getById: async (startupId) => {
-    const response = await api.get(`/api/startups/${startupId}`)
+    const response = await api.get(`/startups/${startupId}`)
     return response.data.data
   },
 
   // Register new startup
   register: async (formData) => {
-    const response = await api.post('/api/startups/register', formData, {
+    const response = await api.post('/startups/register', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
@@ -70,26 +70,26 @@ export const startupsAPI = {
 
   // Update startup
   update: async (startupId, data) => {
-    const response = await api.put(`/api/startups/${startupId}`, data)
+    const response = await api.put(`/startups/${startupId}`, data)
     return response.data.data
   },
 
   // Delete startup
   delete: async (startupId) => {
-    const response = await api.delete(`/api/startups/${startupId}`)
+    const response = await api.delete(`/startups/${startupId}`)
     return response.data
   },
 
   // Get startup members
   getMembers: async (startupId) => {
-    const response = await api.get(`/api/startups/${startupId}/members`)
+    const response = await api.get(`/startups/${startupId}/members`)
     return response.data.data
   },
 
   // Add member to startup
   addMember: async (startupId, memberData) => {
     const response = await api.post(
-      `/api/startups/${startupId}/members`,
+      `/startups/${startupId}/members`,
       memberData
     )
     return response.data.data
@@ -98,21 +98,21 @@ export const startupsAPI = {
   // Remove member from startup
   removeMember: async (startupId, memberId) => {
     const response = await api.delete(
-      `/api/startups/${startupId}/members/${memberId}`
+      `/startups/${startupId}/members/${memberId}`
     )
     return response.data
   },
 
   // Get startup documents
   getDocuments: async (startupId) => {
-    const response = await api.get(`/api/startups/${startupId}/documents`)
+    const response = await api.get(`/startups/${startupId}/documents`)
     return response.data.data
   },
 
   // Upload document
   uploadDocument: async (startupId, formData) => {
     const response = await api.post(
-      `/api/startups/${startupId}/documents`,
+      `/startups/${startupId}/documents`,
       formData,
       {
         headers: {
@@ -126,7 +126,7 @@ export const startupsAPI = {
   // Delete document
   deleteDocument: async (startupId, documentId) => {
     const response = await api.delete(
-      `/api/startups/${startupId}/documents/${documentId}`
+      `/startups/${startupId}/documents/${documentId}`
     )
     return response.data
   },
@@ -134,7 +134,7 @@ export const startupsAPI = {
   // Download document
   downloadDocument: async (startupId, documentId) => {
     const response = await api.get(
-      `/api/startups/${startupId}/documents/${documentId}/download`,
+      `/startups/${startupId}/documents/${documentId}/download`,
       {
         responseType: 'blob',
       }
@@ -144,13 +144,13 @@ export const startupsAPI = {
 
   // Get startup stats
   getStats: async (startupId) => {
-    const response = await api.get(`/api/startups/${startupId}/stats`)
+    const response = await api.get(`/startups/${startupId}/stats`)
     return response.data.data
   },
 
   // Get user's startups
   getUserStartups: async (userId, params = {}) => {
-    const response = await api.get(`/api/startups/user/${userId}`, {
+    const response = await api.get(`/startups/user/${userId}`, {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
@@ -162,19 +162,19 @@ export const startupsAPI = {
 
   // Get industries
   getIndustries: async () => {
-    const response = await api.get('/api/startups/industries')
+    const response = await api.get('/startups/industries')
     return response.data.data
   },
 
   // Get stages
   getStages: async () => {
-    const response = await api.get('/api/startups/stages')
+    const response = await api.get('/startups/stages')
     return response.data.data
   },
 
   // Get join requests
   getJoinRequests: async (startupId, params = {}) => {
-    const response = await api.get(`/api/startups/${startupId}/join-requests`, {
+    const response = await api.get(`/startups/${startupId}/join-requests`, {
       params: {
         status: params.status || 'pending',
         ...params,
@@ -182,11 +182,22 @@ export const startupsAPI = {
     })
     return response.data.data
   },
+  // Send a join request as a regular user
+  sendJoinRequest: async (startupId, payload) => {
+    try {
+      // Use the axios instance which already has the correct baseURL (/api in dev)
+      const response = await api.post(`/startups/${startupId}/join-request`, payload)
+      return response.data.data
+    } catch (error) {
+      console.error('Error sending join request:', error)
+      throw error
+    }
+  },
 
   // Accept join request
   acceptJoinRequest: async (startupId, requestId) => {
     const response = await api.post(
-      `/api/startups/${startupId}/join-requests/${requestId}/accept`
+      `/startups/${startupId}/join-requests/${requestId}/accept`
     )
     return response.data.data
   },
@@ -194,7 +205,7 @@ export const startupsAPI = {
   // Reject join request
   rejectJoinRequest: async (startupId, requestId) => {
     const response = await api.post(
-      `/api/startups/${startupId}/join-requests/${requestId}/reject`
+      `/startups/${startupId}/join-requests/${requestId}/reject`
     )
     return response.data.data
   },
@@ -202,7 +213,7 @@ export const startupsAPI = {
   // Cancel own join request
   cancelJoinRequest: async (requestId) => {
     const response = await api.post(
-      `/api/startups/join-requests/${requestId}/cancel`
+      `/startups/join-requests/${requestId}/cancel`
     )
     return response.data.data
   },

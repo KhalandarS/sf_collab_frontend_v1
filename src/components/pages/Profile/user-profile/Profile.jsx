@@ -21,6 +21,7 @@ const Profile = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const { user: authUser, access_token } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [queryParams] = useSearchParams();
   const [portfolio, setPortfolio] = useState([]);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -35,11 +35,146 @@ import ShinyText from '../../ui/ShinyText';
 
 import { useSelector } from 'react-redux';
 import { startupAPI } from './startUpAPI';
+import { startupsAPI } from '@/utils/APIs/startupAPI';
 import { toast } from 'react-toastify';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { usersAPI } from '@/utils/APIs/userAPI';
+import SendJoinRequestModal from './SendJoinRequestModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+/**
+ * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
+ * 
+ * This modal displays pending join requests from users who want to join the startup.
+ * The founder/creator can accept or reject each request.
+ */
+const ManageJoinRequestsModal = ({
+  isOpen,
+  onClose,
+  joinRequests = [],
+  loading = false,
+  onAccept,
+  onReject,
+  founderName = 'You',
+  startupName = '',
+}) => {
+  const requests = Array.isArray(joinRequests) ? joinRequests : [];
+  const pendingRequests = requests.filter(r => r.status === 'pending' || !r.status);
+  const hasRequests = pendingRequests.length > 0;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl bg-gray-800 border border-white/10 mt-4">
+        <DialogHeader>
+          <DialogTitle className="text-white text-2xl">📋 Manage Join Requests</DialogTitle>
+          <DialogDescription className="text-gray-400">
+            {startupName && <span className="block font-semibold text-white/80 mb-2">For: <span className="text-blue-400">{startupName}</span></span>}
+            Review and respond to requests from people who want to join your team
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Info Box showing who is making decisions */}
+        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
+          <p className="text-xs text-blue-300">
+            ✓ <span className="font-semibold text-white">{founderName}</span> (Founder) - You are reviewing and can accept/reject requests
+          </p>
+        </div>
+
+        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+          {loading ? (
+            <div className="text-center py-20 text-sm text-gray-400">
+              Loading join requests…
+            </div>
+          ) : !hasRequests ? (
+            <div className="text-center py-12">
+              <div className="text-gray-400 text-sm mb-2">✨ No pending requests</div>
+              <p className="text-xs text-gray-500">When someone requests to join, they'll appear here</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-xs text-gray-400 font-semibold px-1">
+                {pendingRequests.length} Request{pendingRequests.length !== 1 ? 's' : ''} Pending
+              </p>
+              {requests.map((request) => {
+                // Handle both camelCase (backend) and snake_case field names
+                const requesterName = request.full_name || 
+                  `${request.firstName || request.first_name || ''} ${request.lastName || request.last_name || ''}`.trim() || 
+                  'Anonymous Builder';
+                const requestedRole = request.role || 'Team Member';
+                const message = request.message || 'No message provided';
+                const createdDate = request.createdAt || request.created_at;
+                
+                return (
+                  <Card key={request.id || request.request_id} className="bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
+                    <CardContent className="pt-4 pb-3 px-4">
+                      {/* Requester Info */}
+                      <div className="mb-3 pb-3 border-b border-white/10">
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm">
+                            {requesterName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-white">
+                              {requesterName}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Requesting as: <span className="text-yellow-400 font-semibold">{requestedRole}</span>
+                            </p>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-300 italic bg-white/5 rounded px-2 py-2">
+                          "{message}"
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Requested on: {createdDate ? new Date(createdDate).toLocaleDateString() : 'N/A'}
+                        </p>
+                      </div>
+
+                      {/* Action Info */}
+                      <div className="text-xs text-gray-400 mb-3">
+                        <p>As <span className="text-blue-300 font-semibold">{founderName}</span>, you can:</p>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 text-xs"
+                          onClick={() => onReject?.(request)}
+                          disabled={!onReject}
+                        >
+                          <XIcon className="w-4 h-4 mr-1" />
+                          Reject
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="flex-1 text-xs bg-green-600 hover:bg-green-700"
+                          onClick={() => onAccept?.(request)}
+                          disabled={!onAccept}
+                        >
+                          <CheckCircle2Icon className="w-4 h-4 mr-1" />
+                          Accept
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="pt-4 border-t border-white/5">
+          <Button variant="ghost" onClick={onClose} className="text-sm text-gray-300">
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 const StartupDetailPage = () => {
   const { id } = useParams();
@@ -51,6 +186,7 @@ const StartupDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isSendJoinRequestModalOpen, setIsSendJoinRequestModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
@@ -62,7 +198,6 @@ const StartupDetailPage = () => {
   
   const [showAlert, setShowAlert] = useState(false);
   
-  // Mock data for new tabs
   const [projectGoals, setProjectGoals] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   
@@ -70,7 +205,6 @@ const StartupDetailPage = () => {
   
   const {user,access_token,refreshToken} = useSelector((state) => state.auth);
 
-  // Form states
   const [joinForm, setJoinForm] = useState({
     name: '',
     email: '',
@@ -91,6 +225,9 @@ const StartupDetailPage = () => {
     document: null,
     document_type: 'general'
   });
+
+  const [joinRequests, setJoinRequests] = useState([]);
+  const joinRequestCountRef = useRef(0);
 
    // Fetch startup data
   const fetchStartupData = async () => {
@@ -117,7 +254,10 @@ const StartupDetailPage = () => {
       const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
 
       if (startupData.success) setStartup(startupData.data.startup);
-      if (membersData.success) setMembers(membersData.data.members);
+      if (membersData.success) {
+        console.log('👥 Members fetched:', membersData.data.members);
+        setMembers(membersData.data.members);
+      }
       if (documentsData.success) setDocuments(documentsData.data.documents);
       if (statsData.success) setStats(statsData.data.stats || {});
       
@@ -129,6 +269,49 @@ const StartupDetailPage = () => {
       setLoading(false);
     }
   };
+
+  const fetchJoinRequests = useCallback(async () => {
+    console.log('🚀 fetchJoinRequests called. Checking conditions...');
+    console.log('  isCreator:', isCreator);
+    console.log('  access_token:', access_token ? '✅ Present' : '❌ Missing');
+    console.log('  id:', id);
+    
+    if (!isCreator || !access_token || !id) {
+      console.log('⏭️ Skipping fetchJoinRequests:', { isCreator, hasToken: !!access_token, id });
+      setJoinRequests([]);
+      return;
+    }
+    try {
+      console.log('📡 Fetching join requests for startup:', id, { isCreator, hasToken: !!access_token });
+      const response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
+      console.log('📦 Raw API response:', response);
+      console.log('📦 Response type:', typeof response, 'Is array?', Array.isArray(response));
+      console.log('📦 Response keys:', Object.keys(response || {}));
+      
+      // Handle multiple possible response structures from backend
+      // The API returns response.data.data which should be { join_requests: [...], ... }
+      let pending = [];
+      if (Array.isArray(response)) {
+        console.log('✅ Response is direct array');
+        pending = response; // Direct array
+      } else if (response?.join_requests && Array.isArray(response.join_requests)) {
+        console.log('✅ Found join_requests key with array:', response.join_requests.length, 'items');
+        pending = response.join_requests; // Wrapped in join_requests key
+      } else if (response?.requests && Array.isArray(response.requests)) {
+        console.log('✅ Found requests key with array:', response.requests.length, 'items');
+        pending = response.requests; // Wrapped in requests key
+      } else {
+        console.warn('⚠️ Could not find requests in response. Full response:', JSON.stringify(response, null, 2));
+      }
+      console.log('✅ Join requests processed:', pending.length, 'items');
+      setJoinRequests(pending);
+    } catch (error) {
+      console.error('❌ Failed to load join requests:', error);
+      console.error('  Error message:', error.message);
+      console.error('  Error response:', error.response?.data);
+      setJoinRequests([]);
+    }
+  }, [isCreator, access_token, id]);
 
 
   useEffect(() => {
@@ -268,12 +451,107 @@ const StartupDetailPage = () => {
       toast.error('Error removing member');
     }
   };
-  useEffect(() => {
-
-    if (user && members.length > 0) {
-      setIsCreator(members.find(m => m.userId === user?.id && ['creator', 'founder'].includes(m.role)) !== undefined);
+  
+  const handleAcceptJoinRequest = async (request) => {
+    const requestId = request?.id || request?.request_id;
+    if (!requestId) return;
+    try {
+      console.log('✅ Accepting join request:', requestId, 'from:', request?.full_name || `${request?.first_name} ${request?.last_name}`);
+      await startupsAPI.acceptJoinRequest(id, requestId);
+      toast.success(`${request?.full_name || `${request?.first_name ?? ''} ${request?.last_name ?? ''}`.trim() || 'Member'} has been added.`);
+      // Remove from list immediately for better UX
+      setJoinRequests(prev => prev.filter(r => (r.id || r.request_id) !== requestId));
+      // Refresh data to ensure consistency
+      fetchJoinRequests();
+      fetchStartupData();
+    } catch (error) {
+      console.error('❌ Accept join request failed', error);
+      toast.error('Unable to accept the request right now.');
     }
-  }, [members, user]);
+  };
+
+  const handleRejectJoinRequest = async (request) => {
+    const requestId = request?.id || request?.request_id;
+    if (!requestId) return;
+    try {
+      console.log('🚫 Rejecting join request:', requestId, 'from:', request?.full_name || `${request?.first_name} ${request?.last_name}`);
+      await startupsAPI.rejectJoinRequest(id, requestId);
+      toast.info(`Join request from ${request?.full_name || `${request?.first_name} ${request?.last_name}`} has been rejected.`);
+      // Remove from list immediately for better UX
+      setJoinRequests(prev => prev.filter(r => (r.id || r.request_id) !== requestId));
+      // Refresh data to ensure consistency
+      fetchJoinRequests();
+    } catch (error) {
+      console.error('❌ Reject join request failed', error);
+      toast.error('Unable to reject the request right now.');
+    }
+  };
+  useEffect(() => {
+    if (user && startup) {
+      // Try to get userId from different possible fields
+      const userId = user?.id || user?.userId || user?.user_id;
+      
+      // Check 1: Is user the startup creator?
+      const isStartupCreator = startup?.creator_id === userId;
+      
+      // Check 2: Is user a member with creator/founder role?
+      const isMemberWithRole = members.find(m => m.userId === userId && ['creator', 'founder'].includes(m.role));
+      
+      console.log('🔄 Effect: Checking isCreator', {
+        userExists: !!user,
+        userId,
+        startupCreatorId: startup?.creator_id,
+        isStartupCreator,
+        hasMemberRole: !!isMemberWithRole,
+        allUserFields: Object.keys(user || {}),
+        membersCount: members.length,
+        members: members.map(m => ({ 
+          userId: m.userId, 
+          fullName: m.fullName,
+          role: m.role,
+          matches: m.userId === userId && ['creator', 'founder'].includes(m.role)
+        }))
+      });
+      
+      // User is creator if they are the startup creator OR have member founder role
+      const isCreatorUser = isStartupCreator || !!isMemberWithRole;
+      console.log('🔍 Found creator:', { isStartupCreator, hasMemberRole: !!isMemberWithRole, final: isCreatorUser });
+      setIsCreator(isCreatorUser);
+    } else {
+      console.log('⏭️ Skipping isCreator check:', { userExists: !!user, startupExists: !!startup, memberCount: members.length });
+      setIsCreator(false);
+    }
+  }, [members, user, startup]);
+
+  useEffect(() => {
+    console.log('✓ isCreator effect triggered. isCreator=', isCreator);
+    if (isCreator) {
+      console.log('  → User is creator, calling fetchJoinRequests()');
+      fetchJoinRequests();
+    } else {
+      console.log('  → User is NOT creator, clearing requests');
+      setJoinRequests([]);
+    }
+  }, [isCreator, fetchJoinRequests]);
+
+  // Also fetch when modal opens
+  useEffect(() => {
+    console.log('✓ Modal effect triggered. isJoinModalOpen=', isJoinModalOpen, 'isCreator=', isCreator, 'hasToken=', !!access_token);
+    if (isJoinModalOpen && isCreator && access_token) {
+      console.log('🔄 Modal opened - fetching join requests with token');
+      fetchJoinRequests();
+    }
+  }, [isJoinModalOpen, access_token]);
+
+  useEffect(() => {
+    if (joinRequests.length > 0 && joinRequests.length > joinRequestCountRef.current) {
+      setAlertTitle('Pending Join Requests');
+      setAlertDescription(`You have ${joinRequests.length} pending team request${joinRequests.length > 1 ? 's' : ''}.`);
+      setAlertVariant('warning');
+      setShowAlert(true);
+    }
+    joinRequestCountRef.current = joinRequests.length;
+  }, [joinRequests.length]);
   // Delete startup
   const handleDeleteStartup = async () => {
     try {
@@ -337,6 +615,20 @@ const StartupDetailPage = () => {
             <div className="flex items-center gap-2">
               {isCreator && (
                 <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsJoinModalOpen(true)}
+                    className="relative text-gray-300 hover:text-white"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Join Requests
+                    {joinRequests.length > 0 && (
+                      <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-[10px] font-semibold text-white bg-red-500 rounded-full">
+                        {joinRequests.length}
+                      </span>
+                    )}
+                  </Button>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -384,7 +676,7 @@ const StartupDetailPage = () => {
       {/* Hero Section */}
       <HeroSection 
         startup={startup} 
-        onJoinClick={() => setIsJoinModalOpen(true)}
+        onJoinClick={() => isCreator ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         formatCurrency={formatCurrency}
         getStageBadgeVariant={getStageBadgeVariant}
         setAlertDescription={setAlertDescription}
@@ -495,11 +787,32 @@ const StartupDetailPage = () => {
       </div>
 
       {/* Modals */}
-      <JoinRequestModal 
-        isOpen={isJoinModalOpen}
-        onClose={() => setIsJoinModalOpen(false)}
-        startupName={startup.name}
-      />
+      {isCreator && (
+        <ManageJoinRequestsModal 
+          isOpen={isJoinModalOpen}
+          onClose={() => setIsJoinModalOpen(false)}
+          startupName={startup?.name || 'Your Startup'}
+          founderName={user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.email || 'You'}
+          joinRequests={joinRequests}
+          loading={loading}
+          onAccept={handleAcceptJoinRequest}
+          onReject={handleRejectJoinRequest}
+        />
+      )}
+      
+      {!isCreator && (
+        <SendJoinRequestModal
+          isOpen={isSendJoinRequestModalOpen}
+          onClose={() => setIsSendJoinRequestModalOpen(false)}
+          startupId={id}
+          startupName={startup?.name || ''}
+          onSuccess={() => {
+            setIsSendJoinRequestModalOpen(false);
+            toast.success('Join request sent successfully!');
+          }}
+        />
+      )}
+      
       {isCreator &&
         <>
       <AddMemberModal
@@ -528,8 +841,8 @@ const StartupDetailPage = () => {
       />
       </>
       }
-        {
-            showAlert&&(
+      
+      {showAlert && (
                 <div className="w-full max-w-lg fixed top-46 right-6">
                 <Alert className={'relative '}>
                     
@@ -1211,143 +1524,6 @@ const CTASection = ({ onJoinClick }) => (
   </motion.section>
 );
 
-// Modal Components
-const JoinRequestModal = ({ isOpen, onClose, startupName }) => {
-  const { user } = useSelector((state) => state.auth);
-  const [formData, setFormData] = useState({
-    name: user ? `${user.firstName} ${user.lastName}` : "",
-    email: user ? user.email : "",
-    message: "",
-    portfolio: "",
-    linkedin: user?.profile?.socialLinks?.linkedin || "",
-    github: user?.profile?.socialLinks?.github || ""
-  });
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onClose();
-    // Here you would typically send the join request to your backend
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent style={{zIndex:99999999999999}} className="max-w-2xl bg-gray-800 border-gray-700 mt-3">
-        <DialogHeader>
-          <DialogTitle className="text-2xl text-white">Join {startupName}</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            Tell us about yourself and why you'd like to join our team.
-          </DialogDescription>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-5 mt-4">
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Full Name *
-              </label>
-              <Input
-                required
-                value={formData.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="John Doe"
-                className="h-11 bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 block">
-                Email *
-              </label>
-              <Input
-                required
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="john@example.com"
-                className="h-11 bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-300 mb-2 block">
-              Why do you want to join us? *
-            </label>
-            <Textarea
-              required
-              value={formData.message}
-              onChange={(e) => handleChange('message', e.target.value)}
-              className="w-full min-h-[120px] bg-gray-700 border-gray-600 text-white resize-none"
-              placeholder="Tell us about your interest in our company and what you'd bring to the team..."
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium text-gray-300 mb-2 block">
-              Portfolio / Website
-            </label>
-            <Input
-              value={formData.portfolio}
-              onChange={(e) => handleChange('portfolio', e.target.value)}
-              placeholder="https://yourportfolio.com"
-              className="h-11 bg-gray-700 border-gray-600 text-white"
-            />
-          </div>
-
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Linkedin className="w-4 h-4" />
-                LinkedIn Profile
-              </label>
-              <Input
-                value={formData.linkedin}
-                onChange={(e) => handleChange('linkedin', e.target.value)}
-                placeholder="linkedin.com/in/johndoe"
-                className="h-11 bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-2">
-                <Github className="w-4 h-4" />
-                GitHub Profile
-              </label>
-              <Input
-                value={formData.github}
-                onChange={(e) => handleChange('github', e.target.value)}
-                placeholder="github.com/johndoe"
-                className="h-11 bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="flex-1 border-gray-600 text-black"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Send Request
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
 function AddMemberModal({ isOpen, onClose, onSubmit, formData, onFormChange }) {
   const [userResults, setUserResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -1434,9 +1610,9 @@ function AddMemberModal({ isOpen, onClose, onSubmit, formData, onFormChange }) {
               <SelectContent className="bg-gray-800 border-gray-600">
                 <SelectItem value="member" className="text-white">Member</SelectItem>
                 <SelectItem value="founder" className="text-white">Builder</SelectItem>
-                <SelectItem value="advisor" className="text-white">Founder</SelectItem>
-                <SelectItem value="advisor" className="text-white">Investor</SelectItem>
-                <SelectItem value="advisor" className="text-white">Influencer</SelectItem>
+                <SelectItem value="founder" className="text-white">Founder</SelectItem>
+                <SelectItem value="investor" className="text-white">Investor</SelectItem>
+                <SelectItem value="influencer" className="text-white">Influencer</SelectItem>
 
               </SelectContent>
             </Select>
