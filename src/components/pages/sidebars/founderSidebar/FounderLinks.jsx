@@ -1,4 +1,4 @@
-import { Badge, File } from 'lucide-react';
+import { Badge, BarChart3, File } from 'lucide-react';
 import { FaTasks } from 'react-icons/fa';
 import { FaMoneyBill } from 'react-icons/fa6';
 import { FcFeedback } from 'react-icons/fc';
