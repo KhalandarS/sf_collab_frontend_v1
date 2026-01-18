@@ -29,24 +29,6 @@ export default function AIDashboard() {
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Premium Header Section */}
         <div className="text-center mb-12 animate-fade-in">
-          {/* AI Badge */}
-          <div className="inline-flex items-center gap-3 mb-8 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-500 rounded-full blur-sm opacity-75 animate-pulse" />
-                <div className="relative p-2 bg-linear-to-br from-slate-900 to-slate-800 rounded-full border border-white/10">
-                  <Brain className="h-5 w-5 text-blue-400" />
-                </div>
-              </div>
-              <span className="text-sm font-semibold bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                ENTERPRISE AI SUITE
-              </span>
-            </div>
-            <div className="w-px h-6 bg-white/10" />
-            <span className="text-sm text-slate-400 font-medium">
-              Powered by Advanced AI Models
-            </span>
-          </div>
 
           {/* Main Title */}
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 animate-slide-up">

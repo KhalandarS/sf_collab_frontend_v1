@@ -55,16 +55,19 @@ export const aiAPI = {
   },
 
   // Generate content (business plan, pitch deck, etc.)
-  generateContent: async (prompt, model, contentType = 'chat', temperature = 0.7, maxTokens = 2048, outputFormat = 'text') => {
+  generateContent: async ({ prompt, model, contentType = 'chat', temperature = 0.7, maxTokens = 2048, outputFormat = 'text', metadata = {} }, accessToken) => {
     const response = await api.post('/ai/generate', {
       prompt,
       model,
       content_type: contentType,
+      metadata,
       temperature,
       max_tokens: maxTokens,
       output_format: outputFormat,
+    },  {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
-    return response.data.data;
+    return response.data;
   },
 
   // Chat endpoint

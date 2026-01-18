@@ -153,19 +153,6 @@ const Help = () => {
             />
           </div>
 
-          {/* Badge */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6 py-2 backdrop-blur-sm mb-6"
-          >
-            <HelpCircle className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-              24/7 Support Available
-            </span>
-          </motion.div>
-
           {/* Main Heading */}
           <motion.h1
             initial={{ y: 30, opacity: 0 }}
@@ -189,13 +176,13 @@ const Help = () => {
           </motion.p>
 
           {/* Search Bar */}
-          <motion.div
+          {/* <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
             className="max-w-2xl mx-auto relative"
           >
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search for articles, guides, or FAQs..."
@@ -203,10 +190,10 @@ const Help = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-4 py-4 bg-gray-800 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all"
             />
-          </motion.div>
+          </motion.div> */}
 
           {/* Stats */}
-          <motion.div
+          {/* <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.6 }}
@@ -228,7 +215,7 @@ const Help = () => {
               <div className="text-2xl font-bold text-white mb-1">98%</div>
               <div className="text-sm text-gray-400">Satisfaction Rate</div>
             </div>
-          </motion.div>
+          </motion.div> */}
         </motion.div>
 
         {/* Quick Guides Section */}

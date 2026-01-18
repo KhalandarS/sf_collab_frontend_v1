@@ -554,10 +554,7 @@ export default function RegisterStartUp() {
       <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-blue-400/10 border border-blue-400/30 rounded-full px-4 py-2 mb-4">
-            <Rocket className="w-4 h-4 text-blue-400" />
-            <span className="text-blue-400 text-sm font-medium">Launch Your Venture</span>
-          </div>
+
           <h1 className="text-4xl font-bold text-white mb-4">
             Build Your <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>
           </h1>
@@ -643,7 +640,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <Building2 className="absolute left-4 top-4 text-gray-400" size={20} />
+                          <Building2 className="absolute right-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="name"
                             type="text"
@@ -672,9 +669,9 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <Globe className="absolute left-4 top-3 text-gray-400 z-10" size={20} />
+                          <Globe className="absolute right-4 top-3 text-gray-400 z-10" size={20} />
                           <Select value={formData.industry} onValueChange={(value) => handleInputChange("industry", value)}>
-                            <SelectTrigger style={{height:'45px'}} className="w-full pl-14 border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
+                            <SelectTrigger style={{height:'45px'}} className="w-full border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
                               <SelectValue placeholder="Select Industry" className="text-white" />
                             </SelectTrigger>
                             <SelectContent position="bottom" className="w-full bg-gray-800 border-gray-600 text-white">
@@ -701,7 +698,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <MapPin className="absolute left-4 top-4 text-gray-400" size={20} />
+                          <MapPin className="absolute right-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="location"
                             type="text"
@@ -745,7 +742,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
+                          <User className="absolute right-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="firstName"
                             type="text"
@@ -774,7 +771,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <User className="absolute left-4 top-4 text-gray-400" size={20} />
+                          <User className="absolute right-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="lastName"
                             type="text"
@@ -803,7 +800,7 @@ export default function RegisterStartUp() {
                           </Tooltip>
                         </Label>
                         <div className="relative">
-                          <Mail className="absolute left-4 top-4 text-gray-400" size={20} />
+                          <Mail className="absolute right-4 top-4 text-gray-400" size={20} />
                           <Input
                             id="email"
                             type="email"
@@ -2192,10 +2189,6 @@ export default function RegisterStartUp() {
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-gray-400">XP Earned</span>
                       <span className="text-blue-400 font-bold">{xpPoints}</span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-400">Success Rate</span>
-                      <span className="text-green-400">98%</span>
                     </div>
                   </div>
                 </div>

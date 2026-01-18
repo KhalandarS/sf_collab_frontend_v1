@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useSelector } from "react-redux";
-import { authAPI } from "@/services/auth/authAPI";
+import { authAPI } from "@/utils/APIs/authAPI";
 
 export default function EmailVerifyPopUp() {
   const navigate = useNavigate();

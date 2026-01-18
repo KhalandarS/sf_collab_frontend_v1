@@ -7,7 +7,7 @@ import { Mail, User, Building, Globe, Clock, MapPin, Camera } from "lucide-react
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../LoadingSpinner";
-import { setupProfileRequest } from "@/services/auth/authAPI";
+import { setupProfileRequest } from "@/utils/APIs/authAPI";
 
 const COUNTRIES = [
   "United States",

@@ -9,6 +9,7 @@ import { useRef, useState } from "react";
 import MultiImageGrid from "./MultiImageGrid";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 // Create Post Component
 export default function CreatePost({ currentUser, onPost }) {
@@ -68,7 +69,7 @@ if (!currentUser) return null; // or skeleton
       <CardContent className="space-y-4">
         <div className="flex gap-4">
           <Avatar className="w-10 h-10 ring-2 ring-blue-400/50">
-            <AvatarImage src={currentUser.avatar} />
+            <AvatarImage src={getProfilePicture(currentUser)} />
             <AvatarFallback>{currentUser.name}</AvatarFallback>
           </Avatar>
           <Textarea

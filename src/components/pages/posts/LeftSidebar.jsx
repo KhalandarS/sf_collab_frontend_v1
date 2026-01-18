@@ -11,9 +11,13 @@ import { Card, CardContent, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { BarChart3, Settings } from "./Icons";
+import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 // Left Sidebar Component - NEW
-export default function LeftSidebar() {
+export default function LeftSidebar({ socialProfile }) {
+  const { user, access_token } = useSelector((state) => state.auth);
   const menuItems = [
     { icon: Home, label: "Feed", active: true },
     { icon: Search, label: "Explore", active: false },
@@ -25,31 +29,31 @@ export default function LeftSidebar() {
   ];
 
   const suggestions = [
-    {
-      name: "Webulsylist",
-      location: "Elk Grove, California",
-      avatar: "https://i.pravatar.cc/150?img=12",
-    },
-    {
-      name: "Anghelina",
-      location: "Sibiu, Romania",
-      avatar: "https://i.pravatar.cc/150?img=13",
-    },
-    {
-      name: "Male Designer",
-      location: "Ukraine",
-      avatar: "https://i.pravatar.cc/150?img=14",
-    },
-    {
-      name: "Vera Cherry",
-      location: "Bremen, Germany",
-      avatar: "https://i.pravatar.cc/150?img=15",
-    },
-    {
-      name: "Josh e-Sport",
-      location: "Elk Grove, California",
-      avatar: "https://i.pravatar.cc/150?img=16",
-    },
+    // {
+    //   name: "Webulsylist",
+    //   location: "Elk Grove, California",
+    //   avatar: "https://i.pravatar.cc/150?img=12",
+    // },
+    // {
+    //   name: "Anghelina",
+    //   location: "Sibiu, Romania",
+    //   avatar: "https://i.pravatar.cc/150?img=13",
+    // },
+    // {
+    //   name: "Male Designer",
+    //   location: "Ukraine",
+    //   avatar: "https://i.pravatar.cc/150?img=14",
+    // },
+    // {
+    //   name: "Vera Cherry",
+    //   location: "Bremen, Germany",
+    //   avatar: "https://i.pravatar.cc/150?img=15",
+    // },
+    // {
+    //   name: "Josh e-Sport",
+    //   location: "Elk Grove, California",
+    //   avatar: "https://i.pravatar.cc/150?img=16",
+    // },
   ];
 
   return (
@@ -59,33 +63,29 @@ export default function LeftSidebar() {
         <CardContent className="p-6">
           <div className="flex items-center space-x-4 mb-4">
             <Avatar className="w-16 h-16 ring-2 ring-blue-400/50">
-              <AvatarImage src="https://i.pravatar.cc/150?img=7" />
-              <AvatarFallback>LT</AvatarFallback>
+              <AvatarImage src={getProfilePicture(user)} />
+              <AvatarFallback>{user?.firstName[0]}</AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="font-bold text-white">Masudur Rahman</h3>
-              <p className="text-sm text-zinc-400">Bremen, Germany</p>
+              <h3 className="font-bold text-white">{user?.firstName} {user?.lastName}</h3>
+              <p className="text-sm text-zinc-400">{user?.location || 'Location not set'}</p>
             </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4 text-center mb-4">
             <div>
-              <p className="font-bold text-white">28.5k</p>
+              <p className="font-bold text-white">{socialProfile?.totalLikesReceived || 0}</p>
               <p className="text-xs text-zinc-400">Likes</p>
             </div>
             <div>
-              <p className="font-bold text-white">33</p>
-              <p className="text-xs text-zinc-400">Comment</p>
+              <p className="font-bold text-white">{socialProfile?.postsCount || 0}</p>
+              <p className="text-xs text-zinc-400">Posts</p>
             </div>
             <div>
-              <p className="font-bold text-white">134</p>
+              <p className="font-bold text-white">{socialProfile?.totalShares || 0}</p>
               <p className="text-xs text-zinc-400">Share</p>
             </div>
           </div>
-
-          <Button className="w-full bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer">
-            Edit Profile
-          </Button>
         </CardContent>
       </Card>
 
@@ -119,7 +119,7 @@ export default function LeftSidebar() {
         </CardHeader>
         <CardContent className="p-4">
           <div className="space-y-4">
-            {suggestions.map((user) => (
+            {suggestions.length > 0 ? suggestions.map((user) => (
               <div
                 key={user?.name}
                 className="flex items-center justify-between"
@@ -144,7 +144,9 @@ export default function LeftSidebar() {
                   Follow
                 </Button>
               </div>
-            ))}
+            )) : 
+            <p className="text-sm text-zinc-400">No suggestions available.</p>
+            }
           </div>
         </CardContent>
       </Card>

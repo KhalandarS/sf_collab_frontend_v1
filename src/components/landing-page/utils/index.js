@@ -1,7 +1,7 @@
 import herovideoOne from '../../../assets/videos/main.mp4';
 import herovideotwo from '../../../assets/videos/hero.mp4';
 import herovideothree from '../../../assets/videos/aedb3913.mp4';
-
+import herovideoFour from '/landing_video.mp4';
 
 import mainAudio from '../../../assets/audio/WhatsApp Audio 2025-12-26 at 12.35.46 PM.mp3'
 
@@ -29,7 +29,8 @@ import exploreVideo from '../../../assets/videos/8085924f.mp4'
 export const heroAssest = {
     herovideoOne,
     herovideotwo,
-    herovideothree
+    herovideothree,
+    herovideoFour
 }
 
 

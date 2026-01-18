@@ -18,6 +18,7 @@ import {
   ChevronDown,
   X
 } from "lucide-react";
+import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -27,46 +28,7 @@ const ShinyText = ({ text, className = "" }) => (
   </span>
 );
 
-const mockKnowledgeData = [
-  {
-    id: 1,
-    title: "MVP Development Guide",
-    titleDescription: "A clear roadmap for building your MVP efficiently.",
-    contentPreview: "Learn how to build an MVP, validate your idea, and launch fast...",
-    category: "Startup",
-    fileType: "pdf",
-    fileUrl: "https://example.com/sample.pdf",
-    views: 1200,
-    downloads: 450,
-    likes: 90,
-    tags: ["startup", "mvp", "product"],
-    author: {
-      name: "John Smith",
-      avatar: "https://i.pravatar.cc/150?img=10",
-    },
-    date: "January 15, 2025",
-    dateRaw: "2025-01-15T10:00:00Z",
-  },
-  {
-    id: 2,
-    title: "Marketing Strategy for Early-stage Startups",
-    titleDescription: "High-impact organic and paid marketing methods.",
-    contentPreview: "Understand growth channels, user acquisition, funnels, and positioning...",
-    category: "Marketing",
-    fileType: "docx",
-    fileUrl: "https://example.com/marketing.docx",
-    views: 890,
-    downloads: 320,
-    likes: 72,
-    tags: ["marketing", "growth", "strategy"],
-    author: {
-      name: "Emily Johnson",
-      avatar: "https://i.pravatar.cc/150?img=11",
-    },
-    date: "February 2, 2025",
-    dateRaw: "2025-02-02T08:00:00Z",
-  }
-];
+
 
 const getFileType = (url) => {
   if (!url) return "file";
@@ -100,21 +62,20 @@ const Knowledge = () => {
   const [loading, setLoading] = useState(true);
   const [networkError, setNetworkError] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-
+  const [totalContent, setTotalContent] = useState(0);
   const fetchKnowledgeResources = async () => {
     try {
       setLoading(true);
       setNetworkError(false);
 
-      const response = await fetch(
+      const { data } = await axios.get(
         `${API_URL}/knowledge?page=1&per_page=200`
       );
+      if (!data.success) {
+        throw new Error("Failed to fetch knowledge resources");
+      }
 
-      if (!response.ok) throw new Error("API error");
-
-      const data = await response.json();
-
-      const mapped = data.knowledge_posts.map((item) => ({
+      const mapped = data.data.knowledge_posts.map((item) => ({
         id: item.id,
         title: item.title,
         titleDescription: item.titleDescription ?? "",
@@ -139,6 +100,7 @@ const Knowledge = () => {
       }));
 
       setKnowledgeContent(mapped);
+      setTotalContent(data.total || 0)
     } catch (error) {
       console.warn("Backend failed — using mock data instead.");
       setKnowledgeContent(mockKnowledgeData);
@@ -192,8 +154,7 @@ const Knowledge = () => {
   }, [knowledgeContent, searchQuery, selectedCategory, selectedSort]);
 
   const stats = [
-    { icon: BookOpen, value: knowledgeContent.length, label: "Resources" },
-    { icon: Users, value: "50K+", label: "Readers" },
+    { icon: BookOpen, value: totalContent, label: "Resources" },
     { icon: TrendingUp, value: "95%", label: "Helpful Rate" },
     { icon: FileText, value: "20+", label: "Categories" }
   ];
@@ -252,18 +213,6 @@ const Knowledge = () => {
             />
           </div>
 
-          {/* Badge */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-full px-6 py-2 backdrop-blur-sm mb-6"
-          >
-            <Sparkles className="w-4 h-4 text-blue-400" />
-            <span className="text-xs font-medium bg-gradient-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-              {knowledgeContent.length}+ Expert Resources
-            </span>
-          </motion.div>
 
           {/* Main Heading */}
           <motion.h1
@@ -292,7 +241,7 @@ const Knowledge = () => {
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-3xl mx-auto"
+            className="flex frex-wrap justify-center items-center gap-4 max-w-3xl mx-auto"
           >
             {stats.map((stat, index) => {
               const Icon = stat.icon;
@@ -302,7 +251,7 @@ const Knowledge = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
-                  className="p-4 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl"
+                  className="p-4 flex-grow flex-1 bg-gray-800/50 backdrop-blur-sm border border-gray-700 rounded-xl"
                 >
                   <Icon className="w-5 h-5 text-blue-400 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">{stat.value}</div>

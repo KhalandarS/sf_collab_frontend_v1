@@ -59,7 +59,7 @@ export const usersAPI = {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data.data;
+    return response.data;
   },
 
   updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {

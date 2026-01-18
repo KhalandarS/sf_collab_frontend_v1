@@ -12,8 +12,11 @@ import Team from './team/TeamComponent'
 import NavBar from '../Navbar'
 import Footer from '../Footer'
 import 'lenis/dist/lenis.css'
+import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 
 const Home = () => {
+  const navigate = useNavigate()
   useEffect(() => {
     let lenis;
     let rafId;
@@ -41,7 +44,12 @@ const Home = () => {
       if (lenis) lenis.destroy();
     }
   }, [])
-
+  const { user } = useSelector((state) => state.auth);
+  useEffect(() => {
+      if (user) {
+        navigate('/dashboard');
+      }
+    }, [user, navigate]);
   return (
     <div className="overflow-y-hidden md:w-full w-screen">
         <NavBar/>

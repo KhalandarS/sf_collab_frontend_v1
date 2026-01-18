@@ -20,21 +20,21 @@ import { useEffect } from "react";
 const contributionActions = [
   
   {
-    title: "Crowdfunding Access",
-    description:
-      "Skip the Hustle, Secure your access, Help us grow by investing in cheaper future workspace for you and your fellow founders and builders, shape SFCollab's future.",
-    points: "Early access plus bonuses",
-    important: true,
-    pointsDetail: "Priority ranking and bonus points",
-    icon: Rocket,
-    cta: "Contribute Now",
-    to: "/crowdfunding",
-    tone: "locked",
-    available: true,
-    verified: false,
-    repeatable: false,
-    impact: "Provides a significant boost to your ranking",
-  },
+  title: "Crowdfunding Access",
+  description:
+    "Skip the hustle, secure your access. Help us grow by investing in a cheaper future workspace for you and your fellow founders and builders. Shape SFCollab's future.",
+  points: "Early access plus bonuses",
+  important: true,
+  pointsDetail: "Priority ranking and bonus points",
+  icon: Rocket,
+  cta: "Contribute Now",
+  to: "/crowdfunding",
+  tone: "locked",
+  available: true,
+  verified: false,
+  repeatable: false,
+  impact: "Provides a significant boost to your ranking",
+},
   {
     title: "Submit an Idea",
     description:
@@ -49,7 +49,7 @@ const contributionActions = [
     contribution: true,
     verified: true,
     repeatable: true,
-    impact: "Affects your ranking immediately",
+    impact: "Affects your ranking",
   },
   {
     title: "Refer Friends",
@@ -65,7 +65,7 @@ const contributionActions = [
     available: true,
     verified: true,
     repeatable: true,
-    impact: "Affects your ranking immediately",
+    impact: "Affects your ranking",
   },
   {
     title: "Vote in Polls",
@@ -96,7 +96,7 @@ const contributionActions = [
     available: true,
     verified: true,
     repeatable: false,
-    impact: "Affects ranking immediately",
+    impact: "Affects ranking",
   },
   {
     title: "Idea Incubator",
@@ -112,7 +112,7 @@ const contributionActions = [
     available: true,
     verified: true,
     repeatable: true,
-    impact: "Affects ranking immediately",
+    impact: "Affects your ranking",
   },
   {
     title: "Report Bugs & Feedback",
@@ -128,7 +128,7 @@ const contributionActions = [
     verified: true,
     contribution: true,
     repeatable: true,
-    impact: "Affects ranking immediately",
+    impact: "Affects ranking",
   },
   
 ];

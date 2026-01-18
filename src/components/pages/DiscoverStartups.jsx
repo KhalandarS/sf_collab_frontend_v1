@@ -491,7 +491,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                 {startups.length} {startups.length === 1 ? 'startup' : 'startups'} found
               </p>
               {mode === 'discover' && activeFiltersCount > 0 && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-gray-400 hover:text-white">
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-black">
                   Clear all filters
                 </Button>
               )}
@@ -525,7 +525,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     {modeConfig.emptyState.message}
                   </p>
                   {mode === 'discover' ? (
-                    <Button onClick={clearFilters} variant="outline" className="border-gray-600 text-gray-300">
+                    <Button onClick={clearFilters} variant="outline" className="border-gray-600 text-black">
                       Clear all filters
                     </Button>
                   ) : (
@@ -633,7 +633,7 @@ const FilterSidebar = ({
       <div className="flex-1">
         <h4 className="text-sm font-medium text-gray-300 mb-2">Search</h4>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <Input
             placeholder="Search startups..."
             value={searchQuery}
@@ -749,7 +749,7 @@ const FilterSidebar = ({
             variant="ghost" 
             size="sm" 
             onClick={clearFilters} 
-            className="text-blue-400 hover:text-blue-300 text-xs h-8"
+            className="text-blue-400 hover:border hover:border-blue-300 hover:bg-black hover:text-blue-300 text-xs h-8"
           >
             Clear all
           </Button>

@@ -52,7 +52,6 @@ export default function AIAssistant() {
       setIsLoading(true);
 
       try {
-        console.log(content);
         const res = await AIAPI.queryAssistant(content.trim(), token );
 
         if (!res?.success) {

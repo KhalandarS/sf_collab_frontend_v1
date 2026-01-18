@@ -1,8 +1,9 @@
 import React from 'react';
 import { Users, TrendingUp, Share2, Target, ArrowRight, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
-export default function InfluencerProfileSection({ userData, setShowInfluencerInfo }) {
+export default function InfluencerProfileSection({ userData, setHideInfluencerInfo }) {
   const previewStats = [
     { icon: Users, label: 'Audience Growth' },
     { icon: TrendingUp, label: 'Engagement Analytics' },
@@ -45,8 +46,9 @@ export default function InfluencerProfileSection({ userData, setShowInfluencerIn
             </Link>
             <div
               onClick={() => {
-                localStorage.setItem('preferences:showInfluencerInfo', 'true');
-                setShowInfluencerInfo(true);
+                localStorage.setItem('preferences:hideInfluencerInfo', 'true');
+                setHideInfluencerInfo(true);
+                toast.success("Influencer Profile section hidden. You can turn it back on anytime in Preferences.");
               }}
               className="cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-gray-700 hover:bg-gray-600 px-6 py-3 font-semibold text-white transition-all duration-300 border border-gray-600 hover:scale-105"
             >

@@ -57,10 +57,11 @@ export const ideaAPI = {
     return response.data;
   },
 
-  createIdea: async (ideaData, accessToken) => {
+  createIdea: async (ideaData, accessToken, headers) => {
     const response = await api.post('/ideas', ideaData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        ...headers,
       },
     });
     return response.data;

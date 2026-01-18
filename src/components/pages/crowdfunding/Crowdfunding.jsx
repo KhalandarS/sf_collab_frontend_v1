@@ -34,7 +34,6 @@ export default function CrowdfundingSection() {
     const fetchPlans = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
-        console.log(res);
         if (res.data.length > 0) {
           const plan = res.data[0];
           console.log(plan, "Plan");

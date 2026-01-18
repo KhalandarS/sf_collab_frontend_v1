@@ -92,7 +92,7 @@ useEffect(() => {
     // { id: 'notifications', label: 'Notifications', icon: Bell },
     // { id: 'privacy', label: 'Privacy', icon: Shield },
     // { id: 'appearance', label: 'Appearance', icon: Palette },
-    // { id: 'preferences', label: 'Preferences', icon: Globe },
+    { id: 'preferences', label: 'Preferences', icon: Globe },
     // { id: 'saved', label: 'Saved Items', icon: Bookmark }
   ];
 

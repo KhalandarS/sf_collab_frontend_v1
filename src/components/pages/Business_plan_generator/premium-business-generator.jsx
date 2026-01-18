@@ -18,10 +18,16 @@ import {
   Clock
 } from 'lucide-react';
 import ShinyText from "../../ui/ShinyText";
+import VoiceInput from './VoiceInput';
+import { aiAPI } from '@/utils/APIs/aiAPI';
+import { AIAPI } from '@/services/auth/AIAPI';
+import { useSelector } from 'react-redux';
+import ResponsePrompt from './ResponsePrompt';
+import { API_BASE_URL_NO_API } from '@/utils/config';
 
 export default function BusinessIdeaGenerator() {
   const [mode, setMode] = useState('ideas');
-  const [isRecording, setIsRecording] = useState({});
+  const { user, access_token } = useSelector((state) => state.auth);
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [formData, setFormData] = useState({
@@ -31,157 +37,103 @@ export default function BusinessIdeaGenerator() {
     location: '',
     tech: ''
   });
-  const [voiceStatus, setVoiceStatus] = useState({});
+  
+  const inputGrid = [
+    {
+      fieldName: 'businessIdea',
+      label: 'Business Concept',
+      icon: <Sparkles className="h-4 w-4" />,
+      placeholder: 'Briefly describe your business vision and goals',
+      value: formData.businessIdea,
+      btnId: '1'
 
-  const recognitionInstances = useRef({});
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const switchMode = (newMode) => {
-    setMode(newMode);
-  };
-
-  const startVoiceInput = (fieldName, btnId) => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error('Speech recognition is not supported in your browser.');
-      return;
+    },
+    {
+      fieldName: 'industry',
+      label: 'Industry Focus',
+      icon: <Building2 className="h-4 w-4" />,
+      placeholder: 'e.g., HealthTech, FinTech, Sustainable Energy',
+      value: formData.industry,
+      btnId: '2'
+    },
+    {
+      fieldName: 'budget',
+      label: 'Investment Range',
+      icon: <DollarSign className="h-4 w-4" />,
+      placeholder: 'e.g., $5,000 - $50,000',
+      value: formData.budget,
+      btnId: '3'
+    },
+    {
+      fieldName: 'location',
+      label: 'Market Location',
+      icon: <MapPin className="h-4 w-4" />,
+      placeholder: 'e.g., North America, Remote, EU Market',
+      value: formData.location,
+      btnId: '4'
+    },
+    {
+      fieldName: 'tech',
+      label: 'Technology Stack',
+      icon: <Cpu className="h-4 w-4" />,
+      placeholder: 'e.g., AI/ML, Blockchain, Cloud Native',
+      value: formData.tech,
+      btnId: '5'
     }
+  ];
+  
 
-    if (recognitionInstances.current[btnId]) {
-      recognitionInstances.current[btnId].stop();
-    }
+  
 
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'en-US';
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognitionInstances.current[btnId] = recognition;
-
-    recognition.onstart = () => {
-      setIsRecording(prev => ({ ...prev, [btnId]: true }));
-      setVoiceStatus(prev => ({ ...prev, [btnId]: '🎤 Listening... Click stop when finished' }));
-    };
-
-    recognition.onresult = (event) => {
-      let finalTranscript = '';
-      
-      for (let i = event.resultIndex; i < event.results.length; i++) {
-        if (event.results[i].isFinal) {
-          finalTranscript += event.results[i][0].transcript + ' ';
-        }
-      }
-
-      if (finalTranscript) {
-        setFormData(prev => ({
-          ...prev,
-          [fieldName]: (prev[fieldName] + ' ' + finalTranscript).trim()
-        }));
-      }
-    };
-
-    recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
-      stopVoiceInput(btnId);
-      setVoiceStatus(prev => ({ ...prev, [btnId]: '❌ Error: ' + event.error }));
-    };
-
-    recognition.start();
-  };
-
-  const stopVoiceInput = (btnId) => {
-    if (recognitionInstances.current[btnId]) {
-      recognitionInstances.current[btnId].stop();
-      delete recognitionInstances.current[btnId];
-      setIsRecording(prev => ({ ...prev, [btnId]: false }));
-      setVoiceStatus(prev => ({ ...prev, [btnId]: '✅ Recording stopped' }));
-      
-      setTimeout(() => {
-        setVoiceStatus(prev => ({ ...prev, [btnId]: '' }));
-      }, 2000);
-    }
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
     
-    setTimeout(() => {
+    const body = {
+      content_type: mode === 'ideas' ? 'business_ideas' : 'business_plan',
+      max_tokens: mode === 'ideas' ? 2048 : 4096,
+      metadata: {
+        business_idea: formData.businessIdea,
+        industry: formData.industry,
+        budget: formData.budget,
+        location: formData.location,
+        tech: formData.tech
+      }
+      
+    }
+    try {
+      setIsLoading(true);
+
+      const response = await AIAPI.generateBusinessPlan(body, access_token)
+      if (!response?.success) {
+        throw new Error(response?.message || "Generation failed");
+      }
+      console.log(response);
       setResults({
         type: mode,
-        content: `Generated ${mode === 'ideas' ? 'Business Ideas' : 'Business Plan'} based on your inputs...`
+        content: `Generated ${mode === 'ideas' ? 'Business Ideas' : 'Business Plan'} based on your inputs...`,
+        response: response?.data.response || '',
+        pdfLink: response?.data.download_links.pdf || '',
+        mdLink: response?.data.download_links.md || ''
       });
+      console.log(response);
+    } catch (error) {
+      toast.error("Error generating content: " + error.message);
+
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
+      
+
   };
 
-  const VoiceInput = ({ fieldName, placeholder, value, type = 'input', btnId, label, icon }) => (
-    <div className="mb-4">
-      <label className="flex items-center gap-2 text-sm font-semibold text-slate-300 mb-2">
-        {icon}
-        {label}
-      </label>
-      <div className="relative">
-        {type === 'textarea' ? (
-          <textarea
-            name={fieldName}
-            value={value}
-            onChange={handleInputChange}
-            placeholder={placeholder}
-            rows={3}
-            className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-24 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none"
-          />
-        ) : (
-          <input
-            type="text"
-            name={fieldName}
-            value={value}
-            onChange={handleInputChange}
-            placeholder={placeholder}
-            className="w-full bg-slate-900/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-24 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 transition-all"
-          />
-        )}
-        <div className="absolute right-2 top-3 flex gap-2">
-          <button
-            type="button"
-            onClick={() => startVoiceInput(fieldName, btnId)}
-            className={`p-2 rounded-lg transition-all ${
-              isRecording[btnId]
-                ? 'bg-linear-to-br from-rose-500 to-red-600 animate-pulse'
-                : 'bg-linear-to-br from-purple-500 to-blue-600 hover:scale-110'
-            }`}
-          >
-            <Mic className="h-4 w-4 text-white" />
-          </button>
-          {isRecording[btnId] && (
-            <button
-              type="button"
-              onClick={() => stopVoiceInput(btnId)}
-              className="p-2 rounded-lg bg-linear-to-br from-rose-500 to-red-600 hover:scale-110 transition-all"
-            >
-              <Square className="h-4 w-4 text-white" />
-            </button>
-          )}
-        </div>
-      </div>
-      {voiceStatus[btnId] && (
-        <div className="mt-2 text-xs text-purple-400 bg-purple-500/10 px-3 py-2 rounded-lg">
-          {voiceStatus[btnId]}
-        </div>
-      )}
-    </div>
-  );
+
 
   return (
+    <>
     <div className="min-h-screen  p-8">
       <div className="w-full mx-auto">
         {/* Animated Background */}
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
           <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
           <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
@@ -189,25 +141,7 @@ export default function BusinessIdeaGenerator() {
         {/* Premium AI Business Plan Generator Header */}
         <div className="relative overflow-hidden">
             <div className="text-center">
-              {/* AI Badge */}
-              <div className="inline-flex items-center gap-3 mb-8 px-6 py-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl animate-fade-in">
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-purple-500 rounded-full blur-sm opacity-75 animate-pulse" />
-                    <div className="relative p-2 bg-linear-to-br from-slate-900 to-slate-800 rounded-full border border-white/10">
-                      <img className="h-5 w-5" src='/ai.png' />
-                    </div>
-                  </div>
-                  <span className="text-sm font-semibold bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                    ENTERPRISE-GRADE AI
-                  </span>
-                </div>
-                <div className="w-px h-6 bg-white/10" />
-                <span className="text-sm text-slate-400 font-medium">
-                  Powered by Qwen2.5-72B
-                </span>
-              </div>
-        
+
               {/* Main Hero Title */}
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up">
                 <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
@@ -215,8 +149,8 @@ export default function BusinessIdeaGenerator() {
                 </span>
                 <br />
                 <span className=" relative">
-                  <span style={{zIndex:99999}} className='mt-4 z-50 bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent '>
-                  Generator (Coming Soon!)
+                  <span className='mt-4 z-50 bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent '>
+                  Generator
                   </span>
                   {/* Animated underline */}
                   {/* <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 w-48 h-px bg-linear-to-r from-transparent via-blue-500 to-transparent animate-shimmer" /> */}
@@ -260,7 +194,46 @@ export default function BusinessIdeaGenerator() {
           {/* Animated Scan Line */}
           <div className="absolute bottom-0  left-0 right-0 h-px bg-linear-to-r from-transparent via-blue-500 to-transparent animate-scan" />
         </div>
-
+        {/* Credits Cost Section */}
+        <div className="relative mt-8 mb-8">
+          <div className="absolute inset-0 bg-linear-to-r from-blue-500/5 via-purple-500/5 to-amber-500/5 blur-xl rounded-2xl" />
+          
+          <div className="relative bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Cost Info */}
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-amber-400" />
+                  Credit Cost
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-3 bg-slate-800/50 rounded-lg border border-white/10">
+                    <div className="text-sm text-slate-400">Business Ideas</div>
+                    <div className="text-2xl font-bold text-amber-400">5 Credits</div>
+                  </div>
+                  <div className="p-3 bg-slate-800/50 rounded-lg border border-white/10">
+                    <div className="text-sm text-slate-400">Business Plan</div>
+                    <div className="text-2xl font-bold text-blue-400">10 Credits</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Credits Balance */}
+              <div className="flex-1 md:border-l border-white/10 md:pl-6">
+                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-purple-400" />
+                  Your Credits
+                </h4>
+                <div className="p-4 bg-linear-to-br from-purple-600/20 to-blue-600/20 rounded-lg border border-purple-500/30">
+                  <div className="text-4xl font-bold text-white">
+                    {user?.credits || 0}
+                  </div>
+                  <div className="text-sm text-slate-400 mt-1">Credits Available</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
         {/* Mode Selector */}
         <div className="relative">
           <div className="absolute inset-0 -top-4 -bottom-4 bg-linear-to-r from-blue-500/5 via-purple-500/5 to-amber-500/5 blur-xl rounded-3xl" />
@@ -275,7 +248,7 @@ export default function BusinessIdeaGenerator() {
             
             {/* Ideas Button */}
             <button
-              onClick={() => switchMode('ideas')}
+              onClick={() => setMode('ideas')}
               className={`cursor-pointer relative flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 group ${
                 mode === 'ideas'
                   ? 'text-white'
@@ -304,7 +277,7 @@ export default function BusinessIdeaGenerator() {
         
             {/* Plan Button */}
             <button
-              onClick={() => switchMode('plan')}
+              onClick={() => setMode('plan')}
               className={`cursor-pointer relative flex-1 flex items-center justify-center gap-3 px-6 py-4 rounded-xl font-semibold transition-all duration-300 group ${
                 mode === 'plan'
                   ? 'text-white'
@@ -401,65 +374,12 @@ export default function BusinessIdeaGenerator() {
               </div>
           
               {/* Business Idea (only for plan mode) */}
-              {mode === 'plan' && (
-                <div className="mb-8 animate-fade-in">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="p-1.5 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                      <Target className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <label className="text-sm font-semibold text-slate-300">Core Business Concept</label>
-                    <span className="text-xs text-blue-400 font-medium bg-blue-500/10 px-2 py-1 rounded-full">Required</span>
-                  </div>
-                  <VoiceInput
-                    fieldName="businessIdea"
-                    label=""
-                    // icon={<Target className="h-4 w-4" />}
-                    placeholder="Describe your business vision, target market, and unique value proposition in detail..."
-                    value={formData.businessIdea}
-                    type="textarea"
-                    btnId="1"
-                    className="bg-slate-800/50 border-white/10 focus:border-blue-500/30 transition-all duration-300"
-                  />
-                </div>
-              )}
+              
           
               {/* Input Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                {[
-                  {
-                    fieldName: 'industry',
-                    label: 'Industry Focus',
-                    icon: <Building2 className="h-4 w-4" />,
-                    placeholder: 'e.g., HealthTech, FinTech, Sustainable Energy',
-                    value: formData.industry,
-                    btnId: '2'
-                  },
-                  {
-                    fieldName: 'budget',
-                    label: 'Investment Range',
-                    icon: <DollarSign className="h-4 w-4" />,
-                    placeholder: 'e.g., $5,000 - $50,000',
-                    value: formData.budget,
-                    btnId: '3'
-                  },
-                  {
-                    fieldName: 'location',
-                    label: 'Market Location',
-                    icon: <MapPin className="h-4 w-4" />,
-                    placeholder: 'e.g., North America, Remote, EU Market',
-                    value: formData.location,
-                    btnId: '4'
-                  },
-                  {
-                    fieldName: 'tech',
-                    label: 'Technology Stack',
-                    icon: <Cpu className="h-4 w-4" />,
-                    placeholder: 'e.g., AI/ML, Blockchain, Cloud Native',
-                    value: formData.tech,
-                    btnId: '5'
-                  }
-                ].map((field, index) => (
-                  <div key={field.fieldName} className="animate-fade-in" style={{ animationDelay: `${index * 0.1}s` }}>
+                {inputGrid.filter(field => mode === 'ideas' ? field.fieldName !== 'businessIdea' : true).map((field, index) => (
+                  <div key={field.fieldName} className={`animate-fade-in ${field.fieldName === 'businessIdea' ? 'md:col-span-2' : ''}`} style={{ animationDelay: `${index * 0.1}s` }}>
                     <div className="flex items-center gap-2 mb-3">
                       <div className="p-1.5 bg-slate-700/50 rounded-lg border border-white/5">
                         {field.icon}
@@ -468,7 +388,9 @@ export default function BusinessIdeaGenerator() {
                     </div>
                     <VoiceInput
                       fieldName={field.fieldName}
-                      label=""
+                      label={field.label}
+                      type={field.fieldName === 'businessIdea' ? 'textarea' : 'text'}
+                      setFormData={setFormData}
                       // icon={field.icon}
                       placeholder={field.placeholder}
                       value={field.value}
@@ -560,72 +482,39 @@ export default function BusinessIdeaGenerator() {
 
         {/* Results */}
         {results && !isLoading && (
-          <div className="mt-8 bg-linear-to-br from-slate-900/80 to-slate-800/80 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden shadow-2xl">
-            {/* Results Header */}
-            <div className="p-6 border-b border-slate-700/50 flex items-center justify-between bg-linear-to-r from-purple-500/10 to-blue-500/10">
-              <h3 className="text-2xl font-bold flex items-center gap-3">
-                {mode === 'ideas' ? (
-                  <>
-                    <Lightbulb className="h-6 w-6 text-amber-400" />
-                    <span className="bg-linear-to-r from-amber-400 to-purple-400 bg-clip-text text-transparent">
-                      Generated Business Ideas
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <BarChart3 className="h-6 w-6 text-purple-400" />
-                    <span className="bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
-                      Your Detailed Business Plan
-                    </span>
-                  </>
-                )}
-              </h3>
-              <button className="flex items-center gap-2 px-4 py-2 bg-linear-to-br from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold rounded-xl transition-all hover:scale-105 shadow-lg">
-                <Download className="h-4 w-4" />
-                Download PDF
-              </button>
-            </div>
-
-            {/* Results Content */}
-            <div className="p-8 bg-slate-950/50 max-h-[600px] overflow-y-auto">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-2xl font-bold text-purple-400 mb-4 pb-3 border-b border-slate-700/50">
-                    Executive Summary
-                  </h3>
-                  <p className="text-slate-300 leading-relaxed">
-                    Based on your inputs for the <strong className="text-amber-400">{formData.industry || 'selected'}</strong> industry 
-                    with a budget of <strong className="text-amber-400">{formData.budget || 'specified'}</strong> in{' '}
-                    <strong className="text-amber-400">{formData.location || 'your location'}</strong>, here are tailored recommendations 
-                    leveraging <strong className="text-amber-400">{formData.tech || 'modern'}</strong> technology.
-                  </p>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-blue-400 mb-3">Key Opportunities</h4>
-                  <div className="space-y-3">
-                    <div className="pl-4 py-3 bg-purple-500/5 border-l-4 border-purple-500 rounded-r text-slate-300">
-                      Market analysis shows strong potential in your target region
-                    </div>
-                    <div className="pl-4 py-3 bg-blue-500/5 border-l-4 border-blue-500 rounded-r text-slate-300">
-                      Technology stack aligns with industry trends and scalability needs
-                    </div>
-                    <div className="pl-4 py-3 bg-amber-500/5 border-l-4 border-amber-500 rounded-r text-slate-300">
-                      Budget allocation supports MVP development and initial market testing
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-slate-400 italic text-sm bg-slate-800/30 p-4 rounded-lg border border-slate-700/30">
-                  💡 This is a demo response. Integrate with your actual AI model to generate real business insights.
-                </p>
+          <div className="mt-8">
+            
+            
+            {/* Download Buttons */}
+            <div className="flex gap-4 justify-center my-6">
+              {results.pdfLink && (
+                  <a
+                  target='_blank'
+                  href={`${API_BASE_URL_NO_API}${results.pdfLink}`}
+                  download
+                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+                >
+                  <Download className="h-5 w-5" />
+                  Download PDF
+                </a>
+              )}
+              {results.mdLink && (
+                  <a
+                  target='_blank'
+                  href={`${API_BASE_URL_NO_API}${results.mdLink}`}
+                  download
+                  className="flex items-center gap-2 px-6 py-3 bg-linear-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105"
+                >
+                  <Download className="h-5 w-5" />
+                  Download Markdown
+                </a>
+              )}
               </div>
-            </div>
+              <ResponsePrompt results={results}/>
           </div>
         )}
-
-
       </div>
     </div>
+  </>
   );
 }

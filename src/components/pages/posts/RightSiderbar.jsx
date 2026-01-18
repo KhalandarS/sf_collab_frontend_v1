@@ -10,14 +10,14 @@ import { Badge } from "../../ui/badge";
 import { Input } from "../../ui/input";
 
 // Right Sidebar Component - NEW
-export default function RightSidebar() {
+export default function RightSidebar({ socialProfile }) {
   const trending = [
-    { hashtag: "#WebDevelopment", posts: "24.3K" },
-    { hashtag: "#ReactJS", posts: "18.7K" },
-    { hashtag: "#UIUX", posts: "12.4K" },
-    { hashtag: "#Startup", posts: "9.8K" },
+    // { hashtag: "#WebDevelopment", posts: "24.3K" },
+    // { hashtag: "#ReactJS", posts: "18.7K" },
+    // { hashtag: "#UIUX", posts: "12.4K" },
+    // { hashtag: "#Startup", posts: "9.8K" },
   ];
-
+  const usersActive = []
   return (
     <div className="w-80 space-y-2 ">
       {/* Search */}
@@ -26,7 +26,7 @@ export default function RightSidebar() {
           <div className="relative">
             <Search
               size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-400"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400"
             />
             <Input
               placeholder="Search..."
@@ -41,12 +41,7 @@ export default function RightSidebar() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-white">Trending Feeds</h3>
-            <Badge
-              variant="outline"
-              className="border-blue-400/50 text-blue-400 bg-blue-500/10"
-            >
-              Hot
-            </Badge>
+            
           </div>
         </CardHeader>
         <CardContent className="p-4">
@@ -72,6 +67,11 @@ export default function RightSidebar() {
                 <MoreHorizontal size={16} className="text-zinc-400" />
               </div>
             ))}
+            {
+              trending.length === 0 && (
+                <p className="text-sm text-zinc-400">No trending feeds available.</p>
+              )
+            }
           </div>
         </CardContent>
       </Card>
@@ -84,9 +84,9 @@ export default function RightSidebar() {
         <CardContent className="p-4">
           <div className="text-center mb-4">
             <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-black rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl font-bold text-white">24.3K</span>
+              <span className="text-2xl font-bold text-white">{socialProfile?.followersCount || 0}</span>
             </div>
-            <p className="text-sm text-zinc-400">Follower</p>
+            <p className="text-sm text-zinc-400">{socialProfile && socialProfile.followersCount !== 1 ? "Followers" : "Follower"}</p>
           </div>
 
           <div className="bg-zinc-800/30 rounded-lg p-4">
@@ -108,7 +108,7 @@ export default function RightSidebar() {
         </CardHeader>
         <CardContent className="p-4">
           <div className="flex space-x-3">
-            {[1, 2, 3, 4].map((i) => (
+            {usersActive.map((i) => (
               <div key={i} className="text-center">
                 <div className="relative">
                   <Avatar className="w-12 h-12 border-2 border-green-500">
@@ -122,6 +122,11 @@ export default function RightSidebar() {
                 <p className="text-xs text-zinc-400 mt-1">User{i}</p>
               </div>
             ))}
+            {
+              usersActive.length === 0 && (
+                <p className="text-sm text-zinc-400">No friends online.</p>
+              )
+            }
           </div>
         </CardContent>
       </Card>

@@ -92,26 +92,6 @@ function ScraperForm() {
                 </div>
             
                 <div className="relative">
-                    {/* Premium Badge */}
-                    <div className="flex justify-center mb-8 animate-fade-in">
-                        <div className="inline-flex items-center gap-3 px-6 py-2 bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl shadow-blue-500/10 group hover:border-blue-500/30 transition-all duration-500">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-cyan-500 rounded-lg blur-sm opacity-25 group-hover:opacity-30 transition-opacity duration-300" />
-                            <div className="relative p-1 bg-linear-to-br from-slate-900 to-slate-800 rounded-full border border-white/10">
-                            <span className="text-xl">🌐</span>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <span className="text-sm font-semibold bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent">
-                            ENTERPRISE WEB SCRAPER
-                            </span>
-                            <div className="w-px h-4 bg-white/10" />
-                            <span className="text-xs flex gap-2 text-slate-400 font-medium bg-slate-800/50 px-2 py-1 rounded-full border border-white/5">
-                                AI-Powered <img src="/ai.png" className="w-5" alt="AI powered"/>
-                            </span>
-                        </div>
-                        </div>
-                    </div>
                 
                     {/* Main Title */}
                     <div className="text-center mb-6 animate-slide-up">

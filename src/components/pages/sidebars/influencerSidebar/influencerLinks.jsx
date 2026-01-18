@@ -1,4 +1,4 @@
-import { BarChart3, BriefcaseBusiness, MessageSquare, Share2, TrendingUp, Wallet } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, Earth, MessageSquare, Share2, TrendingUp, Wallet } from "lucide-react";
 import { BrainCircuit, Wand2, FileText, Lightbulb } from 'lucide-react';
 
 import { Badge } from "@/components/ui/badge";
@@ -68,6 +68,7 @@ export function createInfluencerLinks(unreadMessagesCount) {
             { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
             { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
             { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
+            { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Earth size={18} /> },
           ],
         },
   ];

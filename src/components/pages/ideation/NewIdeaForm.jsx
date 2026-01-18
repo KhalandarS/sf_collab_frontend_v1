@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useSelector } from "react-redux";
 
 export default function NewIdeaForm({
   onClose,
@@ -14,7 +15,16 @@ export default function NewIdeaForm({
   const stageRef = useRef("");
   const tagsRef = useRef("");
   const projectDetailsRef = useRef("");
+  const fileInputRef = useRef(null);
+  const [selectedImage, setSelectedImage] = useState(null);
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+    }
+  };
+  const { user } = useSelector((state) => state.auth);
   const handleFormSubmit = (e) => {
     e.preventDefault();
     const tagsArray = tagsRef.current
@@ -24,18 +34,24 @@ export default function NewIdeaForm({
           .filter(Boolean)
       : [];
 
-    const payload = {
-      title: titleRef.current.trim(),
-      description: descriptionRef.current.trim(),
-      projectDetails:
-        projectDetailsRef.current.trim() || "No additional details provided.",
-      industry: industryRef.current || "Technology",
-      stage: stageRef.current || "Idea Stage",
-      tags: tagsArray.length > 0 ? tagsArray : ["General"],
-    };
-
+    const formData = new FormData();
+    formData.append("creator_first_name", user?.firstName);
+    formData.append("creator_last_name", user?.lastName);
+    formData.append("title", titleRef.current.trim());
+    formData.append("description", descriptionRef.current.trim());
+    formData.append(
+      "projectDetails",
+      projectDetailsRef.current.trim() || "No additional details provided."
+    );
+    formData.append("industry", industryRef.current || "Technology");
+    formData.append("stage", stageRef.current || "Idea Stage");
+    formData.append("tags", JSON.stringify(tagsArray.length > 0 ? tagsArray : ["General"]));
+    
+    if (selectedImage) {
+      formData.append("image", selectedImage);
+    }
     if (typeof onCreateIdea === "function") {
-      onCreateIdea(payload);
+      onCreateIdea(formData);
     }
     onClose();
     titleRef.current = "";
@@ -43,6 +59,7 @@ export default function NewIdeaForm({
     industryRef.current = "";
     stageRef.current = "";
     tagsRef.current = "";
+    setSelectedImage(null);
   };
 
   const containerVariants = {
@@ -92,7 +109,7 @@ export default function NewIdeaForm({
       onClick={() => onClose()}
     >
       <motion.div
-        className="bg-[#1A1A1A] border border-white/20 rounded-2xl p-6 w-full max-w-lg min-h-[600px] overflow-y-scroll"
+        className="bg-[#1A1A1A] border border-white/20 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-scroll"
         variants={modalVariants}
         initial="hidden"
         animate="visible"
@@ -270,6 +287,32 @@ export default function NewIdeaForm({
           </motion.div>
 
           <motion.div
+            variants={itemVariants}
+            custom={5.5}
+            initial="hidden"
+            animate="visible"
+          >
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Image
+            </label>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
+            />
+            <motion.button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
+              whileHover={{ scale: 1.01 }}
+            >
+              {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
+            </motion.button>
+          </motion.div>
+
+          <motion.div
             className="flex justify-end gap-3 pt-4 max-sm:text-sm"
             variants={itemVariants}
             custom={6}
@@ -278,7 +321,7 @@ export default function NewIdeaForm({
           >
             <motion.button
               type="button"
-              onClick={() => setShowNewIdeaForm(false)}
+              onClick={() => onClose()}
               className="px-6 py-2.5 bg-white/10 shadow-md hover:bg-white/20 rounded-xl transition-colors font-medium"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}

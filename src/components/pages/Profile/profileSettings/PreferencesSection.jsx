@@ -1,19 +1,56 @@
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
+
 /* ---------------------- PreferencesSection ---------------------- */
 export default function PreferencesSection({ formData, onChange, setFormData }) {
   const prefs = formData.preferences || {};
-  const languages = ["en","es","fr","de","zh","ja","ar","hi"];
-  const emailOptions = ["daily","weekly","monthly","never"];
+  // const languages = ["en","es","fr","de","zh","ja","ar","hi"];
+  // const emailOptions = ["daily","weekly","monthly","never"];
+  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(localStorage.getItem('preferences:hideInfluencerInfo') === 'true');
+  const [hideJobApplication, setHideJobApplication] = useState(localStorage.getItem('preferences:hideJobApplication') === 'true');
 
   return (
     <div className="space-y-10">
       <h2 className="text-2xl font-bold mb-6">Preferences</h2>
 
       <div className="space-y-6">
+        <h3 className="text-xl font-semibold">Application Visibility</h3>
+        <p className="text-gray-400 text-sm">Control which types of applications you want to see.</p>
+
+        <div className="space-y-3">
+          <Label className="flex items-center gap-3 bg-gray-700/30 p-4 rounded-lg cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!hideJobApplication || false}
+              onChange={(e) => {
+                localStorage.setItem('preferences:hideJobApplication', !e.target.checked)
+                setHideJobApplication(!e.target.checked);
+              }
+              }
+            />
+            <span>Show Job Applications</span>
+          </Label>
+              
+          <Label className="flex items-center gap-3 bg-gray-700/30 p-4 rounded-lg cursor-pointer">
+            <input
+              type="checkbox"
+              checked={!hideInfluencerInfo || false}
+              onChange={(e) => {
+                localStorage.setItem('preferences:hideInfluencerInfo', !e.target.checked)
+                setHideInfluencerInfo(!e.target.checked);
+              }
+              }
+            />
+            <span>Show Influencer Applications</span>
+          </Label>
+        </div>
+      </div>
+      {/* <div className="space-y-6">
         <h3 className="text-xl font-semibold">Language & Localization</h3>
         <p className="text-gray-400 text-sm">Customize how things appear based on your language and region.</p>
 
         <div>
-          <label className="block text-sm mb-2 text-gray-400">Language</label>
+          <Label className="block text-sm mb-2 text-gray-400">Language</Label>
           <select value={prefs.language} onChange={(e) => onChange({ language: e.target.value })} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
             {languages.map(l => <option key={l} value={l}>{l.toUpperCase()}</option>)}
           </select>
@@ -27,9 +64,9 @@ export default function PreferencesSection({ formData, onChange, setFormData }) 
             <option value="YYYY/MM/DD">YYYY/MM/DD</option>
           </select>
         </div>
-      </div>
+      </div> */}
 
-      <div className="space-y-6 pt-10">
+      {/* <div className="space-y-6 pt-10">
         <h3 className="text-xl font-semibold">Theme & Display</h3>
 
         <div className="space-y-3">
@@ -56,7 +93,7 @@ export default function PreferencesSection({ formData, onChange, setFormData }) 
             Save Preferences
           </button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };

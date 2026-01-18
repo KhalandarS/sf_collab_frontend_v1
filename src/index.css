@@ -31,13 +31,19 @@
 }
 
 html, body{
-    width: 100%;
-    height: 100%;
     color: white;
     background-color: black;
     overflow-x: hidden;
     /* font-family: "Trade Winds", system-ui; */
     
+}
+
+html {
+  height: 100%;
+  overflow: auto;
+}
+body {
+  height: 100%;
 }
 
 /* Add this in your globals.css or tailwind.css */
@@ -246,3 +252,8 @@ backdrop-filter: blur(10);
     }
 }
 
+label {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+}

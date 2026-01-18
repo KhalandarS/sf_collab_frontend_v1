@@ -221,6 +221,7 @@ const Hero = () => {
         </div>
 
         {/* Layer 2 — Main Authority Statement */}
+        <div className="relative z-10 flex flex-col items-center justify-center px-4 bg-black/10 backdrop-blur-sm rounded-lg py-6 md:py-10">
         <div className="relative z-10 text-center">
           <h1 
             ref={mainHeadingRef}
@@ -261,7 +262,7 @@ const Hero = () => {
             </span>
           </p>
         </div>
-
+      </div>
         
 
         {/* Animated Metric Ticker */}
@@ -308,7 +309,7 @@ const Hero = () => {
           playsInline
           className="w-full h-full object-cover"
         >
-          <source src={heroAssest.herovideothree} type="video/mp4" />
+          <source src={heroAssest.herovideoFour} type="video/mp4" />
         </video>
       </div>
 

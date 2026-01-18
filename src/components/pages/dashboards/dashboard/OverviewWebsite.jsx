@@ -15,17 +15,17 @@ export default function OverviewWebsite() {
       </div>
       </div>
       {!accepted &&
-        <div className="w-full mb-4 text-center">
-          <div className="relative overflow-hidden rounded-2xl bg-blue-900/30 border border-blue-500/50  backdrop-blur-sm py-2">
-            <div className=" rounded-lg p-4 mb-6 text-left">
-              <p className="text-sm text-blue-100">
-              <span className="font-semibold">SFCollab is currently in active testing and early rollout.</span> Features, point values, visuals, and rewards may evolve as we refine the system — always with fairness and transparency in mind.
+        <div className="w-full flex justify-center mb-4">
+          <div className="relative w-full overflow-hidden rounded-2xl bg-blue-900/30 border border-blue-500/50 backdrop-blur-sm py-3 px-6 w-fit">
+            <div className="rounded-lg text-center">
+              <p className="text-sm bg-gradient-to-r from-blue-200 via-blue-100 to-blue-200 bg-clip-text text-transparent leading-relaxed">
+                <span className="font-semibold">SFCollab is currently in active testing and early rollout.</span> Features, point values, visuals, and rewards may evolve as we refine the system — always with fairness and transparency in mind.
               </p>
             </div>
           
             <button
               onClick={() => setAccepted(true)}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200">
+              className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition duration-200">
               Accept
             </button>
           

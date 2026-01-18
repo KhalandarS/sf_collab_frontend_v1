@@ -256,7 +256,11 @@ export default function Login() {
     );
   };
   
-  
+  useEffect(() => {
+    if (user) {
+      navigate('/dashboard');
+    }
+  }, [user, navigate]);
   return (
   <div>
     

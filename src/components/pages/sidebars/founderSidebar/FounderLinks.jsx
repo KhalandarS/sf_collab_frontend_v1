@@ -1,4 +1,4 @@
-import { Badge, BarChart3, File } from 'lucide-react';
+import { Badge, BarChart3, Earth, File } from 'lucide-react';
 import { FaTasks } from 'react-icons/fa';
 import { FaMoneyBill } from 'react-icons/fa6';
 import { FcFeedback } from 'react-icons/fc';
@@ -50,17 +50,18 @@ export function createFounderLinks(unreadMessagesCount = 0) {
       ]
     },
     {
-      id: 5,
-      icon: <BrainCircuit size={23} />,
-      href: "/ai-dashboard",
-      label: "AI Tools",
-      subItems: [
-        { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
-        { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-        { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
-        { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
-        { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
-      ]
-    },
+          id: 6,
+          icon: <BrainCircuit size={23} />,
+          href: "/ai-dashboard",
+          label: "AI Tools",
+          subItems: [
+            { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
+            { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
+            { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
+            { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
+            { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
+            { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Earth size={18} /> },
+          ],
+        },
   ];
 }

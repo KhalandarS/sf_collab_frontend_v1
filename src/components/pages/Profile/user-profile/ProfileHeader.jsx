@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { Camera, Edit, Settings, MapPin, Calendar, Mail, Sparkles, Trophy } from 'lucide-react';
 import './background.css';
 import { Link } from 'react-router-dom';
-
-
+import { getProfilePicture } from '@/utils/getProfilePicture';
+import { useSelector } from 'react-redux';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 
@@ -18,6 +18,7 @@ const ProfileHeader = ({
   onEditToggle, 
   onSettingsClick 
 }) => {
+  const { user: currentUser } = useSelector((state) => state.auth);
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -73,8 +74,7 @@ const ProfileHeader = ({
             className="relative w-32 h-32  rounded-full border-4 border-gray-800 bg-gradient-to-br from-blue-500/20 to-purple-500/20 group/picture"
           >
             <img 
-              src={user?.profile?.picture ?
-                `${API_BASE_URL}/users/avatars/${user?.profile?.picture?.replace(/^\/?uploads\//, "")}` : "/default-user.jpeg"}
+              src={getProfilePicture(user) }
               alt={user?.firstName}
               className="w-full h-full object-cover group-hover/picture:scale-110 rounded-full transition-transform duration-300"
             />
@@ -178,8 +178,9 @@ const ProfileHeader = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col gap-4">
-            {/* <motion.button
+          {currentUser && currentUser.id === user?.id && (
+            <div className="flex flex-col gap-4">
+              {/* <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={onEditToggle}
@@ -188,16 +189,17 @@ const ProfileHeader = ({
               <Edit className="w-4 h-4" />
               {isEditing ? 'Cancel' : 'Edit Profile'}
             </motion.button> */}
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onSettingsClick}
-              className="flex items-center gap-2 my-4 mx-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
-            >
-              <Settings className="w-4 h-4" />
-              Edit Profile
-            </motion.button>
-          </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={onSettingsClick}
+                className="flex items-center gap-2 my-4 mx-auto px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 backdrop-blur-sm rounded-lg transition-all"
+              >
+                <Settings className="w-4 h-4" />
+                Edit Profile
+              </motion.button>
+            </div>
+)}
         </div>
       </div>
     </motion.div>

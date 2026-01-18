@@ -189,9 +189,9 @@ const IdeationHeader = ({
       <div
         className={`${
           isMobileMenuOpen ? "flex" : "hidden"
-        } sm:flex flex-col sm:flex-row gap-3 w-full`}
+        } sm:flex flex-col justify-between sm:flex-row gap-3 w-full`}
       >
-        <div className="flex-1">
+        <div className="">
           <SearchBar
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}

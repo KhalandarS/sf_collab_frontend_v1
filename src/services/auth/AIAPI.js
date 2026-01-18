@@ -41,18 +41,26 @@ export class AIAPI {
   }
 
   static async generate(payload, accessToken) {
-  const { data } = await aiApiInstance.post('/generate', {
-    prompt: payload.prompt,
-    model: payload.model || 'qwen/qwen3-32b',
-    content_type: payload.contentType || 'chat', // 'chat', 'business_plan', 'pitch_deck'
-    temperature: payload.temperature || 0.7,
-    max_tokens: payload.maxTokens || 2048,
-    output_format: payload.outputFormat || 'text', // 'text', 'json'
-  }, {
-    headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-  })
-  return data
-}
+    const { data } = await aiApiInstance.post('/generate', {
+      prompt: payload.prompt,
+      model: payload.model || 'qwen/qwen3-32b',
+      content_type: payload.contentType || 'chat', // 'chat', 'business_plan', 'pitch_deck'
+      temperature: payload.temperature || 0.7,
+      max_tokens: payload.maxTokens || 2048,
+      output_format: payload.outputFormat || 'text', // 'text', 'json'
+      metadata: payload.metadata || {},
+    }, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+    return data
+  }
+
+  static async generateBusinessPlan(payload, accessToken) {
+    const { data } = await aiApiInstance.post('/business-ideas', payload, {
+      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
+    })
+    return data
+  }
 
   static async download(filename, accessToken) {
     const { data } = await aiApiInstance.get(`/download/${filename}`, {
@@ -74,14 +82,7 @@ export class AIAPI {
     return data
   }
 
-  static async queryAssistant(question, accessToken) {
-    const { data } = await aiApiInstance.post('/assistant/query', {
-      question,
-    }, {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
-    })
-    return data
-  }
+  
 }
 
 export const healthAI = AIAPI.health

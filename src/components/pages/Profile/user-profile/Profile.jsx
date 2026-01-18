@@ -13,15 +13,18 @@ import AchievementSection from './AchievementSection';
 import ActivityFeed from './ActivityFeed';
 import ProfileSettings from '../profileSettings/ProfileSettings';
 import { useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { data, useNavigate, useSearchParams } from 'react-router-dom';
 import { builderProfileAPI } from '@/services/builderAPI';
 import { API_BASE_URL } from '@/utils/config';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const { user: authUser, access_token } = useSelector((state) => state.auth);
   const [isEditing, setIsEditing] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+
   const [queryParams] = useSearchParams();
   const [portfolio, setPortfolio] = useState([]);
   const [loadingPortfolio, setLoadingPortfolio] = useState(false);
@@ -48,7 +51,14 @@ const Profile = () => {
   }, [authUser, access_token]);
 
   const viewedUserId = queryParams.get("userId");
-
+  const page = queryParams.get("page");
+  useEffect(() => {
+    if (page === "settings") {
+      setShowSettings(true);
+    } else {
+      setShowSettings(false);
+    }
+  }, [page]);
   const [viewedUser, setViewedUser] = useState(null);
   const [loadingViewedUser, setLoadingViewedUser] = useState(false);
 
@@ -69,17 +79,11 @@ const Profile = () => {
 
       setLoadingViewedUser(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/users/${viewedUserId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+        const response = await usersAPI.getById(viewedUserId, token);
+        console.log(response);
+        const fetchedUser = response?.data?.user || response?.data || null;
 
-        const data = await res.json();
-        const fetchedUser = data?.data?.user || data?.data || null;
-
-        if (data?.success && fetchedUser) {
+        if (response?.success && fetchedUser) {
           setViewedUser(fetchedUser);
         } else {
           setViewedUser(null);
@@ -120,7 +124,6 @@ const Profile = () => {
     { id: 'projects', label: 'Projects', icon: Briefcase },
     // { id: 'settings', label: 'Settings', icon: Settings }
   ];
-
   return (
     <div className="min-h-screen text-white">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
@@ -133,7 +136,7 @@ const Profile = () => {
           xpToNextLevel={xpToNextLevel}
           isEditing={isEditing}
           onEditToggle={() => setIsEditing(!isEditing)}
-          onSettingsClick={() => window.location.assign("/user-profile?page=settings")}
+          onSettingsClick={() => navigate("/user-profile?page=settings")}
         />
 
         <ProfileStats

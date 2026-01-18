@@ -39,6 +39,7 @@ import AdminSection from "./AdminSection";
 import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../dashboardChangeSection";
 import DonationSection from "./DonationSection";
+import CrowdfundingSection from "./CrowdfundingSection";
 const Dashboard = ({
   activeRole, setActiveRole, userRoles
 }) => {
@@ -114,13 +115,14 @@ const Dashboard = ({
     setSections(items => arrayMove(items, from, to));
   };
 
-  const [showInfluencerInfo, setShowInfluencerInfo] = useState(() => {
-    const stored = localStorage.getItem('preferences:showInfluencerInfo');
+  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(() => {
+    const stored = localStorage.getItem('preferences:hideInfluencerInfo');
     return stored === 'true';
   });
   
-  const [showJobApplication, setShowJobApplication] = useState(() => {
-    const stored = localStorage.getItem('preferences:showJobApplication');
+  const [hideShowJobApplication, setHideJobApplication] = useState(() => {
+    const stored = localStorage.getItem('preferences:hideJobApplication');
+    
     return stored === 'true';
   });
   return (
@@ -132,6 +134,7 @@ const Dashboard = ({
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
+        <CrowdfundingSection /> 
         <DonationSection />
         <DashboardChangeSection sections={userRoles.map(role => ({
           id: role,
@@ -144,12 +147,12 @@ const Dashboard = ({
         />
         <WaitlistSection />
         {
-          !showJobApplication && <JoinSFSection setShowJobApplication={setShowJobApplication}/>
+          !hideShowJobApplication && <JoinSFSection setHideJobApplication={setHideJobApplication}/>
         }
         
         {
-          userData && !userRoles.includes("influencer") && !showInfluencerInfo && (
-            <InfluencerSection userData={userData} setShowInfluencerInfo={setShowInfluencerInfo} />
+          userData && !userRoles.includes("influencer") && !hideInfluencerInfo && (
+            <InfluencerSection userData={userData} setHideInfluencerInfo={setHideInfluencerInfo} />
           )
         }
         {

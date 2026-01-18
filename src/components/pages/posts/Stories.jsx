@@ -42,7 +42,7 @@ const fetchStories = async () => {
     <div className="bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 border border-zinc-800/50 mb-6 mt-10">
       <div className="flex gap-4">
         {/* Add Story Card */}
-        <div className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-[url('https://picsum.photos/seed/addstory/400/260')] bg-cover bg-center">
+        <div className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-cover bg-center">
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-zinc-400 hover:text-blue-400 transition">
             <button

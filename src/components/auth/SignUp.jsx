@@ -2,7 +2,7 @@ import { useState, useEffect,useRef } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { setUser,setToken } from "../../services/auth/authSlice";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import NavBar from "../sections/NavBar";
 import useScrollHide from "../../hooks/useScrollHide";
 import { TiThMenu } from "react-icons/ti";
@@ -13,7 +13,7 @@ import { PasswordStrengthIndicator } from "../lightswind/password-strength-indic
 import {Button} from '../ui/button';
 import LoadingSpinner from "../LoadingSpinner";
 import { API_URL } from "@/utils/config";
-import { authAPI } from "@/services/auth/authAPI";
+import { authAPI } from "@/utils/APIs/authAPI";
 import { toast } from "react-toastify";
 import MobileNavBar from "../sections/MobileNavBar";
 
@@ -21,7 +21,7 @@ export default function SignUp() {
   const navigate = useNavigate();
   const dispatch=useDispatch();
   const [searchParams] = useSearchParams();
-
+  const { user } = useSelector((state) => state.auth);
   const referralCode = searchParams.get("ref");
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -299,7 +299,11 @@ export default function SignUp() {
     { value: 'dark', label: 'Dark' },
     { value: 'auto', label: 'Auto' }
   ];
-
+  useEffect(() => {
+      if (user) {
+        navigate('/dashboard');
+      }
+    }, [user, navigate]);
   return (
   <div>
       {/* Collapsible Top Nav Container */}

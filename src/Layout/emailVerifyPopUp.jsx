@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { authAPI } from '@/services/auth/authAPI';
+import { authAPI } from '@/utils/APIs/authAPI';
 import { useState } from 'react';
 
 const EmailVerifyPopUp = () => {

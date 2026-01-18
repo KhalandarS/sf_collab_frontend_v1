@@ -1,11 +1,12 @@
 import GlareHover from "@/components/ui/GlareHover";
 
 export default function DashboardSummaryCard({ userData }) {
+  console.log(userData);
   return (
-    <div className="w-full mb-6">
+    <div className="w-full my-6">
       <div className="relative overflow-hidden rounded-2xl transition-all">
         <div className="w-full">
-          <div className="relative z-10 mt-4">
+          <div className="relative z-10">
             <GlareHover
               width="100%"
               height="100%"
@@ -16,7 +17,7 @@ export default function DashboardSummaryCard({ userData }) {
               transitionDuration={800}
               playOnce={true}
             >
-              <div className="w-full group relative flex flex-col gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
+              <div className="w-full group relative flex flex-col gap-4 sm:gap-6 lg:gap-8 p-4 sm:p-6 lg:p-8">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500/30 to-purple-600/30 opacity-75 group-hover:opacity-100 transition-opacity duration-300" />
                 <img 
                   src="/design.png" 
@@ -25,7 +26,7 @@ export default function DashboardSummaryCard({ userData }) {
                 />
 
                 {/* Welcome Text */}
-                <div className="relative flex flex-col gap-3 sm:gap-4">
+                <div className="relative flex flex-col items-center justify-center gap-2 sm:gap-3">
                   <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white">
                     Welcome back, &nbsp;
                     <span className="relative whitespace-nowrap">
@@ -42,67 +43,66 @@ export default function DashboardSummaryCard({ userData }) {
                       </span>
                     </span>
                   </h1>
-                  <p className="text-sm sm:text-base lg:text-lg text-white/80 max-w-2xl">
-                    Here's what's happening with your startups today. You have{" "}
-                    <span className="font-semibold text-white">
-                      {userData?.notificationsCount || "3"}
-                    </span>{" "}
-                    new notification{userData?.notificationsCount > 1 ? "s" : ""} and{" "}
-                    <span className="font-semibold text-white">
-                      {userData?.pendingTasksCount || "12"}
-                    </span>{" "}
-                    pending task{userData?.pendingTasksCount > 1 ? "s" : ""} to review.
-                  </p>
 
-                  {/* Stats Row */}
-                  <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-4">
-                    {[
-                      {
-                        icon: "bg-green-400",
-                        value: userData?.activeStartupsCount || "5",
-                        label: "Active Startups",
-                      },
-                      {
-                        icon: "bg-blue-400",
-                        value: `$${userData?.totalRevenue || "24.8"}K`,
-                        label: "Revenue",
-                      },
-                      {
-                        icon: "bg-purple-400",
-                        value: `${userData?.satisfactionPercentage || "98"}%`,
-                        label: "Satisfaction",
-                      },
-                      {
-                        icon: "bg-orange-400",
-                        value: userData?.lastActivityDate || "__",
-                        label: "Last activity",
-                      },
-                    ].map((stat) => (
-                      <div key={stat.label} className="flex items-center gap-2 sm:gap-3">
-                        <div className={`w-2 h-2 sm:w-3 sm:h-3 ${stat.icon} rounded-full animate-pulse`} />
-                        <span className="text-xs sm:text-sm text-white/70">
-                          {stat.value}{" "}
-                          <span style={{ fontFamily: "Trade Winds, system-ui", fontWeight: "lighter" }}>
-                            {stat.label}
-                          </span>
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                  <p className="text-xs sm:text-sm lg:text-base text-white/80 max-w-2xl text-center">
+                    Here's what's happening with your startups today.
+                  </p>
                 </div>
 
-                {/* Quick Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                  <div className="flex-1 sm:flex-none sm:w-40 flex items-center justify-center sm:justify-around h-10 bg-blue-400/30 border border-blue-400 px-3 sm:p-3 rounded-full gap-2">
-                    <img src="/flame.png" alt="flame" className="w-6 sm:w-[30px]" />
+                {/* Stats Row */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+                          {[
+                          {
+                            icon: "bg-green-400",
+                            value: userData?.active_startups_count || 0,
+                            label: "Active Startups",
+                          },
+                          {
+                            icon: "bg-blue-400",
+                            value: `$${userData?.total_revenue || 0}`,
+                            label: "Revenue",
+                          },
+                          {
+                            icon: "bg-purple-400",
+                            value: `${userData?.satisfaction_percentage || "98"}%`,
+                            label: "Satisfaction",
+                          },
+                          {
+                            icon: "bg-orange-400",
+                            value: userData?.last_activity_date 
+                            ? new Date(userData.last_activity_date).toLocaleDateString('en-US', { 
+                              year: 'numeric', 
+                              month: 'short', 
+                              day: 'numeric' 
+                              })
+                            : "Jan 1 2026",
+                            label: "Last activity",
+                          },
+                          ].map((stat) => (
+                          <div key={stat.label} className="flex flex-col items-center gap-1 text-center">
+                            <div className={`w-2 h-2 sm:w-3 sm:h-3 ${stat.icon} rounded-full animate-pulse`} />
+                            <span className="text-xs sm:text-sm text-white/70">
+                            <strong>{stat.value}</strong>
+                            </span>
+                            <span className="text-xs text-white/60" style={{ fontFamily: "Trade Winds, system-ui" }}>
+                            {stat.label}
+                            </span>
+                          </div>
+                          ))}
+                        </div>
+
+                        {/* Quick Actions */}
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <div className="flex items-center justify-center gap-2 h-10 bg-blue-400/30 border border-blue-400 px-4 rounded-full">
+                    <img src="/flame.png" alt="flame" className="w-5 sm:w-6" />
                     <small style={{ fontFamily: "Trade Winds, system-ui" }}>
-                      {userData?.streakDays || "7"}&nbsp;<strong>days Streak</strong>
+                      {userData?.streak_days || 0}&nbsp;<strong>days</strong>
                     </small>
                   </div>
-                  <div className="flex-1 sm:flex-none sm:w-40 flex items-center justify-center sm:justify-around h-10 bg-purple-400/30 border border-purple-400 px-3 sm:p-3 rounded-full gap-2">
-                    <img src="/trophy.png" alt="trophy" className="w-6 sm:w-[30px]" />
+                  <div className="flex items-center justify-center gap-2 h-10 bg-purple-400/30 border border-purple-400 px-4 rounded-full">
+                    <img src="/trophy.png" alt="trophy" className="w-5 sm:w-6" />
                     <small style={{ fontFamily: "Trade Winds, system-ui" }}>
-                      {userData?.xpPoints || "1000"}&nbsp;<strong>XP</strong>
+                      {userData?.xp_points || 0}&nbsp;<strong>XP</strong>
                     </small>
                   </div>
                 </div>

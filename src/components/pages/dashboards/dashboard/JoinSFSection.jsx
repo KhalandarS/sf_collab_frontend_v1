@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
 
 export default function JoinSFSection({
-  setShowJobApplication,
+  setHideJobApplication,
 }) {
   return (
+    <>
     <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-500/20 to-teal-500/20 border border-cyan-400/30 backdrop-blur-sm p-5 sm:p-6 lg:p-8">
     
       {/* Subtle background pattern */}
@@ -47,8 +49,9 @@ export default function JoinSFSection({
           </Link>
           <div
               onClick={() => {
-              localStorage.setItem('preferences:showJobApplication', 'true');
-              setShowJobApplication(true);
+              localStorage.setItem('preferences:hideJobApplication', 'true');
+                setHideJobApplication(true);
+                toast.success("Job Application section hidden. You can turn it back on anytime in Preferences.");
               }}
               className="w-full cursor-pointer inline-flex items-center justify-center gap-2 rounded-xl bg-gray-700 hover:bg-gray-600 px-6 py-3 font-semibold text-white transition-all duration-300 border border-gray-600 hover:scale-105"
             >
@@ -57,6 +60,10 @@ export default function JoinSFSection({
         </div>
 
       </div>
-    </div>
+      </div>
+      {
+
+      }
+      </>
   )
 }

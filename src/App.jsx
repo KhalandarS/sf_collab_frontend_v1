@@ -1,8 +1,8 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Layout from "./Layout/Layout.jsx";
 import Project from "./components/pages/Project.jsx";
 import Ideation from "./components/pages/ideation/Ideation.jsx";
-import Knowledge from "./components/pages/Knowledge.jsx";
+import Knowledge from "./components/pages/knowledge/Knowledge.jsx";
 import Setting from "./components/pages/Setting.jsx";
 import ProfileSetting from "./components/pages/ProfileSetting.jsx";
 import Preferences from "./components/pages/Preferences.jsx";
@@ -11,7 +11,7 @@ import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
 import HomedetailsPage from "./components/detailspage/HomedetailsPage.jsx";
-import Idationdetails from "./components/detailspage/Idationdetails.jsx";
+import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
 import Knowledgedetails from "./components/detailspage/Knowledgedetails.jsx";
 import ProjectDetails from "./components/detailspage/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
@@ -60,7 +60,7 @@ import JoinSF from "./components/pages/joinSF/JoinSF.jsx";
 import Influencer from "./components/pages/influencer/Influencer.jsx";
 import ProfileSetup from "./components/pages/ProfileSetup.jsx";
 import { useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useLayoutEffect } from "react";
 import { usersAPI } from "./utils/APIs/userAPI.js";
 import Dashboard from "./components/pages/dashboards/dashboard/dashboard.jsx";
 import InfluencerDashboard from "./components/pages/dashboards/influencerDashboard/InfluencerDashboard.jsx";
@@ -80,7 +80,6 @@ import Checkout from "./components/pages/checkout/Checkout.jsx";
 import ReturnPage from "./components/pages/checkout/CheckoutReturnPage.jsx";
 import Donate from "./components/pages/donate/Donate.jsx";
 import ConnectionsPage from './components/pages/connections/ConnectionsPage';
-import MyStartups from "./components/pages/dashboards/founderDashboard/MyStartups";
 
 // Builder Dashboard Routes - Phase 2
 import BrowseStartups from "./components/pages/dashboards/builderDashboard/BrowseStartups.jsx";
@@ -90,6 +89,7 @@ import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
 import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx";
 import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
 import UserPage from "./components/pages/usersPage/UsersPage.jsx";
+import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
 
 
 
@@ -122,6 +122,27 @@ export default function App() {
     }
     fetchUserRoles();
   }, [access_token]);
+  
+
+  function ScrollToTop() {
+    const { pathname } = useLocation();
+
+    useLayoutEffect(() => {
+      document.documentElement.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+      document.body.scrollTo({
+        top: 0,
+        left: 0,
+        behavior: "auto",
+      });
+    }, [pathname]);
+
+    return null;
+  }
+
   return (
     <BrowserRouter> {/* Added this to provide context for useNavigate */}
 
@@ -129,6 +150,7 @@ export default function App() {
         <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
 
           <ChatContactsProvider token={access_token}>
+            <ScrollToTop />
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/about" element={<AboutPage />} />
@@ -215,7 +237,7 @@ export default function App() {
         
                 {/* Ideation */}
                 <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
-                <Route path="ideation-details" element={<Idationdetails />} />
+                <Route path="ideation-details" element={<Ideationdetails />} />
         
                 {/* Knowledge */}
                 <Route path="knowledge" element={<Knowledge />} />
@@ -256,7 +278,7 @@ export default function App() {
                 <Route path="discover-startups" element={<DiscoverStartups />} />
                 <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                 <Route path="startup-details/:id" element={<StartupDetailPage />} />
-        
+                {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
                 {/* Tools */}
                 <Route path="business-plan" element={<BusinessIdeaGenerator />} />
                 <Route path="multimodal-images" element={<ImageGenerator />} />

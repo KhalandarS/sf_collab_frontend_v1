@@ -5,7 +5,7 @@ import {
   refreshTokenRequest,
   getProfileRequest,
   loginGoogleRequest
-} from './authAPI';
+} from '../../utils/APIs/authAPI';
 
 // LOGIN
 export const loginUser = createAsyncThunk(

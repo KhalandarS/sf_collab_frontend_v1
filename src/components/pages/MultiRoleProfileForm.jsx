@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import './MultiRoleProfileForm.css'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { setupProfileRequest } from '@/services/auth/authAPI'
+import { setupProfileRequest } from '@/utils/APIs/authAPI'
 import LoadingSpinner from '../LoadingSpinner'
 
 const roleConfig = [

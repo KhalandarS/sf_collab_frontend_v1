@@ -90,25 +90,7 @@ const IdeationDetails = () => {
     }
     fetchIdeaUser();
   }, [idea, access_token]);
-  const handleLike = useCallback(
-    async (e) => {
-      e?.stopPropagation();
-      try {
-        setLiked((prevLiked) => {
-          const newLiked = !prevLiked;
-          setLikes((prevLikes) => (newLiked ? prevLikes + 1 : prevLikes - 1));
-          return newLiked;
-        });
-
-        const res = await ideaAPI.likeIdea(ideaId, access_token);
-        setLikes(res.data.idea.likes);
-        setLiked(res.data.idea.likedBy.includes(user.id));
-      } catch (err) {
-        console.error("Error liking idea:", err);
-      }
-    },
-    [ideaId]
-  );
+  
 
   useEffect(() => {
     const fetchBookmarks = async () => {
@@ -254,7 +236,7 @@ const IdeationDetails = () => {
       if (data.success && data.data?.team_member) {
         const res = await axios.get(`${BASE_URL}/${ideaId}`);
         const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const ideaData = isLocal 
+        const ideaData = isLocal
           ? (res.data.data?.idea || res.data.idea)
           : (res.data.idea || res.data.data?.idea);
         
@@ -373,17 +355,35 @@ const IdeationDetails = () => {
       toast.error("Failed to delete idea. Please try again.");
     }
   };
+  const handleLike = useCallback(
+    async (e) => {
+      e?.stopPropagation();
+      try {
+        setLiked((prevLiked) => {
+          const newLiked = !prevLiked;
+          setLikes((prevLikes) => (newLiked ? prevLikes + 1 : prevLikes - 1));
+          return newLiked;
+        });
 
+        const res = await ideaAPI.likeIdea(ideaId, access_token);
+        setLikes(res.data.idea.likes);
+        setLiked(res.data.idea.likedBy.includes(user.id));
+      } catch (err) {
+        console.error("Error liking idea:", err);
+      }
+    },
+    [ideaId, access_token, user]
+  );
   const isCreator = user?.id && idea?.creator?.id && user.id === idea.creator.id;
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-400">
         <motion.div
-  animate={{ rotate: 360 }}
-  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-  className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full"
-/>
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+          className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full"
+        />
 
       </div>
     );
@@ -391,7 +391,7 @@ const IdeationDetails = () => {
 
   if (!idea) {
     return (
-      <motion.div 
+      <motion.div
         className="min-h-screen flex items-center justify-center text-red-400"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -428,13 +428,13 @@ const IdeationDetails = () => {
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
+    visible: {
+      opacity: 1,
       scale: 1,
       transition: { duration: 0.3, ease: "easeOut" }
     },
-    exit: { 
-      opacity: 0, 
+    exit: {
+      opacity: 0,
       scale: 0.95,
       transition: { duration: 0.2 }
     },
@@ -443,7 +443,7 @@ const IdeationDetails = () => {
   return (
     <div className="min-h-screen bg-black text-white relative">
       {/* Header */}
-      <motion.div 
+      <motion.div
         className="border-b border-white/10 bg-[#0A0A0A]"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -465,11 +465,10 @@ const IdeationDetails = () => {
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className={`p-2.5 rounded-xl border border-white/20 ${
-                liked
-                  ? "bg-red-500/10 text-red-400 border-red-400"
-                  : "hover:bg-white/10"
-              }`}
+              className={`p-2.5 rounded-xl border border-white/20 ${liked
+                ? "bg-red-500/10 text-red-400 border-red-400"
+                : "hover:bg-white/10"
+                }`}
               onClick={handleLike}
             >
               <motion.div
@@ -489,7 +488,7 @@ const IdeationDetails = () => {
             >
               <Share2 className="h-5 w-5" />
             </motion.button>
-              {/* BOOKMARK NOT WORKING */}
+            {/* BOOKMARK NOT WORKING */}
             {/* <motion.button
               variants={buttonVariants}
               whileHover="hover"
@@ -542,7 +541,7 @@ const IdeationDetails = () => {
       </motion.div>
 
       {/* Main Layout */}
-      <motion.div 
+      <motion.div
         className="w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8"
         variants={containerVariants}
         initial="hidden"
@@ -551,7 +550,7 @@ const IdeationDetails = () => {
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
           {/* Main Card */}
-          <motion.div 
+          <motion.div
             className="bg-[#18181A] rounded-2xl p-8"
             variants={itemVariants}
             whileHover={{ y: -4 }}
@@ -559,7 +558,15 @@ const IdeationDetails = () => {
             <h1 className="text-3xl font-bold mb-2">{idea.title}</h1>
             <p className="text-gray-300 mb-4">{idea.description}</p>
 
-            <motion.div 
+            {idea.imageUrl && (
+              <img
+                src={idea.imageUrl.startsWith('http') ? idea.imageUrl : `${API_BASE_URL}${idea.imageUrl}`}
+                alt={idea.title}
+                className="w-full h-40 object-cover rounded-lg border border-white/10 mb-4"
+              />
+            )}
+
+            <motion.div
               className="flex flex-wrap gap-2 mb-4"
               variants={containerVariants}
               initial="hidden"
@@ -585,9 +592,8 @@ const IdeationDetails = () => {
                 whileTap={{ scale: 0.95 }}
               >
                 <Heart
-                  className={`h-4 w-4 transition-colors ${
-                    liked ? "text-red-500 fill-red-500" : "text-gray-400"
-                  }`}
+                  className={`h-4 w-4 transition-colors ${liked ? "text-red-500 fill-red-500" : "text-gray-400"
+                    }`}
                 />
                 {likes} Likes
               </motion.span>
@@ -604,7 +610,7 @@ const IdeationDetails = () => {
               </span>
             </div>
 
-            <motion.div 
+            <motion.div
               className="flex flex-wrap gap-3 pt-2"
               variants={containerVariants}
               initial="hidden"
@@ -641,7 +647,7 @@ const IdeationDetails = () => {
           </motion.div>
 
           {/* Project Details */}
-          <motion.div 
+          <motion.div
             className="bg-[#18181A] rounded-2xl p-8"
             variants={itemVariants}
             whileHover={{ y: -4 }}
@@ -666,15 +672,15 @@ const IdeationDetails = () => {
               {idea.comments?.length ?? 0})
             </h2>
 
-            <motion.div 
+            <motion.div
               className="space-y-6"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
               {idea.comments?.map((c, idx) => (
-                <motion.div 
-                  key={idx} 
+                <motion.div
+                  key={idx}
                   className="flex gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors"
                   variants={itemVariants}
                   whileHover={{ x: 4 }}
@@ -693,8 +699,8 @@ const IdeationDetails = () => {
             </motion.div>
 
             {/* Comment Input */}
-            <motion.form 
-              onSubmit={handleCommentSubmit} 
+            <motion.form
+              onSubmit={handleCommentSubmit}
               className="mt-8"
               variants={itemVariants}
             >
@@ -707,7 +713,7 @@ const IdeationDetails = () => {
                 rows={3}
               />
               <div className="flex justify-end mt-2">
-                <motion.button 
+                <motion.button
                   type="submit"
                   variants={buttonVariants}
                   whileHover="hover"
@@ -722,25 +728,25 @@ const IdeationDetails = () => {
         </div>
 
         {/* Sidebar */}
-        <Link to={`/users/${idea.creator?.id}`}>
+        <Link to={`/user-profile?userId=${idea.creator?.id}`}>
           <div className="space-y-8">
-            <motion.div 
+            <motion.div
               className="bg-[#18181A] rounded-2xl p-6 text-center"
               variants={itemVariants}
               whileHover={{ y: -4 }}
             >
-            <h2 className="text-lg font-bold mb-4">Idea Creator</h2>
-            <img 
-              src={getProfilePicture(ideaUser)} 
-              alt={`${ideaUser?.firstName} ${ideaUser?.lastName}`} 
-              className="w-16 h-16 rounded-full mx-auto mb-4"
-            />
+              <h2 className="text-lg font-bold mb-4">Idea Creator</h2>
+              <img
+                src={getProfilePicture(ideaUser)}
+                alt={`${ideaUser?.firstName} ${ideaUser?.lastName}`}
+                className="w-16 h-16 rounded-full mx-auto mb-4"
+              />
               <h3 className="font-semibold">
                 {idea.creator?.firstName} {idea.creator?.lastName}
               </h3>
               {ideaUser?.profile?.city && (
                 <p className="text-xs text-gray-400 mt-2">
-            {ideaUser.profile.city}, {ideaUser.profile.country}
+                  {ideaUser.profile.city}, {ideaUser.profile.country}
                 </p>
               )}
               {ideaUser?.profile?.bio && (
@@ -783,10 +789,10 @@ const IdeationDetails = () => {
               </motion.div>
             </motion.div> */}
           </div>
-          </Link>
-              </motion.div>
+        </Link>
+      </motion.div>
 
-              {/* Success Message */}
+      {/* Success Message */}
       <AnimatePresence>
         {successMsg && (
           <motion.div

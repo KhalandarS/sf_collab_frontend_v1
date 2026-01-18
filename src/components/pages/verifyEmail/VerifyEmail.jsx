@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { toast } from "react-toastify";
 import { Mail, CheckCircle, ArrowRight, Lock } from "lucide-react";
 import { API_URL } from "@/utils/config";
-import { authAPI } from "@/services/auth/authAPI";
+import { authAPI } from "@/utils/APIs/authAPI";
 import useCountdown from "@/components/waitlist/components/hooks/useCountdown";
 import { updateUser } from "@/services/auth/authSlice";
 

@@ -9,6 +9,7 @@ import { Loader2, Upload, X, Sparkles, ImageIcon, TextIcon, Download, InfoIcon, 
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
 import { useSelector } from "react-redux";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'; // Make sure you have this component
+import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -50,7 +51,7 @@ const ImageGenerator = () => {
     setResponse(null);
 
     try {
-      let endpoint = `${API_URL}/generation/generate`;
+      let endpoint = `${API_URL}/ai/generate`;
       let body = {};
       
       if (activeTab === 'text-to-text' || activeTab === 'text-to-image') {
@@ -100,17 +101,10 @@ const ImageGenerator = () => {
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Generation failed');
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Unknown error occurred');
-      }
-
       setResponse(data);
     } catch (err) {
       setError(err.message);
+      toast.error(err.message)
       console.error('Generation error:', err);
     } finally {
       setLoading(false);
@@ -177,7 +171,61 @@ const ImageGenerator = () => {
               Generate text, images, or transform images with FREE AI models
             </p>
           </div>
+          {/* Credits Info Section */}
+          <div className="mb-8 grid gap-4 lg:grid-cols-4">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm font-medium">Your Credits</p>
+                    <p className="text-2xl font-bold text-white mt-1">{user?.credits || 0}</p>
+                  </div>
+                  <div className="p-3 bg-gray-700 rounded-lg">
+                    <Sparkles className="h-6 w-6 text-yellow-400" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm font-medium">Text Generation</p>
+                    <p className="text-2xl font-bold text-blue-400 mt-1">1-2</p>
+                    <p className="text-gray-500 text-xs mt-1">credits per request</p>
+                  </div>
+                  <Type className="h-6 w-6 text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm font-medium">Text to Image</p>
+                    <p className="text-2xl font-bold text-purple-400 mt-1">40</p>
+                    <p className="text-gray-500 text-xs mt-1">credits per image</p>
+                  </div>
+                  <ImageLucide className="h-6 w-6 text-purple-400" />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-gray-400 text-sm font-medium">Image to Image</p>
+                    <p className="text-2xl font-bold text-green-400 mt-1">50</p>
+                    <p className="text-gray-500 text-xs mt-1">credits per transform</p>
+                  </div>
+                  <FileImage className="h-6 w-6 text-green-400" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
           {/* Tabs */}
           <div className="mb-8">
             <Tabs defaultValue="text-to-text" value={activeTab} onValueChange={handleTabChange}>

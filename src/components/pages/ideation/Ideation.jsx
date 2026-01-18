@@ -21,7 +21,7 @@ import {
   WifiOff,
   RefreshCw,
 } from "lucide-react";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import IdeationHeader from "./IdeationHeader";
 import ScrollToTop from "../../sections/ScrollToTop";
@@ -30,6 +30,8 @@ import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { API_BASE_URL } from "@/utils/config";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import IdeationCard from "./IdeationCard";
+import { getStageColor } from "./getStageColor";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -76,12 +78,13 @@ const Ideation = ({ activeRole}) => {
       }
 
       const response = await ideaAPI.getAllIdeas(access_token, params);
+      console.log("Response: ", response);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch ideas");
       }
       const data = response.data;
       const ideasArray = data.data?.ideas || data.ideas || [];
-
+      console.log(ideasArray);
       const mappedIdeas = ideasArray.map((idea) => ({
         id: idea.id,
         title: idea.title,
@@ -90,6 +93,7 @@ const Ideation = ({ activeRole}) => {
         category: idea.industry,
         privacy: idea.privacy,
         creatorId: idea.creator?.id,
+        imageUrl: idea.imageUrl,
         author: {
           name: `${idea.creator.firstName} ${idea.creator.lastName}`,
           role: activeRole,
@@ -133,18 +137,7 @@ const Ideation = ({ activeRole}) => {
       if (!user || !access_token) {
         throw new Error("You must be logged in to create an idea.");
       }
-      const response = await ideaAPI.createIdea({
-        title: payload.title,
-        description: payload.description,
-        project_details: payload.projectDetails || "",
-        industry: payload.industry,
-        stage: payload.stage,
-        tags: payload.tags || [],
-        creator_id: user?.id,
-        creator_first_name: user.firstName || "",
-        creator_last_name: user.lastName || "",
-        created_at: new Date().toISOString(),
-      }, access_token);
+      const response = await ideaAPI.createIdea(payload, access_token, { 'Content-Type': 'multipart/form-data' });
 
       if (!response.success) {
         throw new Error(response.message || "Failed to create idea");
@@ -161,6 +154,7 @@ const Ideation = ({ activeRole}) => {
         category: newIdea.industry,
         privacy: newIdea.privacy,
         creatorId: newIdea.creator.id,
+        imageUrl: newIdea.imageUrl,
         author: {
           name: `${newIdea.creator.firstName} ${newIdea.creator.lastName}`,
           role: activeRole,
@@ -191,16 +185,7 @@ const Ideation = ({ activeRole}) => {
     fetchIdeas();
   }, [selectedStage, selectedIndustry, sortBy, searchQuery]);
 
-  const getStageColor = (stage) => {
-    const colors = {
-      "Idea Stage": "bg-blue-500/20 text-blue-400",
-      "Concept Stage": "bg-amber-500/20 text-amber-400",
-      "Development Stage": "bg-green-500/20 text-green-400",
-      "Research Stage": "bg-purple-500/20 text-purple-400",
-      "MVP Stage": "bg-red-500/20 text-red-400",
-    };
-    return colors[stage] || "bg-gray-500/20 text-gray-400";
-  };
+
 
   useEffect(() => {
     const fetchBookmarks = async () => {
@@ -288,7 +273,7 @@ const Ideation = ({ activeRole}) => {
   };
 
   const handleRetry = () => fetchIdeas();
-
+    
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
@@ -296,7 +281,7 @@ const Ideation = ({ activeRole}) => {
       </div>
     );
   }
-
+  
   if (networkError) {
     return (
       <div className="min-h-screen bg-black">
@@ -377,100 +362,7 @@ const Ideation = ({ activeRole}) => {
           return (
             <div key={content.id} className="group relative">
               {canAccess ? (
-                <Link
-                  to={`/ideation-details?id=${content.id}`}
-                  className="block bg-[#1A1A1A] border border-white/10 rounded-xl hover:border-white/20 hover:bg-[#212121] transition-all duration-300 group-hover:scale-[1.02] h-full relative"
-                >
-                  {shouldBlur && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
-                      <div className="text-center p-4">
-                        <div className="text-gray-400 text-sm mb-2">🔒 Private Idea</div>
-                        <div className="text-gray-500 text-xs">Only the creator can view this</div>
-                      </div>
-                    </div>
-                  )}
-                  <div className={`p-6 space-y-4 ${shouldBlur ? 'blur-sm pointer-events-none' : ''}`}>
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={content.author.avatar}
-                          alt={content.author.name}
-                          className="h-10 w-10 rounded-full object-cover"
-                        />
-                        <div>
-                          <h3 className="font-medium text-sm text-white">
-                            {content.author.name}
-                          </h3>
-                          <p className="text-xs text-gray-400">
-                            {content.author.role}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`${getStageColor(
-                          content.stage
-                        )} text-xs px-2 py-1 rounded-full font-medium`}
-                      >
-                        {content.stage}
-                      </span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-bold text-white leading-tight line-clamp-2">
-                        {content.title}
-                      </h2>
-                      <p className="text-sm text-gray-300 leading-relaxed line-clamp-3">
-                        {content.description}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {Array.isArray(content.tags) &&
-                        content.tags.slice(0, 3).map((tag, index) => (
-                          <span
-                            key={index}
-                            className="bg-white/5 text-gray-300 text-xs px-2 py-1 rounded-md hover:bg-white/10 transition-colors"
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-
-                      {Array.isArray(content.tags) && content.tags.length > 3 && (
-                        <span className="text-gray-400 text-xs px-2 py-1">
-                          +{content.tags.length - 3}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                      <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span className="flex items-center gap-1">
-                          <Heart className="h-3 w-3" />
-                          {content.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageCircle className="h-3 w-3" />
-                          {content.comments}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          {content.collaborators}
-                        </span>
-                      </div>
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {content.timeAgo}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-center pt-2">
-                      <span className="text-blue-400 text-sm font-medium flex items-center gap-1 group-hover:text-blue-300 transition-colors">
-                        <MessageSquare className="h-4 w-4" />
-                        Join Discussion
-                      </span>
-                    </div>
-                  </div>
-                </Link>
+                <IdeationCard content={content} shouldBlur={shouldBlur} /> 
               ) : (
                 <div className="block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed">
                   {shouldBlur && (

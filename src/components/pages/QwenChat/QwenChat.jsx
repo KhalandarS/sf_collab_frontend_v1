@@ -11,7 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../../ui/slider';
 import { Switch } from '../../ui/switch';
 import { AIAPI } from '@/services/auth/AIAPI';
-
+import { getProfilePicture } from '@/utils/getProfilePicture';
+import InputArea from './InputArea';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const QwenChat = () => {
@@ -31,6 +34,7 @@ const QwenChat = () => {
   const [maxTokens, setMaxTokens] = useState(4096);
   const [showSettings, setShowSettings] = useState(false);
   const [modelStatus, setModelStatus] = useState('loading');
+  const [modelResponseType, setModelResponseType] = useState('page_context');
   
   const messagesEndRef = useRef(null);
   const { user, access_token } = useSelector((state) => state.auth);
@@ -111,21 +115,35 @@ const QwenChat = () => {
         role: 'user',
         content: input
       });
-
-      const response = await AIAPI.generate({
-        prompt: apiMessages,
-        model: 'openai/gpt-oss-20b', // openai/gpt-oss-20b | wen/qwen3-32b
-        temperature: temperature,
-        maxTokens: maxTokens,
-        contentType: 'chat',
-        outputFormat: 'text'
-      }, token);
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Unknown error');
+      let data
+      if (modelResponseType === 'page_context') {
+        const response = await AIAPI.queryAssistant(input.trim(), token );
+        if (!response.success) {
+          throw new Error(response.error || 'Unknown error');
+        }
+        data = {
+          response: response.data.answer,
+          model: 'Custom RAG Model'
+        }
       }
+      else if (modelResponseType === 'general_knowledge') {
+        const response = await AIAPI.generate({
+          prompt: apiMessages,
+          model: 'openai/gpt-oss-20b', // openai/gpt-oss-20b | wen/qwen3-32b
+          temperature: temperature,
+          maxTokens: maxTokens,
+          contentType: 'chat',
+          outputFormat: 'text'
+        }, token);
+        if (!response.success) {
+          throw new Error(response.error || 'Unknown error');
+        }
+        data = {
+          response: response.data.response,
+          model: response.data.model
+        }
+      }
+
 
       // Add assistant response
       const assistantMessage = {
@@ -133,7 +151,7 @@ const QwenChat = () => {
         role: 'assistant',
         content: data.response,
         timestamp: new Date(),
-        model: data.data.response
+        model: data.model
       };
       
       setMessages(prev => [...prev, assistantMessage]);
@@ -167,67 +185,6 @@ const QwenChat = () => {
     }
   };
 
-  const handlegenerateSubmit = async (prompt) => {
-    if (!prompt.trim()) return;
-    
-    const token = access_token;
-    if (!token) {
-      setError('Please log in to use the chat');
-      return;
-    }
-
-    setInput('');
-    setLoading(true);
-    setError('');
-
-    try {
-      const response = await fetch(`${API_URL}/qwen/generate`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: prompt,
-          max_tokens: maxTokens
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Chat failed');
-      }
-
-      if (!data.success) {
-        throw new Error(data.error || 'Unknown error');
-      }
-
-      // Add conversation
-      const userMessage = {
-        id: messages.length + 1,
-        role: 'user',
-        content: prompt,
-        timestamp: new Date()
-      };
-      
-      const assistantMessage = {
-        id: messages.length + 2,
-        role: 'assistant',
-        content: data.data.response,
-        timestamp: new Date(),
-        model: data.data.model
-      };
-      
-      setMessages(prev => [...prev, userMessage, assistantMessage]);
-      
-    } catch (err) {
-      setError(err.message);
-      console.error('generate chat error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const clearChat = () => {
     setMessages([
@@ -287,7 +244,7 @@ const QwenChat = () => {
               </div>
               <div>
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-2">
-                  AI Assistant (Coming Soon!)
+                  AI Assistant
                 </h1>
                 <p className="text-lg text-gray-300">
                   Your intelligent conversation partner powered by <span className="font-semibold text-blue-400">Qwen 2.5</span>
@@ -339,31 +296,80 @@ const QwenChat = () => {
                   </div>
 
                   {/* Temperature Slider */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <Label className="text-sm font-medium text-gray-300">
-                        Creativity
-                      </Label>
-                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                        {temperature.toFixed(1)}
-                      </span>
-                    </div>
-                    <Slider
-                      value={[temperature]}
-                      onValueChange={([value]) => setTemperature(value)}
-                      min={0.1}
-                      max={1.0}
-                      step={0.1}
-                      className="w-full"
-                    />
-                    <p className="text-xs text-gray-500">
-                      {temperature < 0.3 ? '🎯 Precise' :
-                       temperature < 0.7 ? '⚖️ Balanced' :
-                       '🎨 Creative'}
-                    </p>
-                  </div>
+                            <div className="space-y-2">
+                            <div className="flex justify-between items-center">
+                              <Label className="text-sm font-medium text-gray-300">
+                              Creativity
+                              </Label>
+                              <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                              {temperature.toFixed(1)}
+                              </span>
+                            </div>
+                            <Slider
+                              value={[temperature]}
+                              onValueChange={([value]) => setTemperature(value)}
+                              min={0.1}
+                              max={1.0}
+                              step={0.1}
+                              className="w-full"
+                            />
+                            <p className="text-xs text-gray-500">
+                              {temperature < 0.3 ? '🎯 Precise' :
+                               temperature < 0.7 ? '⚖️ Balanced' :
+                               '🎨 Creative'}
+                            </p>
+                            </div>
+<div className="w-full my-2">
+  <Label className="text-sm font-medium text-gray-300 mb-2 block">
+    Model Response Type
+  </Label>
 
-                  {/* Action Buttons */}
+  <div className="flex gap-2">
+    {/* Page Context */}
+    <button
+      onClick={() => setModelResponseType("page_context")}
+      className={`
+        flex-1 px-2 py-1 rounded-full border text-sm font-medium transition-all
+        ${
+          modelResponseType === "page_context"
+            ? "bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 text-white border-transparent shadow-lg scale-[1.02]"
+            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
+        }
+      `}
+      aria-pressed={modelResponseType === "page_context"}
+    >
+      Page Context
+    </button>
+
+    {/* General Knowledge */}
+    <button
+      onClick={() => setModelResponseType("general_knowledge")}
+      className={`
+        flex-1 px-2 py-1 rounded-full border text-sm font-medium transition-all
+        ${
+          modelResponseType === "general_knowledge"
+            ? "bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 text-white border-transparent shadow-lg scale-[1.02]"
+            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
+        }
+      `}
+      aria-pressed={modelResponseType === "general_knowledge"}
+    >
+      General Knowledge
+    </button>
+  </div>
+
+  {/* Selected mode hint */}
+  <p className="mt-2 text-xs text-gray-400">
+    Selected mode:{" "}
+    <span className="text-white font-medium">
+      {modelResponseType === "page_context"
+        ? "Page Context (uses SForger information only)"
+        : "General Knowledge (model knowledge only)"}
+    </span>
+  </p>
+</div>
+
+                            {/* Action Buttons */}
                   <div className="space-y-2 pt-4 border-t border-gray-700/50">
                     <Button
                       onClick={clearChat}
@@ -399,7 +405,10 @@ const QwenChat = () => {
                     {quickPrompts.map((prompt, index) => (
                       <button
                         key={index}
-                        onClick={() => handleQuickSubmit(prompt)}
+                        onClick={() => {
+                          setInput(prompt);
+                          handleSubmit(new Event('submit'));
+                        }}
                         disabled={loading}
                         className="w-full text-left p-3 rounded-xl bg-gray-900/30 border border-gray-700/50 hover:border-blue-500/50 hover:bg-blue-500/10 transition-all text-sm text-gray-300 hover:text-white disabled:opacity-50"
                       >
@@ -442,7 +451,7 @@ const QwenChat = () => {
                           : 'bg-purple-500'
                       }`}>
                         {message.role === 'user' ? (
-                          <User className="h-4 w-4 text-white" />
+                          <img src={getProfilePicture(user)} alt="User Avatar" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
                           <Bot className="h-4 w-4 text-white" />
                         )}
@@ -456,7 +465,7 @@ const QwenChat = () => {
                             ? 'bg-red-900/30 border border-red-700/50 text-red-200'
                             : 'bg-gray-700/80 text-gray-100'
                         }`}>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                         </div>
                         
                         <div className={`flex items-center gap-2 mt-1 text-xs ${
@@ -495,53 +504,13 @@ const QwenChat = () => {
                 </div>
                 
                 {/* Input Area */}
-                <div className="relative z-10 p-6 border-t border-gray-700/50">
-                  <form onSubmit={handleSubmit} className="space-y-3">
-                    {error && (
-                      <Alert className="bg-red-900/20 border-red-700/50">
-                        <AlertDescription className="text-red-200 text-sm">
-                          {error}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    
-                    <div className="flex gap-3">
-                      <Textarea
-                        value={input}
-                        onChange={(e) => setInput(e.target.value)}
-                        placeholder="Type your message..."
-                        rows={2}
-                        className="bg-gray-900/50 border-gray-600/50 text-white placeholder-gray-500 focus:border-blue-500 resize-none"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            handleSubmit(e);
-                          }
-                        }}
-                        disabled={loading}
-                      />
-                      <Button
-                        type="submit"
-                        disabled={!input.trim() || loading}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
-                      >
-                        {loading ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Send className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </div>
-                    
-                    <p className="text-xs text-gray-500 flex items-center justify-between">
-                      <span>Press Shift+Enter for new line</span>
-                      <span className="flex items-center gap-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                        Ready
-                      </span>
-                    </p>
-                  </form>
-                </div>
+                <InputArea
+                  input={input}
+                  setInput={setInput}
+                  handleSubmit={handleSubmit}
+                  loading={loading}
+                  error={error}
+                />
               </div>
             </div>
           </div>

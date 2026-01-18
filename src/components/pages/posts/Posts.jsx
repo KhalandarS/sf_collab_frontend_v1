@@ -25,6 +25,7 @@ import PostCard from "./PostCard";
 import RightSidebar from "./RightSiderbar";
 import { useSelector } from "react-redux";
 import { postAPI } from "@/utils/APIs/postAPI";
+import { userSocialAPI } from "@/utils/APIs/socialAPI";
 
 // type Post = {
 //   id: number;
@@ -112,7 +113,22 @@ const ShareSheet = () => {
 // Main Posts Component - UPDATED WITH 3-CELL GRID
 const Posts = () => {
   const { user: currentUser, access_token } = useSelector((state) => state.auth);
+  const [socialProfile, setSocialProfile] = useState(null);
 
+  useEffect(() => {
+    const fetchSocialProfile = async () => {
+      try {
+        const response = await userSocialAPI.getSocialProfile(currentUser.id);
+        setSocialProfile(response.social);
+      }
+      catch (error) {
+        console.error("Failed to fetch social profile:", error);
+      }
+    }
+    if (currentUser) {
+      fetchSocialProfile();
+    }
+  }, [currentUser]);
 
 
 
@@ -161,7 +177,7 @@ const fetchPosts = async () => {
           {/* ---- LEFT SIDEBAR (hidden on mobile, sticky on lg) ---- */}
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-0 space-y-2">
-              <LeftSidebar />
+              <LeftSidebar socialProfile={socialProfile} />
             </div>
           </div>
 
@@ -195,7 +211,7 @@ const fetchPosts = async () => {
           {/* ---- RIGHT SIDEBAR (hidden on mobile, sticky on lg) ---- */}
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-0 space-y-2">
-              <RightSidebar />
+              <RightSidebar socialProfile={socialProfile} />
             </div>
           </div>
         </div>
