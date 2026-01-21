@@ -1,5 +1,5 @@
 // src/components/pages/admin/AdminDashboard.jsx
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
 import { useSelector } from 'react-redux';
 import { Bar, Pie } from 'react-chartjs-2';
@@ -21,6 +21,12 @@ import { applicationAPI } from '@/utils/APIs/applicationAPI';
 import AdminIdeasReviewSection from '../contribution/AdminIdeasReviewSection';
 import { useNavigate } from 'react-router-dom';
 import UserPopUp from './userPopUp';
+import { startupsAPI } from '@/utils/APIs/startupsAPI';
+import usePaginatedFetch from '@/utils/hooks/usePaginated';
+import InfiniteList from '@/components/InfiniteList';
+import { feedbackAPI } from '@/utils/APIs/feedbackAPI';
+import StartupAdminItems from './StartupAdminItems';
+import UserAdminItems from './UserAdminItems';
 
 // Register chart.js components
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
@@ -28,22 +34,59 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tool
 const AdminDashboard = () => {
   const { access_token, user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
-  const [totalUsers, setTotalUsers] = useState(0);
-  const [startups, setStartups] = useState([]);
-  const [totalStartups, setTotalStartups] = useState(0);
-  const [feedback, setFeedback] = useState([]);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalStartups: 0,
-    totalFeedback: 0,
-    totalRevenue: 0,
-  });
-  const [feedbackFilter, setFeedbackFilter] = useState('');
   const [usersFilter, setUsersFilter] = useState('');
-  const [activeUser, setActiveUser] = useState(null)
+  const [totalRevenue, setTotalRevenue] = useState(0); // Example stat
+  const {
+    items: users,
+    total: totalUsers,
+    loading: loadingUsers,
+    targetRef: usersRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page, search }) =>
+      usersAPI.getAll({
+        page,
+        search,
+      }, access_token),
+    search: usersFilter,
+    objectKey: 'users',
+    enabled: !!access_token,
+  });
   const [startupsFilter, setStartupsFilter] = useState('');
-  const [page, setPage] = useState(1);
+  const {
+    items: startups,
+    total: totalStartups,
+    loading: loadingStartups,
+    targetRef: startupsRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page, search }) =>
+      startupsAPI.getAll({
+        page,
+        search,
+      }, access_token),
+    search: startupsFilter,
+    objectKey: 'startups',
+    enabled: !!access_token,
+  });
+    const [feedbackFilter, setFeedbackFilter] = useState('');
+  const {
+    items: feedback,
+    setItems: setFeedback,
+    total: totalFeedback,
+    loading: loadingFeedback,
+    targetRef: feedbackRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page, search }) =>
+      feedbackAPI.getAll({
+        page,
+        per_page: 10,
+        search,
+      }, access_token),
+    search: feedbackFilter,
+    objectKey: 'feedback',
+    enabled: !!access_token,
+  });
+
+  const [activeUser, setActiveUser] = useState(null)
   const [selectedUser, setSelectedUser] = useState({});
   const [pointsCategory, setPointsCategory] = useState('small_contribution');
   const [showPointsModal, setShowPointsModal] = useState(false);
@@ -61,11 +104,7 @@ const AdminDashboard = () => {
       if (response.points) {
         setShowPointsModal(false);
         // Remove the feedback item from the list after giving points
-        await axios.delete(`${API_BASE_URL}/feedback/${selectedUser.id}`, {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        });
+        await feedbackAPI.delete(selectedUser.id, access_token);
         setFeedback((prevFeedback) =>
           prevFeedback.filter((item) => item.userId !== selectedUser.id)
         );
@@ -81,73 +120,13 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchAllData = useCallback(async () => {
-    try {
-      // if (!user.is_admin) {
-      //   toast.error('Unauthorized access to admin data');
-      //   navigate('/dashboard')
-      //   return
-      // }
-      const headers = {
-        "Authorization": `Bearer ${access_token}`,
-        "Content-Type": 'application/json',
-      }
-      const [usersRes, startupsRes, feedbackRes] = await Promise.all([
-        usersAPI.getAll(access_token, { page, per_page: 1000 }),
-        axios.get(`${API_BASE_URL}/startups`, { headers }),
-        axios.get(`${API_BASE_URL}/feedback`, { headers }),
-      ])
-
-      const usersData = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.users || [];
-      const startupsData = Array.isArray(startupsRes.data.data) ? startupsRes.data.data : startupsRes.data.data.startups || [];
-      const feedbackData = Array.isArray(feedbackRes.data.data) ? feedbackRes.data.data : feedbackRes.data.data.feedback || [];
-      console.log(usersRes.data.pagination?.total);
-      setUsers(usersData);
-      setTotalUsers(usersRes.data.pagination?.total || usersData.length);
-      setStartups(startupsData);
-      setTotalStartups(startupsRes.data.pagination?.total || startupsData.length);
-      setFeedback(feedbackData);
-      setStats({
-        totalUsers: usersData.length,
-        totalStartups: startupsData.length,
-        totalFeedback: feedbackData.length
-      });
-    } catch (err) {
-      if (err.response && err.response.status === 403) {
-        toast.error('Unauthorized access to admin data');
-        navigate('/dashboard')
-        return
-      }
-      console.error('Error fetching admin data:', err.response?.data || err.message);
-    }
-  }, [access_token]);
-
-  useEffect(() => {
-    if (access_token) {
-      fetchAllData();
-    }
-  }, [access_token, fetchAllData]);
-
-  const filteredFeedback = feedback.filter((item) =>
-    item.content.toLowerCase().includes(feedbackFilter.toLowerCase())
-  );
-
-  const filteredUsers = users.filter((user) =>
-    user.fullName.toLowerCase().includes(usersFilter.toLowerCase()) ||
-    user.email.toLowerCase().includes(usersFilter.toLowerCase())
-  );
-
-  const filteredStartups = startups.filter((startup) =>
-    startup.name.toLowerCase().includes(startupsFilter.toLowerCase())
-  );
-
   // Chart data
   const barData = {
     labels: ['Users', 'Startups', 'Feedback'],
     datasets: [
       {
         label: 'Counts',
-        data: [stats.totalUsers, stats.totalStartups, stats.totalFeedback],
+        data: [totalUsers, totalStartups, totalFeedback],
         backgroundColor: ['#4ade80', '#60a5fa', '#facc15'],
       },
     ],
@@ -158,7 +137,7 @@ const AdminDashboard = () => {
     datasets: [
       {
         label: 'Revenue',
-        data: [stats.totalRevenue, 100000 - stats.totalRevenue],
+        data: [totalRevenue, 100000 - totalRevenue],
         backgroundColor: ['#f87171', '#a1a1aa'],
       },
     ],
@@ -174,9 +153,7 @@ const AdminDashboard = () => {
 
   return (
     <>
-      {
-        activeUser && <UserPopUp user={activeUser} onClose={() => setActiveUser(null)}/>
-      }
+      {activeUser && <UserPopUp user={activeUser} onClose={() => setActiveUser(null)}/>}
     <div className="p-8 bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 min-h-screen text-white">
       <div className="w-full mx-auto">
         <div className="mb-12">
@@ -190,8 +167,8 @@ const AdminDashboard = () => {
           {[
             { label: 'Total Users', value: totalUsers, icon: '👥', color: 'from-green-500 to-green-600', accent: 'green' },
             { label: 'Total Startups', value: totalStartups, icon: '🚀', color: 'from-blue-500 to-blue-600', accent: 'blue' },
-            { label: 'Total Feedback', value: stats.totalFeedback, icon: '💬', color: 'from-yellow-500 to-yellow-600', accent: 'yellow' },
-            { label: 'Revenue', value: `$${stats?.totalRevenue || 0}`, icon: '💰', color: 'from-purple-500 to-purple-600', accent: 'purple' },
+            { label: 'Total Feedback', value: totalFeedback, icon: '💬', color: 'from-yellow-500 to-yellow-600', accent: 'yellow' },
+            { label: 'Revenue', value: `$${totalRevenue || 0}`, icon: '💰', color: 'from-purple-500 to-purple-600', accent: 'purple' },
           ].map((stat, idx) => (
             <div
               key={idx}
@@ -283,38 +260,38 @@ const AdminDashboard = () => {
             onChange={(e) => setFeedbackFilter(e.target.value)}
             className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
           />
-          <ul className="space-y-3 max-h-80 overflow-y-auto">
-            {filteredFeedback.map((item) => (
-              <li
-                key={item.id}
-                className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition backdrop-blur"
-              >
-                <div className="flex justify-between items-center mb-2">
-                  <div className="font-medium text-blue-300">
-                    User ID: {item.userId}
-                  </div>
+            <ul className="space-y-3 max-h-80 overflow-y-auto">
+              <InfiniteList items={feedback} renderItem={(item) => (
+                <li
+                  key={item.id}
+                  className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition backdrop-blur"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="font-medium text-blue-300">
+                      User ID: {item.userId}
+                    </div>
                   
     
-                  <button
-                    onClick={() => {
-                      setSelectedUser(users.find(u => u.id === item.userId));
-                      setShowPointsModal(true);
-                    }}
-                    className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
-                  >
-                    + Give Points
-                  </button>
-                </div>
+                    <button
+                      onClick={() => {
+                        setSelectedUser(users.find(u => u.id === item.userId));
+                        setShowPointsModal(true);
+                      }}
+                      className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
+                    >
+                      + Give Points
+                    </button>
+                  </div>
 
-                <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
-                <p className="text-gray-100 whitespace-pre-wrap break-words">{item.content}</p>
-                <p className="text-xs text-gray-400 mt-2">
-                  {new Date(item.createdAt).toLocaleDateString()} •{' '}
-                  {new Date(item.createdAt).toLocaleTimeString()}
-                </p>
-              </li>
+                  <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
+                  <p className="text-gray-100 whitespace-pre-wrap break-words">{item.content}</p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    {new Date(item.createdAt).toLocaleDateString()} •{' '}
+                    {new Date(item.createdAt).toLocaleTimeString()}
+                  </p>
+                </li>
 
-            ))}
+              )} sentinelRef={feedbackRef} loading={loadingFeedback}/>
           </ul>
         </div>
         <AdminIdeasReviewSection />
@@ -328,19 +305,8 @@ const AdminDashboard = () => {
               onChange={(e) => setUsersFilter(e.target.value)}
               className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
             />
-            <ul className="max-h-80 overflow-y-auto space-y-2">
-              {filteredUsers.map((u) => (
-                <li key={u.id}
-                  onClick={() => setActiveUser(u)}
-
-                  className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-600/40 transition">
-                  <div className="font-medium text-green-300">{u.fullName}</div>
-                  <div className="text-xs text-gray-400 mt-1">📧 {u.email}</div>
-                  <div className="text-xs text-gray-400">👤 {u.role} • {u.status}</div>
-                  <div className="text-xs text-gray-400">📊 {u.active_startups_count} startups • {u.satisfaction_percentage}% satisfied</div>
-                  <div className="text-xs text-gray-400">✅ Verified {u.isEmailVerified ? '•' : '× Not'} • {new Date(u.createdAt).toLocaleDateString()}</div>
-                </li>
-              ))}
+              <ul className="max-h-80 overflow-y-auto space-y-2">
+                <InfiniteList items={users} renderItem={(u) => <UserAdminItems user={u} setActiveUser={setActiveUser} />} sentinelRef={usersRef} loading={loadingUsers}/>
               </ul>
               
           </div>
@@ -353,12 +319,8 @@ const AdminDashboard = () => {
               onChange={(e) => setStartupsFilter(e.target.value)}
               className="w-full p-3 mb-4 rounded-lg bg-gray-700/50 text-white placeholder-gray-500 border border-gray-600/50 focus:border-blue-500 focus:outline-none transition"
             />
-            <ul className="max-h-80 overflow-y-auto space-y-2">
-              {filteredStartups.map((s) => (
-                <li key={s.id} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:bg-gray-600/40 transition">
-                  <span className="text-purple-300">{s.name}</span>
-                </li>
-              ))}
+              <ul className="max-h-80 overflow-y-auto space-y-2">
+                <InfiniteList items={startups} renderItem={(s) => <StartupAdminItems startup={s} />} loading={loadingStartups} sentinelRef={startupsRef} />
             </ul>
           </div>
         </div>

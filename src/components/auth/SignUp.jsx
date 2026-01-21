@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from "react-router-dom"
 import { setUser,setToken } from "../../services/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import NavBar from "../sections/NavBar";
-import useScrollHide from "../../hooks/useScrollHide";
+import useScrollHide from "../../utils/hooks/useScrollHide";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
 import { FaUserPlus } from "react-icons/fa6";
@@ -21,7 +21,7 @@ export default function SignUp() {
   const navigate = useNavigate();
   const dispatch=useDispatch();
   const [searchParams] = useSearchParams();
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token, isAuthenticated } = useSelector((state) => state.auth);
   const referralCode = searchParams.get("ref");
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -300,10 +300,13 @@ export default function SignUp() {
     { value: 'auto', label: 'Auto' }
   ];
   useEffect(() => {
-      if (user) {
-        navigate('/dashboard');
-      }
-    }, [user, navigate]);
+    if (!isAuthenticated) return;
+
+    if (user && access_token) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, access_token, isAuthenticated]);
+
   return (
   <div>
       {/* Collapsible Top Nav Container */}

@@ -6,7 +6,7 @@ import {
   ChevronRight, Bell, UserCheck 
 } from 'lucide-react';
 import { useConnectionNotifications } from '../hooks/useConnectionNotifications';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/utils/hooks/use-toast';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 const API_HOST = API_URL.replace(/\/api\/?$/, "");

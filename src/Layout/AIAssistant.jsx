@@ -103,7 +103,7 @@ export default function AIAssistant() {
   if (!currentUser) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-100 flex flex-col items-end gap-3 pointer-events-none md:bottom-20 md:right-4">
+    <div className="fixed bottom-20 right-4 z-1000000 flex flex-col items-end gap-3 pointer-events-none md:bottom-20 md:right-4">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -111,7 +111,7 @@ export default function AIAssistant() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed inset-0 md:inset-auto md:w-80 md:bottom-20 md:right-4 md:rounded-2xl bg-zinc-900 border border-zinc-800 md:border rounded-none md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+            className="fixed left-0 top-16 z-1000000  md:inset-auto w-full md:w-80 md:bottom-20 md:right-4 md:rounded-2xl bg-zinc-900 border border-zinc-800 md:border rounded-none md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
           >
             <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
               <div className="flex items-center gap-2">
@@ -146,7 +146,7 @@ export default function AIAssistant() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <div className="h-[calc(100vh-140px)] md:h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-2">
+                  <div className="h-[calc(100vh-204px)] md:h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-2">
                     {messages.length === 0 ? (
                       <div className="text-sm text-zinc-500 text-center py-8">
                         Ask me anything...

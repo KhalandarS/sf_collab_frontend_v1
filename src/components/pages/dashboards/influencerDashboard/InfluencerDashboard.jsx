@@ -11,7 +11,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardChangeSection from "../dashboardChangeSection";
+import DashboardChangeSection from "../DashboardChangeSection";
 import KnowledgeResources from "@/components/pages/dashboards/influencerDashboard/components/KnowledgeResources";
 import DashboardTopNav from "@/components/common/DashboardTopNav";
 import { useDashboardNavHide } from "@/components/common/DashboardTopNav";

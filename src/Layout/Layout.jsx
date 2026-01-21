@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useRef, useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -11,7 +12,7 @@ import InfluencerSidebar from "@/components/pages/sidebars/influencerSidebar/Inf
 import BuilderSidebar from "@/components/pages/sidebars/builderSidebar/BuilderSidebar";
 import InvestorSidebar from "@/components/pages/sidebars/investorSidebar/InvestorSidebar";
 
-import useScrollHide from "../hooks/useScrollHide";
+import useScrollHide from "../utils/hooks/useScrollHide";
 import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
@@ -28,7 +29,6 @@ import { SOCKET_API_URL } from "@/utils/config";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { isUserProfileComplete } from "@/utils/getUserComplete";
-import Navbar from "@/components/sections/NavBar";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteEmailPopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
@@ -85,7 +85,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     };
 
     checkWaitlist();
-  }, [user, access_token, location.pathname, navigate]);
+  }, [user, access_token, location.pathname]);
 
   // ==========================================================================
   // CONNECTION NOTIFICATIONS VIA SOCKET.IO
@@ -140,7 +140,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <p className="text-sm opacity-90">{accepterName} accepted your connection request</p>
         </div>,
         { 
-          onClick: () => navigate(`/user-profile/${data.accepter_id || data.accepter?.id}`),
+          onClick: () => navigate(`/user-profile?userId=${data.accepter_id || data.accepter?.id}`),
           autoClose: 5000,
         }
       );
@@ -193,7 +193,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       socket.off('connection_declined', handleRequestDeclined);
       socket.off('connection_removed', handleConnectionRemoved);
     };
-  }, [socket, isConnected, user, navigate]);
+  }, [socket, isConnected, user]);
 
   // ==========================================================================
   // RAW WEBSOCKET CLIENT (Alternative if not using Socket.io)
@@ -237,7 +237,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     client.connect();
 
     return () => client.disconnect();
-  }, [user?.id, navigate]);
+  }, [user?.id]);
 
   // Profile completion reminder
   useEffect(() => {
@@ -314,7 +314,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           onMouseEnter={handleNavAreaEnter}
           onMouseLeave={handleNavAreaLeave}
           className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-            isNavHidden ? "h-0" : "h-[60px]"
+            isNavHidden ? "h-0" : "h-16"
           }`}
         >
           <NavBar
@@ -366,7 +366,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       </motion.div>
       </div>
       {/* Chat docks */}
-            <AIAssistant />
+      <div className="z-10000000000">
+        <AIAssistant />
+      </div>
         {!isRootPath && !isChatRoute && !isMobile && (
             <ChatDock maxWindows={2} />
         )}

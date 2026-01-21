@@ -136,6 +136,19 @@ export const waitlistAPI = {
     });
     return response.data.data;
   },
+  getFeedback: async (params = {}, accessToken) => {
+    const response = await api.get("/waitlist/feedback", {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params
+      },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  }
 };
 
 

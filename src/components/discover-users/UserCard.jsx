@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -9,16 +10,8 @@ const UserCard = ({ user, onOpen }) => {
     `${user.first_name || ''} ${user.last_name || ''}`.trim() || 
     'Unknown';
 
-  const getAvatarUrl = () => {
-    if (user.profile?.picture) {
-      return user.profile.picture.startsWith('http') 
-        ? user.profile.picture 
-        : `${API_URL}${user.profile.picture}`;
-    }
-    return null;
-  };
 
-  const avatarUrl = getAvatarUrl();
+
   const initials = `${user.first_name?.charAt(0) || ''}${user.last_name?.charAt(0) || ''}`.toUpperCase();
 
   return (
@@ -34,18 +27,14 @@ const UserCard = ({ user, onOpen }) => {
         {/* Avatar */}
         <div className="flex justify-center mb-3">
           <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600">
-            {avatarUrl ? (
+            
               <img
-                src={avatarUrl}
+                src={getProfilePicture(user)}
                 alt={fullName}
                 className="w-full h-full object-cover"
                 onError={(e) => { e.target.style.display = 'none'; }}
               />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white font-bold text-lg">
-                {initials || '?'}
-              </div>
-            )}
+
           </div>
         </div>
 

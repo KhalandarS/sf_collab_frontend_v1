@@ -1,69 +1,60 @@
 /**
- * ChatInput.jsx - MULTI FILE SUPPORT
- *
- * FEATURES:
- * 1. Controlled input (value, onChange, onSend)
- * 2. Emoji picker
- * 3. Single OR multiple file upload (configurable)
- * 4. Image + file previews
- * 5. Sequential upload support
+ * ChatInput.jsx - FIXED VERSION
+ * 
+ * FIXES:
+ * 1. Works with ChatPage props (value, onChange, onSend)
+ * 2. REMOVED Plus button
+ * 3. Emoji picker works
+ * 4. File/Image upload works
  */
 
-import React, { useState, useRef, useEffect } from 'react';
-import {
-  Send,
-  Smile,
-  Paperclip,
-  Image as ImageIcon,
-  X,
-  Loader2,
-} from 'lucide-react';
-import { toast } from 'react-toastify';
+import React, { useState, useRef } from 'react';
+import { Send, Smile, Paperclip, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 
-/* -------------------- Emoji List -------------------- */
-
+// Simple emoji list
 const EMOJI_LIST = [
-  '😀','😂','🥰','😍','🤩','😎','🙂','😊',
-  '👍','👎','👏','🙌','🤝','✌️','🤞','💪',
-  '❤️','🧡','💛','💚','💙','💜','🖤','💔',
-  '🔥','⭐','✨','💯','🎉','🎊','🎁','🏆',
-  '🙏','🤔','😢','😭','😠','🤬','😱','🙄',
+  '😀', '😂', '🥰', '😍', '🤩', '😎', '🙂', '😊',
+  '👍', '👎', '👏', '🙌', '🤝', '✌️', '🤞', '💪',
+  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔',
+  '🔥', '⭐', '✨', '💯', '🎉', '🎊', '🎁', '🏆',
+  '👋', '🤚', '✋', '🖐️', '👌', '🤌', '🤏', '✊',
+  '😢', '😭', '😤', '😠', '🤬', '😱', '😨', '😰',
+  '🤔', '🤨', '😐', '😑', '😶', '🙄', '😏', '😣',
+  '🙏', '💕', '💞', '💓', '💗', '💖', '💘', '💝',
 ];
 
-/* -------------------- File Preview -------------------- */
-
+// File preview component
 const FilePreview = ({ file, onRemove }) => {
-  const isImage = file.type?.startsWith('image/');
+  const isImage = file?.type?.startsWith('image/');
   const [preview, setPreview] = useState(null);
 
-  useEffect(() => {
-    if (isImage) {
+  React.useEffect(() => {
+    if (isImage && file) {
       const reader = new FileReader();
-      reader.onload = e => setPreview(e.target.result);
+      reader.onload = (e) => setPreview(e.target.result);
       reader.readAsDataURL(file);
     }
   }, [file, isImage]);
 
+  if (!file) return null;
+
   return (
-    <div className="relative inline-block mr-2 mb-2">
+    <div className="relative inline-block">
       {isImage && preview ? (
-        <img
-          src={preview}
-          alt={file.name}
+        <img 
+          src={preview} 
+          alt={file.name} 
           className="h-16 w-16 object-cover rounded-lg border border-zinc-700"
         />
       ) : (
         <div className="h-16 px-3 flex items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700">
           <Paperclip size={16} className="text-zinc-400" />
-          <span className="text-xs text-zinc-300 max-w-[100px] truncate">
-            {file.name}
-          </span>
+          <span className="text-xs text-zinc-300 max-w-[100px] truncate">{file.name}</span>
         </div>
       )}
-
       <button
         onClick={onRemove}
-        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white"
+        className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full text-white hover:bg-red-600"
       >
         <X size={12} />
       </button>
@@ -71,25 +62,24 @@ const FilePreview = ({ file, onRemove }) => {
   );
 };
 
-/* -------------------- Emoji Picker -------------------- */
-
+// Emoji Picker component
 const EmojiPicker = ({ isOpen, onSelect, onClose }) => {
   if (!isOpen) return null;
 
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
-      <div className="absolute bottom-full right-0 mb-2 p-2 bg-zinc-900 border border-zinc-700 rounded-xl z-50 w-72">
+      <div className="absolute bottom-full right-0 mb-2 p-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-72">
         <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
-          {EMOJI_LIST.map((emoji, i) => (
+          {EMOJI_LIST.map((emoji, index) => (
             <button
-              key={i}
+              key={index}
               type="button"
               onClick={() => {
                 onSelect(emoji);
                 onClose();
               }}
-              className="p-2 hover:bg-zinc-800 rounded-lg text-xl"
+              className="p-2 hover:bg-zinc-800 rounded-lg text-xl transition-colors"
             >
               {emoji}
             </button>
@@ -100,205 +90,222 @@ const EmojiPicker = ({ isOpen, onSelect, onClose }) => {
   );
 };
 
-/* -------------------- ChatInput -------------------- */
-
-const ChatInput = ({
-  value = '',
-  onChange,
-  onSend,
-  onFileUpload,
-  socket,
-  conversationId,
+const ChatInput = ({ 
+  value = '',           // Controlled value from parent
+  onChange,             // Callback when text changes
+  onSend,               // Callback to send message
+  onFileUpload,         // Optional: function to upload file and get URL
+  socket,               // Optional: socket for file events
+  conversationId,       // Optional: for file uploads
   disabled = false,
-  placeholder = 'Type a message...',
-  allowEmojis = true,
-  allowFiles = true,
-  allowImages = true,
-  acceptMultipleFiles = false,
+  placeholder = "Type a message..."
 }) => {
   const [showEmoji, setShowEmoji] = useState(false);
-  const [files, setFiles] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-
+  
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
   const imageInputRef = useRef(null);
 
-  /* -------------------- Handlers -------------------- */
-
-  const handleInputChange = e => onChange?.(e.target.value);
-
-  const handleFileSelect = e => {
-    const selected = Array.from(e.target.files || []);
-
-    const valid = selected.filter(file => {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 10MB`);
-        return false;
-      }
-      return true;
-    });
-
-    setFiles(prev =>
-      acceptMultipleFiles ? [...prev, ...valid] : valid.slice(0, 1)
-    );
-
-    e.target.value = '';
-  };
-
-  const handleFileSend = async () => {
-    if (!files.length || !onFileUpload) return;
-
-    setIsUploading(true);
-
-    try {
-      for (const file of files) {
-        const url = await onFileUpload(file);
-
-        if (url && socket && conversationId) {
-          socket.emit('send_file', {
-            conversation_id: conversationId,
-            file_url: url,
-            file_name: file.name,
-            file_type: file.type.startsWith('image/') ? 'image' : 'file',
-          });
-        }
-      }
-
-      setFiles([]);
-    } catch (err) {
-      console.error(err);
-      toast.error('File upload failed');
-    } finally {
-      setIsUploading(false);
+  // Handle text input change
+  const handleInputChange = (e) => {
+    if (onChange) {
+      onChange(e.target.value);
     }
   };
 
-  const handleSubmit = async e => {
-    e.preventDefault();
-    if (disabled || isUploading) return;
-
-    if (files.length) {
+  // Handle send
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    
+    if (isUploading || disabled) return;
+    
+    // Handle file upload first
+    if (selectedFile) {
       await handleFileSend();
       return;
     }
-
-    if (value.trim()) {
+    
+    // Handle text message
+    if (value?.trim()) {
       onSend(value.trim());
       inputRef.current?.focus();
     }
   };
 
-  const handleEmojiSelect = emoji => {
-    onChange?.((value || '') + emoji);
-    inputRef.current?.focus();
+  // Handle file selection
+  const handleFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB');
+        return;
+      }
+      setSelectedFile(file);
+    }
+    e.target.value = '';
   };
 
-  const handleKeyDown = e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit(e);
+  // Send file
+  const handleFileSend = async () => {
+    if (!selectedFile) return;
+
+    // If we have an onFileUpload function, use it
+    if (onFileUpload) {
+      setIsUploading(true);
+      
+      try {
+        const fileUrl = await onFileUpload(selectedFile);
+        
+        if (fileUrl && socket && conversationId) {
+          socket.emit('send_file', {
+            conversation_id: conversationId,
+            file_url: fileUrl,
+            file_name: selectedFile.name,
+            file_type: selectedFile.type.startsWith('image/') ? 'image' : 'file'
+          });
+        }
+        
+        setSelectedFile(null);
+      } catch (error) {
+        console.error('Failed to upload file:', error);
+        alert('Failed to upload file. Please try again.');
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // No upload function - just send file name as message (fallback)
+      onSend(`[File: ${selectedFile.name}]`);
+      setSelectedFile(null);
     }
   };
 
-  /* -------------------- Render -------------------- */
+  // Handle emoji selection
+  const handleEmojiSelect = (emoji) => {
+    if (onChange) {
+      onChange((value || '') + emoji);
+    }
+    inputRef.current?.focus();
+  };
+
+  // Handle like/thumbs up
+  const handleLike = () => {
+    onSend('👍');
+  };
+
+  // Handle Enter key
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
 
   return (
     <div className="border-t border-zinc-800 bg-zinc-900/50">
-      {files.length > 0 && (
-        <div className="px-4 pt-3 flex flex-wrap">
-          {files.map((file, i) => (
-            <FilePreview
-              key={i}
-              file={file}
-              onRemove={() =>
-                setFiles(prev => prev.filter((_, idx) => idx !== i))
-              }
-            />
-          ))}
+      {/* File Preview */}
+      {selectedFile && (
+        <div className="px-4 pt-3">
+          <FilePreview 
+            file={selectedFile} 
+            onRemove={() => setSelectedFile(null)} 
+          />
         </div>
       )}
 
+      {/* Input Area */}
       <div className="p-3">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
-          {allowImages && (
-            <>
-              <button
-                type="button"
-                onClick={() => imageInputRef.current?.click()}
-                className="p-2 text-indigo-400 hover:text-indigo-300"
-                disabled={disabled}
-              >
-                <ImageIcon size={20} />
-              </button>
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept="image/*"
-                multiple={acceptMultipleFiles}
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </>
-          )}
+          {/* Image button */}
+          <button 
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors"
+            disabled={disabled || isUploading}
+            title="Send image"
+          >
+            <ImageIcon size={20} />
+          </button>
+          <input
+            ref={imageInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          
+          {/* File button */}
+          <button 
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors"
+            disabled={disabled || isUploading}
+            title="Attach file"
+          >
+            <Paperclip size={20} />
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,.doc,.docx,.txt,.xlsx,.xls,.ppt,.pptx,.zip,.rar,.png,.jpg,.jpeg,.gif"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
 
-          {allowFiles && (
-            <>
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="p-2 text-indigo-400 hover:text-indigo-300"
-                disabled={disabled}
-              >
-                <Paperclip size={20} />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple={acceptMultipleFiles}
-                onChange={handleFileSelect}
-                className="hidden"
-              />
-            </>
-          )}
-
+          {/* Text input */}
           <div className="flex-1 relative">
             <input
               ref={inputRef}
-              value={value}
+              type="text"
+              value={value || ''}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled || isUploading}
-              className="w-full px-4 py-2.5 bg-zinc-800 rounded-full text-white pr-10"
+              className="w-full px-4 py-2.5 bg-zinc-800 rounded-full text-white placeholder-zinc-500 focus:outline-none disabled:opacity-50 pr-10"
             />
-
-            {allowEmojis && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                <button
-                  type="button"
-                  onClick={() => setShowEmoji(!showEmoji)}
-                  className="text-indigo-400"
-                >
-                  <Smile size={20} />
-                </button>
-                <EmojiPicker
-                  isOpen={showEmoji}
-                  onSelect={handleEmojiSelect}
-                  onClose={() => setShowEmoji(false)}
-                />
-              </div>
-            )}
+            
+            {/* Emoji button */}
+            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <button 
+                type="button"
+                onClick={() => setShowEmoji(!showEmoji)}
+                className="p-1 text-indigo-400 hover:text-indigo-300"
+                disabled={disabled}
+              >
+                <Smile size={20} />
+              </button>
+              
+              <EmojiPicker 
+                isOpen={showEmoji}
+                onSelect={handleEmojiSelect}
+                onClose={() => setShowEmoji(false)}
+              />
+            </div>
           </div>
 
+          {/* Send or Like button */}
           {isUploading ? (
-            <Loader2 size={20} className="animate-spin text-indigo-400" />
-          ) : (
-            <button
-              type="submit"
-              className="p-2 text-indigo-400 hover:text-indigo-300"
+            <div className="p-2 text-indigo-400">
+              <Loader2 size={20} className="animate-spin" />
+            </div>
+          ) : (value?.trim() || selectedFile) ? (
+            <button 
+              type="submit" 
+              className="p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
+              disabled={disabled}
             >
               <Send size={20} />
+            </button>
+          ) : (
+            <button 
+              type="button" 
+              onClick={handleLike}
+              className="p-2 text-indigo-400 hover:text-indigo-300 transition-colors text-xl disabled:opacity-50"
+              disabled={disabled}
+            >
+              👍
             </button>
           )}
         </form>

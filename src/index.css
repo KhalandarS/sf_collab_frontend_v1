@@ -45,7 +45,10 @@ html {
 body {
   height: 100%;
 }
-
+label {
+  all: unset;
+  color: white;
+}
 /* Add this in your globals.css or tailwind.css */
 
 
@@ -252,8 +255,4 @@ backdrop-filter: blur(10);
     }
 }
 
-label {
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-}
+

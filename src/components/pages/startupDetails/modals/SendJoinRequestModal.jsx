@@ -6,13 +6,13 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '../../ui/dialog';
-import { Button } from '../../ui/button';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+} from '../../../ui/dialog';
+import { Button } from '../../../ui/button';
+import { Input } from '../../../ui/input';
+import { Textarea } from '../../../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../ui/select';
 import { toast } from 'react-toastify';
-import { startupsAPI } from '@/utils/APIs/startupAPI';
+import { startupsAPI } from '@/utils/APIs/startupsAPI';
 
 /**
  * SendJoinRequestModal - For REGULAR USERS to send join requests to startups

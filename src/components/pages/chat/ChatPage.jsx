@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Edit3, MessageCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -38,11 +37,13 @@ const formatLastSeen = (ts, nowTs) => {
   const now = new Date(nowTs || Date.now());
   const d = new Date(ms);
 
+  // minutes ago (0–59)
   const diffMs = Math.max(0, now.getTime() - d.getTime());
   const mins = Math.floor(diffMs / 60000);
   if (mins < 1) return "last seen just now";
   if (mins < 60) return mins === 1 ? "last seen 1 min ago" : `last seen ${mins} mins ago`;
 
+  // helpers
   const sameDay =
     d.getFullYear() === now.getFullYear() &&
     d.getMonth() === now.getMonth() &&
@@ -63,12 +64,15 @@ const formatLastSeen = (ts, nowTs) => {
     .replace("AM", "am")
     .replace("PM", "pm");
 
+  // 60+ mins but still today
   if (sameDay) return `last seen ${timeStr}`;
 
+  // crossed midnight -> yesterday
   if (yesterday) return `last seen yesterday, ${timeStr}`;
 
-  const day = d.getDate();
-  const month = d.getMonth() + 1;
+  // 2+ days ago -> d/m/yy time (matches your example)
+  const day = d.getDate(); // no leading zero
+  const month = d.getMonth() + 1; // no leading zero
   const yy = String(d.getFullYear()).slice(-2);
   return `last seen ${day}/${month}/${yy} ${timeStr}`;
 };
@@ -110,33 +114,47 @@ function normalizeMessage(m) {
   };
 }
 
-const LS_LAST_ACTIVE_KEY = "presence:lastActiveAt";
-const LS_LAST_SEEN_KEY = "presence:lastSeenAt";
+  const LS_LAST_ACTIVE_KEY = "presence:lastActiveAt";
+  const LS_LAST_SEEN_KEY = "presence:lastSeenAt";
 
-function readPresenceMap(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    const obj = raw ? JSON.parse(raw) : {};
-    return obj && typeof obj === "object" ? obj : {};
-  } catch {
-    return {};
+  function readPresenceMap(key) {
+    try {
+      const raw = localStorage.getItem(key);
+      const obj = raw ? JSON.parse(raw) : {};
+      return obj && typeof obj === "object" ? obj : {};
+    } catch {
+      return {};
+    }
   }
-}
 
-function writePresenceMap(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value || {}));
-  } catch {
-    // ignore
+  function writePresenceMap(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(value || {}));
+    } catch {
+      // ignore
+    }
   }
-}
+
 
 const ChatPage = () => {
+  
   const navigate = useNavigate();
-  const { user: currentUser, access_token: token } = useSelector((state) => state.auth);
+// ============================================
+  // AUTH
+  // ============================================
+  const { user :currentUser, access_token: token } = useSelector((state) => state.auth);
+
+  // ============================================
+  // SOCKET CONNECTION
+  // ============================================
+  
   const { socket, isConnected, onlineUsers } = useAppSocket();
   const { friends } = useChatContacts();
 
+
+  // ============================================
+  // STATE
+  // ============================================
   const [conversations, setConversations] = useState([]);
   const [activeConversation, setActiveConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -145,36 +163,28 @@ const ChatPage = () => {
   const [lastActiveAt, setLastActiveAt] = useState(() => readPresenceMap(LS_LAST_ACTIVE_KEY));
   const [lastSeenAt, setLastSeenAt] = useState(() => readPresenceMap(LS_LAST_SEEN_KEY));
   const [nowTs, setNowTs] = useState(Date.now());
+
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [searchParams] = useSearchParams();
-  const [showChat, setShowChat] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.matchMedia("(max-width: 1024px)").matches);
-  const [isMessagesLoading, setIsMessagesLoading] = useState(false);
 
+
+  // ============================================
+  // REFS
+  // ============================================
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.matchMedia("(max-width: 1024px)").matches);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    if (!activeConversation) {
-      setShowChat(false);
-    }
-  }, [activeConversation]);
-
+  // ============================================
+  // API CALLS
+  // ============================================
+  
+  // Fetch conversations
   const fetchConversations = useCallback(async () => {
-    if (!token) return [];
-
+    if (!token) return;
+    
     try {
       const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -184,6 +194,8 @@ const ChatPage = () => {
         const convos = data.data.conversations || [];
         setConversations(convos);
 
+        // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
+        // (works even if you didn't witness the user go offline in this session)
         setLastSeenAt((prev) => {
           const next = { ...prev };
           for (const c of convos) {
@@ -205,21 +217,18 @@ const ChatPage = () => {
           }
           return next;
         });
-
-        return convos;
       }
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
     } finally {
       setIsLoading(false);
     }
+  }, [token]);
 
-    return [];
-  }, [token, currentUser?.id]);
-
+  // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
-
+    
     try {
       const response = await fetch(
         `${API_BASE_URL}/chat/conversations/${conversationId}/messages`,
@@ -235,14 +244,17 @@ const ChatPage = () => {
     }
   }, [token, socket]);
 
+  // ============================================
+  // FILE UPLOAD HANDLER
+  // ============================================
   const handleFileUpload = useCallback(async (file) => {
     if (!token || !file) return null;
-
+    
     const formData = new FormData();
     formData.append('file', file);
     formData.append('content', file.name);
     formData.append('message_type', file.type.startsWith('image/') ? 'image' : 'file');
-
+    
     try {
       const response = await fetch(
         `${API_BASE_URL}/chat/conversations/${activeConversation.id}/messages`,
@@ -253,7 +265,7 @@ const ChatPage = () => {
         }
       );
       const data = await response.json();
-
+      
       if (data.success && data.data.message) {
         return data.data.message.file_url;
       }
@@ -264,12 +276,18 @@ const ChatPage = () => {
     }
   }, [token, activeConversation?.id]);
 
+  // ============================================
+  // EFFECTS
+  // ============================================
+
+  // Initial data load
   useEffect(() => {
-    if (token) {
-      fetchConversations();
-    }
+    if (!token) return;
+    fetchConversations();
   }, [token, fetchConversations]);
 
+
+  // Open DM if URL has ?user=<id>
   useEffect(() => {
     if (activeConversation) return;
 
@@ -281,11 +299,13 @@ const ChatPage = () => {
     if (!friend) return;
 
     handleOpenChatWithFriend(friend);
-  }, [searchParams, friends, activeConversation]);
+  }, [searchParams, friends]);
 
+  // Socket event listeners
   useEffect(() => {
     if (!socket) return;
 
+    // Join active conversation room
     if (activeConversation) {
       socket.emit("join_conversation", { conversation_id: activeConversation.id });
     }
@@ -305,10 +325,11 @@ const ChatPage = () => {
         setTypingUsers((prev) => {
           if (prev.some((u) => String(u.id) === String(data.user_id))) return prev;
 
+          // Guard: activeConversation or participants may be missing for some DMs
           const participants = activeConversation?.participants || [];
           const user =
             participants.find((p) => String(p.id) === String(data.user_id)) ||
-            { id: data.user_id, firstName: "", lastName: "" };
+            { id: data.user_id, firstName: "", lastName: "" }; // fallback so UI won't crash
 
           return [...prev, user];
         });
@@ -316,6 +337,7 @@ const ChatPage = () => {
         setTypingUsers((prev) => prev.filter((u) => String(u.id) !== String(data.user_id)));
       }
     };
+
 
     socket.on("new_message", onNewMessage);
     socket.on("user_typing", onUserTyping);
@@ -329,6 +351,9 @@ const ChatPage = () => {
     };
   }, [socket, activeConversation, fetchConversations]);
 
+  // ============================================
+  // PRESENCE TRACKING (IDLE SUPPORT)
+  // ============================================
   useEffect(() => {
     if (!socket) return;
 
@@ -356,10 +381,12 @@ const ChatPage = () => {
     socket.on("user_status", onUserStatus);
     socket.on("user_activity", onUserActivity);
 
+    // 🔹 THROTTLED ACTIVITY PING (THIS IS THE PART YOU ASKED ABOUT)
     const ping = () => socket.emit("user_activity", { ts: now() });
 
+    // only keypress + interval (NO mousemove spam)
     window.addEventListener("keydown", ping);
-    const interval = setInterval(ping, 20000);
+    const interval = setInterval(ping, 20000); // every 20s
 
     return () => {
       clearInterval(interval);
@@ -372,7 +399,7 @@ const ChatPage = () => {
   useEffect(() => {
     const t = setInterval(() => {
       setNowTs(Date.now());
-    }, 30000);
+    }, 30000); // every 30s
 
     return () => clearInterval(t);
   }, []);
@@ -385,49 +412,58 @@ const ChatPage = () => {
     writePresenceMap(LS_LAST_SEEN_KEY, lastSeenAt);
   }, [lastSeenAt]);
 
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key === "presence:lastActiveAt") {
-        try {
-          setLastActiveAt(JSON.parse(e.newValue || "{}"));
-        } catch {}
-      }
-      if (e.key === "presence:lastSeenAt") {
-        try {
-          setLastSeenAt(JSON.parse(e.newValue || "{}"));
-        } catch {}
-      }
-    };
 
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-  }, []);
+// --------------------------------------------
+// Sync presence when localStorage changes
+// (keeps ChatDock and ChatPage aligned)
+// --------------------------------------------
+useEffect(() => {
+  const onStorage = (e) => {
+    if (e.key === "presence:lastActiveAt") {
+      try {
+        setLastActiveAt(JSON.parse(e.newValue || "{}"));
+      } catch {}
+    }
+    if (e.key === "presence:lastSeenAt") {
+      try {
+        setLastSeenAt(JSON.parse(e.newValue || "{}"));
+      } catch {}
+    }
+  };
 
+  window.addEventListener("storage", onStorage);
+  return () => window.removeEventListener("storage", onStorage);
+}, []);
+
+
+  // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSelectConversation = async (conversation) => {
+
+  // ============================================
+  // HANDLERS
+  // ============================================
+
+  // Select a conversation
+  const handleSelectConversation = (conversation) => {
     if (activeConversation?.id !== conversation.id) {
+      // Leave previous room
       if (socket && activeConversation) {
         socket.emit('leave_conversation', { conversation_id: activeConversation.id });
       }
-
+      
+      setActiveConversation(conversation);
       setMessages([]);
       setTypingUsers([]);
-      setIsMessagesLoading(true);
-
-      await fetchMessages(conversation.id);
-      setActiveConversation(conversation);
-      setIsMessagesLoading(false);
-
-      if (isMobile) {
-        setShowChat(true);
-      }
+      fetchMessages(conversation.id);
     }
   };
 
+  // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
+    // Check if conversation already exists
     const existing = conversations.find(c =>
       c.conversation_type === 'direct' &&
       c.participants?.some(p => String(p.id) === String(friend.id))
@@ -436,6 +472,7 @@ const ChatPage = () => {
     if (existing) {
       handleSelectConversation(existing);
     } else {
+      // Create new conversation
       try {
         const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
           method: 'POST',
@@ -450,20 +487,22 @@ const ChatPage = () => {
         });
         const data = await response.json();
         if (data.success) {
-          const allConversations = await fetchConversations();
-          const fullConversation = allConversations.find(
-            c => String(c.id) === String(data.data.conversation.id)
-          );
-          if (fullConversation) {
-            handleSelectConversation(fullConversation);
-          }
+          await fetchConversations();
+
+          
+          const createdId = data?.data?.conversation?.id;
+          const updated = (conversations || []).find((c) => String(c.id) === String(createdId));
+
+          handleSelectConversation(updated || data.data.conversation);
         }
+
       } catch (error) {
         console.error('Failed to create conversation:', error);
       }
     }
   };
 
+  // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
       const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
@@ -480,43 +519,34 @@ const ChatPage = () => {
       });
       const data = await response.json();
       if (data.success) {
-        const newConversation = data.data.conversation;
-
-        await fetchConversations();
-
-        setTimeout(() => {
-          setConversations((prev) => {
-            const fullConversation = prev.find(
-              (c) => String(c.id) === String(newConversation.id)
-            );
-            if (fullConversation) {
-              handleSelectConversation(fullConversation);
-            }
-            return prev;
-          });
-        }, 0);
+        fetchConversations();
+        handleSelectConversation(data.data.conversation);
       }
     } catch (error) {
       console.error('Failed to create group:', error);
     }
   };
 
+  // Handle input change (with typing indicator)
   const handleInputChange = (value) => {
     setMessageInput(value);
-
+    
     if (socket && activeConversation) {
       socket.emit('typing_start', { conversation_id: activeConversation.id });
-
+      
+      // Clear previous timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-
+      
+      // Stop typing after 2 seconds of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit('typing_stop', { conversation_id: activeConversation.id });
       }, 2000);
     }
   };
 
+  // Send a message
   const handleSendMessage = (content) => {
     if (!content || !activeConversation || !socket) return;
 
@@ -525,18 +555,17 @@ const ChatPage = () => {
       conversation_id: activeConversation.id,
       content,
     });
-
+    
     setMessageInput('');
   };
 
+  // Helper: Should show avatar for this message?
   const shouldShowAvatar = (message, index) => {
-    if (index === 0) return true;
-    const prevMessage = messages[index - 1];
-    if (String(prevMessage?.sender_id) !== String(message?.sender_id)) return true;
-    const prevTime = new Date(prevMessage?.created_at);
-    const currTime = new Date(message?.created_at);
-    return (currTime - prevTime) > 5 * 60 * 1000;
-  };
+  if (index === 0) return true;
+  const prevMessage = messages[index - 1];
+  return String(prevMessage?.sender_id) !== String(message?.sender_id);
+};
+
 
   function shouldShowSenderName(messages, index) {
     if (index === 0) return true;
@@ -550,21 +579,35 @@ const ChatPage = () => {
     return prevId !== currId;
   }
 
+
+  // Filter conversations by search and tab
   const filteredConversations = conversations.filter(c => {
+    // Filter by search
     if (searchTerm) {
       const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
       if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
     }
-
+    
+    // Filter by tab
     if (activeTab === 'all') return true;
     if (activeTab === 'friends') return c.conversation_type === 'direct';
     if (activeTab === 'groups') return c.conversation_type === 'group';
     if (activeTab === 'startups') return c.conversation_type === 'team';
     if (activeTab === 'general') return c.conversation_type === 'general';
-
+    
     return true;
   });
 
+  
+
+  
+  // ============================================
+  // PRESENCE (ONLINE / IDLE / LAST SEEN)
+  // Rules you requested:
+  // - online: < 5 mins inactivity
+  // - idle:  5:00 to 5:59 mins inactivity (still connected)
+  // - last seen: 6+ mins inactivity OR disconnected
+  // ============================================
   const otherParticipant =
     activeConversation?.conversation_type === "direct"
       ? activeConversation?.participants?.find(
@@ -574,7 +617,9 @@ const ChatPage = () => {
 
   const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
   const buildProfileUrl = (userId) =>
-    userId ? `/user-profile?userId=${userId}` : "/user-profile";
+  userId ? `/user-profile?userId=${userId}` : "/user-profile";
+  
+
 
   const handleOpenProfile = useCallback(() => {
     if (!otherId) return;
@@ -599,13 +644,14 @@ const ChatPage = () => {
 
   const diffMs = (ts) => (ts ? Math.max(0, nowTs - ts) : null);
 
-  let presenceStatus = "offline";
+  let presenceStatus = "offline"; // "online" | "idle" | "offline"
   let statusText = "";
 
   if (activeConversation?.conversation_type === "direct" && otherId) {
     if (connected) {
       const d = diffMs(lastActiveTs);
 
+      // If we haven't received activity yet, assume online while connected
       if (d == null || d < 5 * 60 * 1000) {
         presenceStatus = "online";
         statusText = "online";
@@ -624,336 +670,247 @@ const ChatPage = () => {
 
   const isOnline = presenceStatus === "online";
 
+// ============================================
+  // RENDER: Not logged in
+  // ============================================
   if (!token || !currentUser) {
     return (
       <div className="h-screen bg-zinc-950 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center"
-        >
+        <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Please log in to access chat</h2>
           <a href="/login" className="text-indigo-500 hover:text-indigo-400">Go to Login</a>
-        </motion.div>
+        </div>
       </div>
     );
   }
 
+  // ============================================
+  // RENDER: Main chat page
+  // ============================================
   return (
-    <div className="h-[calc(100vh-64px)] bg-zinc-950 flex overflow-hidden">
+    <div className="h-[calc(100vh-64px)] bg-zinc-950 flex">
+      {/* ============================================ */}
       {/* LEFT SIDEBAR: Conversations List */}
-      <AnimatePresence mode="wait">
-        {!showChat && (
-          <motion.div
-            key="sidebar"
-            className="w-full lg:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col"
-            initial={{ x: isMobile ? -400 : 0, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: isMobile ? -400 : 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {/* Header */}
-            <div className="p-4">
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center justify-between mb-4"
+      {/* ============================================ */}
+      <div className="w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+        {/* Header */}
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-xl font-bold text-white">Chats</h1>
+            <div className="flex items-center gap-2">
+              {/* Connection status */}
+              <span 
+                className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} 
+                title={isConnected ? 'Connected' : 'Disconnected'}
+              />
+              {/* New message button */}
+              <button
+                onClick={() => setShowNewMessage(true)}
+                className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+                title="New message"
               >
-                <h1 className="text-xl font-bold text-white">Chats</h1>
-                <div className="flex items-center gap-2">
-                  <span
-                    className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
-                    title={isConnected ? 'Connected' : 'Disconnected'}
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.1 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setShowNewMessage(true)}
-                    className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
-                    title="New message"
-                  >
-                    <Edit3 size={18} />
-                  </motion.button>
-                </div>
-              </motion.div>
-
-              {/* Search */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.15 }}
-                className="relative"
-              >
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search Messenger"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
-                />
-              </motion.div>
-
-              {/* Tabs */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="flex gap-1 mt-3 overflow-x-auto pb-1"
-              >
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'friends', label: 'Friends', type: 'direct' },
-                  { id: 'groups', label: 'Groups', type: 'group' },
-                  { id: 'startups', label: 'Startups', type: 'team' },
-                  { id: 'general', label: 'General', type: 'general' },
-                ].map((tab) => (
-                  <motion.button
-                    key={tab.id}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-indigo-500 text-zinc-900'
-                        : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                  </motion.button>
-                ))}
-              </motion.div>
+                <Edit3 size={18} />
+              </button>
             </div>
+          </div>
 
-            {/* Conversation List */}
-            <div className="flex-1 overflow-y-auto px-2">
-              {isLoading ? (
-                <div className="flex items-center justify-center h-32">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full"
-                  />
-                </div>
-              ) : filteredConversations.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-8 text-zinc-500"
-                >
-                  <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
-                  <p>No conversations yet</p>
-                </motion.div>
-              ) : (
-                <motion.div
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: {
-                      transition: {
-                        staggerChildren: 0.05,
-                      },
-                    },
-                  }}
-                >
-                  {filteredConversations.map((conv) => (
-                    <motion.div
-                      key={conv.id}
-                      variants={{
-                        hidden: { opacity: 0, x: -20 },
-                        visible: { opacity: 1, x: 0 },
-                      }}
-                      whileHover={{ x: 4 }}
-                    >
-                      <ConversationItem
-                        conversation={conv}
-                        isActive={activeConversation?.id === conv.id}
-                        onClick={() => handleSelectConversation(conv)}
-                        onlineUsers={onlineUsers}
-                        currentUserId={currentUser.id}
-                        lastActiveAt={lastActiveAt}
-                        lastSeenAt={lastSeenAt}
-                        nowTs={nowTs}
-                      />
-                    </motion.div>
-                  ))}
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* CENTER: Chat Area */}
-      <AnimatePresence mode="wait">
-        {((isMobile && showChat) || !isMobile) && (
-          <motion.div
-            key="chat"
-            className="flex-1 flex flex-col bg-zinc-950"
-            initial={{ x: isMobile ? 400 : 0, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: isMobile ? 400 : 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-          >
-            {activeConversation ? (
-              <>
-                <ChatHeader
-                  conversation={activeConversation}
-                  currentUserId={currentUser.id}
-                  presenceStatus={presenceStatus}
-                  statusText={statusText}
-                  onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
-                  onBack={() => {
-                    setShowChat(false);
-                    setActiveConversation(null);
-                  }}
-                  showBack={isMobile}
-                />
-
-                {/* Messages Area */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex-1 overflow-y-auto py-4"
-                >
-                  {messages.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="flex flex-col items-center justify-center h-full text-zinc-500"
-                    >
-                      <Avatar
-                        src={
-                          otherParticipant?.profilePicture ||
-                          otherParticipant?.profile_picture ||
-                          otherParticipant?.profile?.picture ||
-                          otherParticipant?.profile?.avatar ||
-                          null
-                        }
-                        name={`${otherParticipant?.firstName || otherParticipant?.first_name || ""}`}
-                        size="xl"
-                        showStatus={false}
-                      />
-
-                      <p className="mt-4 font-medium text-white">
-                        {otherParticipant?.firstName} {otherParticipant?.lastName}
-                      </p>
-                      <p className="text-sm text-zinc-500">Start a conversation</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      initial="hidden"
-                      animate="visible"
-                      variants={{
-                        visible: {
-                          transition: {
-                            staggerChildren: 0.02,
-                          },
-                        },
-                      }}
-                    >
-                      {messages.map((message, index) => {
-                        const prevMessage = index > 0 ? messages[index - 1] : null;
-                        const isOwn = String(message.sender_id) === String(currentUser.id);
-
-                        return (
-                          <motion.div
-                            key={message.id || index}
-                            variants={{
-                              hidden: { opacity: 0, y: 10 },
-                              visible: { opacity: 1, y: 0 },
-                            }}
-                          >
-                            {shouldShowDateSeparator(message, prevMessage) && (
-                              <DateSeparator date={message.created_at} />
-                            )}
-
-                            <MessageBubble
-                              message={message}
-                              isOwn={isOwn}
-                              showAvatar={shouldShowAvatar(message, index)}
-                              currentUserId={currentUser.id}
-                              conversationType={activeConversation?.conversation_type}
-                              showSenderName={
-                                activeConversation?.conversation_type !== "direct" &&
-                                shouldShowSenderName(messages, index)
-                              }
-                            />
-                          </motion.div>
-                        );
-                      })}
-                    </motion.div>
-                  )}
-
-                  <TypingIndicator users={typingUsers} />
-                  <div ref={messagesEndRef} />
-                </motion.div>
-
-                <ChatInput
-                  value={messageInput}
-                  onChange={handleInputChange}
-                  onSend={handleSendMessage}
-                  onFileUpload={handleFileUpload}
-                  socket={socket}
-                  conversationId={activeConversation?.id}
-                  disabled={!activeConversation}
-                />
-              </>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex-1 flex flex-col items-center justify-center"
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+            <input
+              type="text"
+              placeholder="Search Messenger"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
+            />
+          </div>
+          
+          {/* Category Tabs */}
+          <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+            {[
+              { id: 'all', label: 'All' },
+              { id: 'friends', label: 'Friends', type: 'direct' },
+              { id: 'groups', label: 'Groups', type: 'group' },
+              { id: 'startups', label: 'Startups', type: 'team' },
+              { id: 'general', label: 'General', type: 'general' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-indigo-500 text-zinc-900'
+                    : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                }`}
               >
-                <motion.div
-                  animate={{ scale: [1, 1.1, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-4"
-                >
-                  <MessageCircle size={40} className="text-indigo-500" />
-                </motion.div>
-                <h2 className="text-xl font-semibold text-white mb-2">Your Messages</h2>
-                <p className="text-zinc-500 text-sm mb-4">Send private messages to a friend or group</p>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setShowNewMessage(true)}
-                  className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-zinc-900 font-medium rounded-full transition-colors"
-                >
-                  Send message
-                </motion.button>
-              </motion.div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-      {/* RIGHT SIDEBAR: Online Contacts */}
-      <div className="hidden lg:flex">
-        <OnlineContactsSidebar
-          friends={friends}
-          onlineUsers={onlineUsers}
-          onOpenChat={handleOpenChatWithFriend}
-          onNewMessage={() => setShowNewMessage(true)}
-          token={token}
-          currentUserId={currentUser?.id}
-        />
+        {/* Conversation List */}
+        <div className="flex-1 overflow-y-auto px-2">
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="text-center py-8 text-zinc-500">
+              <MessageCircle size={40} className="mx-auto mb-3 opacity-30" />
+              <p>No conversations yet</p>
+            </div>
+          ) : (
+            filteredConversations.map((conv) => (
+              <ConversationItem
+                key={conv.id}
+                conversation={conv}
+                isActive={activeConversation?.id === conv.id}
+                onClick={() => handleSelectConversation(conv)}
+                onlineUsers={onlineUsers}
+                currentUserId={currentUser.id}
+                lastActiveAt={lastActiveAt}
+                lastSeenAt={lastSeenAt}
+                nowTs={nowTs}
+              />
+            ))
+          )}
+        </div>
       </div>
 
-      {/* NEW MESSAGE MODAL */}
-      <AnimatePresence>
-        {showNewMessage && (
-          <NewMessageModal
-            isOpen={showNewMessage}
-            onClose={() => setShowNewMessage(false)}
-            friends={friends}
-            onlineUsers={onlineUsers}
-            onSelectUser={handleOpenChatWithFriend}
-            onCreateGroup={handleCreateGroup}
-          />
+
+
+      {/* ============================================ */}
+      {/* CENTER: Chat Area */}
+      {/* ============================================ */}
+      <div className="flex-1 flex flex-col bg-zinc-950">
+        {activeConversation ? (
+          <>
+            
+            
+            {/* Chat Header - No more Phone/Video/Info icons */}
+            <ChatHeader
+               conversation={activeConversation}
+               currentUserId={currentUser.id}
+               presenceStatus={presenceStatus}
+               statusText={statusText}
+               onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+            />
+
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto py-4">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+                  <Avatar
+                    src={
+                      otherParticipant?.profilePicture ||
+                      otherParticipant?.profile_picture ||
+                      otherParticipant?.profile?.picture ||
+                      otherParticipant?.profile?.avatar ||
+                      null
+                    }
+                    name={`${otherParticipant?.firstName || otherParticipant?.first_name || ""}`}
+                    size="xl"
+                    showStatus={false}
+                  />
+
+                  <p className="mt-4 font-medium text-white">
+                    {otherParticipant?.firstName} {otherParticipant?.lastName}
+                  </p>
+                  <p className="text-sm text-zinc-500">Start a conversation</p>
+                </div>
+              ) : (
+                messages.map((message, index) => {
+                  const prevMessage = index > 0 ? messages[index - 1] : null;
+                  // Use String() comparison to avoid type mismatch
+                  const isOwn = String(message.sender_id) === String(currentUser.id);
+                  
+                  return (
+                    <React.Fragment key={message.id || index}>
+                      {/* Date separator (Today, Yesterday, etc.) */}
+                      {shouldShowDateSeparator(message, prevMessage) && (
+                        <DateSeparator date={message.created_at} />
+                      )}
+                      
+                      {/* Message bubble */}
+                      <MessageBubble
+                        message={message}
+                        isOwn={isOwn}
+                        showAvatar={shouldShowAvatar(message, index)}
+                        currentUserId={currentUser.id}
+                        conversationType={activeConversation?.conversation_type}
+                        showSenderName={
+                          activeConversation?.conversation_type !== "direct" &&
+                          shouldShowSenderName(messages, index)
+                        }
+                      />
+
+                    </React.Fragment>
+                  );
+                })
+              )}
+              
+              {/* Typing indicator */}
+              <TypingIndicator users={typingUsers} />
+              
+              {/* Scroll anchor */}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Chat Input - with file upload support */}
+            <ChatInput
+              value={messageInput}
+              onChange={handleInputChange}
+              onSend={handleSendMessage}
+              onFileUpload={handleFileUpload}
+              socket={socket}
+              conversationId={activeConversation?.id}
+              disabled={!activeConversation}
+            />
+          </>
+        ) : (
+          /* No conversation selected */
+          <div className="flex-1 flex flex-col items-center justify-center">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-4">
+              <MessageCircle size={40} className="text-indigo-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-white mb-2">Your Messages</h2>
+            <p className="text-zinc-500 text-sm mb-4">Send private messages to a friend or group</p>
+            <button
+              onClick={() => setShowNewMessage(true)}
+              className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-zinc-900 font-medium rounded-full transition-colors"
+            >
+              Send message
+            </button>
+          </div>
         )}
-      </AnimatePresence>
+      </div>
+
+      {/* ============================================ */}
+      {/* RIGHT SIDEBAR: Online Contacts */}
+      {/* ============================================ */}
+      <OnlineContactsSidebar
+        friends={friends}
+        onlineUsers={onlineUsers}
+        onOpenChat={handleOpenChatWithFriend}
+        onNewMessage={() => setShowNewMessage(true)}
+        token={token}
+        currentUserId={currentUser?.id}
+      />
+
+      {/* ============================================ */}
+      {/* NEW MESSAGE MODAL */}
+      {/* ============================================ */}
+      <NewMessageModal
+        isOpen={showNewMessage}
+        onClose={() => setShowNewMessage(false)}
+        friends={friends}
+        onlineUsers={onlineUsers}
+        onSelectUser={handleOpenChatWithFriend}
+        onCreateGroup={handleCreateGroup}
+      />
     </div>
   );
 };

@@ -77,6 +77,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
         <div
           className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"
             }`}
+          
           onClick={() => setIsOpen(false)}
         />
 

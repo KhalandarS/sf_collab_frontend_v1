@@ -356,7 +356,7 @@ export default function RegisterStartUp() {
       if (!creator_id) {
         throw new Error('User not authenticated');
       }
-      const MAX_SIZE = 5 * 1024 * 1024; // 5MB
+      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
       if (logoFile && logoFile.size > MAX_SIZE) {
         toast.error("Logo file is too large");
         return;

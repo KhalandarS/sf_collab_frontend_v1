@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import BottomLinks from "./BottomLinks";
 import { Crown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
+import { useState } from "react";
 
 export default function DesktopSidebarContent({ links = [], currentContextId, toggleExpand, hasSubItems, shouldShowSubItems, isAdmin }) {
   const location = useLocation();
   const navigate = useNavigate();
-
+  const [hoveredLinkId, setHoveredLinkId] = useState(null);
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -32,7 +33,9 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
   };
 
   return (
-    <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
+    <div
+
+      className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       <motion.div
         className="flex flex-col gap-1 items-center px-1"
         variants={containerVariants}
@@ -41,10 +44,13 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
       >
         {links.map((link) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
-          const showSubs = shouldShowSubItems(link);
+          const showSubs = shouldShowSubItems(link) || hoveredLinkId === link.id;
 
           return (
-            <motion.div key={link.id} className="w-full" variants={itemVariants}>
+            <motion.div
+              onMouseEnter={() => setHoveredLinkId(link.id)}
+              onMouseLeave={() => setHoveredLinkId(null)}
+              key={link.id} className="w-full" variants={itemVariants}>
               <div className="relative group w-full flex justify-center">
                 {hasSubItems(link) ? (
                   <motion.button

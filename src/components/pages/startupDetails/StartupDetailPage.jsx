@@ -1,14 +1,9 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
-  ArrowLeft, MapPin, Users, Calendar, TrendingUp, Globe, 
-  Code, Briefcase, Heart, Share2, ExternalLink, Mail,
-  Github, Linkedin, X, Check, ChevronRight, Home,
-  Download, Trash2, Plus, UserPlus, Building2, BarChart3,
-  FileText, Eye, DollarSign, Rocket, Target, Clock,
-  CheckCircle, PlayCircle, PauseCircle, AlertCircle,
-  FileSpreadsheet, MessageSquare, Settings, Search,CheckCircle2Icon,XIcon
+  ArrowLeft, Users, Calendar, TrendingUp, Heart, Share2, ChevronRight, Home, Trash2, UserPlus, BarChart3,
+  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon
 } from 'lucide-react';
 import {
     Alert,
@@ -19,27 +14,30 @@ import {
 // shadcn/ui components
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '../../ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../../ui/dialog';
-import { Input } from '../../ui/input';
-import { Textarea } from '../../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
+import { Card, CardContent, CardHeader} from '../../ui/card';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { Progress } from '../../ui/progress';
-import { Avatar, AvatarFallback, AvatarImage } from '../../ui/avatar';
-import { AvatarGroup,AvatarGroupTooltip } from '../../ui/shadcn-io/avatar-group/index';
-import { Separator } from '../../ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../ui/tooltip';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '../../ui/accordion';
 import ShinyText from '../../ui/ShinyText';
 
 import { useSelector } from 'react-redux';
-import { startupAPI } from './startUpAPI';
-import { startupsAPI } from '@/utils/APIs/startupAPI';
+
+import { calendarEventsAPI, projectGoalsAPI, startupsAPI } from '@/utils/APIs/startupsAPI';
 import { toast } from 'react-toastify';
-import { getProfilePicture } from '@/utils/getProfilePicture';
-import { usersAPI } from '@/utils/APIs/userAPI';
-import SendJoinRequestModal from './SendJoinRequestModal';
+import SendJoinRequestModal from './modals/SendJoinRequestModal';
+import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
+import ProjectGoalsSection from './sections/ProjectGoalsSection';
+import CalendarSection from './sections/CalendarSection';
+import DeleteStartupModal from './modals/DeleteStartup';
+import UploadDocumentModal from './modals/UploadDocument';
+import AddMemberModal from './modals/AddMember';
+import DocumentsSection from './sections/DocumentsSection';
+import TeamSection from './sections/TeamSection';
+import DescriptionSection from './sections/DescriptionSection';
+import TechStackSection from './sections/TechStackSection';
+import HeroSection from './sections/HeroSection';
+import StartupDetailSkeleton from './StartupDetailsSkeleton';
+import AddEventModal from './modals/AddEvent';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -49,132 +47,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
  * This modal displays pending join requests from users who want to join the startup.
  * The founder/creator can accept or reject each request.
  */
-const ManageJoinRequestsModal = ({
-  isOpen,
-  onClose,
-  joinRequests = [],
-  loading = false,
-  onAccept,
-  onReject,
-  founderName = 'You',
-  startupName = '',
-}) => {
-  const requests = Array.isArray(joinRequests) ? joinRequests : [];
-  const pendingRequests = requests.filter(r => r.status === 'pending' || !r.status);
-  const hasRequests = pendingRequests.length > 0;
 
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-gray-800 border border-white/10 mt-4">
-        <DialogHeader>
-          <DialogTitle className="text-white text-2xl">📋 Manage Join Requests</DialogTitle>
-          <DialogDescription className="text-gray-400">
-            {startupName && <span className="block font-semibold text-white/80 mb-2">For: <span className="text-blue-400">{startupName}</span></span>}
-            Review and respond to requests from people who want to join your team
-          </DialogDescription>
-        </DialogHeader>
-
-        {/* Info Box showing who is making decisions */}
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
-          <p className="text-xs text-blue-300">
-            ✓ <span className="font-semibold text-white">{founderName}</span> (Founder) - You are reviewing and can accept/reject requests
-          </p>
-        </div>
-
-        <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-          {loading ? (
-            <div className="text-center py-20 text-sm text-gray-400">
-              Loading join requests…
-            </div>
-          ) : !hasRequests ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 text-sm mb-2">✨ No pending requests</div>
-              <p className="text-xs text-gray-500">When someone requests to join, they'll appear here</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-xs text-gray-400 font-semibold px-1">
-                {pendingRequests.length} Request{pendingRequests.length !== 1 ? 's' : ''} Pending
-              </p>
-              {requests.map((request) => {
-                // Handle both camelCase (backend) and snake_case field names
-                const requesterName = request.full_name || 
-                  `${request.firstName || request.first_name || ''} ${request.lastName || request.last_name || ''}`.trim() || 
-                  'Anonymous Builder';
-                const requestedRole = request.role || 'Team Member';
-                const message = request.message || 'No message provided';
-                const createdDate = request.createdAt || request.created_at;
-                
-                return (
-                  <Card key={request.id || request.request_id} className="bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-                    <CardContent className="pt-4 pb-3 px-4">
-                      {/* Requester Info */}
-                      <div className="mb-3 pb-3 border-b border-white/10">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm">
-                            {requesterName.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-white">
-                              {requesterName}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              Requesting as: <span className="text-yellow-400 font-semibold">{requestedRole}</span>
-                            </p>
-                          </div>
-                        </div>
-                        <p className="text-xs text-gray-300 italic bg-white/5 rounded px-2 py-2">
-                          "{message}"
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Requested on: {createdDate ? new Date(createdDate).toLocaleDateString() : 'N/A'}
-                        </p>
-                      </div>
-
-                      {/* Action Info */}
-                      <div className="text-xs text-gray-400 mb-3">
-                        <p>As <span className="text-blue-300 font-semibold">{founderName}</span>, you can:</p>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs"
-                          onClick={() => onReject?.(request)}
-                          disabled={!onReject}
-                        >
-                          <XIcon className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1 text-xs bg-green-600 hover:bg-green-700"
-                          onClick={() => onAccept?.(request)}
-                          disabled={!onAccept}
-                        >
-                          <CheckCircle2Icon className="w-4 h-4 mr-1" />
-                          Accept
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        <DialogFooter className="pt-4 border-t border-white/5">
-          <Button variant="ghost" onClick={onClose} className="text-sm text-gray-300">
-            Close
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  )
-}
 
 const StartupDetailPage = () => {
   const { id } = useParams();
@@ -190,6 +63,7 @@ const StartupDetailPage = () => {
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
+  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   
   const [alertDescription, setAlertDescription] = useState("");
@@ -242,16 +116,23 @@ const StartupDetailPage = () => {
       const args = {
         startup_id: id,
         per_page: 100,
-        page: 1
+        page: 1,
+        include_milestones: true
       }
-      const startupResult = await startupAPI.getStartup(id, token).catch(err => ({ success: false, error: err }));
-      const membersResult = await startupAPI.getMembersByStartupId(id, token, args).catch(err => ({ success: false, error: err }));
-      const documentsResult = await startupAPI.getDocuments(id, token).catch(err => ({ success: false, error: err }));
-      const statsResult = await startupAPI.getStats(id, token).catch(err => ({ success: false, error: err }));
+      const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult] = await Promise.all([
+        startupsAPI.getById(id, token).catch(err => ({ success: false, error: err })),
+        startupsAPI.getMembers(id, token, args).catch(err => ({ success: false, error: err })),
+        startupsAPI.getDocuments(id, token).catch(err => ({ success: false, error: err })),
+        startupsAPI.getStats(id, token).catch(err => ({ success: false, error: err })),
+        projectGoalsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        calendarEventsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+      ]);
       const startupData = startupResult.success ? startupResult : { success: false, data: null };
       const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
       const documentsData = documentsResult.success ? documentsResult : { success: false, data: { documents: [] } };
       const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
+      const goalsData = goalsResult.success ? goalsResult : { success: false, data: { project_goals: [] } };
+      const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
 
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) {
@@ -260,7 +141,8 @@ const StartupDetailPage = () => {
       }
       if (documentsData.success) setDocuments(documentsData.data.documents);
       if (statsData.success) setStats(statsData.data.stats || {});
-      
+      if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
+      if (eventsData.success) setCalendarEvents(eventsData.data.events || []);
     } catch (error) {
       console.error('Error fetching startup data:', error);
       toast.error('Error loading startup data');
@@ -351,22 +233,20 @@ const StartupDetailPage = () => {
     const formData = new FormData();
     formData.append('document', documentForm.document);
     formData.append('document_type', documentForm.document_type);
-
+    formData.append('visible_by', documentForm.visible_by || 'private'); 
+    for (const pair of formData.entries()) {
+      console.log(`${pair[0]}: ${pair[1]}`);
+    }
     try {
-      const response = await fetch(`${API_URL}/startups/${id}/documents`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      const data = await response.json();
+      const response = await startupsAPI.uploadDocument(id, formData, access_token);
       
-      if (response.ok) {
+      if (response.success) {
         toast.success('Document uploaded successfully');
         setIsUploadDocModalOpen(false);
         setDocumentForm({ document: null, document_type: 'general' });
         fetchStartupData();
       } else {
-        throw new Error(data.error || 'Upload failed');
+        throw new Error(response.error || 'Upload failed');
       }
     } catch (error) {
       toast.error('Error uploading document');
@@ -374,10 +254,9 @@ const StartupDetailPage = () => {
   };
 
   const handleDocumentDelete = async (documentId) => {
-    if (!window.confirm('Are you sure you want to delete this document?')) return;
 
     try {
-      const response = await startupAPI.deleteDocument(id, documentId, access_token);
+      const response = await startupsAPI.deleteDocument(id, documentId, access_token);
 
 
       
@@ -394,22 +273,19 @@ const StartupDetailPage = () => {
 
   const downloadDocument = async (documentId, filename) => {
     try {
-      const response = await fetch(`${API_URL}/startups/${id}/documents/${documentId}/download`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        throw new Error('Download failed');
-      }
+      const response = await startupsAPI.downloadDocument(id, documentId, access_token);
+      const blob = response.data; // response.data is already a Blob
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
     } catch (error) {
       toast.error('Error downloading document');
+      console.error('Error downloading document:', error);
     }
   };
 
@@ -417,7 +293,7 @@ const StartupDetailPage = () => {
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
-      const response = await startupAPI.addMember(id, memberForm, access_token);
+      const response = await startupsAPI.addMember(id, memberForm, access_token);
 
 
       
@@ -434,16 +310,16 @@ const StartupDetailPage = () => {
     }
   };
 
-  const handleRemoveMember = async (memberId) => {
-    if (!window.confirm('Are you sure you want to remove this member?')) return;
-
+  const handleRemoveMember = async (e, memberId) => {
+    e.stopPropagation();
+    e.preventDefault()
     try {
-      const response = await startupAPI.removeMember(id, memberId, access_token);
-
+      const response = await startupsAPI.removeMember(id, memberId, access_token);
+      console.log("Response:", response);
       
       if (response.success) {
         toast.success('Member removed successfully');
-        fetchStartupData();
+        setMembers(prevMembers => prevMembers.filter(m => m.id !== memberId));
       } else {
         throw new Error('Failed to remove member');
       }
@@ -496,49 +372,26 @@ const StartupDetailPage = () => {
       
       // Check 2: Is user a member with creator/founder role?
       const isMemberWithRole = members.find(m => m.userId === userId && ['creator', 'founder'].includes(m.role));
-      
-      console.log('🔄 Effect: Checking isCreator', {
-        userExists: !!user,
-        userId,
-        startupCreatorId: startup?.creator_id,
-        isStartupCreator,
-        hasMemberRole: !!isMemberWithRole,
-        allUserFields: Object.keys(user || {}),
-        membersCount: members.length,
-        members: members.map(m => ({ 
-          userId: m.userId, 
-          fullName: m.fullName,
-          role: m.role,
-          matches: m.userId === userId && ['creator', 'founder'].includes(m.role)
-        }))
-      });
-      
+    
       // User is creator if they are the startup creator OR have member founder role
       const isCreatorUser = isStartupCreator || !!isMemberWithRole;
-      console.log('🔍 Found creator:', { isStartupCreator, hasMemberRole: !!isMemberWithRole, final: isCreatorUser });
       setIsCreator(isCreatorUser);
     } else {
-      console.log('⏭️ Skipping isCreator check:', { userExists: !!user, startupExists: !!startup, memberCount: members.length });
       setIsCreator(false);
     }
   }, [members, user, startup]);
 
   useEffect(() => {
-    console.log('✓ isCreator effect triggered. isCreator=', isCreator);
     if (isCreator) {
-      console.log('  → User is creator, calling fetchJoinRequests()');
       fetchJoinRequests();
     } else {
-      console.log('  → User is NOT creator, clearing requests');
       setJoinRequests([]);
     }
   }, [isCreator, fetchJoinRequests]);
 
   // Also fetch when modal opens
   useEffect(() => {
-    console.log('✓ Modal effect triggered. isJoinModalOpen=', isJoinModalOpen, 'isCreator=', isCreator, 'hasToken=', !!access_token);
     if (isJoinModalOpen && isCreator && access_token) {
-      console.log('🔄 Modal opened - fetching join requests with token');
       fetchJoinRequests();
     }
   }, [isJoinModalOpen, access_token]);
@@ -555,7 +408,7 @@ const StartupDetailPage = () => {
   // Delete startup
   const handleDeleteStartup = async () => {
     try {
-      const response = await startupAPI.deleteStartup(id, access_token);
+      const response = await startupsAPI.delete(id, access_token);
 
       
       if (response.success) {
@@ -567,7 +420,45 @@ const StartupDetailPage = () => {
       console.error('Error deleting startup:', error);
     }
   };
-
+  const handleCreateEvent = async (eventData) => {
+    try {
+      const body = {
+        ...eventData,
+        startup_id: id,
+        user_id: user?.id || user?.userId || user?.user_id,
+      }
+      const response = await calendarEventsAPI.create(body);
+      
+      if (response.success || response.event) {
+        toast.success('Event created successfully');
+        setIsAddEventModalOpen(false);
+        setCalendarEvents([...calendarEvents, response.data?.event || response.event]);
+      } else {
+        throw new Error(response.error || 'Failed to create event');
+      }
+    } catch (error) {
+      toast.error('Error creating event');
+      console.error('Error creating event:', error);
+    }
+  }
+  const handleEditEvent = async (updatedData) => {
+    // Implement event editing logic here
+  }
+  const handleDeleteEvent = async (eventId) => {
+    try {
+      const response = await calendarEventsAPI.delete(eventId);
+      if (response.success) {
+        toast.success('Event deleted successfully');
+        setCalendarEvents(calendarEvents.filter(event => event.id !== eventId));
+      } else {
+        throw new Error('Failed to delete event');
+      }
+    } catch (error) {
+      toast.error('Error deleting event');
+      console.error('Error deleting event:', error);
+    }
+    // Implement event deletion logic here
+  }
   if (loading) {
     return <StartupDetailSkeleton />;
   }
@@ -593,8 +484,8 @@ const StartupDetailPage = () => {
         className="z-50  w-full"
       >
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center justify-between">
+            <div className="flex flex-wrap items-center justify-evenly gap-4">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -605,14 +496,14 @@ const StartupDetailPage = () => {
                 Back to Discover
               </Button>
               
-              <div className="hidden sm:flex items-center gap-2 text-sm text-gray-400">
+              <div className="hidden sm:flex flex-wrap items-center gap-2 text-sm text-gray-400">
                 <Home className="w-4 h-4" />
                 <ChevronRight className="w-3 h-3" />
                 <span className="text-white font-medium">{startup.name}</span>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap h-auto items-center gap-2">
               {isCreator && (
                 <>
                   <Button
@@ -674,7 +565,7 @@ const StartupDetailPage = () => {
       </motion.nav>
 
       {/* Hero Section */}
-      <HeroSection 
+      <HeroSection
         startup={startup} 
         onJoinClick={() => isCreator ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         formatCurrency={formatCurrency}
@@ -688,7 +579,7 @@ const StartupDetailPage = () => {
       {/* Main Content with Tabs */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-5 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
             <TabsTrigger value="overview" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BarChart3 className="w-4 h-4 mr-2" />
               <ShinyText 
@@ -719,7 +610,7 @@ const StartupDetailPage = () => {
             <TabsTrigger value="goals" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Target className="w-4 h-4 mr-2" />
               <ShinyText 
-                  text=" Project Goals" 
+                  text="Project Goals" 
                   disabled={false} 
                   speed={3} 
                 //   className='custom-title' 
@@ -740,7 +631,7 @@ const StartupDetailPage = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
-            <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} />
+            <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} goals={projectGoals} />
             <DescriptionSection startup={startup} formatCurrency={formatCurrency} />
             
             <TechStackSection startup={startup} />
@@ -748,7 +639,7 @@ const StartupDetailPage = () => {
 
           {/* Members Tab */}
           <TabsContent value="members">
-            <TeamSection 
+            <TeamSection
               members={members} 
               isCreator={isCreator}
               onRemoveMember={handleRemoveMember}
@@ -758,7 +649,7 @@ const StartupDetailPage = () => {
 
           {/* Documents Tab */}
           <TabsContent value="documents">
-            <DocumentsSection 
+            <DocumentsSection
               documents={documents}
               isCreator={isCreator}
               onDownload={downloadDocument}
@@ -770,36 +661,31 @@ const StartupDetailPage = () => {
 
           {/* Project Goals Tab */}
           <TabsContent value="goals">
-            <ProjectGoalsSection 
+            <ProjectGoalsSection
               goals={projectGoals}
               isCreator={isCreator}
+              setGoals={setProjectGoals}
+              startupId={id}
+              teamMembers={members}
             />
           </TabsContent>
 
           {/* Calendar Tab */}
           <TabsContent value="calendar">
-            <CalendarSection 
+            <CalendarSection
               events={calendarEvents}
               isCreator={isCreator}
+              onCreateEvent={() => setIsAddEventModalOpen(true)}
+              onEditEvent={handleEditEvent}
+              onDeleteEvent={handleDeleteEvent}
+
             />
           </TabsContent>
         </Tabs>
       </div>
 
       {/* Modals */}
-      {isCreator && (
-        <ManageJoinRequestsModal 
-          isOpen={isJoinModalOpen}
-          onClose={() => setIsJoinModalOpen(false)}
-          startupName={startup?.name || 'Your Startup'}
-          founderName={user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.email || 'You'}
-          joinRequests={joinRequests}
-          loading={loading}
-          onAccept={handleAcceptJoinRequest}
-          onReject={handleRejectJoinRequest}
-        />
-      )}
-      
+
       {!isCreator && (
         <SendJoinRequestModal
           isOpen={isSendJoinRequestModalOpen}
@@ -838,7 +724,22 @@ const StartupDetailPage = () => {
         onClose={() => setIsDeleteStartupModalOpen(false)}
         onConfirm={handleDeleteStartup}
         startupName={startup.name}
-      />
+        />
+        <ManageJoinRequestsModal 
+          isOpen={isJoinModalOpen}
+          onClose={() => setIsJoinModalOpen(false)}
+          startupName={startup?.name || 'Your Startup'}
+          founderName={user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.email || 'You'}
+          joinRequests={joinRequests}
+          loading={loading}
+          onAccept={handleAcceptJoinRequest}
+          onReject={handleRejectJoinRequest}
+        />
+        <AddEventModal
+          isOpen={isAddEventModalOpen}
+          onClose={() => setIsAddEventModalOpen(false)}
+          onCreate={handleCreateEvent}
+        />
       </>
       }
       
@@ -864,180 +765,27 @@ const StartupDetailPage = () => {
   );
 };
 
-// Updated Hero Section - Facebook-like profile layout
-const HeroSection = ({ startup, onJoinClick, formatCurrency, getStageBadgeVariant,setAlertDescription,setShowAlert,setAlertTitle,setAlertVariant }) => (
-  <div className="relative ">
-    {/* Banner */}
-    <div className="h-64 rounded-lg mx-auto w-full object-fit bg-gradient-to-r from-blue-600/40 via-purple-600/40 to-blue-800/40 relative overflow-hidden">
-      {startup.banner_url && (
-        <img 
-          src={`${API_URL}${startup.banner_url}`}
-          alt={startup.name}
-          className="w-full  h-full object-cover opacity-40"
-        />
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/50 to-transparent" />
-    </div>
 
-    {/* Content */}
-    <div className="relative  w-full shadow-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 ">
 
-        
-      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between -mt-20 relative z-10">
-        {/* Logo and Basic Info */}
-        <div className="flex flex-col lg:flex-row lg:items-end gap-6">
-          {/* Logo */}
-          <div className="w-32 h-32 mt-3 bg-white rounded-full border-4 border-gray-800 shadow-2xl flex items-center justify-center">
-            {startup.logo_url ? (
-              <img 
-                src={`${API_URL}${startup.logo_url}`}
-                alt={startup.name}
-                className="w-24 h-24 rounded-full object-cover"
-              />
-            ) : (
-              <span className="text-2xl font-bold text-blue-600">
-                {startup.name.charAt(0)}
-              </span>
-            )}
-          </div>
 
-          {/* Startup Info */}
-          <div className="text-white space-y-3 ">
-            <h1 className="text-3xl font-bold bg-gray-500/5 backdrop-blur-sm w-fit p-2 rounded-full flex items-center">{startup.name}</h1>
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className="bg-blue-500/20 text-blue-400 border-blue-400/30">
-                <Building2 className="w-3 h-3 mr-1" />
-                {startup.industry}
-              </Badge>
-              <Badge className="bg-green-500/20 text-green-400 border-green-400/30">
-                <MapPin className="w-3 h-3 mr-1" />
-                {startup.location || 'Remote'}
-              </Badge>
-              <Badge className={`${getStageBadgeVariant(startup.stage)}`}>
-                <Rocket className="w-3 h-3 mr-1" />
-                {startup.stage.charAt(0).toUpperCase() + startup.stage.slice(1)}
-              </Badge>
-            </div>
-            <p className="text-gray-300 max-w-2xl">
-              {startup.description || "Innovative startup making waves in their industry"}
-            </p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3 mt-6 lg:mt-0">
-          <Button 
-            onClick={onJoinClick}
-            className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white"
-          >
-            <Mail className="w-4 h-4 mr-2" />
-            Join Team
-          </Button>
-          <Button 
-          onClick={() => {
-            const url = `${window.location.origin}/startups/${startup.id}`;
-            navigator.clipboard.writeText(url);
-            setShowAlert(true);
-            setAlertTitle("Link Copied!");
-            setAlertDescription("Startup link has been copied to clipboard.");
-            setAlertVariant("success");
-          }}
-          variant="outline" className="border-gray-600 text-black hover:bg-black/30 cursor-pointer hover:text-white">
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
-          </Button>
-          {startup.funding_amount > 0 && (
-            <Button variant="outline" className="border-gray-600 text-black hover:bg-black/30 hover:text-white">
-              <DollarSign className="w-4 h-4 mr-2" />
-              {formatCurrency(startup.funding_amount)} raised
-            </Button>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Description Section Component
-const DescriptionSection = ({ startup, formatCurrency }) => (
-    <motion.section
-      initial={{ y: 30, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-      className="grid lg:grid-cols-2 gap-8"
-    >
-      {/* Company Description */}
-      <Card className="bg-gray-800 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-blue-400" />
-            About Us
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-300 leading-relaxed">
-            {startup.description || "No description provided yet."}
-          </p>
-        </CardContent>
-      </Card>
-  
-      {/* Financial Overview */}
-      <Card className="bg-gray-800 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-blue-400" />
-            Financial Overview
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-400">Funding Round</p>
-              <p className="text-white font-semibold capitalize">{startup.funding_round?.replace('-', ' ') || 'Not specified'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Runway</p>
-              <p className="text-white font-semibold">{startup.runway_months || 0} months</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-400">Total Funding</p>
-              <p className="text-white font-semibold text-lg">{formatCurrency(startup.funding_amount)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Valuation</p>
-              <p className="text-white font-semibold text-lg">{formatCurrency(startup.valuation)}</p>
-            </div>
-          </div>
-  
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-400">Annual Revenue</p>
-              <p className="text-white font-semibold">{formatCurrency(startup.revenue)}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-400">Monthly Burn</p>
-              <p className="text-white font-semibold">{formatCurrency(startup.burn_rate)}</p>
-            </div>
-          </div>
-  
-          {startup.financial_notes && (
-            <div>
-              <p className="text-sm text-gray-400 mb-2">Financial Notes</p>
-              <p className="text-gray-300 text-sm">{startup.financial_notes}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.section>
-  );
-  
   
 // Gamified Stats Overview
-const GamifiedStatsOverview = ({ startup, stats, formatCurrency }) => {
+const GamifiedStatsOverview = ({ goals, startup, stats, formatCurrency }) => {
+  const milestoneProgress = useMemo(() => {
+    console.log(goals);
+    if (goals.length === 0) return 0;
+    console.log("Goals:", goals);
+    let progress = 0;
+    const totalMilestonesCompleted = goals.reduce((count, goal) => {
+      return count + goal.milestones_completed
+    }, 0);
+    const totalMilestones = goals.reduce((count, goal) => {
+      return count + goal.milestones_total
+    }, 0);
+    progress = totalMilestones === 0 ? 0 : Math.floor((totalMilestonesCompleted / totalMilestones) * 100);
+    console.log("Calculated milestone progress:", progress);
+    return progress
+  }, [goals]);
   const gamifiedStats = [
     {
       label: "Team Level",
@@ -1057,9 +805,9 @@ const GamifiedStatsOverview = ({ startup, stats, formatCurrency }) => {
     },
     {
       label: "Progress Score",
-      value: Math.floor((startup.valuation / 1000000) * 100),
+      value: milestoneProgress,
       icon: Target,
-      progress: Math.min((startup.valuation / 1000000) * 10, 100),
+      progress: milestoneProgress,
       color: "from-purple-500 to-violet-500",
       description: "Milestone Tracker"
     },
@@ -1111,322 +859,9 @@ const GamifiedStatsOverview = ({ startup, stats, formatCurrency }) => {
   );
 };
 
-// Project Goals Section
-const ProjectGoalsSection = ({ goals, isCreator }) => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-white">Project Goals & Milestones</h2>
-      {isCreator && (
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          New Goal
-        </Button>
-      )}
-    </div>
 
-    <div className="grid gap-6">
-      {goals.map((goal, index) => (
-        <Card key={goal.id} className="bg-gray-800 border-gray-700">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-white flex items-center gap-2">
-                <Target className="w-5 h-5 text-blue-400" />
-                {goal.title}
-              </CardTitle>
-              <Badge className={
-                goal.status === 'completed' ? 'bg-green-500/20 text-green-400' :
-                goal.is_on_track ? 'bg-blue-500/20 text-blue-400' : 'bg-yellow-500/20 text-yellow-400'
-              }>
-                {goal.status === 'completed' ? 'Completed' : goal.is_on_track ? 'On Track' : 'Needs Attention'}
-              </Badge>
-            </div>
-            <CardDescription className="text-gray-400">
-              {goal.description}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Progress</span>
-                <span className="text-white font-medium">{goal.progress_percentage}%</span>
-              </div>
-              <Progress value={goal.progress_percentage} className="h-2" />
-            </div>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-gray-400">Milestones: </span>
-                <span className="text-white">{goal.milestones_completed}/{goal.milestones_total}</span>
-              </div>
-              <div>
-                <span className="text-gray-400">Next: </span>
-                <span className="text-white">{goal.next_milestone}</span>
-              </div>
-            </div>
 
-            {/* Milestones Accordion */}
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="milestones">
-                <AccordionTrigger className="text-gray-400 hover:text-white">
-                  View Milestones ({goal.milestones.length})
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2">
-                    {goal.milestones.map((milestone) => (
-                      <div key={milestone.id} className="flex items-center gap-3 p-2 rounded-lg bg-gray-700/50">
-                        {milestone.is_completed ? (
-                          <CheckCircle className="w-4 h-4 text-green-400" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-yellow-400" />
-                        )}
-                        <span className={`flex-1 ${milestone.is_completed ? 'text-gray-400 line-through' : 'text-white'}`}>
-                          {milestone.title}
-                        </span>
-                        <Badge variant="outline" className="text-xs">
-                          #{milestone.order}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <div className="text-sm text-gray-400">
-              Due: {goal.target_date.toLocaleDateString()}
-            </div>
-            {isCreator && (
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-300">
-                  <Settings className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
-                <Button variant="outline" size="sm" className="border-gray-600 text-gray-300">
-                  <PlayCircle className="w-3 h-3 mr-1" />
-                  Update
-                </Button>
-              </div>
-            )}
-          </CardFooter>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
-
-// Calendar Section
-const CalendarSection = ({ events, isCreator }) => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-white">Upcoming Events</h2>
-      {isCreator && (
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          New Event
-        </Button>
-      )}
-    </div>
-
-    <div className="grid gap-4">
-      {events.map((event, index) => (
-        <Card key={event.id} className="bg-gray-800 border-gray-700">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              <div 
-                className="w-3 h-16 rounded-full"
-                style={{ backgroundColor: event.color }}
-              />
-              <div className="flex-1">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-white font-semibold">{event.title}</h3>
-                    <p className="text-gray-400 text-sm mt-1">{event.description}</p>
-                  </div>
-                  <Badge className="bg-gray-700 text-gray-300">
-                    {event.category}
-                  </Badge>
-                </div>
-                <div className="flex items-center gap-4 mt-3 text-sm text-gray-400">
-                  <Clock className="w-4 h-4" />
-                  <span>{event.start_date.toLocaleDateString()} • {event.start_date.toLocaleTimeString()}</span>
-                  {event.end_date && (
-                    <>
-                      <span>→</span>
-                      <span>{event.end_date.toLocaleTimeString()}</span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
-
-// Updated Team Section with Avatar Group
-const TeamSection = ({ members,onJoinClick, isCreator, onRemoveMember }) => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-white">Team Members</h2>
-      {isCreator && (
-        <Button onClick={onJoinClick} className="bg-blue-600 hover:bg-blue-700">
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add Member
-        </Button>
-      )}
-    </div>
-
-    {/* Avatar Group */}
-    {members.length > 0 && (
-  <Card className="bg-gray-800 border-gray-700">
-    <CardHeader>
-      <CardTitle className="text-white text-lg">Team Overview</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <AvatarGroup variant="stack" size={48} animate={true} className="justify-start">
-        {members.slice(0, 6).map((member) => (
-          <TooltipProvider key={member.id}>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Avatar className="border-2 border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
-                  <AvatarImage src={member.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold">
-                    {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent side="top" arrowColor="bg-gray-500 fill-gray-500"  className="bg-gray-500 border-gray-700 text-white">
-                <p className="font-semibold">{member.firstName} {member.lastName}</p>
-                <p className="text-gray-300 text-sm">{member.role}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        ))}
-        {members.length > 6 && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Avatar className="border-2 border-gray-700 cursor-pointer">
-                  <AvatarFallback className="bg-gray-600 text-gray-300 font-semibold">
-                    +{members.length - 6}
-                  </AvatarFallback>
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="bg-gray-800 border-gray-700 text-white">
-                <p>{members.length - 6} more members</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </AvatarGroup>
-    </CardContent>
-  </Card>
-)}
-
-    {/* Members Grid */}
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {members.map((member, index) => (
-        <Card key={member.id} className="bg-gray-800 border-gray-700 hover:border-blue-500/50 transition-all">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={member.avatar} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                    {member.firstName?.charAt(0)}{member.lastName?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-white font-semibold">
-                    {member.firstName} {member.lastName}
-                  </h3>
-                  <Badge variant="outline" className="text-xs bg-blue-500/10 text-blue-400 border-blue-500/30">
-                    {member.role}
-                  </Badge>
-                </div>
-              </div>
-              {isCreator && member.role !== 'founder' && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onRemoveMember(member.id)}
-                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10 h-8 w-8 p-0"
-                >
-                  <X className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            <div className="text-xs text-gray-400 mt-2">
-              Joined {new Date(member.joinedAt).toLocaleDateString()}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
-
-// Updated Documents Section
-const DocumentsSection = ({onJoinClick, documents, isCreator, onDownload, onDelete }) => (
-  <div className="space-y-6">
-    <div className="flex items-center justify-between">
-      <h2 className="text-2xl font-bold text-white">Documents</h2>
-      {isCreator && (
-        <Button onClick={onJoinClick} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Upload Document
-        </Button>
-      )}
-    </div>
-
-    <div className="grid gap-4">
-      {documents.map((doc, index) => (
-        <Card key={doc.id} className="bg-gray-800 border-gray-700 hover:border-blue-500/50 transition-all">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-blue-400" />
-                </div>
-                <div>
-                  <h3 className="text-white font-medium">{doc.filename}</h3>
-                  <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
-                    <span className="capitalize">{doc.document_type}</span>
-                    <span>{(doc.file_size / 1024 / 1024).toFixed(2)} MB</span>
-                    <span>{new Date(doc.uploaded_at).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDownload(doc.id, doc.filename)}
-                  className="text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-                {isCreator && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onDelete(doc.id)}
-                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
-  </div>
-);
 
 // Add the Trophy icon component
 const Trophy = (props) => (
@@ -1447,295 +882,7 @@ const Trophy = (props) => (
       <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
     </svg>
   );
-  
 
-// Tech Stack Section Component
-const TechStackSection = ({ startup }) => (
-    <motion.section
-      initial={{ y: 30, opacity: 0 }}
-      whileInView={{ y: 0, opacity: 1 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6 }}
-    >
-      <Card className="bg-gray-800 border-gray-700 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Code className="w-5 h-5 text-blue-400" />
-            Technology Stack
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {startup.tech_stack && startup.tech_stack.length > 0 ? (
-            <div className="flex flex-wrap gap-3">
-              {startup.tech_stack.map((tech, index) => (
-                <motion.div
-                  key={tech}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.05 }}
-                  whileHover={{ scale: 1.05, y: -2 }}
-                >
-                  <Badge 
-                    variant="outline" 
-                    className="px-4 py-2 text-sm border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 transition-all"
-                  >
-                    <Code className="w-4 h-4 mr-2" />
-                    {tech}
-                  </Badge>
-                </motion.div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-400 italic">No technologies specified yet.</p>
-          )}
-        </CardContent>
-      </Card>
-    </motion.section>
-  );
-  
-// CTA Section Component
-const CTASection = ({ onJoinClick }) => (
-  <motion.section
-    initial={{ y: 30, opacity: 0 }}
-    whileInView={{ y: 0, opacity: 1 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.6 }}
-    className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 rounded-3xl p-12 text-center"
-  >
-    <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNnoiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLW9wYWNpdHk9Ii4xIi8+PC9nPjwvc3ZnPg==')] opacity-20" />
-    
-    <div className="relative">
-      <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-        Ready to Join the Journey?
-      </h2>
-      <p className="text-lg text-white/90 mb-8 max-w-2xl mx-auto">
-        Be part of an innovative team that's shaping the future.
-      </p>
-      <Button 
-        onClick={onJoinClick}
-        size="lg"
-        className="bg-white text-blue-700 hover:bg-white/90 shadow-xl"
-      >
-        <Mail className="w-5 h-5 mr-2" />
-        Send Join Request
-      </Button>
-    </div>
-  </motion.section>
-);
 
-function AddMemberModal({ isOpen, onClose, onSubmit, formData, onFormChange }) {
-  const [userResults, setUserResults] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      if (formData.first_name || formData.last_name) {
-        try {
-          const response = await usersAPI.getAll({
-            search: formData.first_name || formData.last_name,
-            page: 1,
-            per_page: 10
-          });
-          
-          if (response.success && response.data?.users) {
-            setUserResults(response.data.users);
-          }
-        } catch (error) {
-          console.error('Error fetching users:', error);
-        }
-      }
-    }, 500);
-    
-    return () => clearTimeout(timer);
-  }, [formData.first_name, formData.last_name]);
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-gray-800 border-gray-700">
-        <DialogHeader>
-          <DialogTitle className="text-white">Add Team Member</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-300 mb-2 block">First Name</label>
-              <Input
-                required={!selectedUser}
-                value={formData.first_name}
-                onChange={(e) => onFormChange({ ...formData, first_name: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-300 mb-2 block">Last Name</label>
-              <Input
-                required={!selectedUser}
-                value={formData.last_name}
-                onChange={(e) => onFormChange({ ...formData, last_name: e.target.value })}
-                className="bg-gray-700 border-gray-600 text-white"
-              />
-            </div>
-          </div>
-          <div className='flex flex-col gap-2 max-h-50 overflow-y-auto'>
-            {userResults.map((user,) => (
-              <div
-                onClick={() => {
-                  setSelectedUser(user.id)
-                  onFormChange({
-                    user_id: user.id,
-                    first_name: user.firstName,
-                    last_name: user.lastName,
-                  })
-                }}
-                key={user.id} className={`${selectedUser === user.id ? 'bg-blue-400/70 rounded-lg p-2' : 'bg-gray-700/50'} flex items-center gap-3 p-2 rounded-lg transition-colors cursor-pointer`}>
-                <Avatar className="w-8 h-8">
-                  <AvatarImage src={getProfilePicture(user)} />
-                  <AvatarFallback className="bg-gradient-to-br from-blue-500 to-blue-600 text-white font-semibold">
-                    {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
-                  <p className="text-gray-400 text-sm">{user.roles.join(' ')}</p>
-                </div>
-              </div>
-            ))}
-            </div>
-          
-          <div>
-            <label className="text-sm text-gray-300 mb-2 block">Role</label>
-            <Select value={formData.role} onValueChange={(value) => onFormChange({ ...formData, role: value })}>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-600">
-                <SelectItem value="member" className="text-white">Member</SelectItem>
-                <SelectItem value="founder" className="text-white">Builder</SelectItem>
-                <SelectItem value="founder" className="text-white">Founder</SelectItem>
-                <SelectItem value="investor" className="text-white">Investor</SelectItem>
-                <SelectItem value="influencer" className="text-white">Influencer</SelectItem>
-
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-black">
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-              Add Member
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-const UploadDocumentModal = ({ isOpen, onClose, onSubmit, formData, onFormChange }) => (
-  <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="max-w-md bg-gray-800 border-gray-700">
-      <DialogHeader>
-        <DialogTitle className="text-white">Upload Document</DialogTitle>
-      </DialogHeader>
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div>
-          <label className="text-sm text-gray-300 mb-2 block">Document</label>
-          <Input
-            type="file"
-            onChange={(e) => onFormChange({ ...formData, document: e.target.files[0] })}
-            className="bg-gray-700 border-gray-600 text-white"
-          />
-        </div>
-        <div>
-          <label className="text-sm text-gray-300 mb-2 block">Document Type</label>
-          <Select value={formData.document_type} onValueChange={(value) => onFormChange({ ...formData, document_type: value })}>
-            <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-gray-800 border-gray-600">
-              <SelectItem value="general" className="text-white">General</SelectItem>
-              <SelectItem value="business_plan" className="text-white">Business Plan</SelectItem>
-              <SelectItem value="pitch_deck" className="text-white">Pitch Deck</SelectItem>
-              <SelectItem value="financial" className="text-white">Financial</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex gap-3 pt-4">
-          <Button type="button" variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-black">
-            Cancel
-          </Button>
-          <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-            Upload
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
-
-const DeleteStartupModal = ({ isOpen, onClose, onConfirm, startupName }) => (
-  <Dialog open={isOpen} onOpenChange={onClose}>
-    <DialogContent className="max-w-md bg-gray-800 border-gray-700">
-      <DialogHeader>
-        <DialogTitle className="text-white text-red-400">Delete Startup</DialogTitle>
-        <DialogDescription className="text-gray-400">
-          Are you sure you want to delete "{startupName}"? This action cannot be undone and will permanently remove all associated data.
-        </DialogDescription>
-      </DialogHeader>
-      <div className="flex gap-3 pt-4">
-        <Button variant="outline" onClick={onClose} className="flex-1 border-gray-600 text-black">
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={onConfirm} className="flex-1">
-          Delete Startup
-        </Button>
-      </div>
-    </DialogContent>
-  </Dialog>
-);
-
-// Skeleton Loading Component
-const StartupDetailSkeleton = () => (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 animate-pulse">
-      <nav className="sticky top-0 z-50 backdrop-blur-xl bg-gray-800/80 border-b border-gray-700 h-16"></nav>
-      
-      {/* Hero Skeleton */}
-      <div className="bg-gray-800 h-64"></div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-5 gap-2 mb-8">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="h-12 bg-gray-700 rounded-xl"></div>
-          ))}
-        </div>
-        
-        {/* Stats Skeleton */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="p-6 bg-gray-800 rounded-xl border border-gray-700">
-              <div className="h-12 w-12 bg-gray-700 rounded-xl mb-3"></div>
-              <div className="h-8 bg-gray-700 rounded w-3/4 mb-2"></div>
-              <div className="h-2 bg-gray-700 rounded w-full mb-1"></div>
-              <div className="h-4 bg-gray-700 rounded w-1/2"></div>
-            </div>
-          ))}
-        </div>
-  
-        {/* Content Skeleton */}
-        <div className="space-y-6">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="p-6 bg-gray-800 rounded-xl border border-gray-700">
-              <div className="h-6 bg-gray-700 rounded w-1/3 mb-4"></div>
-              <div className="space-y-2">
-                <div className="h-4 bg-gray-700 rounded"></div>
-                <div className="h-4 bg-gray-700 rounded w-5/6"></div>
-                <div className="h-4 bg-gray-700 rounded w-4/6"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
 
 export default StartupDetailPage;

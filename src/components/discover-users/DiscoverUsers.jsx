@@ -18,10 +18,7 @@ import { useNavigate, Link } from "react-router-dom";
 
 // NEW: Import ConnectionButton
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
-
-const getProfilePicture = (user) => {
-  return getAvatarUrl(user);
-};
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 

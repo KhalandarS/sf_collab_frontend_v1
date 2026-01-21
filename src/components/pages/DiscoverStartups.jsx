@@ -19,6 +19,7 @@ import ShinyText from "../ui/ShinyText";
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { startupAPI } from './startupDetails/startUpAPI';
+import { toast } from 'react-toastify';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -108,7 +109,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const fetchStartups = async (page = 1) => {
     try {
       setLoading(true);
-      const token = access_token; 
+      const token = access_token;
       if (!token) {
         console.error('No access token found');
         return;
@@ -116,20 +117,19 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   
       const fundingRange = getFundingRangeValues();
       
-      const params = new URLSearchParams({
-        page: page.toString(),
-        per_page: itemsPerPage.toString()
-      });
-  
-      if (searchQuery) params.append('search', searchQuery);
-      if (selectedIndustry !== 'All') params.append('industry', selectedIndustry);
-      if (selectedStage !== 'All') params.append('stage', selectedStage);
-      if (fundingRange.min !== null) params.append('min_funding', fundingRange.min.toString());
-      if (fundingRange.max !== null) params.append('max_funding', fundingRange.max.toString());
-      if (myStartupsOnly && user?.id) params.append('my_startups', true);
-      
+
+      const params = {
+        page,
+        search: searchQuery,
+        per_page: itemsPerPage,
+        min_funding: fundingRange.min,
+        max_funding: fundingRange.max,
+        industry: selectedIndustry !== 'All' ? selectedIndustry : undefined,
+        stage: selectedStage !== 'All' ? selectedStage : undefined,
+        my_startups: myStartupsOnly ? 'true' : 'false'
+      }
       const response = await startupAPI.getAll(token, params);
-      
+
       const data = response;
   
       if (data.success) {
@@ -230,7 +230,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     <div className="min-h-screen">
       <div className="w-full mx-auto px-4 sm:px-6 py-2">
         {/* Navigation */}
-        <motion.nav 
+        <motion.nav
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="sticky top-0 z-50"
@@ -252,24 +252,28 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                   </span>
                 </motion.div>
               )} */}
-            
-              <div className="hidden md:flex items-center gap-4 ml-auto">
-                <Button 
-                  variant={mode === 'myStartups' ? "default" : "ghost"}
-                  size="sm"
-                  className={mode === 'myStartups' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-gray-300 hover:text-black"}
-                  onClick={() => navigate(modeConfig.ctaRoute)}
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  {modeConfig.ctaButton}
-                </Button>
-              </div>
+              {
+                !(startups.length > 0 &&
+                !user?.plan_id) &&
+              
+                <div className="hidden md:flex items-center gap-4 ml-auto">
+                  <Button
+                    variant={mode === 'myStartups' ? "default" : "ghost"}
+                    size="sm"
+                    className={mode === 'myStartups' ? "bg-blue-600 hover:bg-blue-700 text-white" : "text-gray-300 hover:text-black"}
+                    onClick={() => navigate(modeConfig.ctaRoute)}
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    {modeConfig.ctaButton}
+                  </Button>
+                </div>
+              }
             </div>
           </div>
         </motion.nav>
         
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.1 }}
@@ -318,17 +322,17 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           )}
         
           {/* Main Heading */}
-          <motion.h1 
+          <motion.h1
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight"
           >
             <span className="">
-              <ShinyText 
+              <ShinyText
                 text={modeConfig.headerTitle}
-                disabled={false} 
-                speed={3} 
+                disabled={false}
+                speed={3}
               />
             </span>
             <br />
@@ -337,11 +341,11 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.5 }}
             >
-              <ShinyText 
+              <ShinyText
                 text={modeConfig.headerSubtitle}
-                disabled={false} 
-                speed={3} 
-                className='custom-title' 
+                disabled={false}
+                speed={3}
+                className='custom-title'
               />
             </motion.span>
           </motion.h1>
@@ -355,7 +359,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           >
             {mode === 'discover' && (
               <>
-                Join <span className="font-semibold text-white">thousands of innovators</span> building the future at 
+                Join <span className="font-semibold text-white">thousands of innovators</span> building the future at
                 fast-growing startups. From pre-seed to Series C, find your perfect match.
               </>
             )}
@@ -407,7 +411,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
         </motion.div>
 
         {/* Search & Mobile Filter Toggle */}
-        <motion.div 
+        <motion.div
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -529,7 +533,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                       Clear all filters
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       onClick={() => navigate(modeConfig.ctaRoute)}
                       className="bg-blue-600 hover:bg-blue-700"
                     >
@@ -539,9 +543,9 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                   )}
                 </motion.div>
               ) : (
-                <motion.div 
+                <motion.div
                   layout
-                  className="grid gap-6 w-full"
+                  className="md:grid flex flex-col gap-6 w-full"
                   style={{
                     gridTemplateColumns: 'repeat(auto-fill, minmax(480px, 1fr))'
                   }}
@@ -557,6 +561,56 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                       mode={mode}
                     />
                   ))}
+                  
+                  {mode === "myStartups" &&
+                    startups.length > 0 &&
+                    !user?.plan_id && (
+                      <motion.div
+                        layout
+                        initial={{ opacity: 0, scale: 0.96 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.25, ease: "easeOut" }}
+                        className="w-full"
+                      >
+                        <div
+                          onClick={() => {
+                            toast.info("You've reached the maximum number of startups for your plan");
+                            navigate("/crowdfunding");
+                          }}
+                          className="
+          relative min-h-[220px] cursor-pointer rounded-xl
+          border-2 border-dashed border-gray-700
+          bg-gray-900/40 backdrop-blur-sm
+          flex flex-col items-center justify-center gap-3
+          transition-all
+          hover:border-blue-500/50 hover:bg-gray-900/60
+          hover:shadow-[0_0_40px_-10px_rgba(59,130,246,0.25)]
+          group
+        "
+                        >
+                          {/* Icon */}
+                          <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-800/60 group-hover:bg-blue-500/10 transition">
+                            <Plus className="w-7 h-7 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                          </div>
+
+                          {/* Text */}
+                          <div className="text-center">
+                            <p className="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-colors">
+                              Upgrade your plan
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1 max-w-[240px]">
+                              Unlock more startups and advanced features
+                            </p>
+                          </div>
+
+                          {/* CTA hint */}
+                          <span className="mt-2 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                            View plans →
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+
                 </motion.div>
               )}
             </AnimatePresence>
@@ -580,8 +634,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     variant={currentPage === page ? "default" : "outline"}
                     size="sm"
                     onClick={() => fetchStartups(page)}
-                    className={currentPage === page 
-                      ? "bg-blue-500 hover:bg-blue-600" 
+                    className={currentPage === page
+                      ? "bg-blue-500 hover:bg-blue-600"
                       : "border-gray-600 text-gray-300 hover:bg-gray-700"
                     }
                   >
@@ -900,7 +954,7 @@ const StartupCard = ({ startup, index, onClick, formatCurrency, getStageBadgeVar
     className="flex-1"
   >
     <Card 
-      className="group h-full flex flex-col p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"
+      className="group h-full w-full flex flex-col p-6 hover:shadow-xl transition-all duration-300 cursor-pointer border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-hidden relative hover:border-blue-500/50"
       onClick={onClick}
     >
       <div className="absolute inset-0 bg-linear-to-br from-blue-500/0 via-blue-600/0 to-purple-500/0 group-hover:from-blue-500/5 group-hover:via-blue-600/5 group-hover:to-purple-500/5 transition-all duration-300" />

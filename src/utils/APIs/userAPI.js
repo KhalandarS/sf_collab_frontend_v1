@@ -42,14 +42,18 @@ api.interceptors.response.use(
 // Users API
 export const usersAPI = {
   // Now these functions will automatically use the token from the interceptor!
-  getAll: async (params = {}) => {
+  getAll: async (params = {}, accessToken = '') => {
     const response = await api.get("/users", {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
         ...params
       },
+      headers: accessToken ? {
+        Authorization: `Bearer ${accessToken}`,
+      } : {}
     });
+    console.log(response.data);
     return response.data;
   },
 

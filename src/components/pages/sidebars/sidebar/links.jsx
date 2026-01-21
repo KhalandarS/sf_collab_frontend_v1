@@ -12,6 +12,8 @@ import {
   BookOpen,
   Earth,
   MessageSquareHeart,
+  Building,
+  Building2,
 } from "lucide-react";
 
 import { IoChatbubbles } from "react-icons/io5";
@@ -78,6 +80,7 @@ export function createLinks(unreadMessagesCount) {
       href: "/discover-startups",
       label: "Startups",
       subItems: [
+        { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
         { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
         { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
         // { id: "startup-teams", href: "/startup-teams", label: "Teams", icon: <TiSocialAtCircular size={18} /> },

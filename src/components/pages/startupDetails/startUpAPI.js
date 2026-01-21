@@ -49,6 +49,7 @@ export const startupAPI = {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
+        my_startups: params.my_startups || 'false',
         ...params,
       },
     })

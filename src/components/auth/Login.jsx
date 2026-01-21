@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom"
 import Beams from '../ui/Beams';
 import ShinyText from '../ui/ShinyText';
 import {Button} from '../ui/button';
-import useScrollHide from "../../hooks/useScrollHide";
+import useScrollHide from "../../utils/hooks/useScrollHide";
 import { loginGoogleUser,loginUser} from "../../services/auth/authThunks";
 
 import NavBar from "../sections/NavBar";
@@ -31,7 +31,7 @@ export default function Login() {
   // const { login, loginWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token, isAuthenticated } = useSelector((state) => state.auth);
   // If you have user logged in, you should be signed out to access login page
 
   const [alertConf, setAlertConf] = useState({title:"", message:""});
@@ -257,10 +257,13 @@ export default function Login() {
   };
   
   useEffect(() => {
-    if (user) {
-      navigate('/dashboard');
-    }
-  }, [user, navigate]);
+  if (!isAuthenticated) return;
+
+  if (user && access_token) {
+    navigate('/dashboard', { replace: true });
+  }
+}, [user, access_token, isAuthenticated]);
+
   return (
   <div>
     

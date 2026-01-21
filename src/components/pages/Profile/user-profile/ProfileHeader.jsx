@@ -161,7 +161,7 @@ const ProfileHeader = ({
                   !user?.profile?.company,
                 ].filter(Boolean).length;
                 
-                return emptyFields >= 3 && (
+                return emptyFields >= 3 && currentUser && currentUser.id === user?.id && (
                   
                   <motion.div 
                     whileHover={{ scale: 1.05 }}

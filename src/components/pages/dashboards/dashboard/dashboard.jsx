@@ -37,7 +37,7 @@ import JoinSFSection from "./JoinSFSection";
 import InfluencerSection from "./InfluencerSection";
 import AdminSection from "./AdminSection";
 import Loader from "@/components/loader/loader";
-import DashboardChangeSection from "../dashboardChangeSection";
+import DashboardChangeSection from "../DashboardChangeSection";
 import DonationSection from "./DonationSection";
 import CrowdfundingSection from "./CrowdfundingSection";
 const Dashboard = ({

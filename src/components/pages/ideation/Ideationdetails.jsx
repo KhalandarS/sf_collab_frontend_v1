@@ -562,7 +562,7 @@ const IdeationDetails = () => {
               <img
                 src={idea.imageUrl.startsWith('http') ? idea.imageUrl : `${API_BASE_URL}${idea.imageUrl}`}
                 alt={idea.title}
-                className="w-full h-40 object-cover rounded-lg border border-white/10 mb-4"
+                className="w-full h-40 object-contain rounded-lg border border-white/10 mb-4"
               />
             )}
 

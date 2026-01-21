@@ -10,7 +10,7 @@ import {
   Layers,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardChangeSection from "../dashboardChangeSection";
+import DashboardChangeSection from "../DashboardChangeSection";
 
 export default function BuilderDashboard({
   userRoles,

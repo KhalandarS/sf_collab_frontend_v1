@@ -5,7 +5,7 @@ import { ProfilePeek } from "../gsap/profile-peek";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch, useSelector } from "react-redux";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
@@ -59,7 +59,8 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [loaderState, setLoaderState] = useState(false);
-  
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
   const dispatch = useDispatch();
@@ -144,13 +145,21 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   useEffect(() => {
     fetchNotifications();
   }, [user]);
+  const location = useLocation(); // Get the current location
+
+  // Close dropdowns when the location changes
+  useEffect(() => {
+    setIsNotificationsOpen(false);
+    setIsProfileOpen(false);
+  }, [location]);
+
 
   if (loaderState) return (
     <nav
       className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
         isHidden ? "-translate-y-full" : "translate-y-0"
       } lg:translate-y-0`}
-      style={{ zIndex: 9999999 }}
+      style={{ zIndex: 10000 }}
     >
       <div
         className="absolute inset-0 z-0"
@@ -201,8 +210,9 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
               <IoChatbubbles size={23} />
             </Link>
             <div className="relative" ref={notificationRef}>
-              <Tippy
-                content={
+                          {/* 🔔 NOTIFICATIONS */}
+            <Tippy
+              content={
                   <GlareHover
                     width="100%"
                     height="100%"
@@ -248,26 +258,35 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="click"
-                placement="bottom"
-                interactive={true}
-                delay={[100, 150]} // small delay to avoid flicker
-                appendTo={document.body}
-                onClickOutside={() => { }}
-                
+              visible={isNotificationsOpen}
+              interactive
+              placement="bottom"
+              appendTo={document.body}
+              onClickOutside={() => setIsNotificationsOpen(false)}
+            >
+              <button
+                onClick={() => {
+                  setIsProfileOpen(false);
+                  setIsNotificationsOpen(v => !v);
+                }}
+                className="relative p-2 rounded-lg bg-blue-500/10"
               >
-                <button className="relative p-2.5 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 text-slate-300 hover:text-white hover:from-blue-500/30 hover:to-cyan-500/20 border border-blue-500/20 transition-all duration-200">
-                  <BellIcon />
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold bg-gradient-to-r from-red-600 to-red-500 text-white rounded-full animate-pulse shadow-lg shadow-red-600/50">
+                <BellIcon />
+                {notifications.length > 0 && (
+                  <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1">
                     {notifications.length}
                   </span>
-                </button>
-              </Tippy>
+                )}
+              </button>
+            </Tippy>
+
+            
             </div>
 
             <div className="relative" ref={profileRef}>
-              <Tippy
-                content={
+              {/* 👤 PROFILE */}
+            <Tippy
+              content={
                   <GlareHover
                     width="100%"
                     height="100%"
@@ -308,21 +327,22 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-                trigger="click"
-                placement="bottom"
-                interactive={true}
-                delay={[100, 150]} // small delay to avoid flicker
-                appendTo={document.body}
-                onClickOutside={() => { }}
+              visible={isProfileOpen}
+              interactive
+              placement="bottom"
+              appendTo={document.body}
+              onClickOutside={() => setIsProfileOpen(false)}
+            >
+              <button
+                onClick={() => {
+                  setIsNotificationsOpen(false);
+                  setIsProfileOpen(v => !v);
+                }}
+                className="w-10 h-10 rounded-lg overflow-hidden"
               >
-                <button className="flex items-center gap-2.5 w-11 h-11 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/10 border border-blue-500/20 overflow-hidden hover:from-blue-500/30 hover:to-cyan-500/20 transition-all duration-200 ring-2 ring-transparent hover:ring-blue-500/30">
-                  <img
-                    className="h-full w-full object-cover"
-                    src={user?.profile?.picture ? (user.profile.picture.startsWith('http') ? user.profile.picture : `${BASE_URL}/users/avatars/${user.profile.picture.replace(/^\/?uploads\//, "")}`) : "/default-user.jpeg"}
-                    alt="avatar"
-                  />
-                </button>
-              </Tippy>
+                <img src={getProfilePicture(user)} className="w-full h-full object-cover" />
+              </button>
+            </Tippy>
             </div>
 
             <div className="lg:hidden border border-blue-500/20 rounded-lg">

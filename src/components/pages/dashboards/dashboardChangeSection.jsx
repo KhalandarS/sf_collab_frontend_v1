@@ -1,41 +1,79 @@
-import { Plus } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown } from "lucide-react";
+import DashboardSelectorModal from "./DashboardSelectorModal";
 
-export default function DashboardChangeSection({ sections = [], onSectionChange, activeRole }) {
-  const [activeSection, setActiveSection] = useState(activeRole || (sections.length > 0 ? sections[0].id : null));
+export default function DashboardChangeSection({
+  sections = [],
+  onSectionChange,
+  activeRole,
+}) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  const handleSectionChange = (sectionId) => {
-    setActiveSection(sectionId);
-    onSectionChange?.(sectionId);
-  };
+  const activeSection = sections.find(s => s.id === activeRole);
 
   return (
-
-    <div className="z-50 flex flex-wrap gap-4 px-4 my-4">
-      <span className="text-2xl gap-2 flex items-center text-white font-semibold">
-        
-        Select your dashboard
-      </span>
-      {sections?.map((section) => (
-        <button
-          
-          key={section.id}
-          onClick={() => handleSectionChange(section.id)}
-          className={`px-4 py-2 min-w-[8rem] rounded-lg font-semibold transition-all ${
-            activeSection === section.id
-              ? "bg-blue-600 text-white shadow-lg"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
+    <>
+      <div className="z-50 flex items-center justify-between px-4 my-6">
+        {/* Title */}
+        <motion.h2
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="text-xl font-semibold text-white"
         >
-          {section.label || section.name}
-        </button>
-      ))}
-      <button
-        onClick={() => window.location.href = '/user-profile?page=settings'}
-        className="px-4 py-2 rounded-lg font-semibold bg-gray-600 text-white shadow-lg transition-colors hover:bg-green-500"
-      >
-        <Plus size={22} />
-      </button>
-    </div>
+          Select your dashboard
+        </motion.h2>
+
+        {/* Selector */}
+        <motion.button
+          onClick={() => setIsOpen(true)}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          className="
+            relative flex items-center gap-3 px-5 py-2.5
+            rounded-xl
+            bg-gradient-to-br from-slate-800/80 via-slate-900/80 to-black/80
+            border border-white/10
+            text-white font-medium
+            backdrop-blur-md
+            hover:border-blue-400/40
+            hover:shadow-xl hover:shadow-blue-500/10
+            transition-colors
+          "
+        >
+          {/* Glow */}
+          <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 hover:opacity-100 transition-opacity" />
+
+          <span className="relative z-10 text-sm text-slate-300">
+            {activeSection?.label || "Choose dashboard"}
+          </span>
+
+          <motion.span
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.25 }}
+            className="relative z-10 text-slate-400"
+          >
+            <ChevronDown size={18} />
+          </motion.span>
+        </motion.button>
+      </div>
+
+      {/* Modal */}
+      <AnimatePresence>
+        {isOpen && (
+          <DashboardSelectorModal
+            sections={sections}
+            activeRole={activeRole}
+            onClose={() => setIsOpen(false)}
+            onSelect={(role) => {
+              onSectionChange(role);
+              setIsOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

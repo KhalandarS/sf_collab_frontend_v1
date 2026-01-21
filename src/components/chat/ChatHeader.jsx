@@ -1,18 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Avatar from "./Avatar";
 
-
-
-const ChatHeader = ({ 
-  conversation, 
-  currentUserId,
-  statusText="",
-  presenceStatus="offline",
-  onAvatarClick,
-  onBack,
-  showBack = false
-}) => {
-  if (!conversation) return null;
+const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus="offline", onAvatarClick }) => {
+  
 
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
@@ -47,17 +37,11 @@ const ChatHeader = ({
       : presenceStatus === "idle"
         ? "text-yellow-400"
         : "text-zinc-500";
-
+  if (!conversation) return null;
   return (
     <div className="h-16 px-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
       <div className="flex items-center gap-3">
-
         <div className="relative" ref={menuRef}>
-          {showBack && (
-            <button onClick={onBack} className="lg:hidden p-2">
-              ←
-            </button>
-          )}
           <button
             type="button"
             onClick={() => {
@@ -97,7 +81,6 @@ const ChatHeader = ({
           {conversation.conversation_type === "direct" && (
             <p className={`text-xs ${statusColor}`}>{statusText}</p>
           )}
-
         </div>
       </div>
     </div>
