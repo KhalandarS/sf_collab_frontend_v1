@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import {
   Lightbulb, 
@@ -24,10 +24,13 @@ import { AIAPI } from '@/services/auth/AIAPI';
 import { useSelector } from 'react-redux';
 import ResponsePrompt from './ResponsePrompt';
 import { API_BASE_URL_NO_API } from '@/utils/config';
+import { paymentAPI } from '@/utils/APIs/paymentAPI';
+import useGetCredits from '@/utils/hooks/useGetCredits';
 
 export default function BusinessIdeaGenerator() {
   const [mode, setMode] = useState('ideas');
   const { user, access_token } = useSelector((state) => state.auth);
+  const credits = useGetCredits();
   const [isLoading, setIsLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [formData, setFormData] = useState({
@@ -226,7 +229,7 @@ export default function BusinessIdeaGenerator() {
                 </h4>
                 <div className="p-4 bg-linear-to-br from-purple-600/20 to-blue-600/20 rounded-lg border border-purple-500/30">
                   <div className="text-4xl font-bold text-white">
-                    {user?.credits || 0}
+                    {credits || 0}
                   </div>
                   <div className="text-sm text-slate-400 mt-1">Credits Available</div>
                 </div>
@@ -307,7 +310,7 @@ export default function BusinessIdeaGenerator() {
         
           {/* Feature Highlights */}
           <div className="flex justify-center  mt-6 animate-fade-in">
-            <div className='w-[80%] flex justify-around '>
+            <div className='w-[80%] flex flex-wrap justify-around '>
               {[
                 { 
                   mode: 'ideas', 

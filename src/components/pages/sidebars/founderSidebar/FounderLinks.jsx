@@ -1,4 +1,4 @@
-import { Badge, BarChart3, Earth, File } from 'lucide-react';
+import { Badge, BarChart3, Building2, Earth, File, Save } from 'lucide-react';
 import { FaTasks } from 'react-icons/fa';
 import { FaMoneyBill } from 'react-icons/fa6';
 import { FcFeedback } from 'react-icons/fc';
@@ -15,7 +15,7 @@ export function createFounderLinks(unreadMessagesCount = 0) {
   return [
     {
       id: 1,
-      icon: <BarChart3 size={22} />,
+      icon: <LuLayoutDashboard size={22} />,
       href: "/dashboard",
       label: "Dashboard",
       subItems: []
@@ -28,6 +28,9 @@ export function createFounderLinks(unreadMessagesCount = 0) {
       subItems: [
         { id: "discover-startups", href: "/my-startups", label: "Discover", icon: <Rocket size={18} /> },
         { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
+        { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
+        { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+
       ]
     },
     {
@@ -47,6 +50,15 @@ export function createFounderLinks(unreadMessagesCount = 0) {
       label: "Learning",
       subItems: [
         { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
+      ]
+    },
+    {
+      id: 5,
+      icon: <Lightbulb size={23} />,
+      href: "/ideation",
+      label: "Ideation",
+      subItems: [
+        { id: "ideation-board", href: "/ideation", label: "Ideation Board", icon: <Lightbulb size={18} /> },
       ]
     },
     {

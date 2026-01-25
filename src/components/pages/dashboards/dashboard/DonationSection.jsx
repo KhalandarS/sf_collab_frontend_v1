@@ -19,7 +19,7 @@ export default function DonationSection() {
             },
           }
         );
-        setTotalDonations(response.data.data.total_donations);
+        setTotalDonations(response.data.data.total_donations / 100);
       } catch (error) {
         console.error("Error fetching total donations:", error);
       }
@@ -58,7 +58,6 @@ export default function DonationSection() {
               ${displayedTotal}
             </span>
           </div>
-
           <Link
             to="/donate"
             className="flex items-center justify-center rounded-xl h-full px-6 py-3 text-sm font-semibold
@@ -67,7 +66,7 @@ export default function DonationSection() {
                        "
           >
             Donate
-          </Link>
+            </Link>
         </div>
       </div>
     </section>

@@ -32,7 +32,7 @@ import { isUserProfileComplete } from "@/utils/getUserComplete";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteEmailPopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
-
+import useScrollHide from "@/utils/hooks/useScrollHide";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -44,8 +44,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   const { user, access_token } = useSelector((state) => state.auth);
   const [isAdmin] = useState(hasPermission(user, "admin_access"));
-
-  // const { onlineUsers, socket, isConnected } = useAppSocket();
   const { friends } = useChatContacts();
 
   const { isHidden: isNavHidden, onScroll } = useScrollHide({
@@ -74,7 +72,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
         if (
           !res?.on_waitlist &&
-          !["/waitlist", "/waitlist-terms", "/user-profile", "/apply-influencer", "/joinsf"].includes(location.pathname)
+          !["/waitlist", "/waitlist-terms", "/user-profile", "/apply-influencer", "/joinsf", "/pricing"].includes(location.pathname)
         ) {
           toast.info("You should join the waitlist to access this section.");
           navigate("/waitlist");
@@ -87,24 +85,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     checkWaitlist();
   }, [user, access_token, location.pathname]);
 
-  // ==========================================================================
-  // CONNECTION NOTIFICATIONS VIA SOCKET.IO
-  // ==========================================================================
+  // Connection notifications via Socket.IO
   useEffect(() => {
     if (!socket || !isConnected || !user) return;
 
-    /**
-     * Handle new connection request received
-     * Someone wants to connect with us
-     */
     const handleNewConnectionRequest = (data) => {
       if (!data) return;
-      
-      const senderName = data.sender_name || 
-        `${data.sender?.first_name || ''} ${data.sender?.last_name || ''}`.trim() ||
-        'Someone';
-      
-      // Show toast notification
+      const senderName = data.sender_name || `${data.sender?.first_name || ''} ${data.sender?.last_name || ''}`.trim() || 'Someone';
       toast.info(
         <div className="flex flex-col gap-1">
           <p className="font-semibold">New Connection Request</p>
@@ -115,25 +102,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           autoClose: 5000,
         }
       );
-      
-      // Dispatch event for NavBar to update badge
-      window.dispatchEvent(new CustomEvent('connection:new_request', { 
-        detail: data 
-      }));
+      window.dispatchEvent(new CustomEvent('connection:new_request', { detail: data }));
     };
 
-    /**
-     * Handle connection request accepted
-     * Someone accepted our connection request
-     */
     const handleRequestAccepted = (data) => {
       if (!data) return;
-      
-      const accepterName = data.accepter_name ||
-        `${data.accepter?.first_name || ''} ${data.accepter?.last_name || ''}`.trim() ||
-        'Someone';
-      
-      // Show toast notification
+      const accepterName = data.accepter_name || `${data.accepter?.first_name || ''} ${data.accepter?.last_name || ''}`.trim() || 'Someone';
       toast.success(
         <div className="flex flex-col gap-1">
           <p className="font-semibold">Connection Accepted!</p>
@@ -144,44 +118,23 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           autoClose: 5000,
         }
       );
-      
-      // Dispatch event for NavBar/hook to update counts
-      window.dispatchEvent(new CustomEvent('connection:request_accepted', { 
-        detail: data 
-      }));
+      window.dispatchEvent(new CustomEvent('connection:request_accepted', { detail: data }));
     };
 
-    /**
-     * Handle connection request declined
-     * Someone declined our connection request (optional notification)
-     */
     const handleRequestDeclined = (data) => {
       if (!data) return;
-      
-      // Dispatch event to update counts (no toast - declined is silent)
-      window.dispatchEvent(new CustomEvent('connection:request_declined', { 
-        detail: data 
-      }));
+      window.dispatchEvent(new CustomEvent('connection:request_declined', { detail: data }));
     };
 
-    /**
-     * Handle connection removed
-     * Someone removed us from their connections
-     */
     const handleConnectionRemoved = (data) => {
       if (!data) return;
-      
-      // Dispatch event to update counts (no toast - removal is silent)
-      window.dispatchEvent(new CustomEvent('connection:removed', { 
-        detail: data 
-      }));
+      window.dispatchEvent(new CustomEvent('connection:removed', { detail: data }));
     };
 
-    // Register socket listeners
     socket.on('connection_request', handleNewConnectionRequest);
-    socket.on('connection_request_received', handleNewConnectionRequest); // Alternative event name
+    socket.on('connection_request_received', handleNewConnectionRequest);
     socket.on('connection_accepted', handleRequestAccepted);
-    socket.on('connection_request_accepted', handleRequestAccepted); // Alternative event name
+    socket.on('connection_request_accepted', handleRequestAccepted);
     socket.on('connection_declined', handleRequestDeclined);
     socket.on('connection_removed', handleConnectionRemoved);
 
@@ -195,29 +148,21 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     };
   }, [socket, isConnected, user]);
 
-  // ==========================================================================
-  // RAW WEBSOCKET CLIENT (Alternative if not using Socket.io)
-  // ==========================================================================
+  // Raw WebSocket client
   useEffect(() => {
     const userId = user?.id;
     if (!userId) return;
 
     const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
-    // Chat events
     client.on("new_message", (data) => {
       toast.info("New message received");
       window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
     });
 
-    client.on("user_online", (data) =>
-      toast.success(`${data?.user_name || "User"} is online`)
-    );
-    client.on("user_offline", (data) =>
-      toast.info(`${data?.user_name || "User"} went offline`)
-    );
+    client.on("user_online", (data) => toast.success(`${data?.user_name || "User"} is online`));
+    client.on("user_offline", (data) => toast.info(`${data?.user_name || "User"} went offline`));
 
-    // Connection events via raw WebSocket
     client.on("connection_request", (data) => {
       const senderName = data.sender_name || 'Someone';
       toast.info(`${senderName} wants to connect with you`, {
@@ -287,83 +232,75 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     setIsOptionsVisible(false);
   };
+
   const isMobile = window.matchMedia("(max-width: 1024px)").matches;
 
   return (
     <>
-    <div className="relative min-h-screen w-screen flex flex-col">
-      {/* Background */}
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          background:
-            "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-        }}
-      />
-
-      {/* Email Verification Banner */}
-      {user && !user.is_email_verified && <EmailVerifyPopUp />}
-
-      {/* Profile Completion Modal */}
-      {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setCompletePopupVisible} />}
-
-      {/* Top Nav */}
-      {!isRootPath && (
+      <div className="relative min-h-screen w-screen flex flex-col">
+        {/* Background */}
         <div
-          ref={navContainerRef}
-          onMouseEnter={handleNavAreaEnter}
-          onMouseLeave={handleNavAreaLeave}
-          className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-            isNavHidden ? "h-0" : "h-16"
-          }`}
-        >
-          <NavBar
-            setIsOpen={setIsOpen}
-            isOpen={isOpen}
-            isHidden={isNavHidden}
-            isAdmin={isAdmin}
-            activeRole={activeRole}
-            setActiveRole={setActiveRole}
-            userRoles={userRoles}
-          />
-        </div>
-      )}
+          className="absolute inset-0 z-0"
+          style={{
+            background: "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
+          }}
+        />
 
-      <motion.div className="relative flex-1 w-full flex overflow-hidden">
-        {/* Left sidebar */}
-        {!isRootPath && <SideBar />}
+        {/* Email Verification Banner */}
+        {user && !user.is_email_verified && <EmailVerifyPopUp />}
 
-        {/* Main content area */}
-        <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
-          {/* Options bar: never show on chat or connections */}
-          {!isRootPath && !isChatRoute && !isConnectionsRoute && (
-            <div
-              ref={optionsRef}
-              className={`transition-all duration-300 px-4 absolute m-auto flex justify-center top-2 ${
-                isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"
-              }`}
-              style={{ zIndex: 10 }}
-            >
-              <Options
-                isHidden={isNavHidden}
-                unreadMessagesCount={unreadMessagesCount}
-                isAdmin={isAdmin}
-              />
-            </div>
-          )}
+        {/* Profile Completion Modal */}
+        {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setCompletePopupVisible} />}
 
+        {/* Top Nav */}
+        {!isRootPath && (
           <div
-            className={`relative w-full h-full ${
-              !isRootPath ? "pt-3.5 max-sm:pb-16" : ""
-            } overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
-            onScroll={isRootPath ? undefined : onScroll}
+            ref={navContainerRef}
+            // onMouseEnter={handleNavAreaEnter}
+            // onMouseLeave={handleNavAreaLeave}
+            className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"}`}
           >
-            <Outlet />
+            <NavBar
+              setIsOpen={setIsOpen}
+              isOpen={isOpen}
+              isHidden={isNavHidden}
+              isAdmin={isAdmin}
+              activeRole={activeRole}
+              setActiveRole={setActiveRole}
+              userRoles={userRoles}
+            />
           </div>
-        </div>
+        )}
 
-        
-      </motion.div>
+        <motion.div className="relative flex-1 w-full flex overflow-hidden">
+          {/* Left sidebar */}
+          {!isRootPath && <SideBar />}
+
+          {/* Main content area */}
+          <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
+            {/* Options bar: never show on chat or connections */}
+            {!isRootPath && !isChatRoute && !isConnectionsRoute && (
+              <div
+                ref={optionsRef}
+                className={`transition-all pointer-events-none duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
+                style={{ zIndex: 10 }}
+              >
+                <Options
+                  isHidden={isNavHidden}
+                  unreadMessagesCount={unreadMessagesCount}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            )}
+
+            <div
+              className={`relative w-full h-full ${!isRootPath ? "pt-3.5 max-sm:pb-16" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              onScroll={isRootPath ? undefined : onScroll}
+            >
+              <Outlet />
+            </div>
+          </div>
+        </motion.div>
       </div>
       {/* Chat docks */}
       <div className="z-10000000000">

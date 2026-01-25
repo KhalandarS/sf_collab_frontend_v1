@@ -111,7 +111,9 @@ export default function Checkout() {
 
   // if (loading) return <div className="text-center mt-20">Loading...</div>;
   if (!tier) return <div className="text-center mt-20">Tier not found</div>;
-
+  if (!tierId.includes("crowdfunding") && !tierId.includes("donations")) return (
+    <div className="text-center mt-20">At the moment, we are only accepting crowdfunding and donations</div>
+  )
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-8 flex flex-col items-center">
       {/* Tier Info */}
@@ -146,7 +148,7 @@ export default function Checkout() {
 
         {/* Features */}
         <ul className="text-left text-slate-300 mb-4 space-y-1">
-          {tier.features?.map((f, i) => (
+          {(tier.options.find(opt => opt.title === selectedOption?.title)?.features || tier.features).map((f, i) => (
             <li key={i} className="flex items-center gap-2">
               <span className="text-blue-400">•</span>
               {f}

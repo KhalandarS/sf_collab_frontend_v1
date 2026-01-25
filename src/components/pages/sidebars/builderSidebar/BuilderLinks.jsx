@@ -1,5 +1,5 @@
-import { Badge, BarChart3, Briefcase, LucideLayoutDashboard, Star, User, Heart, CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb, Earth } from 'lucide-react';
-import { IoChatbubbles } from 'react-icons/io5';
+import { CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb, Earth, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users } from 'lucide-react';
+
 import { LuLayoutDashboard } from 'react-icons/lu';
 
 export function createBuilderLinks(unreadMessagesCount) {
@@ -15,39 +15,47 @@ export function createBuilderLinks(unreadMessagesCount) {
     },
     {
       id: 2,
-      icon: <Briefcase size={22} />,
-      href: "/builder/browse-startups",
-      label: "Browse Startups",
+      icon: <Rocket size={22} />,
+      href: "/discover-startups",
+      label: "Discover Startups",
+      subItems: [
+        { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
+        { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+      ]
+
     },
-    {
-      id: 3,
-      icon: <Heart size={22} />,
-      href: "/builder/saved-startups",
-      label: "Saved Startups",
-    },
+
     {
       id: 4,
+      icon:<LightbulbIcon size={22} />,
+      href: "/ideation",
+      label: "Ideation",
+      subItems: [
+        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
+        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
+      ]
+    },
+    {
+      id: 5,
       icon: <CheckCircle size={22} />,
       href: "/builder/my-applications",
       label: "My Applications",
     },
-    {
-      id: 5,
-      icon: <LucideLayoutDashboard size={22} />,
-      href: "/builder/my-work",
-      label: "My Work",
-    },
-    {
-      id: 6,
-      icon: <Star size={22} />,
-      href: "/builder/rewards",
-      label: "Rewards",
-    },
+    // {
+    //   id: 6,
+    //   icon: <LucideLayoutDashboard size={22} />,
+    //   href: "/builder/my-work",
+    //   label: "My Work",
+    // },
     {
       id: 7,
-      icon: <User size={22} />,
-      href: "/builder/profile-skills",
-      label: "Skill Profile",
+      icon: <Users size={22} />,
+      href: "/discover-users",
+      label: "Discover Builders",
+      subItems: [
+        { id: "discover-builders", href: "/discover-users", label: "Discover Builders", icon: <Users size={18} /> },
+        { id: "social-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} />, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
+      ]
     },
     {
           id: 8,

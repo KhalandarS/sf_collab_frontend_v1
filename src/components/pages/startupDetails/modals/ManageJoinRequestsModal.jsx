@@ -61,57 +61,66 @@ const ManageJoinRequestsModal = ({
                 
                 return (
                   <Card key={request.id || request.request_id} className="bg-white/5 border border-white/10 hover:border-white/20 transition-colors">
-                    <CardContent className="pt-4 pb-3 px-4">
+                    <CardContent className="py-1 px-4">
                       {/* Requester Info */}
-                      <div className="mb-3 pb-3 border-b border-white/10">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm">
-                            {requesterName.charAt(0).toUpperCase()}
+                        <div className="flex items-center justify-between gap-1 mb-3">
+                          <div className="flex items-center gap-3 flex-1">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm">
+                              {requesterName.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-white truncate">{requesterName}</p>
+                              <p className="text-xs text-gray-400">
+                                <span className="text-yellow-400 font-semibold">{requestedRole}</span>
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm font-bold text-white">
-                              {requesterName}
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              Requesting as: <span className="text-yellow-400 font-semibold">{requestedRole}</span>
-                            </p>
+                          
+                          {/* Inline Action Buttons */}
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs px-2.5"
+                              onClick={() => onReject?.(request)}
+                              disabled={!onReject}
+                            >
+                              <XIcon className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="text-xs px-2.5 bg-green-600 hover:bg-green-700"
+                              onClick={() => onAccept?.(request)}
+                              disabled={!onAccept}
+                            >
+                              <CheckCircle2Icon className="w-3.5 h-3.5" />
+                            </Button>
                           </div>
                         </div>
-                        <p className="text-xs text-gray-300 italic bg-white/5 rounded px-2 py-2">
-                          "{message}"
-                        </p>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Requested on: {createdDate ? new Date(createdDate).toLocaleDateString() : 'N/A'}
-                        </p>
-                      </div>
+                        
+                        {message !== 'No message provided' && (
+                          <p className="text-xs text-gray-300 italic bg-white/5 rounded px-2 py-1.5 mb-2">
+                            "{message}"
+                          </p>
+                        )}
+                        
+                        <div className="flex items-center justify-between text-xs text-gray-500">
+                          <span>Requested: {createdDate ? new Date(createdDate).toLocaleDateString() : 'N/A'}</span>
+                          {request.mediaLinks && (request.mediaLinks.linkedin || request.mediaLinks.portfolio || request.mediaLinks.github) && (
+                            <div className="flex gap-2">
+                              {request.mediaLinks.linkedin && (
+                                <a href={request.mediaLinks.linkedin} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">LinkedIn</a>
+                              )}
+                              {request.mediaLinks.portfolio && (
+                                <a href={request.mediaLinks.portfolio} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">Portfolio</a>
+                              )}
+                              {request.mediaLinks.github && (
+                                <a href={request.mediaLinks.github} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300">GitHub</a>
+                              )}
+                            </div>
+                          )}
+                        </div>
 
-                      {/* Action Info */}
-                      <div className="text-xs text-gray-400 mb-3">
-                        <p>As <span className="text-blue-300 font-semibold">{founderName}</span>, you can:</p>
-                      </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 text-xs"
-                          onClick={() => onReject?.(request)}
-                          disabled={!onReject}
-                        >
-                          <XIcon className="w-4 h-4 mr-1" />
-                          Reject
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1 text-xs bg-green-600 hover:bg-green-700"
-                          onClick={() => onAccept?.(request)}
-                          disabled={!onAccept}
-                        >
-                          <CheckCircle2Icon className="w-4 h-4 mr-1" />
-                          Accept
-                        </Button>
-                      </div>
                     </CardContent>
                   </Card>
                 );

@@ -69,9 +69,13 @@ export const startupsAPI = {
   },
 
   // Update startup
-  update: async (startupId, data) => {
-    const response = await api.put(`/startups/${startupId}`, data)
-    return response.data.data
+  update: async (startupId, data, accessToken) => {
+    const response = await api.put(`/startups/${startupId}`, data, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    })
+    return response.data
   },
 
   // Delete startup
@@ -171,9 +175,12 @@ export const startupsAPI = {
         ...params,
       },
     })
-    return response.data.data
+    return response.data
   },
-
+  getUserStartupNames: async () => {
+    const response = await api.get(`/startups/names`)
+    return response.data
+  },
   // Get industries
   getIndustries: async () => {
     const response = await api.get('/startups/industries')
@@ -194,7 +201,8 @@ export const startupsAPI = {
         ...params,
       },
     })
-    return response.data.data
+    console.log("Join requests:", response);
+    return response.data
   },
   // Send a join request as a regular user
   sendJoinRequest: async (startupId, payload) => {
@@ -207,7 +215,12 @@ export const startupsAPI = {
       throw error
     }
   },
-
+  deleteJoinRequest: async (requestId) => {
+    const response = await api.delete(
+      `/join-requests/${requestId}`
+    )
+    return response.data
+  },
   // Accept join request
   acceptJoinRequest: async (startupId, requestId) => {
     const response = await api.post(
@@ -230,6 +243,49 @@ export const startupsAPI = {
       `/startups/join-requests/${requestId}/cancel`
     )
     return response.data.data
+  },
+
+  toggleBookmarkStartup: async ({
+    userId,
+    startupId,
+    //
+  }) => {
+    const response = await api.post('/startup-bookmarks/toggle', {
+      user_id: userId,
+      startup_id: startupId,
+    })
+    return response.data
+  },
+  getBookmarkStatus: async ({ startupId, userId }) => {
+    const response = await api.get(`/startup-bookmarks/status`, {
+      params: {
+        startup_id: startupId,
+        user_id: userId,
+      },
+    })
+    return response.data;
+  },
+  getBookmarkedStartups: async (userId, params = {}) => {
+    const response = await api.get(`/startup-bookmarks/startups`, {
+      params: {
+        user_id: userId,
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params,
+      },
+    })
+    console.log("Bookmarked Startups:", response);
+    return response.data
+  },
+  getApplications: async (params = {}) => {
+    const response = await api.get('/join-requests', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params,
+      },
+    })
+    return response.data
   }
 }
 // Project Goals API

@@ -10,7 +10,8 @@ export default function CrowdfundingSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
-  const [totalCrowdfunding, setTotalCrowdfunding] = useState(0);
+  const [totalCrowdfunding, setTotalCrowdfunding] = useState(80);
+
   const { access_token } = useSelector((state) => state.auth);
   useEffect(() => {
     const fetchTotalCrowdfunding = async () => {
@@ -22,7 +23,7 @@ export default function CrowdfundingSection() {
         }
         );
         
-        setTotalCrowdfunding(res?.data?.data?.total_crowdfunding || 0);
+        setTotalCrowdfunding(res?.data?.data?.total_crowdfunding / 100   || 80);
       } catch (err) {
         console.error("❌ Failed to load total crowdfunding amount", err);
       }
@@ -62,10 +63,10 @@ export default function CrowdfundingSection() {
   }
 
   const activeRole = roles[activeIndex] || { tiers: [] };
-  const FUNDING_GOAL = 250000; // USD goal (change anytime)
+  const FUNDING_GOAL = 25000; // USD goal (change anytime)
 
 const progressPercent = Math.min(
-  Math.round((totalCrowdfunding / FUNDING_GOAL) * 100),
+  ((totalCrowdfunding / FUNDING_GOAL) * 100).toFixed(2),
   100
 );
 
@@ -169,6 +170,13 @@ const progressPercent = Math.min(
             </Link>
           ))}
         </div>
+      </div>
+      {/* DISCLAIMER */}
+      <div className="mt-16 max-w-3xl mx-auto bg-neutral-900/50 border border-neutral-700 rounded-xl p-6 text-sm text-neutral-300 space-y-2">
+        <p>● Platform fees apply only when you earn</p>
+        <p>● Crowdfunding does not guarantee work or income</p>
+        <p>● Priority affects matching order, not selection outcomes</p>
+        <p>● All core tools remain free for builders</p>
       </div>
     </section>
   );

@@ -118,7 +118,7 @@ const contributionActions = [
     title: "Report Bugs & Feedback",
     description:
       "Help improve SFCollab by reporting bugs and sharing constructive feedback, click on the button on the lower-left part of the screen.",
-    points: "10-30 points",
+    points: "10-50 points",
     pointsDetail: "Based on severity & quality",
     icon: Zap,
     cta: "Submit Report",

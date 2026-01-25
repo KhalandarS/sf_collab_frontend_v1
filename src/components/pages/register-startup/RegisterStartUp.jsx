@@ -12,7 +12,7 @@ import { Progress } from "../../ui/progress";
 import { Alert, AlertDescription } from "../../ui/alert";
 import { Label } from "../../ui/label";
 import { Separator } from "../../ui/separator";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 
 import {
   Tooltip,
@@ -23,10 +23,24 @@ import {
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 import { toast } from "react-toastify";
 import { API_URL } from "@/utils/config";
-import SidebarContent from "./SiderbarContent";
+import SidebarContent from "./SidebarContent";
 import { logoutUser } from "@/services/auth/authThunks";
+import StartupRoleCard from "./StartupRoleCard";
+import { industries, startupStages } from "./elements";
+import StartupReview from "./steps/9_StartupReview";
+import StartupRolesAndTechStack from "./steps/7_StartupRolesAndTeamStack";
+import Startup from "@/components/landing-page/pages/StartupPage";
+import StartupFinancialForm from "./steps/4_StartupFinancialForm";
+import { formatCurrency } from "@/lib/utils";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { startupsAPI } from "@/utils/APIs/startupsAPI";
 export default function RegisterStartUp() {
+  const navigate = useNavigate();
+  const { access_token, user } = useSelector((state) => state.auth);
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [query] = useSearchParams();
+  const id = query.get('id') || null;
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -61,7 +75,36 @@ export default function RegisterStartUp() {
     // Save form data to local storage whenever it changes
     localStorage.setItem('formData', JSON.stringify(formData));
   }, [formData]);
+  useEffect(() => {
+    if (id && user?.id) {
 
+      async function fetchStartupData() {
+        try {
+          const response = await startupsAPI.getById(id)
+          if (response.success && response.data?.startup) {
+            const startup = response.data.startup;
+            if (user.id !== startup.creator.id) {
+              toast.error('Startup ID mismatch');
+              navigate(`/register-startup`);
+            }
+            setFormData({
+              
+              ...startup,
+            })
+            return
+          }
+          toast.error('Failed to load startup data for editing');
+        } catch {
+          console.error('Error fetching startup data for editing');
+          toast.error('Error fetching startup data for editing');
+        }
+          
+      }
+      fetchStartupData();
+    }
+  
+
+  }, [id, formData, user?.id]);
 // ...existing code...
   const [roles, setRoles] = useState([{ title: "", roleType: "Full Time" }]);
   const [logoFile, setLogoFile] = useState(null);
@@ -70,79 +113,13 @@ export default function RegisterStartUp() {
   const [xpPoints, setXpPoints] = useState(0);
   const [techStack, setTechStack] = useState([]);
   const [techInput, setTechInput] = useState("");
-  const { user, access_token } = useSelector((state) => state.auth);
 
   const [uploadedDocuments, setUploadedDocuments] = useState([]);
 
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
 
-  const industries = [
-    "Technology", "Healthcare", "Finance", "Education", 
-    "Retail", "Manufacturing", "Entertainment", "Real Estate",
-    "Transportation", "Energy", "Agriculture", "Other"
-  ];
 
-  const fundingRounds = [
-    { value: "pre-seed", label: "Pre-Seed", description: "Idea stage, friends & family" },
-    { value: "seed", label: "Seed", description: "Product development" },
-    { value: "series-a", label: "Series A", description: "Scaling operations" },
-    { value: "series-b", label: "Series B", description: "Market expansion" },
-    { value: "series-c", label: "Series C+", description: "Growth & acquisitions" },
-    { value: "bootstrapped", label: "Bootstrapped", description: "Self-funded" }
-  ];
-
-  const roleTypes = ["Full Time", "Part Time", "Contract", "Intern", "Volunteer"];
-  
-  const startupStages = [
-    { 
-      value: "idea", 
-      icon: <img src="/idea.png" className="w-14" alt="Concept phase"/>, 
-      label: "Idea", 
-      description: "Concept phase",
-      tooltip: "Just an idea on paper. No product built yet. Looking for co-founders and initial validation."
-    },
-    { 
-      value: "validation", 
-      icon: <img src="/seed.png" className="w-14" alt="Initial funding"/>, 
-      label: "Validation", 
-      description: "Initial funding",
-      tooltip: "Secured initial funding. Building MVP. Small team forming. Early customer validation."
-    },
-    { 
-      value: "early", 
-      icon: <img src="/rocket.png" className="w-14" alt="Product development"/>, 
-      label: "Early", 
-      description: "Product development",
-      tooltip: "MVP launched. First customers onboarded. Product-market fit exploration. Growing team."
-    },
-    { 
-      value: "growth", 
-      icon: <img src="/progress.png" className="w-14" alt="Scaling operations"/>, 
-      label: "Growth", 
-      description: "Scaling operations",
-      tooltip: "Strong product-market fit. Rapid user growth. Scaling team and operations. Series A/B funding."
-    },
-    { 
-      value: "scale", 
-      icon: <img src="/thounder.png" className="w-14" alt="Market expansion"/>, 
-      label: "Scale", 
-      description: "Market expansion",
-      tooltip: "Established market position. Expanding to new markets. Large team. Focus on optimization and growth."
-    }
-  ];
-  
-  const popularTechnologies = [
-    "JavaScript", "TypeScript", "Python", "Java", "C#", "PHP", "Ruby", "Go", "Rust",
-    "React", "Vue", "Angular", "Next.js", "Nuxt.js", "Svelte",
-    "Node.js", "Express", "Django", "Flask", "Spring", "Laravel", "Ruby on Rails",
-    "PostgreSQL", "MySQL", "MongoDB", "Redis", "Elasticsearch",
-    "AWS", "Azure", "Google Cloud", "Docker", "Kubernetes", "Terraform",
-    "GraphQL", "REST API", "WebSocket", "gRPC",
-    "React Native", "Flutter", "Swift", "Kotlin",
-    "Machine Learning", "AI", "Blockchain", "IoT"
-  ];
-  
   //! TECH STACK
   const addTech = (tech) => {
     if (tech && !techStack.includes(tech) && techStack.length < 15) {
@@ -180,16 +157,16 @@ export default function RegisterStartUp() {
   //! Get current user data from localStorage
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    if (userData) {
+    if (userData && !id) {
       const user = JSON.parse(userData);
-      setFormData(prev => ({
-        ...prev,
+      setFormData({
+        ...formData,
         creator_first_name: user?.first_name || user?.firstName || "",
         creator_last_name: user?.last_name || user?.lastName || "",
         creator_email: user?.email || ""
-      }));
+      });
     }
-  }, []);
+  }, [formData, id]);
 
   //! Add XP points when completing steps
   useEffect(() => {
@@ -260,7 +237,7 @@ export default function RegisterStartUp() {
       case 6:
         // Documents step - all fields are optional, no validation needed
         return true;
-      case 7:
+      case 7: {
         const invalidRoles = roles.filter(role => !role.title.trim() || !role.roleType);
         if (invalidRoles.length > 0) {
           toast.error('Please fill in all role titles and types');
@@ -273,6 +250,7 @@ export default function RegisterStartUp() {
         }
         
         return true;
+      }
       default:
         return true;
     }
@@ -363,7 +341,7 @@ export default function RegisterStartUp() {
       }
 
       // Convert roles array to the format expected by backend
-      const rolesObject = roles.reduce((acc, role, index) => {
+      const rolesObject = roles.reduce((acc, role) => {
         acc[role.title] = {
           roleType: role.roleType,
           positionsNumber: role.positionsNumber || 0
@@ -400,19 +378,31 @@ export default function RegisterStartUp() {
       if (bannerFile) submitData.append("banner", bannerFile);
 
       // Append uploaded documents
-      uploadedDocuments.forEach((doc, index) => {
+      uploadedDocuments.forEach((doc) => {
         submitData.append("documents", doc);
       });
+      let response
+      if (id) {
+        response = await fetch(`${API_URL}/startups/${id}`, {
+          method: "PUT",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // 'Content-Type': 'application/json',
+          },
+          body: submitData,
+        })
+        response = await startupsAPI.update(id, submitData, token);
+      } else {
 
-      const response = await fetch(`${API_URL}/startups/register`, {
-        method: "POST",
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          // 'Content-Type': 'application/json',
-        },
-        body: submitData,
-      });
-
+        response = await fetch(`${API_URL}/startups/register`, {
+          method: "POST",
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // 'Content-Type': 'application/json',
+          },
+          body: submitData,
+        });
+      }
       const data = await response.json();
       if (response.status === 401) {
         toast.error("Session expired. Please log in again.");
@@ -538,15 +528,7 @@ export default function RegisterStartUp() {
 
   
 
-  // Format currency for display
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+
 
   return (
     <div className="min-h-screen">
@@ -559,7 +541,7 @@ export default function RegisterStartUp() {
             Build Your <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            Join thousands of founders who've built successful teams on our platform. 
+            Join thousands of founders who've built successful teams on our platform.
             <span className="text-white font-semibold"> Average time to first hire: 2.3 weeks.</span>
           </p>
         </div>
@@ -607,8 +589,8 @@ export default function RegisterStartUp() {
                   <span className="text-blue-400 text-sm font-medium">+{currentStep > 1 ? (currentStep - 1) * 150 : 0} XP</span>
                 </div>
                 <Progress value={((currentStep - 1) / 8) * 100} className="h-2 bg-gray-700  *:data-[slot=progress-indicator]:bg-blue-500 [&>div]:bg-blue-500/20" />
-                <div  className="h-2  transition-all duration-1000 ease-out rounded-full"
-                  style={{ width: `${((currentStep - 1) / 8) * 100}%`, marginTop: '-8px', background:'linear-linear(90deg,rgba(13, 91, 181, 1) 0%, rgba(78, 225, 245, 1) 100%)' }}
+                <div className="h-2  transition-all duration-1000 ease-out rounded-full"
+                  style={{ width: `${((currentStep - 1) / 8) * 100}%`, marginTop: '-8px', background: 'linear-linear(90deg,rgba(13, 91, 181, 1) 0%, rgba(78, 225, 245, 1) 100%)' }}
                 ></div>
               </div>
 
@@ -671,7 +653,7 @@ export default function RegisterStartUp() {
                         <div className="relative">
                           <Globe className="absolute right-4 top-3 text-gray-400 z-10" size={20} />
                           <Select value={formData.industry} onValueChange={(value) => handleInputChange("industry", value)}>
-                            <SelectTrigger style={{height:'45px'}} className="w-full border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
+                            <SelectTrigger style={{ height: '45px' }} className="w-full border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
                               <SelectValue placeholder="Select Industry" className="text-white" />
                             </SelectTrigger>
                             <SelectContent position="bottom" className="w-full bg-gray-800 border-gray-600 text-white">
@@ -828,7 +810,7 @@ export default function RegisterStartUp() {
 
                     <div className="space-y-5">
                       <div>
-                        <Label htmlFor="description" className="text-sm font-medium mb-3 block text-white flex items-center gap-2">
+                        <Label htmlFor="description" className="text-sm font-medium mb-3 text-white flex items-center gap-2">
                           <span>
                             Description <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
@@ -856,7 +838,7 @@ export default function RegisterStartUp() {
                       </div>
 
                       <div>
-                        <Label className="text-sm font-medium mb-3 block text-white flex items-center gap-2">
+                        <Label className="text-sm font-medium mb-3 text-white flex items-center gap-2">
                           Current Stage <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                         </Label>
                         <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
@@ -866,11 +848,10 @@ export default function RegisterStartUp() {
                                 <TooltipTrigger asChild>
                                   <Card
                                     onClick={() => handleInputChange("stage", stage.value)}
-                                    className={`p-4 cursor-pointer transition-all duration-200 border backdrop-blur-sm hover:scale-105 ${
-                                      formData.stage === stage.value
+                                    className={`p-4 cursor-pointer transition-all duration-200 border backdrop-blur-sm hover:scale-105 ${formData.stage === stage.value
                                         ? 'border-blue-400 bg-blue-400/20 text-white shadow-lg shadow-blue-400/20'
                                         : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-blue-400 hover:text-white'
-                                    }`}
+                                      }`}
                                   >
                                     <CardContent className="p-0 text-center">
                                       <div className={`flex justify-center mb-2 ${formData.stage === stage.value ? 'text-blue-400' : 'text-gray-400'}`}>
@@ -898,351 +879,13 @@ export default function RegisterStartUp() {
                 )}
 
                 {/* Step 4: Financial Foundation */}
-                {currentStep === 4 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <DollarSign className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Financial Foundation</CardTitle>
-                      <CardDescription className="text-gray-300">Share your financial metrics to attract the right talent</CardDescription>
-                    </div>
-                
-                    <div className="grid md:grid-cols-2 gap-5">
-                      <div className="space-y-3">
-                        <Label htmlFor="fundingRound" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Funding Round
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Current funding stage. Transparency about funding helps candidates assess company stability and growth potential.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <Select value={formData.funding_round} onValueChange={(value) => handleInputChange("funding_round", value)}>
-                          <SelectTrigger style={{height:'45px'}} className="w-full pl-14 border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
-                            <SelectValue placeholder="Select funding round" />
-                          </SelectTrigger>
-                          <SelectContent style={{width:'100%'}} className="bg-gray-800 border-gray-600 text-white">
-                            {fundingRounds.map(round => (
-                              <SelectItem key={round.value} value={round.value} className="text-white hover:bg-gray-700  focus:bg-gray-700">
-                                <div className="flex flex-col">
-                                  <span className='text-white hover:text-blue-400'>{round.label}</span>
-                                  <span className="text-xs text-gray-400">{round.description}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="fundingAmount" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Total Funding Raised
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Cumulative amount raised from all funding rounds. Shows investor confidence and financial backing.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <DollarSign className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                          <div className="relative">
-                            <DollarSign className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                            <div className="flex items-center gap-2">
-                              <Button
-                                onClick={() => handleFinancialChange("funding_amount", Math.max(0, formData.funding_amount - 1000))}
-                                size="icon"
-                                type="button"
-                                // variant=""
-                                style={{zIndex:99999,cursor:'pointer'}}
-                                className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              >
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <Input
-                                id="fundingAmount"
-                                type="number"
-                                value={formData.funding_amount}
-                                onChange={(e) => handleFinancialChange("funding_amount", e.target.value)}
-                                className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                                placeholder="0"
-                                min="0"
-                                step="1000"
-                              />
-                              <Button
-                                onClick={() => handleFinancialChange("funding_amount", formData.funding_amount + 1000)}
-                                size="icon"
-                                type="button"
-                                // variant=""
-                                style={{zIndex:99999,cursor:'pointer'}}
-                                className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              >
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                        {formData.funding_amount > 0 && (
-                          <p className="text-xs text-blue-400">{formatCurrency(formData.funding_amount)}</p>
-                        )}
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="revenue" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Annual Revenue
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Total annual revenue generated. Important for revenue-stage startups to show traction and market validation.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <BarChart3 className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleFinancialChange("revenue", Math.max(0, formData.revenue - 1000))}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              id="revenue"
-                              type="number"
-                              value={formData.revenue}
-                              onChange={(e) => handleFinancialChange("revenue", e.target.value)}
-                              className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                              placeholder="0"
-                              min="0"
-                              step="1000"
-                            />
-                            <Button
-                              onClick={() => handleFinancialChange("revenue", formData.revenue + 1000)}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        {formData.revenue > 0 && (
-                          <p className="text-xs text-blue-400">{formatCurrency(formData.revenue)}</p>
-                        )}
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="valuation" className="flex justify-between w-full text-sm font-medium text-white  items-center gap-2">
-                          Company Valuation
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Current company valuation from your latest funding round. Indicates market potential and growth expectations.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <TargetIcon className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleFinancialChange("valuation", Math.max(0, formData.valuation - 1000))}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              id="valuation"
-                              type="number"
-                              value={formData.valuation}
-                              onChange={(e) => handleFinancialChange("valuation", e.target.value)}
-                              className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                              placeholder="0"
-                              min="0"
-                              step="1000"
-                            />
-                            <Button
-                              onClick={() => handleFinancialChange("valuation", formData.valuation + 1000)}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
+                {currentStep === 4 && <StartupFinancialForm
+                  formData={formData}
+                  handleFinancialChange={handleFinancialChange}
+                  handleInputChange={handleInputChange}
 
-                        {formData.valuation > 0 && (
-                          <p className="text-xs text-blue-400">{formatCurrency(formData.valuation)}</p>
-                        )}
-                      </div>
                 
-                      <div className="space-y-3">
-                        <Label htmlFor="burnRate" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Monthly Burn Rate
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Average monthly cash expenditure. Helps candidates understand your financial discipline and operational efficiency.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <TrendingUp className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleFinancialChange("burn_rate", Math.max(0, formData.burn_rate - 1000))}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              id="burnRate"
-                              type="number"
-                              value={formData.burn_rate}
-                              onChange={(e) => handleFinancialChange("burn_rate", e.target.value)}
-                              className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                              placeholder="0"
-                              min="0"
-                              step="1000"
-                            />
-                            <Button
-                              onClick={() => handleFinancialChange("burn_rate", formData.burn_rate + 1000)}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        {formData.burn_rate > 0 && (
-                          <p className="text-xs text-blue-400">{formatCurrency(formData.burn_rate)}/month</p>
-                        )}
-                      </div>
-                
-                      <div className="space-y-3">
-                        <Label htmlFor="runwayMonths" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Runway (Months)
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Months until you run out of cash at current burn rate. Companies with 12+ months runway see 60% more applications.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <div className="relative">
-                          <Calendar className="absolute left-14 top-3.5 text-gray-400" size={20} />
-                          <div className="flex items-center gap-2">
-                            <Button
-                              onClick={() => handleFinancialChange("runway_months", Math.max(0, formData.runway_months - 1))}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Minus className="h-4 w-4" />
-                            </Button>
-                            <Input
-                              id="runwayMonths"
-                              type="number"
-                              value={formData.runway_months}
-                              onChange={(e) => handleFinancialChange("runway_months", e.target.value)}
-                              className="pl-12 h-11.5 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                              placeholder="0"
-                              min="0"
-                            />
-                            <Button
-                              onClick={() => handleFinancialChange("runway_months", formData.runway_months + 1)}
-                              size="icon"
-                              type="button"
-                              // variant="outline"
-                              className="rounded-full bg-gray-700/70 border border-gray-600 "
-                              style={{zIndex:99999,cursor:'pointer'}}
-                            >
-                              <Plus className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        {formData.runway_months > 0 && (
-                          <p className="text-xs text-blue-400">{formData.runway_months} months remaining</p>
-                        )}
-                      </div>
-                
-                      <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="financialNotes" className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                          Financial Notes & Context
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                <InfoIcon className="size-4 text-gray-400" />
-                              </button>
-                            </TooltipTrigger>
-                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                              <p>Additional context about revenue models, growth metrics, funding strategy, or financial milestones.</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </Label>
-                        <Textarea
-                          id="financialNotes"
-                          value={formData.financial_notes}
-                          onChange={(e) => handleInputChange("financial_notes", e.target.value)}
-                          rows={3}
-                          className="border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all resize-none"
-                          placeholder="Additional context about your financial situation, growth plans, or funding strategy..."
-                          maxLength={500}
-                        />
-                        <p className="text-xs text-gray-400">
-                          This helps candidates understand your financial health and growth trajectory.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                />}
 
                 {/* Step 5: Branding */}
                 {currentStep === 5 && (
@@ -1258,20 +901,20 @@ export default function RegisterStartUp() {
                     <div className="grid md:grid-cols-2 gap-6">
                       {/* Logo Upload */}
                       <div className="space-y-3">
-                      <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                        Company Logo <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                              <InfoIcon className="size-4 text-gray-400" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                            <p>Your company logo should be high-quality and recognizable. Square images work best. This will be displayed throughout the platform.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </Label>
-                        <Card 
+                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
+                          Company Logo <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
+                                <InfoIcon className="size-4 text-gray-400" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
+                              <p>Your company logo should be high-quality and recognizable. Square images work best. This will be displayed throughout the platform.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        <Card
                           onClick={() => logoInputRef.current?.click()}
                           className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
                         >
@@ -1309,20 +952,20 @@ export default function RegisterStartUp() {
 
                       {/* Banner Upload */}
                       <div className="space-y-3">
-                      <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
-                        Cover Banner
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                              <InfoIcon className="size-4 text-gray-400" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                            <p>A cover banner helps your startup stand out. Use an image that represents your brand. Recommended size: 1200x300 pixels.</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </Label>
-                        <Card 
+                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
+                          Cover Banner
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
+                                <InfoIcon className="size-4 text-gray-400" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
+                              <p>A cover banner helps your startup stand out. Use an image that represents your brand. Recommended size: 1200x300 pixels.</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </Label>
+                        <Card
                           onClick={() => bannerInputRef.current?.click()}
                           className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
                         >
@@ -1439,611 +1082,23 @@ export default function RegisterStartUp() {
 
                 {/* Step 7: Team & Roles */}
                 {currentStep === 7 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <Users className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Build Your Team</CardTitle>
-                      <CardDescription className="text-gray-300">Define roles and positions needed</CardDescription>
-                    </div>
-
-                    <div className="space-y-5">
-                      <div className="space-y-6">
-                        {/* Tech Stack Input */}
-                        <div className="space-y-3">
-                          <Label htmlFor="techStack" className="text-sm font-medium text-white flex items-center gap-2">
-                            Technology Stack
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                  <InfoIcon className="size-4 text-gray-400" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 border-gray-600 text-white">
-                                <p>List the technologies your startup uses. This helps match you with developers who have relevant skills.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                            <span className="text-gray-400 text-xs ml-auto">{techStack.length}/15</span>
-                          </Label>
-                          
-                          <div className="space-y-3">
-                            <div className="flex gap-2">
-                              <Input
-                                id="techStack"
-                                type="text"
-                                value={techInput}
-                                onChange={handleTechInputChange}
-                                onKeyDown={handleTechInputKeyDown}
-                                className="flex-1 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                                placeholder="Add technology (e.g., React, Node.js, Python...)"
-                                list="tech-suggestions"
-                              />
-                              <Button
-                                onClick={() => addTech(techInput.trim())}
-                                disabled={!techInput.trim() || techStack.length >= 15}
-                                className="bg-blue-400 hover:bg-blue-500 text-white border-0 transition-all hover:scale-105"
-                              >
-                                <Plus size={18} />
-                              </Button>
-                            </div>
-                            
-                            <datalist id="tech-suggestions">
-                              {popularTechnologies.map(tech => (
-                                <option key={tech} value={tech} />
-                              ))}
-                            </datalist>
-                          </div>
-                  
-                          {/* Popular Technologies */}
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Popular Technologies</Label>
-                            <div className="flex flex-wrap gap-2">
-                              {popularTechnologies.slice(0, 12).map(tech => (
-                                <Badge
-                                  key={tech}
-                                  variant="outline"
-                                  onClick={() => addTech(tech)}
-                                  className={`cursor-pointer transition-all hover:scale-105 ${
-                                    techStack.includes(tech) 
-                                      ? 'bg-blue-400/20 text-blue-400 border-blue-400/50' 
-                                      : 'bg-gray-700/50 text-gray-300 border-gray-600 hover:bg-gray-600'
-                                  }`}
-                                >
-                                  {tech}
-                                  {techStack.includes(tech) && <CheckCircle className="w-3 h-3 ml-1" />}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                  
-                          {/* Selected Technologies */}
-                          {techStack.length > 0 && (
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Selected Technologies ({techStack.length})</Label>
-                              <div className="flex flex-wrap gap-2">
-                                {techStack.map(tech => (
-                                  <Badge
-                                    key={tech}
-                                    variant="secondary"
-                                    className="bg-blue-400/20 text-blue-400 border-blue-400/30 flex items-center gap-1 group transition-all hover:scale-105"
-                                  >
-                                    {tech}
-                                    <button
-                                      onClick={() => removeTech(tech)}
-                                      className="ml-1 hover:text-blue-300 transition-colors rounded-full hover:bg-blue-400/20 p-0.5"
-                                    >
-                                      <X size={14} />
-                                    </button>
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                  
-                        {/* Benefits */}
-                        <Card className="border-blue-400/20 bg-blue-400/10 backdrop-blur-sm">
-                          <CardContent className="p-4">
-                            <div className="flex items-start gap-3">
-                              <Lightbulb className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                              <div className="space-y-2">
-                                <p className="text-blue-300 text-sm font-medium">Why specify your tech stack?</p>
-                                <ul className="text-blue-200 text-sm space-y-1">
-                                  <li>• Attracts developers with relevant skills (62% more applications)</li>
-                                  <li>• Shows technical direction and company culture</li>
-                                  <li>• Helps candidates assess if they're a good fit</li>
-                                  <li>• Increases matching accuracy with our algorithm</li>
-                                </ul>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </div>
-                      {/* Roles */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium text-white flex items-center gap-2   w-full">
-                            Open Roles ({roles.length}/10)
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                  <InfoIcon className="size-4 text-gray-400" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                                <p>Define specific roles you're hiring for. Clear role descriptions attract more qualified candidates and reduce time-to-hire.</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </Label>
-                          <Button
-                            onClick={addRole}
-                            disabled={roles.length >= 10}
-                            className="bg-blue-400 hover:bg-blue-500 text-white border-0 transition-all hover:scale-105 shadow-lg shadow-blue-400/20"
-                          >
-                            <Plus size={18} className="mr-2" />
-                            Add Role
-                          </Button>
-                        </div>
-
-                        <div className="space-y-4  max-h-80 overflow-y-auto p-2 custom-scrollbar">
-                          {roles.map((role, index) => (
-                            <Card  key={index} className="p-4 border bg-blue-300/5 border-gray-600 hover:border-blue-400/50 transition-all duration-200 backdrop-blur-sm hover:scale-102">
-                              <CardContent className="p-0">
-                                <div className="grid md:grid-cols-3  gap-4">
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-gray-400 uppercase font-medium flex items-center justify-between gap-2 w-full">
-                                      Role Title
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                            <InfoIcon className="size-3 text-gray-400" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                                          <p>Enter the specific job title you're hiring for. Be clear and descriptive (e.g., "Senior Frontend Developer" instead of just "Developer").</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </Label>
-                                    <Input
-                                      type="text"
-                                      value={role.title}
-                                      onChange={(e) => updateRole(index, "title", e.target.value)}
-                                      className="border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                                      placeholder="e.g., Frontend Developer"
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label className="text-xs text-gray-400 uppercase font-medium flex items-center justify-between gap-2 w-full">
-                                      Role Type
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                            <InfoIcon className="size-3 text-gray-400" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                                          <p>Select the employment type. Full Time roles attract 65% more applicants, while Contract roles fill 40% faster.</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </Label>
-                                    <Select value={role.roleType} onValueChange={(value) => updateRole(index, "roleType", value)}>
-                                      <SelectTrigger className="w-full border-gray-600 bg-gray-700/50 text-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all">
-                                        <SelectValue placeholder="Select role type" />
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-gray-800 border-gray-600 text-white">
-                                        {roleTypes.map(type => (
-                                          <SelectItem key={type} value={type} className=" hover:bg-gray-700 focus:bg-gray-700">
-                                            <span className='text-white hover:text-blue-400'>
-                                              {type}
-                                            </span>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-2 relative">
-                                    {/* <Users className="absolute left-2 bottom-1 text-gray-400" size={16} /> */}
-                                    
-                                    <Label  className="text-xs text-gray-400 uppercase font-medium flex items-center justify-between gap-2 w-full">
-                                      Available Positions
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
-                                            <InfoIcon className="size-3 text-gray-400" />
-                                          </button>
-                                        </TooltipTrigger>
-                                        <TooltipContent arrowColor="bg-gray-800 fill-gray-800" className="max-w-xs bg-gray-800 fill-gray-800 border-gray-600 text-white">
-                                          <p>Total number of open positions across all roles. This helps candidates understand your hiring scale and growth trajectory.</p>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                      <Button
-                                        onClick={() => updateRole(index, "positionsNumber", Math.max(0, (role.positionsNumber || 0) - 1))}
-                                        size="icon"
-                                        type="button"
-                                        className="rounded-full w-8 h-8 bg-gray-700/70 border border-gray-600"
-                                        style={{zIndex:99999,cursor:'pointer'}}
-                                      >
-                                        <Minus className="h-4 w-4" />
-                                      </Button>
-                                      <Input
-                                        id="positionsNumber"
-                                        type="number"
-                                        value={role.positionsNumber || 0}
-                                        onChange={(e) => updateRole(index, "positionsNumber", parseInt(e.target.value) || 0)}
-                                        min="0"
-                                        className="w-full pl-8 border-gray-600 bg-gray-700/50 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all"
-                                        placeholder="Number of positions"
-                                      />
-                                      <Button
-                                        onClick={() => updateRole(index, "positionsNumber", (role.positionsNumber || 0) + 1)}
-                                        size="icon"
-                                        type="button"
-                                        className="rounded-full w-8 h-8 bg-gray-700/70 border border-gray-600"
-                                        style={{zIndex:99999,cursor:'pointer'}}
-                                      >
-                                        <Plus className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <div className="absolute right-0 top-0 flex items-center justify-between">
-                                      {/* <Label className="text-xs text-gray-400 uppercase font-medium">Role Type</Label> */}
-                                      {roles.length > 1 && (
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          onClick={() => removeRole(index)}
-                                          className="text-red-400 hover:text-red-500 hover:bg-red-500/10 transition-colors h-6 w-6 p-0 rounded-full"
-                                        >
-                                          <X size={16} />
-                                        </Button>
-                                      )}
-                                    </div>
-                                </div>
-                              </CardContent>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <StartupRolesAndTechStack
+                    techStack={techStack}
+                    techInput={techInput}
+                    setTechInput={setTechInput}
+                    handleTechInputChange={handleTechInputChange}
+                    handleTechInputKeyDown={handleTechInputKeyDown}
+                    addTech={addTech}
+                    removeTech={removeTech}
+                    roles={roles}
+                    addRole={addRole}
+                    updateRole={updateRole}
+                    removeRole={removeRole}
+                  />
                 )}
 
                 {/* Step 8: Review */}
-                {currentStep === 8 && (
-                  <div className="space-y-6 animate-fadeIn">
-                    <div className="text-center mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-blue-400/10 border border-blue-400/30 flex items-center justify-center mx-auto mb-4">
-                        <Eye className="w-8 h-8 text-blue-400" />
-                      </div>
-                      <CardTitle className="text-2xl mb-2 text-white">Review Your Startup</CardTitle>
-                      <CardDescription className="text-gray-300">Review all the details before launching</CardDescription>
-                    </div>
-                
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {/* Company Details */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <Building2 className="w-5 h-5 text-blue-400" />
-                            Company Details
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Startup Name</Label>
-                            <p className="text-white font-medium text-lg">{formData.name || <span className="text-gray-500 italic">Not provided</span>}</p>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Industry</Label>
-                            <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30">
-                              {formData.industry || "Not provided"}
-                            </Badge>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Location</Label>
-                            <div className="flex items-center gap-2 text-white font-medium">
-                              <MapPin className="w-4 h-4 text-gray-400" />
-                              {formData.location || <span className="text-gray-500 italic">Not provided</span>}
-                            </div>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Stage</Label>
-                            <Badge variant="outline" className="bg-purple-400/10 text-purple-400 border-purple-400/30 capitalize">
-                              {formData.stage || "Not provided"}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                
-                      {/* Financial Details */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <DollarSign className="w-5 h-5 text-blue-400" />
-                            Financial Foundation
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Funding Round</Label>
-                              <Badge variant="outline" className="bg-green-400/10 text-green-400 border-green-400/30 capitalize">
-                                {formData.funding_round?.replace('-', ' ') || "Not provided"}
-                              </Badge>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Runway</Label>
-                              <div className="flex items-center gap-2">
-                                <Calendar className="w-4 h-4 text-gray-400" />
-                                <p className="text-white font-medium">{formData.runway_months || 0} months</p>
-                              </div>
-                            </div>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Total Funding</Label>
-                              <p className="text-white font-medium text-lg">{formatCurrency(formData.funding_amount)}</p>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Valuation</Label>
-                              <p className="text-white font-medium text-lg">{formatCurrency(formData.valuation)}</p>
-                            </div>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Annual Revenue</Label>
-                              <p className="text-white font-medium">{formatCurrency(formData.revenue)}</p>
-                            </div>
-                            <div className="space-y-2">
-                              <Label className="text-sm text-gray-400">Monthly Burn</Label>
-                              <p className="text-white font-medium">{formatCurrency(formData.burn_rate)}</p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                
-                      {/* Founder Details */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <User className="w-5 h-5 text-blue-400" />
-                            Founder Information
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Full Name</Label>
-                            <div className="flex items-center gap-2 text-white font-medium text-lg">
-                              <User className="w-4 h-4 text-gray-400" />
-                              {formData.creator_first_name} {formData.creator_last_name}
-                            </div>
-                          </div>
-                          <Separator className="bg-gray-600" />
-                          <div className="space-y-2">
-                            <Label className="text-sm text-gray-400">Email</Label>
-                            <div className="flex items-center gap-2 text-white font-medium">
-                              <Mail className="w-4 h-4 text-gray-400" />
-                              {formData.creator_email}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                
-                      {/* Branding & Documents */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <Image className="w-5 h-5 text-blue-400" />
-                            Branding & Documents
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                          {/* Logo & Banner */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="text-center">
-                              <Label className="text-sm text-gray-400 block mb-2">Logo</Label>
-                              {logoFile ? (
-                                <div className="w-16 h-16 rounded-xl border-2 border-blue-400/50 mx-auto overflow-hidden bg-gray-600">
-                                  <img
-                                    src={URL.createObjectURL(logoFile)}
-                                    alt="Logo preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-500 flex items-center justify-center mx-auto bg-gray-600/50">
-                                  <Image className="w-6 h-6 text-gray-400" />
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-center">
-                              <Label className="text-sm text-gray-400 block mb-2">Banner</Label>
-                              {bannerFile ? (
-                                <div className="w-full h-16 rounded-lg border-2 border-blue-400/50 overflow-hidden bg-gray-600">
-                                  <img
-                                    src={URL.createObjectURL(bannerFile)}
-                                    alt="Banner preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                </div>
-                              ) : (
-                                <div className="w-full h-16 rounded-lg border-2 border-dashed border-gray-500 flex items-center justify-center bg-gray-600/50">
-                                  <Image className="w-6 h-6 text-gray-400" />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                
-                          {/* Documents */}
-                          <div>
-                            <Label className="text-sm text-gray-400 mb-2 block">Documents ({uploadedDocuments.length})</Label>
-                            {uploadedDocuments.length > 0 ? (
-                              <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-                                {uploadedDocuments.map((doc, index) => (
-                                  <div key={index} className="flex items-center justify-between p-2 border border-gray-600 rounded-lg bg-gray-600/30">
-                                    <div className="flex items-center gap-2">
-                                      <FileText className="w-4 h-4 text-blue-400" />
-                                      <span className="text-white text-sm truncate max-w-[180px]">{doc.name}</span>
-                                    </div>
-                                    <Badge variant="outline" className="bg-gray-500/30 text-gray-300 border-gray-500 text-xs">
-                                      {(doc.size / 1024 / 1024).toFixed(2)} MB
-                                    </Badge>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-4 border-2 border-dashed border-gray-600 rounded-lg bg-gray-600/30">
-                                <FileText className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                                <p className="text-gray-400 text-sm">No documents uploaded</p>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                      
-                                            
-                      {/* Tech Stack */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm md:col-span-2 hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <Code className="w-5 h-5 text-blue-400" />
-                            Technology Stack
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {techStack.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {techStack.map(tech => (
-                                <Badge
-                                  key={tech}
-                                  variant="outline"
-                                  className="bg-blue-400/20 text-blue-400 border-blue-400/30"
-                                >
-                                  {tech}
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 italic">No technologies specified</p>
-                          )}
-                        </CardContent>
-                      </Card>
-                      
-                      {/* Team & Roles */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm md:col-span-2 hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <Users className="w-5 h-5 text-blue-400" />
-                            Team & Roles
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div className="space-y-4">
-                              <div>
-                                <Label className="text-sm text-gray-400 mb-2 block">Available Positions</Label>
-                                <div className="flex items-center gap-3">
-                                  <div className="w-12 h-12 rounded-full bg-blue-400/10 border border-blue-400/30 flex items-center justify-center">
-                                    <Users className="w-6 h-6 text-blue-400" />
-                                  </div>
-                                  <div>
-                                    <p className="text-white font-bold text-2xl">{roles.reduce((total, role) => total + (role.positionsNumber || 0), 0)}</p>
-                                    <p className="text-gray-400 text-sm">Total positions</p>
-                                  </div>
-                                </div>
-                              </div>
-                              <Separator className="bg-gray-600" />
-                              <div>
-                                <Label className="text-sm text-gray-400 mb-2 block">Roles Breakdown</Label>
-                                <div className="space-y-2">
-                                  {roleTypes.map(type => {
-                                    const count = roles.filter(role => role.roleType === type).length;
-                                    if (count === 0) return null;
-                                    return (
-                                      <div key={type} className="flex justify-between items-center">
-                                        <span className="text-gray-300 text-sm">{type}</span>
-                                        <Badge variant="outline" className="bg-gray-500/30 text-gray-300 border-gray-500">
-                                          {count}
-                                        </Badge>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            </div>
-                
-                            <div>
-                              <Label className="text-sm text-gray-400 mb-3 block">Defined Roles ({roles.length})</Label>
-                              <div className="space-y-3 max-h-60 overflow-y-auto custom-scrollbar pr-2">
-                                {roles.map((role, index) => (
-                                  <Card key={index} className="p-3 border border-gray-600 bg-gray-600/30 hover:border-blue-400/50 transition-colors">
-                                    <CardContent className="p-0">
-                                      <div className="flex justify-between items-start mb-2">
-                                        <span className="text-white font-medium text-sm">{role.title || "Untitled Role"}</span>
-                                        <Badge variant="outline" className="bg-blue-400/20 text-blue-400 border-blue-400/30 text-xs">
-                                          {role.roleType}
-                                        </Badge>
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="text-gray-400 text-xs">Positions</span>
-                                        <Badge variant="secondary" className="bg-green-400/20 text-green-400 border-green-400/30">
-                                          {role.positionsNumber || 0}
-                                        </Badge>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                
-                      {/* Description */}
-                      <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm md:col-span-2 hover:border-blue-400/50 transition-all duration-300">
-                        <CardHeader className="pb-3">
-                          <CardTitle className="text-white text-lg flex items-center gap-2">
-                            <Rocket className="w-5 h-5 text-blue-400" />
-                            Description
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="p-4 border border-gray-600 rounded-lg bg-gray-600/30">
-                            <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">
-                              {formData.description || <span className="text-gray-500 italic">No description provided</span>}
-                            </p>
-                          </div>
-                        </CardContent>
-                      </Card>
-                
-                      {/* Financial Notes */}
-                      {formData.financial_notes && (
-                        <Card className="border-gray-600 bg-gray-700/50 backdrop-blur-sm md:col-span-2 hover:border-blue-400/50 transition-all duration-300">
-                          <CardHeader className="pb-3">
-                            <CardTitle className="text-white text-lg flex items-center gap-2">
-                              <BarChart3 className="w-5 h-5 text-blue-400" />
-                              Financial Context
-                            </CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <div className="p-4 border border-gray-600 rounded-lg bg-gray-600/30">
-                              <p className="text-gray-300 whitespace-pre-wrap leading-relaxed">{formData.financial_notes}</p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </div>
-                  </div>
-                )}
+                {currentStep === 8 && <StartupReview formData={formData} logoFile={logoFile} bannerFile={bannerFile} uploadedDocuments={uploadedDocuments} roles={roles} techStack={techStack} />}
 
                 {/* Step 9: Completion */}
                 {currentStep === 9 && (

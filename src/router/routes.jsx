@@ -41,7 +41,7 @@ import ChatPage from "@/components/pages/chat/ChatPage.jsx";
 // import TimezoneConverter from "../components/pages/TimezoneConverter/TimezoneConverter.jsx";
 import ChatComponent from "../components/pages/chat/ChatComponent.jsx";
 
-import DiscoverStartups from "../components/pages/DiscoverStartups.jsx";
+import DiscoverStartups from "../components/pages/discoverStartups/DiscoverStartups.jsx";
 import StartupDetailPage from "../components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "../components/pages/Profile/user-profile/Profile.jsx";
 import ProfileSetup from "../components/pages/ProfileSetup.jsx";

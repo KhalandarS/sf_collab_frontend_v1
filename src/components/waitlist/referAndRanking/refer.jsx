@@ -507,9 +507,9 @@ const currentTier = RANK_REWARDS.find(
               { action: "Submit Ideas", reward: "10–50 points", highlight: false },
               { action: "Refer Friends", reward: "5 pts + 25 bonus per 5", highlight: false },
               { action: "Vote in Polls", reward: "1–10 points per vote", highlight: false },
-              { action: "Register Startup", reward: "15 points", highlight: false },
+              { action: "Register Startup", reward: "15 points/day", highlight: false },
               { action: "Idea Incubator", reward: "10 points/day", highlight: false },
-              { action: "Report Bugs and Feedback", reward: "10–30 points", highlight: false },
+              { action: "Report Bugs and Feedback", reward: "10–50 points", highlight: false },
             ].map((item, idx) => (
               <div
                 key={idx}
@@ -918,8 +918,8 @@ const currentTier = RANK_REWARDS.find(
               <div className="text-2xl font-bold text-purple-400 w-12 text-center">2.</div>
               <div>
                 <p className="font-semibold text-purple-300 text-lg">V1 (Feb/Mar)</p>
-                <p className="text-sm text-neutral-300">2,500 users (MVP users + top referrers + active contributors + remaining waitlist)</p>
-                <p className="text-xs text-neutral-400 mt-1">Get: Extended free access, permanent "Early 2.5k" badge</p>
+                <p className="text-sm text-neutral-300">2,500-10,000 users (MVP users + top referrers + active contributors + remaining waitlist)</p>
+                <p className="text-xs text-neutral-400 mt-1">Get: Extended free access, permanent "Early 2.5k" or "Early 10k" badge</p>
               </div>
             </motion.div>
 

@@ -5,10 +5,10 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog";
-import { Clock, MapPin, Pencil, Trash2, Repeat2, Bell } from "lucide-react";
+import { Clock, MapPin, Pencil, Trash2, Repeat2, Bell, Link } from "lucide-react";
 
 export default function EventDetailsModal({
-  event, open, onClose, isCreator, onEdit, onDelete
+  event, open, onClose, isCreator, onEdit, onDelete, color
 }) {
   if (!event) return null;
 
@@ -30,10 +30,13 @@ export default function EventDetailsModal({
           <DialogTitle className="flex items-center gap-2">
             <span
               className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: event.color }} />
+              style={{ backgroundColor: color }} />
             {event.title}
           </DialogTitle>
-          <span className="text-xs font-semibold px-2 py-1 rounded bg-gray-800 w-fit mt-2">
+          <span 
+            className="text-xs text-white font-semibold px-2 py-1 rounded w-fit mt-2"
+            style={{ backgroundColor: color + "33", }}
+          >
             {event.category}
           </span>
         </DialogHeader>
@@ -42,7 +45,7 @@ export default function EventDetailsModal({
           {/* Date & Time */}
           <div className="text-sm text-gray-300 space-y-2">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-blue-400" />
+              <Clock className="w-4 h-4" style={{ color }} />
               <div>
                 <p className="font-semibold">{formatDateTime(event.start_date)}</p>
                 {event.end_date && (
@@ -58,15 +61,29 @@ export default function EventDetailsModal({
           {/* Location */}
           {event.location && (
             <div className="flex items-start gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-green-400 mt-0.5" />
+              <MapPin className="w-4 h-4 mt-0.5" style={{ color }} />
               <p className="text-gray-300">{event.location}</p>
             </div>
           )}
-
+          {/* Link */}
+          {event.link && (
+            <div className="flex items-start gap-2 text-sm">
+              <Link className="w-4 h-4 mt-0.5" style={{ color }} />
+              <a
+                href={event.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-blue-600"
+                style={{ color }}
+              >
+                Link to event
+              </a>
+            </div>
+          )}
           {/* Description */}
           {event.description && (
             <div>
-              <p className="text-xs text-gray-400 font-semibold mb-1">Description</p>
+              <p className="text-xs font-semibold mb-1" style={{ color }}>Description</p>
               <p className="text-sm text-gray-300 whitespace-pre-wrap bg-gray-800 p-2 rounded">
                 {event.description}
               </p>
@@ -76,7 +93,7 @@ export default function EventDetailsModal({
           {/* Recurring */}
           {event.is_recurring && (
             <div className="flex items-center gap-2 text-sm text-gray-300">
-              <Repeat2 className="w-4 h-4 text-purple-400" />
+              <Repeat2 className="w-4 h-4" style={{ color }} />
               <span>Recurring event</span>
             </div>
           )}
@@ -84,7 +101,7 @@ export default function EventDetailsModal({
           {/* Reminder */}
           {event.reminder_minutes > 0 && (
             <div className="flex items-center gap-2 text-sm text-gray-300">
-              <Bell className="w-4 h-4 text-yellow-400" />
+              <Bell className="w-4 h-4" style={{ color }} />
               <span>Reminder {event.reminder_minutes} min before</span>
             </div>
           )}
@@ -94,23 +111,12 @@ export default function EventDetailsModal({
             <p className="text-xs text-gray-500 italic">Past event</p>
           )}
           {event.is_ongoing && (
-            <p className="text-xs text-green-400 font-semibold">Ongoing</p>
+            <p className="text-xs font-semibold" style={{ color }}>Ongoing</p>
           )}
 
           {/* Actions */}
           {isCreator && (
             <div className="flex justify-end gap-2 pt-4">
-              {/* <Button
-                variant="ghost"
-                onClick={() => {
-                  onClose(false);
-                  onEdit(event);
-                }}
-              >
-                <Pencil className="w-4 h-4 mr-1" />
-                Edit
-              </Button> */}
-
               <Button
                 variant="destructive"
                 onClick={() => {

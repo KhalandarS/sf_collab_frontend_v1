@@ -3,9 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { Crown } from "lucide-react";
 import { getTopNavLinks } from "../pages/sidebars/sidebar/links";
 
-const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin }) => {
+const Options = ({ isHidden = false, unreadMessagesCount = 0, isAdmin, activeRole }) => {
   const location = useLocation();
-  const subLinks = getTopNavLinks(location.pathname, unreadMessagesCount);
+  const subLinks = getTopNavLinks(location.pathname, unreadMessagesCount, activeRole);
 
   const showSubItems = Array.isArray(subLinks) && subLinks.length > 0;
   const isMobile = window.matchMedia("(max-width: 1024px)").matches;

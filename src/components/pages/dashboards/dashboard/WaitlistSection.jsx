@@ -26,7 +26,6 @@ export default function WaitlistSection() {
           <Link to="/refer" className="w-full sm:w-auto group relative px-6 py-3 bg-purple-500/80 hover:bg-purple-600 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 border border-purple-400/50 hover:border-purple-300">
             <span className="relative flex items-center gap-2">
               Refer & Earn
-              <span className="text-xs bg-purple-400/40 px-2 py-1 rounded-full ml-2">Premium</span>
             </span>
           </Link>
         </div>

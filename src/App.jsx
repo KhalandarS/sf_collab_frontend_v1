@@ -27,7 +27,7 @@ import SavedList from "./components/pages/SavedIdeaList.jsx";
 import BusinessIdeaGenerator from "./components/pages/Business_plan_generator/premium-business-generator.jsx";
 import Test from "./components/pages/Test.jsx";
 import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
-import DiscoverStartups from "./components/pages/DiscoverStartups.jsx";
+import DiscoverStartups from "./components/pages/discoverStartups/DiscoverStartups.jsx";
 import StartupDetailPage from "./components/pages/startupDetails/StartupDetailPage.jsx";
 import Profile from "./components/pages/Profile/user-profile/Profile.jsx";
 import ImageGenerator from "./components/pages/Image_Logo_Generator/ImageGenerator.jsx";
@@ -82,7 +82,6 @@ import Donate from "./components/pages/donate/Donate.jsx";
 import ConnectionsPage from './components/pages/connections/ConnectionsPage';
 
 // Builder Dashboard Routes - Phase 2
-import BrowseStartups from "./components/pages/dashboards/builderDashboard/BrowseStartups.jsx";
 import SavedStartups from "./components/pages/dashboards/builderDashboard/SavedStartups.jsx";
 import MyApplications from "./components/pages/dashboards/builderDashboard/MyApplications.jsx";
 import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
@@ -166,16 +165,6 @@ export default function App() {
               <Route path="/verify-email" element={<VerifyEmail />} />
               {/* Refer and Waitlist */}
       
-              {/*   const navlink = [
-    { href: '/', name: 'Home' },
-    { href: '/about', name: 'Platform' },
-    { href: '/membership-benefits', name: 'Membership benefits' },
-    { href: '/implementation-plans', name: 'Implementation Plans' },
-    { href: '/featured-projects', name: 'Featured Projects' },
-    { href: '/team', name: 'Our Team' },
-    { href: '/contact', name: 'Contact' },
-  ]; */}
-      
               <Route path='membership-benefits' element={<MembershipBenefits />} />
               <Route path='implementation-plans' element={<ImplementationPlans />} />
               <Route path='featured-projects' element={<FeaturedProjects />} />
@@ -209,8 +198,7 @@ export default function App() {
                 {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
             
                 {/* ===== BUILDER DASHBOARD ROUTES ===== */}
-                <Route path="builder/browse-startups" element={<BrowseStartups />} />
-                <Route path="builder/saved-startups" element={<SavedStartups />} />
+                <Route path="saved-startups" element={<SavedStartups />} />
                 <Route path="builder/my-applications" element={<MyApplications />} />
                 <Route path="builder/my-work" element={<MyWork />} />
                 <Route path="builder/rewards" element={<Rewards />} />

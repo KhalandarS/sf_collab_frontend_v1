@@ -14,13 +14,13 @@ import {
   MessageSquareHeart,
   Building,
   Building2,
+  Save,
 } from "lucide-react";
-
-import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
-import { Badge } from "@/components/ui/badge";
-import { TiSocialAtCircular } from "react-icons/ti";
-import { MdSocialDistance } from "react-icons/md";
+import { createInvestorLinks } from "../investorSidebar/InvestorLinks";
+import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
+import { createFounderLinks } from "../founderSidebar/FounderLinks";
+import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 
 // ✅ theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
@@ -83,6 +83,9 @@ export function createLinks(unreadMessagesCount) {
         { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
         { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
         { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
+        { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
+        { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+
         // { id: "startup-teams", href: "/startup-teams", label: "Teams", icon: <TiSocialAtCircular size={18} /> },
         // { id: "startup-documents", href: "/startup-documents", label: "Documents", icon: <FileText size={18} /> },
         // { id: "startup-details", href: "/startup-details", label: "Details", icon: <Database size={18} /> },
@@ -162,32 +165,40 @@ export function getAllRoutes(element) {
 }
 
 export function getCurrentContext(pathname) {
-  //if (pathname.startsWith("/chat")) return null;
+  const links = createLinks(0); // Create links without unreadMessagesCount
+  for (const link of links) {
+    if (pathname.startsWith(link.href)) return link.id;
 
-  // Startups first to avoid collision
-  if (
-    ["/discover-startups", "/register-startup", "/startup-teams", "/startup-documents", "/startup-details"].some((p) =>
-      pathname.startsWith(p)
-    )
-  )
-    return 3;
-
-  if (pathname.startsWith("/dashboard")) return 1;
-
-  if (["/ideation", "/submit-idea", "/my-ideas", "/ideas-feed"].some((p) => pathname.startsWith(p))) return 2;
-
-  if (["/posts", "/my-posts", "/discover-users"].some((p) => pathname.startsWith(p))) return 5;
-
-  if (["/business-plan", "/logo-generator", "/data-scraper", "/knowledge"].some((p) => pathname.startsWith(p)))
-    return 6;
-
-  return 1;
+    for (const subItem of link.subItems || []) {
+      if (pathname.startsWith(subItem.href)) return link.id;
+    }
+  }
+  return 1; // Default to the first context if no match is found
 }
 
 
-export function getTopNavLinks(pathname, unreadMessagesCount = 0) {
+export function getTopNavLinks(pathname, unreadMessagesCount = 0, activeMode = 'general') {
   const contextId = getCurrentContext(pathname);
-  const links = createLinks(unreadMessagesCount);
+  let links = []
+  switch (activeMode) {
+    case 'general':
+      links = createLinks(unreadMessagesCount);
+      break;
+    case 'investor':
+      links = createInvestorLinks(unreadMessagesCount);
+      break;
+    case 'builder':
+      links = createBuilderLinks(unreadMessagesCount);
+      break;
+    case 'founder':
+      links = createFounderLinks(unreadMessagesCount);
+      break;
+    case 'influencer':
+      links = createInfluencerLinks(unreadMessagesCount);
+      break;
+    default:
+      links = createLinks(unreadMessagesCount);
+  }
   const activeLink = links.find((l) => l.id === contextId);
   return activeLink?.subItems || [];
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CalendarDays, MapPin, Bell } from "lucide-react";
+import { X, CalendarDays, MapPin, Bell, Link } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,11 +88,7 @@ const AddEventModal = ({ isOpen, onClose, onCreate }) => {
                 <h3 className="text-lg font-semibold text-white">
                   Create Event
                 </h3>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={onClose}
-                >
+                <Button size="icon" variant="ghost" onClick={onClose}>
                   <X className="w-5 h-5" />
                 </Button>
               </div>
@@ -152,9 +148,9 @@ const AddEventModal = ({ isOpen, onClose, onCreate }) => {
 
                 {/* All day */}
                 <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4" />
-                    All day
+                  <Label className="inline-flex items-center gap-2 leading-none">
+                    <CalendarDays className="w-4 h-4 shrink-0" />
+                    <span>All day</span>
                   </Label>
                   <Switch
                     checked={event.all_day}
@@ -187,9 +183,9 @@ const AddEventModal = ({ isOpen, onClose, onCreate }) => {
 
                 {/* Location */}
                 <div className="space-y-1">
-                  <Label className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4" />
-                    Location
+                  <Label className="inline-flex items-center gap-2 leading-none">
+                    <MapPin className="w-4 h-4 shrink-0" />
+                    <span>Location</span>
                   </Label>
                   <Input
                     placeholder="Google Meet / Office"
@@ -200,11 +196,26 @@ const AddEventModal = ({ isOpen, onClose, onCreate }) => {
                   />
                 </div>
 
+                {/* Link */}
+                <div className="space-y-1">
+                  <Label className="inline-flex items-center gap-2 leading-none">
+                    <Link className="w-4 h-4 shrink-0" />
+                    <span>Link</span>
+                  </Label>
+                  <Input
+                    placeholder="https://meet.google.com/abc-defg-hij"
+                    value={event.link}
+                    onChange={(e) =>
+                      handleChange("link", e.target.value)
+                    }
+                  />
+                </div>
+
                 {/* Reminder */}
                 <div className="space-y-1">
-                  <Label className="flex items-center gap-2">
-                    <Bell className="w-4 h-4" />
-                    Reminder (minutes before)
+                  <Label className="inline-flex items-center gap-2 leading-none">
+                    <Bell className="w-4 h-4 shrink-0" />
+                    <span>Reminder (minutes before)</span>
                   </Label>
                   <Input
                     type="number"

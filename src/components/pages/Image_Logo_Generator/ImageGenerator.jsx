@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../
 import { useSelector } from "react-redux";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'; // Make sure you have this component
 import { toast } from 'react-toastify';
+import useGetCredits from '@/utils/hooks/useGetCredits';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -21,7 +22,7 @@ const ImageGenerator = () => {
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+  const credits = useGetCredits();
   const { user, access_token } = useSelector((state) => state.auth);
 
   const handleSubmit = async (e) => {
@@ -178,7 +179,7 @@ const ImageGenerator = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-gray-400 text-sm font-medium">Your Credits</p>
-                    <p className="text-2xl font-bold text-white mt-1">{user?.credits || 0}</p>
+                    <p className="text-2xl font-bold text-white mt-1">{credits}</p>
                   </div>
                   <div className="p-3 bg-gray-700 rounded-lg">
                     <Sparkles className="h-6 w-6 text-yellow-400" />

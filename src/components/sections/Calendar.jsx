@@ -31,6 +31,7 @@ import { useSelector } from 'react-redux'
 import { ShineButton } from '../lightswind/shine-button'
 import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import { startupsAPI } from '@/utils/APIs/startupsAPI'
 
 export default function Calendar() {
   const { user, access_token } = useSelector((state) => state.auth)
@@ -42,7 +43,6 @@ export default function Calendar() {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [showFilters, setShowFilters] = useState(true)
   const [loading, setLoading] = useState(false)
-  const [notification, setNotification] = useState({ show: false, type: '', message: '' })
 
   const [exporting, setExporting] = useState(false)
   const [exportFormat, setExportFormat] = useState('json')
@@ -73,7 +73,23 @@ export default function Calendar() {
   })
 
   // Get user's startups from Redux state
-  const userStartups = user?.relationships?.startups || []
+  const [userStartups, setUserStartups] = useState(user?.startups || [])
+
+  useEffect(() => {
+    if (!user) return
+    async function fetchUserStartups() {
+      try {
+        const response = await startupsAPI.getUserStartupNames()
+        if (response.success) {
+          console.log(response.data, "Startups");
+          setUserStartups(response.data.startups || [])
+        }
+      } catch (error) {
+        console.error('Error fetching user startups:', error)
+      }
+    }
+    fetchUserStartups()
+  }, [user, access_token])
 
   // Event categories with colors
   const eventCategories = [
@@ -144,11 +160,11 @@ export default function Calendar() {
       if (data.success) {
         setEvents(data.data.events || [])
       } else {
-        showNotification('error', data.message || 'Failed to fetch events')
+        toast.error(data.message || 'Failed to fetch events')
       }
     } catch (error) {
       console.error('Error fetching events:', error)
-      showNotification('error', 'Failed to fetch events')
+      toast.error('Failed to fetch events')
     } finally {
       setLoading(false)
     }
@@ -197,11 +213,6 @@ export default function Calendar() {
     }
 
     setFilteredEvents(filtered)
-  }
-
-  const showNotification = (type, message) => {
-    setNotification({ show: true, type, message })
-    setTimeout(() => setNotification({ show: false, type: '', message: '' }), 5000)
   }
 
   const navigateMonth = (direction) => {
@@ -262,7 +273,7 @@ export default function Calendar() {
       const data = await response.json()
 
       if (data.success) {
-        showNotification('success', 'Event created successfully')
+        toast.success('Event created successfully')
         setShowEventModal(false)
         fetchEvents()
         setEventForm({
@@ -278,11 +289,11 @@ export default function Calendar() {
           reminder_minutes: 30
         })
       } else {
-        showNotification('error', data.message || 'Failed to create event')
+        toast.error(data.message || 'Failed to create event')
       }
     } catch (error) {
       console.error('Error creating event:', error)
-      showNotification('error', 'Failed to create event')
+      toast.error('Failed to create event')
     }
   }
 
@@ -308,16 +319,16 @@ export default function Calendar() {
       const data = await response.json()
 
       if (data.success) {
-        showNotification('success', 'Event updated successfully')
+        toast.success('Event updated successfully')
         setShowEventModal(false)
         fetchEvents()
         setSelectedEvent(null)
       } else {
-        showNotification('error', data.message || 'Failed to update event')
+        toast.error(data.message || 'Failed to update event')
       }
     } catch (error) {
       console.error('Error updating event:', error)
-      showNotification('error', 'Failed to update event')
+      toast.error('Failed to update event')
     }
   }
 
@@ -335,26 +346,33 @@ export default function Calendar() {
       const data = await response.json()
 
       if (data.success) {
-        showNotification('success', 'Event deleted successfully')
+        toast.success('Event deleted successfully')
         fetchEvents()
         if (selectedEvent?.id === eventId) {
           setSelectedEvent(null)
           setShowEventModal(false)
         }
       } else {
-        showNotification('error', data.message || 'Failed to delete event')
+        toast.error(data.message || 'Failed to delete event')
       }
     } catch (error) {
       console.error('Error deleting event:', error)
-      showNotification('error', 'Failed to delete event')
+      toast.error('Failed to delete event')
     }
   }
 
   const getEventsForDate = (date) => {
-    return filteredEvents.filter(event => 
-      isSameDay(parseISO(event.start_date), date)
-    )
-  }
+  return filteredEvents.filter(event => {
+    const eventStart = parseISO(event.start_date)
+    const eventEnd = event.end_date ? parseISO(event.end_date) : eventStart
+    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+    const start = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate())
+    const end = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate())
+    
+    return checkDate >= start && checkDate <= end
+  })
+}
+
 
   const renderMonthView = () => {
     const monthStart = startOfMonth(currentDate)
@@ -582,25 +600,6 @@ export default function Calendar() {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-  const Notification = () => {
-    if (!notification.show) return null
-
-    const styles = {
-      error: 'border-red-400 bg-red-500/10 text-red-200',
-      success: 'border-green-400 bg-green-500/10 text-green-200',
-      warning: 'border-yellow-400 bg-yellow-500/10 text-yellow-200'
-    }
-
-    return (
-      <div className="fixed top-4 right-4 z-999999" style={{ zIndex: 999999999999 }}>
-        <Alert className={styles[notification.type]}>
-          <AlertDescription className="font-medium">
-            {notification.message}
-          </AlertDescription>
-        </Alert>
-      </div>
-    )
-  }
 
   const handleExportCalendar = async (format) => {
     try {
@@ -675,10 +674,10 @@ export default function Calendar() {
         document.body.removeChild(a)
       }
   
-      showNotification('success', `Calendar exported successfully as ${format.toUpperCase()}`)
+      toast.success(`Calendar exported successfully as ${format.toUpperCase()}`)
     } catch (error) {
       console.error('Error exporting calendar:', error)
-      showNotification('error', 'Failed to export calendar')
+      toast.error('Failed to export calendar')
     } finally {
       setExporting(false)
     }
@@ -687,7 +686,6 @@ export default function Calendar() {
   
   return (
     <div className="overflow-hidden text-white">
-      <Notification />
 
       <div className="w-full mx-auto px-4 py-8">
         {/* Header */}
@@ -948,7 +946,7 @@ export default function Calendar() {
                     <div className="space-y-2">
                       <Label className="text-sm text-gray-400">Search</Label>
                       <div className="relative">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
+                        <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500" />
                         <Input
                           placeholder="Search events..."
                           className="pl-10 border-gray-700 bg-gray-800/50"
@@ -970,21 +968,24 @@ export default function Calendar() {
                     </div>
                     
                     <div data-aos='fade-left' data-aos-delay="400">
-                      <ShineButton 
+                      <ShineButton
                         className="rounded-md flex gap-2 w-[150px] items-center justify-center text-white"
-                        label="Clear Filters" 
+                        label="Clear Filters"
                         icon={<X size={16} className="hover:animate-pulse" />}
-                        size="sm" 
-                        bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                        onClick={() => setFilters({
-                          category: 'all',
-                          startup_id: 'all',
-                          view: 'month',
-                          upcoming_only: false,
-                          search: '',
-                          start_date: null,
-                          end_date: null
-                        })} 
+                        size="sm"
+                        bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
+                        onClick={() => {
+                          setFilters({
+                            category: 'all',
+                            startup_id: 'all',
+                            view: 'month',
+                            upcoming_only: false,
+                            search: '',
+                            start_date: null,
+                            end_date: null
+                          })
+                          setSelectedEvent(null)
+                        }} 
                       />
                     </div>
                   </div>
@@ -1193,29 +1194,15 @@ export default function Calendar() {
                   </SelectContent>
                 </Select>
               </div>
-
               <div className="space-y-2">
-                <Label className="text-white">Startup (Optional)</Label>
-                <Select
-                  value={eventForm.startup_id}
-                  onValueChange={(value) => setEventForm({...eventForm, startup_id: value})}
-                >
-                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
-                    <SelectValue placeholder="Select startup" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
-                    <SelectItem value="0">Personal Event</SelectItem>
-                    {userStartups.length > 0 ? (
-                      userStartups.map(startup => (
-                        <SelectItem key={startup.id} value={startup.id}>
-                          {startup.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="no-startups" disabled>No startups available</SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label className="text-white">Startup</Label>
+                <div className="text-white">
+                  {eventForm?.startup_id ? (
+                    <p>{userStartups.find(s => s.id === selectedEvent?.startup_id)?.name}</p>
+                  ) : (
+                    <p>No startup selected</p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1262,29 +1249,21 @@ export default function Calendar() {
             </div>
           </div>
 
-          {/* <DialogFooter className="gap-2" >
-            {selectedEvent && (
-              <div data-aos='fade-right' data-aos-delay="100" style={{ zIndex: 99999999999}}>
-                <ShineButton 
-                style={{ zIndex: 9999999 }}
-                  className="rounded-md flex gap-2 w-[130px] items-center justify-center text-white"
-                  label="Delete Event" 
-                  icon={<Trash2 size={16} className="hover:animate-pulse" />}
-                  size="sm" 
-                  bgColor="linear-gradient(325deg, hsl(0 84% 56%) 0%, hsl(0 100% 69%) 55%, hsl(0 84% 56%) 90%)" 
-                  onClick={() => handleDeleteEvent(selectedEvent.id)} 
-                />
-              </div>
-            )}
+          {
+            !selectedEvent?.startup_id && <DialogFooter className="gap-2">
+              {selectedEvent && (
+                <Button
+                  variant="destructive"
+                  onClick={() => handleDeleteEvent(selectedEvent.id)}
+                  className="mr-auto"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </Button>
+              )}
             
-            <div data-aos='fade-left' data-aos-delay="200" style={{ zIndex: 99999999999 }}>
-              <ShineButton 
-              style={{ zIndex: 9999999 }}
-                className="rounded-md flex gap-2 w-[110px] items-center justify-center text-white"
-                label="Cancel" 
-                icon={<X size={16} className="hover:animate-pulse" />}
-                size="sm" 
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowEventModal(false)
                   setSelectedEvent(null)
@@ -1300,66 +1279,21 @@ export default function Calendar() {
                     startup_id: '',
                     reminder_minutes: 30
                   })
-                }} 
-              />
-            </div>
-            
-            <div data-aos='fade-left' data-aos-delay="300" style={{ zIndex: 99999999999 }}>
-              <ShineButton 
-              style={{ zIndex: 9999999 }}
-                className="rounded-md flex gap-2 w-40 items-center justify-center text-white"
-                label={selectedEvent ? 'Update Event' : 'Create Event'} 
-                icon={selectedEvent ? <RefreshCw size={16} className="hover:animate-pulse" /> : <Plus size={16} className="hover:animate-pulse" />}
-                size="sm" 
-                bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
-                onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-                disabled={!eventForm.title || !eventForm.start_date} 
-              />
-            </div>
-          </DialogFooter> */}
-               <DialogFooter className="gap-2">
-            {selectedEvent && (
-              <Button
-                variant="destructive"
-                onClick={() => handleDeleteEvent(selectedEvent.id)}
-                className="mr-auto"
+                }}
+                className="border-gray-700 text-gray-300 hover:text-white"
               >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                Cancel
               </Button>
-            )}
             
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowEventModal(false)
-                setSelectedEvent(null)
-                setEventForm({
-                  title: '',
-                  description: '',
-                  start_date: '',
-                  end_date: '',
-                  all_day: false,
-                  category: 'event',
-                  color: '',
-                  location: '',
-                  startup_id: '',
-                  reminder_minutes: 30
-                })
-              }}
-              className="border-gray-700 text-gray-300 hover:text-white"
-            >
-              Cancel
-            </Button>
-            
-            <Button
-              onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-              disabled={!eventForm.title || !eventForm.start_date}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {selectedEvent ? 'Update Event' : 'Create Event'}
-            </Button>
-          </DialogFooter>
+              <Button
+                onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+                disabled={!eventForm.title || !eventForm.start_date}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {selectedEvent ? 'Update Event' : 'Create Event'}
+              </Button>
+            </DialogFooter>
+          }
         </DialogContent>
       </Dialog>
     </div>

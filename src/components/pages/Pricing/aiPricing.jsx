@@ -98,9 +98,9 @@ const CreditPacks = () => (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
       {[
         ["1,000", "$19"],
-        ["3,000", "$49"],
-        ["7,000", "$99"],
-        ["16,000", "$199"],
+        ["2,000", "$29"],
+        ["5,000", "$59"],
+        ["10,000", "$99"],
       ].map(([credits, price]) => (
         <div key={credits} className="bg-neutral-900 border border-neutral-700 rounded-xl p-4 text-center">
           <p className="text-xl font-bold text-purple-400">{credits}</p>

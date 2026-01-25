@@ -30,6 +30,7 @@ export default function AddMemberModal({ isOpen, onClose, onSubmit, formData, on
     
     return () => clearTimeout(timer);
   }, [formData.first_name, formData.last_name]);
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md bg-gray-800 border-gray-700">

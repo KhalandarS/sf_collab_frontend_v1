@@ -2,283 +2,266 @@ import {
   Briefcase,
   CheckCircle,
   Clock,
-  DollarSign,
-  Star,
-  Award,
-  Users,
-  MessageCircle,
   Layers,
+  Users,
+  ArrowRight,
+  ChevronRight,
+  Plus,
+  MoreHorizontal,
+  MapPin,
 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import DashboardChangeSection from "../DashboardChangeSection";
+import AnnouncementsSection from "../dashboard/AnnouncementsSection";
+import OverviewWebsite from "../dashboard/OverviewWebsite";
+import Calendar from "@/components/sections/Calendar";
+import WorldClock from "@/components/sections/WorldClock";
+import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
+import { useSelector } from "react-redux";
+
+/* ================= MAIN ================= */
 
 export default function BuilderDashboard({
   userRoles,
   activeRole,
   setActiveRole,
 }) {
-  return (
-    <div className="relative my-6 space-y-10">
-      {/* Background texture */}
-      <div className="absolute inset-0 pointer-events-none
-  bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
-  bg-[length:20px_20px]" />
+  const { user } = useSelector((state) => state.auth);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-      {/* Role switcher */}
+  useEffect(() => {
+    dashboardAPI
+      .getBuilderDashboard()
+      .then((res) => setData(res.data))
+      .catch((err) =>
+        console.error("❌ Failed to load builder dashboard", err)
+      )
+      .finally(() => setLoading(false));
+  }, []);
+
+  const startups = data?.startups ?? [];
+
+  /* ================= DERIVED STATS ================= */
+
+  const totals = useMemo(() => {
+    return startups.reduce(
+      (acc, s) => {
+        acc.totalTasks += s.tasks.total;
+        acc.completed += s.tasks.completed;
+        acc.pending += s.tasks.pending;
+        return acc;
+      },
+      { totalTasks: 0, completed: 0, pending: 0 }
+    );
+  }, [startups]);
+
+  if (loading) {
+    return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
+  }
+
+  /* ================= RENDER ================= */
+
+  return (
+    <div className="space-y-6 px-4 py-6">
+      <OverviewWebsite />
+
       <DashboardChangeSection
         sections={userRoles.map((role) => ({
           id: role,
           label: role.charAt(0).toUpperCase() + role.slice(1),
         }))}
-        onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem("activeRole", sectionId);
-        }}
         activeRole={activeRole}
+        onSectionChange={(r) => {
+          setActiveRole(r);
+          localStorage.setItem("activeRole", r);
+        }}
       />
 
-      <div className="relative z-10 space-y-10">
+      <AnnouncementsSection userRoles={userRoles} />
 
-        {/* ================= HEADER ================= */}
-        <div className="flex flex-col gap-4">
-          <h2 className="text-2xl font-semibold text-white flex items-center gap-2">
-            <Layers className="w-6 h-6 text-emerald-400" />
-            Builder Dashboard
-          </h2>
+      {/* ================= HEADER ================= */}
+      <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
+        <div className="flex flex-col lg:flex-row justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-emerald-600">
+                <Layers className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-white">
+                Builder Dashboard
+              </h1>
+            </div>
+            <p className="text-sm text-white/60">
+              Welcome back, {user?.firstName || "Builder"}
+            </p>
+          </div>
 
-          <p className="text-sm text-white/60 max-w-3xl">
-            Find work, collaborate with startups, deliver high-quality output,
-            and earn rewards based on performance.
-          </p>
-
-          <div className="flex flex-wrap gap-3">
-            <KPI label="Tasks Completed" value="18" />
-            <KPI label="On-Time Delivery" value="94%" />
-            <KPI label="Monthly Earnings" value="$1,240" />
-            <KPI label="Reputation" value="★ 4.7" />
+          <div className="flex gap-3">
+            <QuickStat label="Active Startups" value={startups.length} icon={Briefcase} />
+            <QuickStat label="Total Tasks" value={totals.totalTasks} icon={CheckCircle} />
+            <QuickStat label="Pending" value={totals.pending} icon={Clock} />
           </div>
         </div>
+      </header>
 
-        {/* ================= QUICK NAVIGATION BUTTONS ================= */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <Link
-            to="/builder/browse-startups"
-            className="rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30 p-4 hover:border-blue-400/60 transition text-white"
-          >
-            <div className="font-semibold">🔍 Browse Startups</div>
-            <div className="text-xs text-white/60 mt-1">Discover opportunities</div>
-          </Link>
+      {/* ================= QUICK ACTIONS ================= */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        <QuickAction label="Browse Startups" href="/discover-startups" icon={Briefcase} />
+        <QuickAction label="Saved Startups" href="/saved-startups" icon={Users} />
+        <QuickAction label="My Applications" href="/builder/my-applications" icon={CheckCircle} />
+      </div>
 
-          <Link
-            to="/builder/saved-startups"
-            className="rounded-lg bg-gradient-to-br from-red-500/20 to-pink-500/20 border border-red-400/30 p-4 hover:border-red-400/60 transition text-white"
-          >
-            <div className="font-semibold">❤️ Saved Startups</div>
-            <div className="text-xs text-white/60 mt-1">Your bookmarks</div>
-          </Link>
+      {/* ================= MY WORK ================= */}
+      <Section
+        icon={Briefcase}
+        title="My Work"
+        subtitle="Active startups & tasks"
+      >
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {startups.map((s) => (
+            <StartupWorkCard key={s.startup.id} data={s} />
+          ))}
 
-          <Link
-            to="/builder/my-applications"
-            className="rounded-lg bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-400/30 p-4 hover:border-green-400/60 transition text-white"
-          >
-            <div className="font-semibold">✓ My Applications</div>
-            <div className="text-xs text-white/60 mt-1">Track status</div>
-          </Link>
-
-          <Link
-            to="/builder/my-work"
-            className="rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 p-4 hover:border-cyan-400/60 transition text-white"
-          >
-            <div className="font-semibold">📋 My Work</div>
-            <div className="text-xs text-white/60 mt-1">Active tasks</div>
-          </Link>
-
-          <Link
-            to="/builder/rewards"
-            className="rounded-lg bg-gradient-to-br from-yellow-500/20 to-orange-500/20 border border-yellow-400/30 p-4 hover:border-yellow-400/60 transition text-white"
-          >
-            <div className="font-semibold">💰 Rewards</div>
-            <div className="text-xs text-white/60 mt-1">Earnings & equity</div>
-          </Link>
-
-          <Link
-            to="/builder/profile-skills"
-            className="rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/20 border border-purple-400/30 p-4 hover:border-purple-400/60 transition text-white"
-          >
-            <div className="font-semibold">⭐ Skill Profile</div>
-            <div className="text-xs text-white/60 mt-1">Your profile</div>
-          </Link>
+          {startups.length === 0 && (
+            <div className="col-span-full flex flex-col items-center justify-center min-h-[180px] text-white/50">
+              <Briefcase className="w-8 h-8 mb-2" />
+              <p className="text-sm">You are not part of any startup yet.</p>
+            </div>
+          )}
         </div>
+      </Section>
 
-        {/* ================= TASKS AVAILABLE ================= */}
-        <Section
-          icon={Briefcase}
-          title="Tasks Available"
-          subtitle="Marketplace — apply and start building"
-        >
-          <div className="grid sm:grid-cols-2 gap-4">
-            <TaskCard
-              title="Landing Page (React)"
-              reward="$300"
-              type="Cash"
-              difficulty="Medium"
-            />
-            <TaskCard
-              title="AI Prompt Evaluation"
-              reward="0.25% equity"
-              type="Equity"
-              difficulty="Hard"
-            />
-          </div>
+      <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
+        <Calendar />
+        <WorldClock />
+      </div>
 
-          <Link
-            to="/builder/tasks"
-            className="inline-block mt-4 text-emerald-300 hover:underline text-sm"
-          >
-            Browse all tasks →
-          </Link>
-        </Section>
-
-        {/* ================= MY APPLICATIONS ================= */}
-        <Section
-          icon={Clock}
-          title="My Applications"
-          subtitle="Track your applications status"
-        >
-          <StatusRow label="Pending" value={3} />
-          <StatusRow label="Accepted" value={2} />
-          <StatusRow label="Rejected" value={1} />
-        </Section>
-
-        {/* ================= MY WORK ================= */}
-        <Section
-          icon={CheckCircle}
-          title="My Work"
-          subtitle="Active tasks and deliverables"
-        >
-          <WorkItem
-            title="Startup Website UI"
-            due="Oct 18"
-            status="In Progress"
-          />
-          <WorkItem
-            title="Backend API Fixes"
-            due="Oct 12"
-            status="Review"
-          />
-        </Section>
-
-        {/* ================= REWARDS ================= */}
-        <Section
-          icon={DollarSign}
-          title="Rewards"
-          subtitle="Earnings, equity & reputation"
-        >
-          <div className="grid sm:grid-cols-3 gap-4">
-            <Stat label="Paid Earnings" value="$3,840" />
-            <Stat label="Pending Payouts" value="$620" />
-            <Stat label="Equity Promises" value="1.75%" />
-          </div>
-        </Section>
-
-        {/* ================= SKILL PROFILE ================= */}
-        <Section
-          icon={Award}
-          title="Skill Profile"
-          subtitle="Verified skills and reputation"
-        >
-          <div className="flex flex-wrap gap-2">
-            <SkillBadge label="React" />
-            <SkillBadge label="Node.js" />
-            <SkillBadge label="UI/UX" />
-            <SkillBadge label="AI Prompting" />
-          </div>
-
-          <Link
-            to="/builder/profile"
-            className="inline-block mt-4 text-emerald-300 hover:underline text-sm"
-          >
-            View full profile →
-          </Link>
-        </Section>
-
-        {/* ================= COLLABORATION ================= */}
-        <Section
-          icon={Users}
-          title="Collaboration"
-          subtitle="Teams, messages & recommendations"
-        >
-          <div className="grid sm:grid-cols-2 gap-4">
-            <CollabCard
-              icon={MessageCircle}
-              title="Messages"
-              desc="2 unread conversations"
-            />
-            <CollabCard
-              icon={Star}
-              title="Recommended Startups"
-              desc="3 matches based on skills"
-            />
-          </div>
-        </Section>
-
+      <div className="text-sm text-white/50 italic">
+        More builder features coming soon 🚀
       </div>
     </div>
   );
 }
 
-/* ================= SHARED COMPONENTS ================= */
+/* ================= SUBCOMPONENTS ================= */
 
-function Section({ icon: Icon, title, subtitle, children }) {
+function Section({ icon: Icon, title, subtitle, action, children }) {
   return (
-    <section className="rounded-2xl bg-white/5 border border-white/10 p-6 space-y-4">
-      <div className="flex items-center gap-3">
-        <Icon className="w-5 h-5 text-emerald-400" />
-        <div>
-          <h3 className="text-lg font-semibold text-white">{title}</h3>
-          <p className="text-xs text-white/60">{subtitle}</p>
+    <section className="rounded-xl bg-white/[0.03] border border-white/10 p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3 items-center">
+          <Icon className="w-5 h-5 text-emerald-400" />
+          <div>
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <p className="text-xs text-white/50">{subtitle}</p>
+          </div>
         </div>
+        {action && (
+          <Link
+            to={action.href}
+            className="text-xs text-white/50 hover:text-white flex items-center gap-1"
+          >
+            {action.label}
+            <ChevronRight className="w-3 h-3" />
+          </Link>
+        )}
       </div>
       {children}
     </section>
   );
 }
 
-function KPI({ label, value }) {
+function QuickStat({ label, value, icon: Icon }) {
   return (
-    <div className="rounded-xl bg-white/5 border border-white/10 px-4 py-3">
-      <p className="text-xs text-white/60">{label}</p>
-      <p className="text-lg font-semibold text-white">{value}</p>
+    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10">
+      <Icon className="w-4 h-4 text-emerald-400" />
+      <div>
+        <p className="text-xs text-white/50">{label}</p>
+        <p className="text-lg font-semibold text-white">{value}</p>
+      </div>
     </div>
   );
 }
 
-function TaskCard({ title, reward, type, difficulty }) {
+function QuickAction({ label, href, icon: Icon }) {
   return (
-    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-      <p className="font-medium text-white">{title}</p>
-      <p className="text-sm text-white/60">
-        {reward} • {type} • {difficulty}
-      </p>
-    </div>
+    <Link
+      to={href}
+      className="rounded-xl bg-white/5 border border-white/10 p-4 hover:border-emerald-500/30 transition"
+    >
+      <Icon className="w-5 h-5 text-emerald-400 mb-2" />
+      <p className="text-sm font-medium text-white">{label}</p>
+    </Link>
   );
 }
 
-function StatusRow({ label, value }) {
+function StartupWorkCard({ data }) {
+  const { startup, role, tasks } = data;
+
   return (
-    <div className="flex justify-between text-sm text-white">
-      <span>{label}</span>
-      <span className="font-semibold">{value}</span>
-    </div>
+    <Link
+      to={`/startups/${startup.id}`}
+      className="relative rounded-xl bg-gradient-to-br from-emerald-900/20 to-slate-900/20 border border-emerald-500/20 p-5 hover:border-emerald-500/50 transition overflow-hidden group"
+    >
+      {/* Background accent */}
+      <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-emerald-500/10 transition" />
+
+      <div className="relative z-10 space-y-4">
+        {/* Header */}
+        <div className="flex justify-between items-start gap-3">
+          <div className="flex-1 min-w-0">
+            <h4 className="font-semibold text-white truncate">{startup.name}</h4>
+            <p className="text-xs text-white/50">{role}</p>
+          </div>
+          <MoreHorizontal className="w-4 h-4 text-white/40 flex-shrink-0" />
+        </div>
+
+        {/* Task metrics */}
+        <div className="grid grid-cols-2 gap-3 text-xs">
+          <Stat label="Completed" value={tasks.completed} />
+          <Stat label="Pending" value={tasks.pending} />
+        </div>
+
+        {/* Tasks list */}
+        {tasks.items.length > 0 && (
+          <div className="space-y-2 pt-2 border-t border-white/10">
+            {tasks.items.slice(0, 2).map((task) => (
+              <TaskRow key={task.id} task={task} />
+            ))}
+            {tasks.items.length > 2 && (
+              <p className="text-xs text-white/40">
+                +{tasks.items.length - 2} more tasks
+              </p>
+            )}
+          </div>
+        )}
+
+        {tasks.items.length === 0 && (
+          <p className="text-xs text-white/40 pt-2 border-t border-white/10">
+            No assigned tasks
+          </p>
+        )}
+      </div>
+
+      <Link to={`/startups/${startup.id}`} className="absolute inset-0" />
+    </Link>
   );
 }
 
-function WorkItem({ title, due, status }) {
+function TaskRow({ task }) {
   return (
-    <div className="flex justify-between text-sm text-white">
-      <span>{title}</span>
-      <span className="text-white/60">
-        Due {due} • {status}
+    <div className="flex justify-between text-sm text-white/80">
+      <span className="truncate">{task.title}</span>
+      <span
+        className={`text-xs flex-shrink-0 ${
+          task.status === "completed"
+            ? "text-emerald-400"
+            : "text-amber-400"
+        }`}
+      >
+        {task.status}
       </span>
     </div>
   );
@@ -286,29 +269,9 @@ function WorkItem({ title, due, status }) {
 
 function Stat({ label, value }) {
   return (
-    <div className="rounded-xl bg-white/5 border border-white/10 p-4">
-      <p className="text-xs text-white/60">{label}</p>
-      <p className="text-lg font-semibold text-white">{value}</p>
-    </div>
-  );
-}
-
-function SkillBadge({ label }) {
-  return (
-    <span className="px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-xs text-white">
-      {label}
-    </span>
-  );
-}
-
-function CollabCard({ icon: Icon, title, desc }) {
-  return (
-    <div className="rounded-xl bg-white/5 border border-white/10 p-4 flex items-center gap-3">
-      <Icon className="w-5 h-5 text-emerald-400" />
-      <div>
-        <p className="text-sm font-medium text-white">{title}</p>
-        <p className="text-xs text-white/60">{desc}</p>
-      </div>
+    <div>
+      <p className="text-white/40">{label}</p>
+      <p className="text-white font-medium">{value}</p>
     </div>
   );
 }

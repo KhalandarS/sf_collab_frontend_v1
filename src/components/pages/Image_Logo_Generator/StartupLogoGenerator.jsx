@@ -8,6 +8,7 @@ import StepsTimeline from './StepsTimeline';
 import InputSection from './InputSection';
 import OutputSection from './OutputSection';
 import { useSelector } from 'react-redux';
+import useGetCredits from '@/utils/hooks/useGetCredits';
 
 const StartupLogoGenerator = () => {
   const [formData, setFormData] = useState({
@@ -21,6 +22,7 @@ const StartupLogoGenerator = () => {
   
   const [logos, setLogos] = useState([
   ]); // array of images
+  const credits = useGetCredits();
   const [imagesAmount, setImagesAmount] = useState(2);
   const [sloganDesigns, setSloganDesigns] = useState([]);
 
@@ -128,7 +130,7 @@ const StartupLogoGenerator = () => {
               />
               <SummaryCard
                 label="Remaining Credits"
-                value={remainingCredits ?? "0"}
+                value={credits}
                 accent="cyan"
               />
             </div>

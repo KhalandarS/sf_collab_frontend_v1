@@ -84,7 +84,6 @@ const Ideation = ({ activeRole}) => {
       }
       const data = response.data;
       const ideasArray = data.data?.ideas || data.ideas || [];
-      console.log(ideasArray);
       const mappedIdeas = ideasArray.map((idea) => ({
         id: idea.id,
         title: idea.title,

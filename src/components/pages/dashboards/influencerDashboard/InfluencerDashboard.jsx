@@ -15,6 +15,10 @@ import DashboardChangeSection from "../DashboardChangeSection";
 import KnowledgeResources from "@/components/pages/dashboards/influencerDashboard/components/KnowledgeResources";
 import DashboardTopNav from "@/components/common/DashboardTopNav";
 import { useDashboardNavHide } from "@/components/common/DashboardTopNav";
+import OverviewWebsite from "../dashboard/OverviewWebsite";
+import AnnouncementsSection from "../dashboard/AnnouncementsSection";
+import Calendar from "@/components/sections/Calendar";
+import WorldClock from "@/components/sections/WorldClock";
 
 export default function InfluencerDashboard({
   userRoles,
@@ -33,174 +37,54 @@ export default function InfluencerDashboard({
 
   return (
     <>
-      {/* Sticky top navigation */}
-      <DashboardTopNav links={dashboardLinks} isHidden={isNavHidden} />
 
       <div className="relative space-y-6 sm:space-y-8 lg:space-y-10 px-3 sm:px-4 lg:px-6 py-4 sm:py-6">
-      {/* Background texture */}
-      <div className="absolute inset-0 pointer-events-none
+        {/* Background texture */}
+        <div className="absolute inset-0 pointer-events-none
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
   bg-[length:20px_20px]" />
+        <OverviewWebsite />
+        {/* Role selector */}
+        <DashboardChangeSection
+          sections={userRoles.map((role) => ({
+            id: role,
+            label: role.charAt(0).toUpperCase() + role.slice(1),
+          }))}
+          onSectionChange={(sectionId) => {
+            setActiveRole(sectionId);
+            localStorage.setItem("activeRole", sectionId);
+          }}
+          activeRole={activeRole}
+        />
+        <AnnouncementsSection userRoles={userRoles} />
+        <div className="relative z-10 space-y-6 sm:space-y-8 lg:space-y-10">
 
-      {/* Role selector */}
-      <DashboardChangeSection
-        sections={userRoles.map((role) => ({
-          id: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1),
-        }))}
-        onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem("activeRole", sectionId);
-        }}
-        activeRole={activeRole}
-      />
+          {/* ================= HEADER ================= */}
+          <div className="flex flex-col gap-3 sm:gap-4">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white flex items-center gap-2">
+              <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-pink-400 flex-shrink-0" />
+              <span>Influencer Dashboard</span>
+            </h2>
 
-      <div className="relative z-10 space-y-6 sm:space-y-8 lg:space-y-10">
+            <p className="text-xs sm:text-sm text-white/60 max-w-3xl leading-relaxed">
+              Run campaigns, track performance, manage payouts, and grow your
+              influence inside the SF ecosystem.
+            </p>
 
-        {/* ================= HEADER ================= */}
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <h2 className="text-xl sm:text-2xl lg:text-3xl font-semibold text-white flex items-center gap-2">
-            <Layers className="w-5 sm:w-6 h-5 sm:h-6 text-pink-400 flex-shrink-0" />
-            <span>Influencer Dashboard</span>
-          </h2>
-
-          <p className="text-xs sm:text-sm text-white/60 max-w-3xl leading-relaxed">
-            Run campaigns, track performance, manage payouts, and grow your
-            influence inside the SF ecosystem.
-          </p>
-
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <KPI label="Total Clicks" value="18,420" />
-            <KPI label="Conversion Rate" value="4.8%" />
-            <KPI label="Revenue Generated" value="$3,260" />
-            <KPI label="Payout Balance" value="$740" />
           </div>
+
+      
+
         </div>
-
-        {/* ================= CAMPAIGNS ================= */}
-        <Section
-          icon={Megaphone}
-          title="Campaigns"
-          subtitle="Active, upcoming, and completed"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3 sm:gap-4">
-            <CampaignCard
-              name="NeuroForge Launch"
-              status="Active"
-              roi="2.4×"
-            />
-            <CampaignCard
-              name="BuildAI Waitlist"
-              status="Completed"
-              roi="1.9×"
-            />
-          </div>
-
-          <Link
-            to="/influencer/campaigns"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
-          >
-            View all campaigns →
-          </Link>
-        </Section>
-
-        {/* ================= STATISTICS ================= */}
-        <Section
-          icon={BarChart3}
-          title="Performance Statistics"
-          subtitle="Core campaign metrics"
-        >
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <Stat label="Views" value="92k" />
-            <Stat label="Clicks" value="18.4k" />
-            <Stat label="Conversions" value="884" />
-            <Stat label="CTR" value="4.8%" />
-            <Stat label="CPA" value="$3.69" />
-            <Stat label="ROI" value="2.1×" />
-          </div>
-        </Section>
-
-        {/* ================= REFERRAL LINKS ================= */}
-        <Section
-          icon={Link2}
-          title="Referral Links & Assets"
-          subtitle="Tracking links and promo materials"
-        >
-          <div className="space-y-2 text-xs sm:text-sm text-white">
-            <Row label="Active Referral Links" value="5" />
-            <Row label="UTM Campaigns" value="3" />
-            <Row label="Media Kit Files" value="Available" />
-          </div>
-
-          <Link
-            to="/influencer/referrals"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
-          >
-            Manage referral assets →
-          </Link>
-        </Section>
-
-        {/* ================= PAYOUTS ================= */}
-        <Section
-          icon={DollarSign}
-          title="Payouts"
-          subtitle="Earnings and withdrawals"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <Stat label="Earned" value="$3,260" />
-            <Stat label="Pending" value="$740" />
-            <Stat label="Paid Out" value="$2,520" />
-          </div>
-
-          <Link
-            to="/influencer/payouts"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
-          >
-            View payouts →
-          </Link>
-        </Section>
-
-        {/* ================= AUDIENCE PROFILE ================= */}
-        <Section
-          icon={Users}
-          title="Audience Profile"
-          subtitle="Who you reach"
-        >
-          <div className="space-y-2 text-xs sm:text-sm text-white">
-            <Row label="Primary Niche" value="Tech / Startups" />
-            <Row label="Top Regions" value="US, EU, LATAM" />
-            <Row label="Platforms" value="X, YouTube, TikTok" />
-            <Row label="Verification" value="Verified" />
-          </div>
-        </Section>
-
-        {/* ================= LEADERBOARD ================= */}
-        <Section
-          icon={Trophy}
-          title="Leaderboard"
-          subtitle="Your position in the ecosystem"
-        >
-          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-3 gap-2 sm:gap-3 lg:gap-4">
-            <Stat label="Rank" value="#12" />
-            <Stat label="Total Influencers" value="1,240" />
-            <Stat label="Bonus Tier" value="Silver" />
-          </div>
-
-          <Link
-            to="/influencer/leaderboard"
-            className="inline-block mt-3 sm:mt-4 text-pink-300 hover:underline text-xs sm:text-sm"
-          >
-            View leaderboard →
-          </Link>
-        </Section>
-
-        {/* ================= KNOWLEDGE RESOURCES ================= */}
-        <section className="rounded-lg sm:rounded-2xl bg-white/5 border border-white/10 p-4 sm:p-6">
-          <KnowledgeResources />
-        </section>
-
+        <div className="relative w-full mx-auto p-4 overflow-x-hidden">
+        
+          <Calendar />
+          <WorldClock />
+        </div>
+        <div className="text-sm text-white/50 italic">
+          More features coming soon to enhance your builder experience!
+        </div>
       </div>
-    </div>
     </>
   );
 }

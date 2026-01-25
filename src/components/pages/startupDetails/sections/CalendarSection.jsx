@@ -1,11 +1,19 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { CalendarDays, List, Columns, Clock, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import EventDetailsModal from "../modals/EventDetails";
 
 const toDate = (d) => new Date(d);
+const colors = [
+  "#3B82F6", // Blue
+  "#10B981", // Green
+  "#F59E0B", // Yellow
+  "#EF4444", // Red
+  "#8B5CF6", // Purple
+  "#F97316", // Orange 
 
+]
 const isSameDay = (a, b) =>
   a.getFullYear() === b.getFullYear() &&
   a.getMonth() === b.getMonth() &&
@@ -28,9 +36,11 @@ const CalendarSection = ({
   const [view, setView] = useState("agenda");
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedColor, setSelectedColor] = useState(null);
 
-  const openEvent = (event) => {
+  const openEvent = (event, color) => {
     setSelectedEvent(event);
+    setSelectedColor(color);
     setModalOpen(true);
   };
 
@@ -109,7 +119,7 @@ const CalendarSection = ({
       {view === "month" && (
         <CalendarMonthView
           events={events}
-
+          colors={colors}
           onEditEvent={onEditEvent}
             onOpenEvent={openEvent}
 
@@ -121,7 +131,8 @@ const CalendarSection = ({
   onClose={setModalOpen}
   isCreator={isCreator}
   onEdit={onEditEvent}
-  onDelete={onDeleteEvent}
+        onDelete={onDeleteEvent}
+        color={selectedColor}
 />
 
     </div>
@@ -136,19 +147,27 @@ const CalendarAgendaView = ({
   onDeleteEvent,
   onOpenEvent
 }) => {
+  const eventColors = useMemo(() => {
+    return events.map((_, i) => colors[i % colors.length]);
+  }, [events]);
+
+  const getEventColor = (event) => {
+    const index = events.findIndex((e) => e.id === event.id);
+    return eventColors[index] || "#3B82F6";
+  };
   return (
     <div className="space-y-3">
       {events.map((event) => (
         <Card
           key={event.id}
-          onClick={() => onOpenEvent(event)}
+          onClick={() => onOpenEvent(event, getEventColor(event))}
           className="bg-gray-900 border-gray-800 hover:border-blue-500/40 cursor-pointer"
         >
 
           <CardContent className="p-4 flex gap-4">
             <div
               className="w-1.5 rounded-full"
-              style={{ backgroundColor: event.color }}
+              style={{ backgroundColor: getEventColor(event) }}
             />
 
             <div className="flex-1">
@@ -213,6 +232,14 @@ const CalendarWeekView = ({ events, onOpenEvent }) => {
     d.setHours(0, 0, 0, 0);
     return d;
   })();
+  const eventColors = useMemo(() => {
+    return events.map((_, i) => colors[i % colors.length]);
+  }, [events]);
+
+  const getEventColor = (event) => {
+    const index = events.findIndex((e) => e.id === event.id);
+    return eventColors[index] || "#3B82F6";
+  };
 
   return (
     <div className="grid grid-cols-7 gap-2">
@@ -238,20 +265,22 @@ const CalendarWeekView = ({ events, onOpenEvent }) => {
             </div>
 
             <div className="space-y-1">
-              {dayEvents.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => onOpenEvent(event)}
-                  className="text-xs text-white rounded px-2 py-1 cursor-pointer"
-                  style={{
-                    backgroundColor: event.color + "33",
-                    borderLeft: `3px solid ${event.color}`
-                  }}
-                >
-                  {event.title}
-                </div>
+              {dayEvents.map((event) => {
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => onOpenEvent(event, getEventColor(event))}
+                    className="text-xs text-white rounded px-2 py-1 cursor-pointer"
+                    style={{
+                      backgroundColor: getEventColor(event) + "33",
+                      borderLeft: `3px solid ${getEventColor(event)}`
+                    }}
+                  >
+                    {event.title}
+                  </div>
 
-              ))}
+                )
+              })}
             </div>
           </div>
         );
@@ -264,12 +293,19 @@ const CalendarWeekView = ({ events, onOpenEvent }) => {
 const daysInMonth = (year, month) =>
   new Date(year, month + 1, 0).getDate();
 
-const CalendarMonthView = ({ events, onOpenEvent }) => {
+const CalendarMonthView = ({ events, onOpenEvent, colors }) => {
   const today = new Date();
   const year = today.getFullYear();
   const month = today.getMonth();
   const days = daysInMonth(year, month);
+    const eventColors = useMemo(() => {
+    return events.map((_, i) => colors[i % colors.length]);
+  }, [events, colors]);
 
+  const getEventColor = (event) => {
+    const index = events.findIndex((e) => e.id === event.id);
+    return eventColors[index] || "#3B82F6";
+  };
   return (
     <div className="grid grid-cols-7 gap-2">
       {[...Array(days)].map((_, i) => {
@@ -293,20 +329,22 @@ const CalendarMonthView = ({ events, onOpenEvent }) => {
             </div>
 
             <div className="space-y-1">
-              {dayEvents.map((event) => (
-                <div
-                  key={event.id}
-                  onClick={() => onOpenEvent(event)}
-                  className="text-xs truncate text-white rounded px-1 cursor-pointer"
-                  style={{
-                    backgroundColor: event.color + "33",
-                    borderLeft: `3px solid ${event.color}`
-                  }}
-                >
-                  {event.title}
-                </div>
+              {dayEvents.map((event) => {
+                return (
+                  <div
+                    key={event.id}
+                    onClick={() => onOpenEvent(event, getEventColor(event))}
+                    className="text-xs truncate text-white rounded px-1 cursor-pointer"
+                    style={{
+                      backgroundColor: getEventColor(event) + "33",
+                      borderLeft: `3px solid ${getEventColor(event)}`
+                    }}
+                  >
+                    {event.title}
+                  </div>
 
-              ))}
+                )
+              })}
             </div>
           </div>
         );

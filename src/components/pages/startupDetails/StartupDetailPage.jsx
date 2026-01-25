@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Users, Calendar, TrendingUp, Heart, Share2, ChevronRight, Home, Trash2, UserPlus, BarChart3,
-  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon
+  FileText, Target, MessageSquare,CheckCircle2Icon,XIcon,
+  Bookmark
 } from 'lucide-react';
 import {
     Alert,
@@ -53,6 +54,7 @@ const StartupDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [startup, setStartup] = useState(null);
+
   const [members, setMembers] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [stats, setStats] = useState(null);
@@ -119,13 +121,14 @@ const StartupDetailPage = () => {
         page: 1,
         include_milestones: true
       }
-      const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult] = await Promise.all([
+      const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult] = await Promise.all([
         startupsAPI.getById(id, token).catch(err => ({ success: false, error: err })),
         startupsAPI.getMembers(id, token, args).catch(err => ({ success: false, error: err })),
         startupsAPI.getDocuments(id, token).catch(err => ({ success: false, error: err })),
         startupsAPI.getStats(id, token).catch(err => ({ success: false, error: err })),
         projectGoalsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
         calendarEventsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        startupsAPI.getBookmarkStatus({ startupId: id, userId: user?.id }).catch(err => ({ success: false, error: err })),
       ]);
       const startupData = startupResult.success ? startupResult : { success: false, data: null };
       const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
@@ -133,16 +136,16 @@ const StartupDetailPage = () => {
       const statsData = statsResult.success ? statsResult : { success: false, data: { stats: null } };
       const goalsData = goalsResult.success ? goalsResult : { success: false, data: { project_goals: [] } };
       const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
-
+      const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) {
-        console.log('👥 Members fetched:', membersData.data.members);
         setMembers(membersData.data.members);
       }
       if (documentsData.success) setDocuments(documentsData.data.documents);
       if (statsData.success) setStats(statsData.data.stats || {});
       if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
       if (eventsData.success) setCalendarEvents(eventsData.data.events || []);
+      if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
     } catch (error) {
       console.error('Error fetching startup data:', error);
       toast.error('Error loading startup data');
@@ -164,11 +167,7 @@ const StartupDetailPage = () => {
       return;
     }
     try {
-      console.log('📡 Fetching join requests for startup:', id, { isCreator, hasToken: !!access_token });
       const response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
-      console.log('📦 Raw API response:', response);
-      console.log('📦 Response type:', typeof response, 'Is array?', Array.isArray(response));
-      console.log('📦 Response keys:', Object.keys(response || {}));
       
       // Handle multiple possible response structures from backend
       // The API returns response.data.data which should be { join_requests: [...], ... }
@@ -177,15 +176,12 @@ const StartupDetailPage = () => {
         console.log('✅ Response is direct array');
         pending = response; // Direct array
       } else if (response?.join_requests && Array.isArray(response.join_requests)) {
-        console.log('✅ Found join_requests key with array:', response.join_requests.length, 'items');
         pending = response.join_requests; // Wrapped in join_requests key
       } else if (response?.requests && Array.isArray(response.requests)) {
-        console.log('✅ Found requests key with array:', response.requests.length, 'items');
         pending = response.requests; // Wrapped in requests key
       } else {
         console.warn('⚠️ Could not find requests in response. Full response:', JSON.stringify(response, null, 2));
       }
-      console.log('✅ Join requests processed:', pending.length, 'items');
       setJoinRequests(pending);
     } catch (error) {
       console.error('❌ Failed to load join requests:', error);
@@ -332,7 +328,6 @@ const StartupDetailPage = () => {
     const requestId = request?.id || request?.request_id;
     if (!requestId) return;
     try {
-      console.log('✅ Accepting join request:', requestId, 'from:', request?.full_name || `${request?.first_name} ${request?.last_name}`);
       await startupsAPI.acceptJoinRequest(id, requestId);
       toast.success(`${request?.full_name || `${request?.first_name ?? ''} ${request?.last_name ?? ''}`.trim() || 'Member'} has been added.`);
       // Remove from list immediately for better UX
@@ -350,9 +345,8 @@ const StartupDetailPage = () => {
     const requestId = request?.id || request?.request_id;
     if (!requestId) return;
     try {
-      console.log('🚫 Rejecting join request:', requestId, 'from:', request?.full_name || `${request?.first_name} ${request?.last_name}`);
       await startupsAPI.rejectJoinRequest(id, requestId);
-      toast.info(`Join request from ${request?.full_name || `${request?.first_name} ${request?.last_name}`} has been rejected.`);
+      toast.info(`Join request from ${request?.fullName || `${request?.firstName} ${request?.lastName}`} has been rejected.`);
       // Remove from list immediately for better UX
       setJoinRequests(prev => prev.filter(r => (r.id || r.request_id) !== requestId));
       // Refresh data to ensure consistency
@@ -362,6 +356,21 @@ const StartupDetailPage = () => {
       toast.error('Unable to reject the request right now.');
     }
   };
+  const handleBookmarkClick = async () => {
+    try {
+        // Remove bookmark
+        const response = await startupsAPI.toggleBookmarkStartup({ startupId: id, userId: user?.id });
+        if (response.success) {
+          setIsFavorited(response.data.bookmarked);
+          toast.info(`Startup ${response.data.bookmarked ? 'added to' : 'removed from'} favorites`);
+        } else {
+          throw new Error('Failed to remove bookmark');
+        }
+    } catch (error) {
+        toast.error('Error updating favorite status');
+    }
+  };
+
   useEffect(() => {
     if (user && startup) {
       // Try to get userId from different possible fields
@@ -509,8 +518,19 @@ const StartupDetailPage = () => {
                   <Button
                     variant="ghost"
                     size="sm"
+                    onClick={() => navigate(`/register-startup?id=${startup.id}`)}
+                    className="relative text-gray-300"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-1" />
+                    Edit Startup
+                    
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => setIsJoinModalOpen(true)}
-                    className="relative text-gray-300 hover:text-white"
+                    className="relative text-gray-300"
                   >
                     <MessageSquare className="w-4 h-4 mr-1" />
                     Join Requests
@@ -551,14 +571,12 @@ const StartupDetailPage = () => {
               <Button 
                 variant="ghost" 
                 size="sm"
-                onClick={() => setIsFavorited(!isFavorited)}
-                className="text-gray-300 hover:text-red-500"
+                onClick={() => handleBookmarkClick()}
+                className="text-gray-300 hover:text-yellow-500"
               >
-                <Heart className={`w-4 h-4 ${isFavorited ? 'fill-red-500 text-red-500' : ''}`} />
+                <Bookmark className={`w-4 h-4 ${isFavorited ? 'fill-yellow-500 text-yellow-500' : ''}`} />
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-300 hover:text-blue-500">
-                <Share2 className="w-4 h-4" />
-              </Button>
+
             </div>
           </div>
         </div>
@@ -729,7 +747,7 @@ const StartupDetailPage = () => {
           isOpen={isJoinModalOpen}
           onClose={() => setIsJoinModalOpen(false)}
           startupName={startup?.name || 'Your Startup'}
-          founderName={user?.first_name && user?.last_name ? `${user.first_name} ${user.last_name}` : user?.email || 'You'}
+          founderName={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'You'}
           joinRequests={joinRequests}
           loading={loading}
           onAccept={handleAcceptJoinRequest}
@@ -756,7 +774,7 @@ const StartupDetailPage = () => {
                     <XIcon className='size-5' />
                     <span className='sr-only'>Close</span>
                   </button>
-                </Alert>
+                </Alert> 
               </div>
             )
         }

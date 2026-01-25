@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 const ProfileTabs = ({ tabs, activeTab, onTabChange }) => {
   return (
-    <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-2">
+    <div className="flex-1 bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-2">
       <div className="flex flex-wrap justify-between w-full space-x-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;

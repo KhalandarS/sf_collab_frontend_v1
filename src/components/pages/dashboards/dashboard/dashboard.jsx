@@ -2,18 +2,12 @@
 import React, { useMemo, useState, useEffect } from "react";
 import WorldClock from "../../../sections/WorldClock";
 import Calendar from "../../../sections/Calendar";
-import Tasks from "../../../sections/Tasks";
 import DashboardHeader from "../../../headers/DashboardHeader";
 import DashboardSection from "../../../sections/DashboardSection";
 import TaskProgress from "../../../sections/TaskProgress";
-import Silk from '../../../ui/Silk';
-import { Search } from 'lucide-react'; 
-import SpotlightCard from "../../../ui/SpotlightCard";
-import GlareHover from "../../../ui/GlareHover";
 import { GrOverview } from "react-icons/gr";
 import ShinyText from "../../../ui/ShinyText";
 import { useDispatch ,useSelector} from "react-redux";
-import { NotificationList } from "../../../ui/notification-list";
 import {
   DndContext,
   PointerSensor,
@@ -26,9 +20,6 @@ import {
   verticalListSortingStrategy,
   arrayMove,
 } from "@dnd-kit/sortable";
-
-import { GravityStarsBackground } from '../../../animate-ui/components/backgrounds/gravity-stars';
-import { Link } from "react-router-dom";
 import SortableSection from "./SortableSection";
 import OverviewWebsite from "./OverviewWebsite";
 import DashboardSummaryCard from "./DashboardSummarySection";
@@ -40,6 +31,7 @@ import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../DashboardChangeSection";
 import DonationSection from "./DonationSection";
 import CrowdfundingSection from "./CrowdfundingSection";
+import AnnouncementsSection from "./AnnouncementsSection";
 const Dashboard = ({
   activeRole, setActiveRole, userRoles
 }) => {
@@ -115,16 +107,7 @@ const Dashboard = ({
     setSections(items => arrayMove(items, from, to));
   };
 
-  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(() => {
-    const stored = localStorage.getItem('preferences:hideInfluencerInfo');
-    return stored === 'true';
-  });
-  
-  const [hideShowJobApplication, setHideJobApplication] = useState(() => {
-    const stored = localStorage.getItem('preferences:hideJobApplication');
-    
-    return stored === 'true';
-  });
+
   return (
     <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
       {loading && (<Loader />)}
@@ -134,8 +117,6 @@ const Dashboard = ({
       
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-        <CrowdfundingSection /> 
-        <DonationSection />
         <DashboardChangeSection sections={userRoles.map(role => ({
           id: role,
           label: role.charAt(0).toUpperCase() + role.slice(1)
@@ -145,21 +126,12 @@ const Dashboard = ({
           }}
         activeRole={activeRole}
         />
-        <WaitlistSection />
-        {
-          !hideShowJobApplication && <JoinSFSection setHideJobApplication={setHideJobApplication}/>
-        }
-        
-        {
-          userData && !userRoles.includes("influencer") && !hideInfluencerInfo && (
-            <InfluencerSection userData={userData} setHideInfluencerInfo={setHideInfluencerInfo} />
-          )
-        }
-        {
+        <AnnouncementsSection userRoles={userRoles} />
+        {/* {
           userData && (userRoles.includes("admin") || user.role === 'admin') && (
             <AdminSection userData={userData} />
           )
-        }
+        } */}
         <DashboardSummaryCard userData={userData} />
   
         {/* Original Dashboard Header */}

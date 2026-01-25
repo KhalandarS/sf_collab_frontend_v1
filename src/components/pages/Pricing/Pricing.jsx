@@ -235,6 +235,14 @@ const Pricing = () => {
         </AnimatePresence>
       </div>
       <AIPricing />
+      {/* DISCLAIMER */}
+      <div className="w-full mx-auto px-6 lg:px-40 py-12">
+        <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 max-w-3xl mx-auto">
+          <p className="text-neutral-300 text-sm leading-relaxed">
+        <span className="font-semibold text-white">Founder plans</span> unlock access to platform capabilities and define usage limits. Some services such as AI, hosting, email, automation, and external integrations are usage-based and billed separately. As SF evolves, new features will be added within existing plans based on capacity and access level.
+          </p>
+        </div>
+      </div>
       <Footer />
     </div>
   );
