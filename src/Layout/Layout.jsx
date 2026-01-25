@@ -32,7 +32,6 @@ import { isUserProfileComplete } from "@/utils/getUserComplete";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteEmailPopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
-import useScrollHide from "@/utils/hooks/useScrollHide";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
