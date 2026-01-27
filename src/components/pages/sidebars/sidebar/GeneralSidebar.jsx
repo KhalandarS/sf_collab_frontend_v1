@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import SideBar from '../SideBar';
 import { createLinks } from './links';
-export default function GeneralSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) {
+
+export default function GeneralSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles = [], setActiveRole = () => {} }) {
   const [links, setLinks] = useState(createLinks(unreadMessagesCount));
   useEffect(() => {
-    setLinks(createLinks(unreadMessagesCount));
-  }, [unreadMessagesCount]);
+    setLinks(createLinks(unreadMessagesCount, userRoles, setActiveRole));
+  }, [unreadMessagesCount, userRoles, setActiveRole]);
 
   return <SideBar
     isOpen={isOpen}

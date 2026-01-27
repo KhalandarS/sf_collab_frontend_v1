@@ -2,12 +2,11 @@ import { useEffect, useState } from 'react';
 
 import SideBar from '../SideBar';
 import { createBuilderLinks } from './BuilderLinks';
-export default function BuilderSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) {
-  const [links, setLinks] = useState(createBuilderLinks(unreadMessagesCount));
+export default function BuilderSidebar({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles = [], setActiveRole = () => {} }) {
+  const [links, setLinks] = useState(createBuilderLinks(unreadMessagesCount, userRoles, setActiveRole));
   useEffect(() => {
-    setLinks(createBuilderLinks(unreadMessagesCount));
-  }, [unreadMessagesCount]);
-
+    setLinks(createBuilderLinks(unreadMessagesCount, userRoles, setActiveRole));
+  }, [unreadMessagesCount, userRoles, setActiveRole]);
   return <SideBar
     isOpen={isOpen}
     setIsOpen={setIsOpen}

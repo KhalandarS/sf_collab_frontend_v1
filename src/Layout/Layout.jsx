@@ -199,7 +199,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   // Sidebar resolver
   const SideBar = () => {
-    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
+    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
 
     switch (activeRole) {
       case "founder":
