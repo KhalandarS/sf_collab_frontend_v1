@@ -203,7 +203,7 @@ const ChatInput = ({
   };
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-900/50">
+    <div className="border-t border-zinc-800 bg-zinc-900/50 h-24">
       {/* File Preview */}
       {selectedFile && (
         <div className="px-4 pt-3">

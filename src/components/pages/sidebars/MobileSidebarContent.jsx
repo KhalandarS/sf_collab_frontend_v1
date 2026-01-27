@@ -4,7 +4,7 @@ import BottomLinks from "./BottomLinks";
 import { Crown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 
-export default function MobileSidebarContent({ onLinkClick, links = [], currentContextId, isAdmin, toggleExpand, hasSubItems, shouldShowSubItems }) {
+export default function MobileSidebarContent({ onLinkClick, links = [], currentContextId, isAdmin, toggleExpand, hasSubItems, shouldShowSubItems, callback }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -165,7 +165,7 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
         )}
       </motion.div>
 
-      <BottomLinks onLinkClick={onLinkClick} />
+      <BottomLinks onLinkClick={onLinkClick} callback={callback} />
     </div>
   );
 }

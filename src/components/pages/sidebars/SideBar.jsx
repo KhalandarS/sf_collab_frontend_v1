@@ -104,6 +104,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
               toggleExpand={toggleExpand}
               hasSubItems={hasSubItems}
               shouldShowSubItems={shouldShowSubItems}  
+              callback={() => setIsOpen(false)}
             />
           </div>
         </div>

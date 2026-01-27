@@ -1,6 +1,7 @@
 import { SOCKET_API_URL } from "@/utils/config";
+import { getSocketInstance } from "@/utils/getSocketInstance";
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { io } from "socket.io-client";
+
 
 const SocketContext = createContext(null);
 
@@ -27,13 +28,7 @@ export function SocketProvider({ token, children }) {
 
     if (socketRef.current) return;
 
-    const s = io(SOCKET_URL, {
-      query: { token },
-      transports: ["websocket", "polling"],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-    });
+    const s = getSocketInstance();
 
     socketRef.current = s;
     setSocket(s);

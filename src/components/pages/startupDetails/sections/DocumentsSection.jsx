@@ -2,6 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Plus, FileText, Download, Trash2 } from "lucide-react";
 export default function DocumentsSection({ onJoinClick, documents, isCreator, onDownload, onDelete }) {
+  const reduceText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    return text.slice(0, maxLength) + '...';
+  }
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -20,11 +25,13 @@ export default function DocumentsSection({ onJoinClick, documents, isCreator, on
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                    <FileText className="w-6 h-6 text-blue-400" />
-                  </div>
+                  {
+                    !isMobile && <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-blue-400" />
+                    </div>
+                  }
                   <div>
-                    <h3 className="text-white font-medium">{doc.filename}</h3>
+                    <h3 className="text-white font-small">{reduceText(doc.filename, 20)}</h3>
                     <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
                       <span className="capitalize">{doc.document_type}</span>
                       <span>{(doc.file_size / 1024 / 1024).toFixed(2)} MB</span>

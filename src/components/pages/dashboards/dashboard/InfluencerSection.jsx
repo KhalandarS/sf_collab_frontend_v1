@@ -30,13 +30,13 @@ export default function InfluencerProfileSection({ userData, setHideInfluencerIn
                 Locked
               </span>
             </div>
-            <p className="text-white/70 max-w-2xl text-sm sm:text-base">
+            <p className="text-white/70 max-w-2xl text-sm sm:text-base text-center">
               Hi {userData?.firstName || 'there'}, unlock your Influencer Profile to run campaigns, track performance, collaborate with startups, and earn through your audience.
             </p>
           </div>
 
           {/* CTA Buttons */}
-          <div className="md:absolute md:top-1 md:right-1 flex flex-col gap-2 sm:flex-row gap-3 w-full lg:w-auto items-center">
+          <div className="lg:absolute lg:top-1 md:right-1 flex flex-col gap-2 lg:flex-row gap-3 w-full lg:w-auto items-center">
             <Link
               to="/apply-influencer"
               className="inline-flex mx-4 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-6 py-3 font-semibold text-white transition-all duration-300 border border-indigo-300/50 hover:scale-105"
@@ -44,7 +44,7 @@ export default function InfluencerProfileSection({ userData, setHideInfluencerIn
               Apply Now
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
-            <div
+            {/* <div
               onClick={() => {
                 localStorage.setItem('preferences:hideInfluencerInfo', 'true');
                 setHideInfluencerInfo(true);
@@ -54,7 +54,7 @@ export default function InfluencerProfileSection({ userData, setHideInfluencerIn
             >
               Not Interested
               
-            </div>
+            </div> */}
           </div>
         </div>
 

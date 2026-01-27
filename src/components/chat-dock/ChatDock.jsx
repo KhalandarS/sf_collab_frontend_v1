@@ -5,6 +5,7 @@ import Avatar from "@/components/chat/Avatar";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import { useAppSocket } from "@/context/SocketProvider";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 
 // show name only on first message in a run (group/general/startup)
@@ -198,9 +199,8 @@ function shouldShowAvatar(messages, message, index, currentUserId) {
 }
 
 
-export default function ChatDock({ maxWindows = 2 }) {
+export default function ChatDock({ maxWindows = 2, isMobile = false, callback = () => {} }) {
   const { socket, isConnected, onlineUsers } = useAppSocket();
-
   const token = useMemo(() => localStorage.getItem("access_token"), []);
   const currentUser = useMemo(() => {
     try {
@@ -244,6 +244,7 @@ export default function ChatDock({ maxWindows = 2 }) {
         }))
       : [];
   });
+  const isWindowsOpen = useMemo(() => windows.length > 0, [windows]);
 
   useEffect(() => {
     try {
@@ -403,7 +404,6 @@ export default function ChatDock({ maxWindows = 2 }) {
       const data = await res.json();
       if (data?.success) {
         const convos = data.data.conversations || [];
-        console.log("[ChatDock] Fetched conversations:", convos.length);
         setConversations(convos);
 
         setLastSeenAt((prev) => {
@@ -508,7 +508,6 @@ export default function ChatDock({ maxWindows = 2 }) {
 
   const openWindow = useCallback(
     async ({ conversationId, title }) => {
-      console.log("[ChatDock] openWindow called:", { conversationId, title });
       
       if (!conversationId) return;
       const cid = String(conversationId);
@@ -694,14 +693,10 @@ export default function ChatDock({ maxWindows = 2 }) {
   // -----------------------------
   useEffect(() => {
     if (!socket) {
-      console.log("[ChatDock] No socket available yet");
       return;
     }
     
-    console.log("[ChatDock] Socket connected:", socket.connected);
-
     const handleIncomingMessage = (payload) => {
-      console.log("[ChatDock] Received message event:", payload);
       
       const messageData = payload?.message || payload;
       const cid = String(payload?.conversation_id || messageData?.conversation_id);
@@ -709,11 +704,8 @@ export default function ChatDock({ maxWindows = 2 }) {
       const messageNorm = normalizeMessage(messageData);
 
       if (!cid || !messageNorm) {
-        console.log("[ChatDock] Invalid message data, skipping");
         return;
       }
-
-      console.log("[ChatDock] Processing message for conversation:", cid);
 
       // Update messages for open window
       setWindows((prev) => {
@@ -755,12 +747,7 @@ export default function ChatDock({ maxWindows = 2 }) {
           // - If window is minimized → do NOT unminimize, just show unread badge
           // - If browser tab is hidden/minimized → do NOT pop open
           // - If window doesn't exist + tab is visible → OPEN the window
-          console.log("[ChatDock] Auto-open check:", { 
-            isOpen, 
-            isMin, 
-            currentIsTabVisible,
-            shouldOpen: currentIsTabVisible && !isOpen 
-          });
+
           
           if (currentIsTabVisible && !isOpen) {
             const conv = (currentConversations || []).find((c) => String(c.id) === String(cid));
@@ -769,7 +756,6 @@ export default function ChatDock({ maxWindows = 2 }) {
               conv?.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
               "Chat";
 
-            console.log("[ChatDock] Opening window for conversation:", cid, "title:", title);
             openWindow({ conversationId: cid, title });
           }
         } else {
@@ -782,7 +768,6 @@ export default function ChatDock({ maxWindows = 2 }) {
     };
 
     // Listen for BOTH events
-    console.log("[ChatDock] Registering socket listeners for new_message and conversation_message");
     socket.on("new_message", handleIncomingMessage);
     socket.on("conversation_message", handleIncomingMessage);
     
@@ -894,11 +879,48 @@ export default function ChatDock({ maxWindows = 2 }) {
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
     return `${names[0]} and ${names.length - 1} others are typing...`;
   };
-
+  useEffect(() => {
+    if (isMobile && (isPanelOpen || isWindowsOpen)) {
+      // Disable background scrolling
+      document.body.style.overflow = "hidden";
+    }
+    else {
+      document.body.style.overflow = "";
+    }
+  }, [isMobile, isPanelOpen, isWindowsOpen]);
   if (!currentUser) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] flex flex-row-reverse items-end gap-3 pointer-events-none">
+    <>
+      {/* Launcher Button with Avatar Badge */}
+        {(!isPanelOpen && !isWindowsOpen) &&
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setIsPanelOpen((v) => !v)
+                if (isMobile) {
+                  callback();
+                }
+              }}
+            className={`fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center`}
+          >
+            <MessageCircle size={20} />
+          
+            {/* Avatar-based notification badge */}
+            {totalUnread > 0 && (
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-2 -right-2"
+              >
+                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
+                  {totalUnread > 99 ? "99+" : totalUnread}
+                </span>
+              </motion.div>
+            )}
+          </motion.button>}
+    <div className={`fixed ${!isMobile ? "bottom-4 right-4" : "bottom-0 right-0"} z-[9999] flex items-end pointer-events-none`}>
       {/* SECTION A: LAUNCHER & PANEL */}
       <div className="flex flex-col items-end gap-3 pointer-events-auto">
         <AnimatePresence>
@@ -907,14 +929,19 @@ export default function ChatDock({ maxWindows = 2 }) {
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="w-80 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+              className={`${isMobile ? "w-screen h-screen rounded-none" : "w-80"} bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden`}
             >
               <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
                 <div className="flex items-center gap-2">
                   <div className="text-sm font-semibold text-white">Chats</div>
                   <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
                 </div>
-                <button onClick={() => setIsPanelOpen(false)} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
+                <button onClick={() => {
+                  setIsPanelOpen(false)
+                  if (isMobile) {
+                    callback();
+                  }
+                }} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
                   <X size={16} />
                 </button>
               </div>
@@ -973,7 +1000,12 @@ export default function ChatDock({ maxWindows = 2 }) {
                     return (
                       <button
                         key={conv.id}
-                        onClick={() => openWindow({ conversationId: conv.id, title })}
+                        onClick={() => {
+                          openWindow({ conversationId: conv.id, title })
+                          if (isMobile) {
+                            setIsPanelOpen(false);
+                          }
+                        }}
                         className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
                           unreadCount > 0 ? "bg-zinc-800/50" : ""
                         }`}
@@ -999,29 +1031,6 @@ export default function ChatDock({ maxWindows = 2 }) {
             </motion.div>
           )}
         </AnimatePresence>
-
-        {/* Launcher Button with Avatar Badge */}
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setIsPanelOpen((v) => !v)}
-          className="relative w-12 h-12 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center"
-        >
-          <MessageCircle size={20} />
-          
-          {/* Avatar-based notification badge */}
-          {totalUnread > 0 && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-2 -right-2"
-            >
-              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
-                {totalUnread > 99 ? "99+" : totalUnread}
-              </span>
-            </motion.div>
-          )}
-        </motion.button>
       </div>
 
       {/* SECTION B: CHAT WINDOWS */}
@@ -1052,7 +1061,7 @@ export default function ChatDock({ maxWindows = 2 }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 50, scale: 0.9 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="w-[380px] bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+                className={`${isMobile ? "w-screen border-none h-screen" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col justify-between bg-zinc-900  shadow-2xl overflow-hidden pointer-events-auto`}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
@@ -1075,7 +1084,7 @@ export default function ChatDock({ maxWindows = 2 }) {
                           className="flex-shrink-0"
                         >
                           <Avatar
-                            src={avatarUrl}
+                            src={getProfilePicture(avatarUrl)}
                             name={w.title}
                             size="sm"
                             presenceStatus={presenceStatus}
@@ -1208,6 +1217,7 @@ export default function ChatDock({ maxWindows = 2 }) {
           })}
         </AnimatePresence>
       </div>
-    </div>
+      </div>
+      </>
   );
 }
