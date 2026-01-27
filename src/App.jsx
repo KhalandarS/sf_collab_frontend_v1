@@ -89,7 +89,9 @@ import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx"
 import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
 import UserPage from "./components/pages/usersPage/UsersPage.jsx";
 import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
-
+import { NotificationProvider } from './contexts/NotificationContext';
+import ToastNotification from './components/notifications/ToastNotification.jsx';
+import NotificationPage from './components/notifications/NotificationPage.jsx';
 
 
 
@@ -149,6 +151,7 @@ export default function App() {
         <ChatNotificationProvider> {/* Wrap routes so the provider can navigate */}
 
           <ChatContactsProvider token={access_token}>
+            <NotificationProvider>
             <ScrollToTop />
             <Routes>
               <Route path="/" element={<LandingPage />} />
@@ -183,18 +186,26 @@ export default function App() {
                 }
               >
                 {/* Dashboard */}
-                {
-                  user && activeRole === 'influencer' ? (
-                    <Route path="dashboard" element={<InfluencerDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-                  ) : user && activeRole === 'builder' ? (
-                    <Route path="dashboard" element={<BuilderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-                  ) : user && activeRole === 'founder' ? (
-                    <Route path="dashboard" element={<FounderDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-                  ) : user && activeRole === 'investor' ? (
-                    <Route path="dashboard" element={<InvestorDashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-                  ) : (<Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} />
-                  )
-                }
+                <Route 
+                  path="dashboard" 
+                  element={
+                    (() => {
+                      const props = { activeRole, setActiveRole, userRoles };
+
+                      if (user && activeRole === 'influencer') {
+                        return <InfluencerDashboard {...props} />;
+                      } else if (user && activeRole === 'builder') {
+                        return <BuilderDashboard {...props} />;
+                      } else if (user && activeRole === 'founder') {
+                        return <FounderDashboard {...props} />;
+                      } else if (user && activeRole === 'investor') {
+                        return <InvestorDashboard {...props} />;
+                      } else {
+                        return <Dashboard {...props} />;
+                      }
+                    })()
+                  } 
+                />
                 {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
             
                 {/* ===== BUILDER DASHBOARD ROUTES ===== */}
@@ -237,8 +248,7 @@ export default function App() {
                 {/* Chat and notifications */}
                 <Route path="chat" element={<ChatPage />} />
                 <Route path="connections" element={<ConnectionsPage />} />
-                <Route path="notifications" element={<Notifications />} />
-                {/* Posts */}
+                <Route path="notifications" element={<NotificationPage />} />                {/* Posts */}
                 <Route path="posts" element={<Posts />} />
         
             
@@ -299,7 +309,9 @@ export default function App() {
               pauseOnHover
               theme="dark"
               style={{ bottom: '20px' }}
-            />
+              />
+              <ToastNotification />
+              </NotificationProvider>
           </ChatContactsProvider>
         </ChatNotificationProvider>
 

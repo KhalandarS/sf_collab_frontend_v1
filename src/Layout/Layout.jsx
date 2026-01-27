@@ -23,8 +23,8 @@ import { useChatContacts } from "@/context/ChatContactsProvider";
 import useSocket from "@/components/pages/chat/useSocket";
 import { toast } from "react-toastify";
 
-import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
-import { SOCKET_API_URL } from "@/utils/config";
+// import ChatWebSocketClient from "@/services/websocket/ChatWebSocketClient";
+// import { SOCKET_API_URL } from "@/utils/config";
 
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -149,40 +149,40 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   }, [socket, isConnected, user]);
 
   // Raw WebSocket client
-  useEffect(() => {
-    const userId = user?.id;
-    if (!userId) return;
+  // useEffect(() => {
+  //   const userId = user?.id;
+  //   if (!userId) return;
 
-    const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
+  //   const client = new ChatWebSocketClient(SOCKET_API_URL, userId);
 
-    client.on("new_message", (data) => {
-      toast.info("New message received");
-      window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
-    });
+  //   client.on("new_message", (data) => {
+  //     toast.info("New message received");
+  //     window.dispatchEvent(new CustomEvent("chat:new_message", { detail: data }));
+  //   });
 
-    client.on("user_online", (data) => toast.success(`${data?.user_name || "User"} is online`));
-    client.on("user_offline", (data) => toast.info(`${data?.user_name || "User"} went offline`));
+  //   client.on("user_online", (data) => toast.success(`${data?.user_name || "User"} is online`));
+  //   client.on("user_offline", (data) => toast.info(`${data?.user_name || "User"} went offline`));
 
-    client.on("connection_request", (data) => {
-      const senderName = data.sender_name || 'Someone';
-      toast.info(`${senderName} wants to connect with you`, {
-        onClick: () => navigate("/connections?tab=incoming"),
-      });
-      window.dispatchEvent(new CustomEvent('connection:new_request', { detail: data }));
-    });
+  //   client.on("connection_request", (data) => {
+  //     const senderName = data.sender_name || 'Someone';
+  //     toast.info(`${senderName} wants to connect with you`, {
+  //       onClick: () => navigate("/connections?tab=incoming"),
+  //     });
+  //     window.dispatchEvent(new CustomEvent('connection:new_request', { detail: data }));
+  //   });
 
-    client.on("connection_accepted", (data) => {
-      const accepterName = data.accepter_name || 'Someone';
-      toast.success(`${accepterName} accepted your connection request!`);
-      window.dispatchEvent(new CustomEvent('connection:request_accepted', { detail: data }));
-    });
+  //   client.on("connection_accepted", (data) => {
+  //     const accepterName = data.accepter_name || 'Someone';
+  //     toast.success(`${accepterName} accepted your connection request!`);
+  //     window.dispatchEvent(new CustomEvent('connection:request_accepted', { detail: data }));
+  //   });
 
-    client.on("error", () => toast.error("Realtime connection error"));
+  //   client.on("error", () => toast.error("Realtime connection error"));
 
-    client.connect();
+  //   client.connect();
 
-    return () => client.disconnect();
-  }, [user?.id]);
+  //   return () => client.disconnect();
+  // }, [user?.id]);
 
   // Profile completion reminder
   useEffect(() => {

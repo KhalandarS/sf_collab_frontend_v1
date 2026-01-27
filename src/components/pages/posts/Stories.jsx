@@ -17,22 +17,26 @@ export default function Stories() {
   const [viewerOpen, setViewerOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [stories, setStories] = useState([])
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // In Stories.jsx - add safety check
 const fetchStories = async () => {
   try {
-    const response = await storiesAPI.getAll();
-    if (response && response.data && response.data.stories) {
-      setStories(response.data.stories);
-    } else {
-      setStories([]);
+    const token = localStorage.getItem('access_token');
+    // Bypassing postAPI and hitting the story endpoint directly
+    const response = await fetch(`${import.meta.env.VITE_API_URL}/stories`, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await response.json();
+    
+    if (data?.success) {
+      setStories(data.data || []);
     }
   } catch (error) {
-    console.error("Failed to fetch stories:", error);
-    setStories([]);
+    console.warn("Stories API bypassed or failed.");
+    setStories([]); // Set to empty array to stop the crash
   }
 };
 

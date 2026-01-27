@@ -938,6 +938,7 @@ useEffect(() => {
         <OnlineContactsSidebar
           friends={friends}
           onlineUsers={onlineUsers}
+          lastActiveAt={lastActiveAt}
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}
@@ -953,8 +954,11 @@ useEffect(() => {
         onClose={() => setShowNewMessage(false)}
         friends={friends}
         onlineUsers={onlineUsers}
+        lastActiveAt={lastActiveAt}
         onSelectUser={handleOpenChatWithFriend}
         onCreateGroup={handleCreateGroup}
+        token={token}
+        currentUserId={currentUser?.id}
       />
     </div>
   );

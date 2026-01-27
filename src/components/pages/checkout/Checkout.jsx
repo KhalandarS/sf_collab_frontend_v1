@@ -14,7 +14,7 @@ import { API_URL, STRIPE_PUBLIC_KEY } from "@/utils/config";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
+const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
 function CheckoutForm({ clientSecret }) {
   const { user } = useSelector((state) => state.auth);

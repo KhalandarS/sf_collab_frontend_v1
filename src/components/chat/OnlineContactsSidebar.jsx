@@ -1,8 +1,23 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Plus, Video, ChevronDown, ChevronRight, Users, Circle } from 'lucide-react';
+/**
+ * OnlineContactsSidebar Component - Enhanced Version
+ * Shows ONLY connected users (friends) with proper status indicators:
+ * - Green = Online
+ * - Red = Offline  
+ * - Grey = Idle (inactive for 5+ minutes)
+ */
 
-// Avatar component
-const Avatar = ({ src, name, size = 'sm', isOnline = false, showStatus = true }) => {
+import React, { useEffect, useMemo, useState } from 'react';
+import { Search, Plus, ChevronDown, ChevronRight, Users, Circle, UserCheck } from 'lucide-react';
+
+// Status colors
+const STATUS_COLORS = {
+  online: 'bg-emerald-500',   // Green
+  idle: 'bg-gray-400',        // Grey
+  offline: 'bg-red-500',      // Red
+};
+
+// Avatar component with status indicator
+const Avatar = ({ src, name, size = 'sm', status = 'offline', showStatus = true }) => {
   const sizes = {
     xs: 'w-6 h-6 text-[10px]',
     sm: 'w-8 h-8 text-xs',
@@ -32,32 +47,42 @@ const Avatar = ({ src, name, size = 'sm', isOnline = false, showStatus = true })
         </div>
       )}
       {showStatus && (
-        <span className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${isOnline ? 'bg-emerald-500' : 'bg-zinc-600'}`} />
+        <span 
+          className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${STATUS_COLORS[status] || STATUS_COLORS.offline}`} 
+        />
       )}
     </div>
   );
 };
 
 // Contact Item
-const ContactItem = ({ user, isOnline, onClick }) => (
+const ContactItem = ({ user, status, statusText, onClick }) => (
   <button
     onClick={() => onClick(user)}
     className="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-zinc-800/50 rounded-lg transition-colors group"
   >
     <Avatar
-      src={user.profilePicture || user.avatar}
+      src={user.profilePicture || user.profile_picture || user.avatar}
       name={`${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`}
       size="sm"
-      isOnline={isOnline}
+      status={status}
     />
     <div className="flex-1 min-w-0 text-left">
-      <span className={`text-sm truncate block ${isOnline ? 'text-zinc-300 group-hover:text-white' : 'text-zinc-500 group-hover:text-zinc-300'}`}>
+      <span className={`text-sm truncate block ${
+        status === 'online' 
+          ? 'text-zinc-200 group-hover:text-white' 
+          : status === 'idle'
+            ? 'text-zinc-400 group-hover:text-zinc-300'
+            : 'text-zinc-500 group-hover:text-zinc-400'
+      }`}>
         {user.firstName || user.first_name} {user.lastName || user.last_name}
       </span>
-      {/* Show last seen for offline users */}
-      {!isOnline && user.lastSeenDisplay && (
-        <span className="text-[10px] text-zinc-600 block">
-          {user.lastSeenDisplay}
+      {statusText && (
+        <span className={`text-[10px] block ${
+          status === 'online' ? 'text-emerald-500' : 
+          status === 'idle' ? 'text-gray-400' : 'text-zinc-600'
+        }`}>
+          {statusText}
         </span>
       )}
     </div>
@@ -65,13 +90,14 @@ const ContactItem = ({ user, isOnline, onClick }) => (
 );
 
 // Section Header
-const SectionHeader = ({ title, count, isExpanded, onToggle, icon: Icon }) => (
+const SectionHeader = ({ title, count, isExpanded, onToggle, icon: Icon, statusColor }) => (
   <button
     onClick={onToggle}
     className="w-full flex items-center justify-between px-2 py-1.5 hover:bg-zinc-800/30 rounded-lg transition-colors"
   >
     <div className="flex items-center gap-2">
       {Icon && <Icon size={14} className="text-zinc-500" />}
+      {statusColor && <span className={`w-2 h-2 rounded-full ${statusColor}`} />}
       <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
         {title}
       </span>
@@ -89,9 +115,9 @@ const SectionHeader = ({ title, count, isExpanded, onToggle, icon: Icon }) => (
 );
 
 const OnlineContactsSidebar = ({ 
-  friends = [],
-  allUsers = [], // Optional: all users if different from friends
-  onlineUsers = [], // Array of online user IDs
+  friends = [],           // Connected users (friends) - ONLY these will be shown
+  onlineUsers = [],       // Array of online user IDs
+  lastActiveAt = {},      // Map of userId -> last active timestamp (for idle detection)
   onOpenChat, 
   onNewMessage,
   token,               
@@ -101,53 +127,48 @@ const OnlineContactsSidebar = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedSections, setExpandedSections] = useState({ 
     online: true, 
-    all: true 
+    idle: true,
+    offline: false 
   });
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
-  const [fallbackContacts, setFallbackContacts] = useState([]);
-
-  // Normalize onlineUsers (works whether it’s an array or Set)
-  const onlineSet = React.useMemo(() => {
+  // Normalize onlineUsers to Set of strings
+  const onlineSet = useMemo(() => {
     if (Array.isArray(onlineUsers)) return new Set(onlineUsers.map(String));
     if (onlineUsers instanceof Set) return new Set([...onlineUsers].map(String));
     return new Set();
   }, [onlineUsers]);
 
-  React.useEffect(() => {
-    const run = async () => {
-      // If you already have friends or allUsers, no need for fallback
-      if (!token) return;
-      if ((friends || []).length > 0) return;
-      if ((allUsers || []).length > 0) return;
+  // Determine user status (online/idle/offline)
+  const getUserStatus = (userId) => {
+    const id = String(userId);
+    const isConnected = onlineSet.has(id);
+    
+    if (!isConnected) return 'offline';
+    
+    // Check for idle (inactive for 5+ minutes)
+    const lastActive = lastActiveAt?.[id];
+    if (lastActive) {
+      const diffMs = Date.now() - Number(lastActive);
+      const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+      if (diffMs > IDLE_THRESHOLD) return 'idle';
+    }
+    
+    return 'online';
+  };
 
-      try {
-        const res = await fetch(`${API_BASE_URL}/users`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        const users = data?.data?.users || data?.users || [];
-
-        // Remove current user
-        const cleaned = users.filter((u) => String(u.id) !== String(currentUserId));
-        setFallbackContacts(cleaned);
-      } catch {
-        setFallbackContacts([]);
-      }
-    };
-
-    run();
-  }, [token, friends, allUsers, currentUserId]);
-
-
-  // Use allUsers if provided, otherwise use friends
-  const contactList =
-    (allUsers && allUsers.length > 0)
-      ? allUsers
-      : (friends && friends.length > 0)
-        ? friends
-        : fallbackContacts;
-
+  // Get status text
+  const getStatusText = (status, userId) => {
+    switch (status) {
+      case 'online':
+        return 'Active now';
+      case 'idle':
+        return 'Away';
+      case 'offline':
+        return 'Offline';
+      default:
+        return '';
+    }
+  };
 
   // Filter by search
   const filterBySearch = (users) => {
@@ -155,59 +176,54 @@ const OnlineContactsSidebar = ({
     const term = searchTerm.toLowerCase();
     return users.filter((u) => {
       const name = `${u.firstName || u.first_name || ''} ${u.lastName || u.last_name || ''}`.toLowerCase();
-      return name.includes(term);
+      const email = (u.email || '').toLowerCase();
+      return name.includes(term) || email.includes(term);
     });
   };
 
-
-  // Helpers
-  const IDLE_MS = 5 * 60 * 1000;
-  const LAST_SEEN_MIN = 6;
-
-  const timeAgo = (ms) => {
-    const mins = Math.floor(ms / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins} mins ago`;
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24) return `${hrs}h ago`;
-    const days = Math.floor(hrs / 24);
-    return `${days}d ago`;
-  };
-
-  const getStatus = (userId) => {
-    const id = String(userId);
-    const isOnlineNow = onlineSet.has(id);
-
-    if (!isOnlineNow) return "offline";
-
-    // if you later pass lastActiveAt map in, you can compute idle here
-    // for now: treat all online as "online"
-    return "online";
-  };
-
-  const getLastSeenDisplay = (userId) => {
-    // if you later pass lastSeenAt map in, you can show "last seen …"
-    return "";
-  };
-
-  // Separate online and offline
-  const onlineFriends = filterBySearch(
-    contactList.filter((u) => onlineSet.has(String(u.id)))
-  );
-
-  const allContacts = filterBySearch(contactList);
-
+  // Categorize friends by status
+  const categorizedFriends = useMemo(() => {
+    const filtered = filterBySearch(friends);
+    
+    const online = [];
+    const idle = [];
+    const offline = [];
+    
+    filtered.forEach((user) => {
+      const status = getUserStatus(user.id);
+      switch (status) {
+        case 'online':
+          online.push({ ...user, status, statusText: getStatusText(status, user.id) });
+          break;
+        case 'idle':
+          idle.push({ ...user, status, statusText: getStatusText(status, user.id) });
+          break;
+        default:
+          offline.push({ ...user, status, statusText: getStatusText(status, user.id) });
+      }
+    });
+    
+    return { online, idle, offline };
+  }, [friends, searchTerm, onlineSet, lastActiveAt]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
+
+  const totalOnline = categorizedFriends.online.length;
+  const totalIdle = categorizedFriends.idle.length;
+  const totalOffline = categorizedFriends.offline.length;
+  const totalConnections = friends.length;
 
   return (
     <div className={`w-60 bg-zinc-950 border-l border-zinc-800 flex flex-col h-full ${className}`}>
       {/* Header */}
       <div className="p-3 border-b border-zinc-800/50">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-zinc-200 text-sm">Contacts</h3>
+          <div className="flex items-center gap-2">
+            <UserCheck size={16} className="text-amber-500" />
+            <h3 className="font-semibold text-zinc-200 text-sm">Connections</h3>
+          </div>
           <div className="flex items-center gap-1">
             <button 
               onClick={onNewMessage}
@@ -224,7 +240,7 @@ const OnlineContactsSidebar = ({
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
           <input
             type="text"
-            placeholder="Search contacts"
+            placeholder="Search connections..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 bg-zinc-800/50 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
@@ -234,26 +250,27 @@ const OnlineContactsSidebar = ({
 
       {/* Contact List */}
       <div className="flex-1 overflow-y-auto">
-        {/* ONLINE Section */}
+        {/* ONLINE Section (Green) */}
         <div className="p-2">
           <SectionHeader
             title="Online"
-            count={onlineFriends.length}
+            count={totalOnline}
             isExpanded={expandedSections.online}
             onToggle={() => toggleSection('online')}
-            icon={Circle}
+            statusColor={STATUS_COLORS.online}
           />
 
           {expandedSections.online && (
             <div className="mt-1 space-y-0.5">
-              {onlineFriends.length === 0 ? (
-                <p className="text-xs text-zinc-600 px-2 py-2">No contacts online</p>
+              {totalOnline === 0 ? (
+                <p className="text-xs text-zinc-600 px-2 py-2">No connections online</p>
               ) : (
-                onlineFriends.map((user) => (
+                categorizedFriends.online.map((user) => (
                   <ContactItem
                     key={user.id}
                     user={user}
-                    isOnline={true}
+                    status="online"
+                    statusText={user.statusText}
                     onClick={onOpenChat}
                   />
                 ))
@@ -262,43 +279,84 @@ const OnlineContactsSidebar = ({
           )}
         </div>
 
-        {/* ALL USERS Section */}
+        {/* IDLE Section (Grey) */}
+        {totalIdle > 0 && (
+          <div className="p-2 border-t border-zinc-800/30">
+            <SectionHeader
+              title="Away"
+              count={totalIdle}
+              isExpanded={expandedSections.idle}
+              onToggle={() => toggleSection('idle')}
+              statusColor={STATUS_COLORS.idle}
+            />
+
+            {expandedSections.idle && (
+              <div className="mt-1 space-y-0.5">
+                {categorizedFriends.idle.map((user) => (
+                  <ContactItem
+                    key={user.id}
+                    user={user}
+                    status="idle"
+                    statusText={user.statusText}
+                    onClick={onOpenChat}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* OFFLINE Section (Red) */}
         <div className="p-2 border-t border-zinc-800/30">
           <SectionHeader
-            title="All Contacts"
-            count={allContacts.length}
-            isExpanded={expandedSections.all}
-            onToggle={() => toggleSection('all')}
-            icon={Users}
+            title="Offline"
+            count={totalOffline}
+            isExpanded={expandedSections.offline}
+            onToggle={() => toggleSection('offline')}
+            statusColor={STATUS_COLORS.offline}
           />
 
-          {expandedSections.all && (
+          {expandedSections.offline && (
             <div className="mt-1 space-y-0.5">
-              {allContacts.length === 0 ? (
-                <p className="text-xs text-zinc-600 px-2 py-2">No contacts</p>
+              {totalOffline === 0 ? (
+                <p className="text-xs text-zinc-600 px-2 py-2">All connections are online!</p>
               ) : (
-                allContacts.map((user) => {
-                  const isOnline = onlineUsers.includes(user.id) || onlineUsers.includes(String(user.id));
-                  return (
-                    <ContactItem
-                      key={user.id}
-                      user={user}
-                      isOnline={isOnline}
-                      onClick={onOpenChat}
-                    />
-                  );
-                })
+                categorizedFriends.offline.map((user) => (
+                  <ContactItem
+                    key={user.id}
+                    user={user}
+                    status="offline"
+                    statusText={user.statusText}
+                    onClick={onOpenChat}
+                  />
+                ))
               )}
             </div>
           )}
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-2 border-t border-zinc-800/50 text-center">
-        <span className="text-[10px] text-zinc-600">
-          {onlineFriends.length} online • {allContacts.length} total
-        </span>
+      {/* Footer with status legend */}
+      <div className="p-3 border-t border-zinc-800/50">
+        <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500">
+          <div className="flex items-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.online}`} />
+            <span>{totalOnline}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.idle}`} />
+            <span>{totalIdle}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.offline}`} />
+            <span>{totalOffline}</span>
+          </div>
+        </div>
+        <div className="text-center mt-1">
+          <span className="text-[10px] text-zinc-600">
+            {totalConnections} connection{totalConnections !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
     </div>
   );

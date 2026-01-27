@@ -7,7 +7,6 @@ import ChatInput from "@/components/chat/ChatInput";
 import { useAppSocket } from "@/context/SocketProvider";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 
-
 // show name only on first message in a run (group/general/startup)
 function shouldShowSenderName(messages, index) {
   if (index === 0) return true;
@@ -20,8 +19,6 @@ function shouldShowSenderName(messages, index) {
 
   return prevId !== currId;
 }
-
-
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
@@ -187,17 +184,14 @@ function normalizeMessage(m) {
   };
 }
 
-// Helper: Should show avatar (like ChatPage)
 function shouldShowAvatar(messages, message, index, currentUserId) {
   if (index === 0) return true;
 
   const prevMessage = messages[index - 1];
   if (!prevMessage) return true;
 
-  // only when sender changes
   return String(prevMessage.sender_id) !== String(message.sender_id);
 }
-
 
 export default function ChatDock({ maxWindows = 2, isMobile = false, callback = () => {} }) {
   const { socket, isConnected, onlineUsers } = useAppSocket();
@@ -221,7 +215,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const [activeTab, setActiveTab] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [consideredActive, setConsideredActive] = useState(true);
-  // Track if browser tab is visible (not minimized)
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
 
   const [conversations, setConversations] = useState([]);
@@ -230,6 +223,23 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const [lastActiveAt, setLastActiveAt] = useState({});
   const [lastSeenAt, setLastSeenAt] = useState(() => safeJsonParse(localStorage.getItem(LS_PRESENCE_KEY), {}));
   const [nowTs, setNowTs] = useState(Date.now());
+
+  const getUserPresenceStatus = (userId, onlineUsers, lastActiveAt) => {
+    const id = String(userId);
+    const onlineSet = new Set((onlineUsers || []).map(String));
+    const isConnected = onlineSet.has(id);
+
+    if (!isConnected) return 'offline';
+
+    const lastActive = lastActiveAt?.[id];
+    if (lastActive) {
+      const diffMs = Date.now() - Number(lastActive);
+      const IDLE_THRESHOLD = 5 * 60 * 1000;
+      if (diffMs > IDLE_THRESHOLD) return 'idle';
+    }
+
+    return 'online';
+  };
 
   const [windows, setWindows] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
@@ -252,7 +262,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     } catch {}
   }, [lastSeenAt]);
 
-  // Tick every 30s so idle/last-seen text updates automatically
   useEffect(() => {
     const t = setInterval(() => setNowTs(Date.now()), 30000);
     return () => clearInterval(t);
@@ -263,32 +272,26 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     return saved && typeof saved === "object" ? saved : {};
   });
 
-  // Track users with unread messages (for avatar badge)
-  // Structure: { odipus: { odipus: { name, avatar, count } } }
   const [unreadUsers, setUnreadUsers] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_UNREAD_USERS_KEY), {});
     return saved && typeof saved === "object" ? saved : {};
   });
 
-  // Persist unreadUsers
   useEffect(() => {
     try {
       localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(unreadUsers || {}));
     } catch {}
   }, [unreadUsers]);
 
-  // Typing: { [conversationId]: { [userId]: { name, timestamp } } }
   const [typingByConversation, setTypingByConversation] = useState({});
   const typingTimeoutsRef = useRef({});
   const messageEndRefs = useRef({});
 
-  // Refs to track real-time state for socket handlers (avoids stale closures)
   const windowsRef = useRef(windows);
   const isTabVisibleRef = useRef(isTabVisible);
   const conversationsRef = useRef(conversations);
   const consideredActiveRef = useRef(consideredActive);
 
-  // Keep refs in sync
   useEffect(() => { windowsRef.current = windows; }, [windows]);
   useEffect(() => { isTabVisibleRef.current = isTabVisible; }, [isTabVisible]);
   useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
@@ -330,7 +333,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       return next;
     });
 
-    // Track the user who sent the message for avatar badge
     if (senderInfo?.id) {
       const senderId = String(senderInfo.id);
       setUnreadUsers((prev) => {
@@ -361,7 +363,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       return next;
     });
 
-    // Clear unread users for this conversation
     setUnreadUsers((prev) => {
       const next = { ...prev };
       delete next[key];
@@ -370,7 +371,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     });
   }, []);
 
-  // Track tab visibility and focus
   useEffect(() => {
     const onFocus = () => {
       setConsideredActive(true);
@@ -508,7 +508,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
   const openWindow = useCallback(
     async ({ conversationId, title }) => {
-      
       if (!conversationId) return;
       const cid = String(conversationId);
 
@@ -516,7 +515,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         const exists = prev.find((w) => String(w.conversationId) === cid);
         if (exists) {
           const without = prev.filter((w) => String(w.conversationId) !== cid);
-          // Always un-minimize when opening
           const next = [...without, { ...exists, minimized: false }];
           persistWindows(next);
           return next;
@@ -583,9 +581,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     });
   }, [consideredActive, windows, clearUnread, socket]);
 
-  // -----------------------------
-  // Listen for "open dock" events (notifications, navbar, etc.)
-  // -----------------------------
   useEffect(() => {
     const handleOpenFromNavbar = (e) => {
       const { conversationId, title } = e?.detail || {};
@@ -599,9 +594,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     return () => window.removeEventListener("chatDock:open", handleOpenFromNavbar);
   }, [openWindow]);
 
-  // -----------------------------
-  // WebSocket: presence (online/idle/last seen)
-  // -----------------------------
   useEffect(() => {
     if (!socket) return;
 
@@ -641,9 +633,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     };
   }, [socket]);
 
-  // -----------------------------
-  // WebSocket: typing with user names
-  // -----------------------------
   useEffect(() => {
     if (!socket) return;
 
@@ -670,9 +659,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         const next = { ...prev };
 
         if (isTyping) {
-          // Store user info for display
           next[cid] = { ...current, [uid]: { name: (userName || "").trim(), timestamp: Date.now() } };
-       } else {
+        } else {
           const copy = { ...current };
           delete copy[uid];
           next[cid] = copy;
@@ -685,19 +673,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     return () => socket.off("user_typing", onUserTyping);
   }, [socket, currentUser?.id]);
 
-  // -----------------------------
-  // WebSocket: incoming messages
-  // Listen for BOTH events:
-  // - 'new_message' = sent to conversation room (only if window is open)
-  // - 'conversation_message' = sent to user's personal room (ALWAYS received)
-  // -----------------------------
   useEffect(() => {
     if (!socket) {
       return;
     }
-    
+
     const handleIncomingMessage = (payload) => {
-      
       const messageData = payload?.message || payload;
       const cid = String(payload?.conversation_id || messageData?.conversation_id);
 
@@ -707,7 +688,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return;
       }
 
-      // Update messages for open window
       setWindows((prev) => {
         return prev.map((w) => {
           if (String(w.conversationId) === cid) {
@@ -719,11 +699,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         });
       });
 
-      // Handle unread/scroll
       const isOwnMessage = String(messageNorm.sender_id) === String(currentUser?.id);
 
       if (!isOwnMessage) {
-        // Use refs to get real-time state (avoids stale closures)
         const currentWindows = windowsRef.current;
         const currentIsTabVisible = isTabVisibleRef.current;
         const currentConversations = conversationsRef.current;
@@ -732,23 +710,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         const isOpen = currentWindows.some((w) => String(w.conversationId) === cid);
         const isMin = currentWindows.some((w) => String(w.conversationId) === cid && w.minimized);
 
-        // Extract sender info for avatar badge
         const senderInfo = {
           id: messageNorm.sender_id,
           name: messageNorm.sender?.firstName || messageNorm.sender?.name || "",
           avatar: messageNorm.sender?.profilePicture || messageNorm.sender?.profile_picture || null,
         };
 
-        // Always count unread if it's not actively open and visible
         if (!isOpen || isMin || !currentConsideredActive) {
           bumpUnread(cid, senderInfo);
 
-          // AUTO-OPEN: Only if chat window does NOT exist at all
-          // - If window is minimized → do NOT unminimize, just show unread badge
-          // - If browser tab is hidden/minimized → do NOT pop open
-          // - If window doesn't exist + tab is visible → OPEN the window
-
-          
           if (currentIsTabVisible && !isOpen) {
             const conv = (currentConversations || []).find((c) => String(c.id) === String(cid));
             const title =
@@ -763,36 +733,31 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           socket.emit("mark_read", { conversation_id: cid });
         }
       }
-      
+
       setTimeout(() => scrollToBottom(cid), 50);
     };
 
-    // Listen for BOTH events
     socket.on("new_message", handleIncomingMessage);
     socket.on("conversation_message", handleIncomingMessage);
-    
+
     return () => {
       socket.off("new_message", handleIncomingMessage);
       socket.off("conversation_message", handleIncomingMessage);
     };
-  },[
-  socket,
-  currentUser?.id,
-  bumpUnread,
-  clearUnread,
-  scrollToBottom,
-  openWindow,
-]); 
+  }, [
+    socket,
+    currentUser?.id,
+    bumpUnread,
+    clearUnread,
+    scrollToBottom,
+    openWindow,
+  ]);
 
-  // -----------------------------
-  // WebSocket: send message
-  // -----------------------------
   const sendMessage = useCallback(
     (conversationId, content) => {
       if (!socket) return;
       const cid = String(conversationId);
-      
-      // Handle object payload (with file)
+
       if (typeof content === "object" && content !== null) {
         const text = content.content?.trim();
         if (text) {
@@ -800,7 +765,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         }
         return;
       }
-      
+
       const text = content?.trim();
       if (!cid || !text) return;
 
@@ -818,9 +783,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     [socket, consideredActive, isConvMinimized, clearUnread]
   );
 
-  // -----------------------------
-  // Filter conversations
-  // -----------------------------
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
@@ -851,7 +813,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     return Object.values(unread || {}).reduce((sum, v) => sum + (Number(v) || 0), 0);
   }, [unread]);
 
-  // Get unique users with unread messages for avatar badge
   const unreadUsersList = useMemo(() => {
     const usersMap = new Map();
     Object.values(unreadUsers || {}).forEach((convUsers) => {
@@ -861,16 +822,14 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         }
       });
     });
-    // Return up to 3 users for display
     return Array.from(usersMap.values()).slice(0, 3);
   }, [unreadUsers]);
 
-  // Helper to get typing names for a conversation
   const getTypingNames = (conversationId) => {
     const typing = typingByConversation[String(conversationId)] || {};
     const users = Object.values(typing);
     if (users.length === 0) return null;
-    
+
     const names = users.map((u) => (u?.name || "").trim()).filter(Boolean);
     if (names.length === 0) {
       return null;
@@ -879,345 +838,346 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     if (names.length === 2) return `${names[0]} and ${names[1]} are typing...`;
     return `${names[0]} and ${names.length - 1} others are typing...`;
   };
+
   useEffect(() => {
     if (isMobile && (isPanelOpen || isWindowsOpen)) {
-      // Disable background scrolling
       document.body.style.overflow = "hidden";
-    }
-    else {
+    } else {
       document.body.style.overflow = "";
     }
   }, [isMobile, isPanelOpen, isWindowsOpen]);
+
   if (!currentUser) return null;
 
   return (
     <>
-      {/* Launcher Button with Avatar Badge */}
-        {(!isPanelOpen && !isWindowsOpen) &&
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setIsPanelOpen((v) => !v)
-                if (isMobile) {
-                  callback();
-                }
-              }}
-            className={`fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center`}
-          >
-            <MessageCircle size={20} />
-          
-            {/* Avatar-based notification badge */}
-            {totalUnread > 0 && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2"
-              >
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
-                  {totalUnread > 99 ? "99+" : totalUnread}
-                </span>
-              </motion.div>
-            )}
-          </motion.button>}
-    <div className={`fixed ${!isMobile ? "bottom-4 right-4" : "bottom-0 right-0"} z-[9999] flex items-end pointer-events-none`}>
-      {/* SECTION A: LAUNCHER & PANEL */}
-      <div className="flex flex-col items-end gap-3 pointer-events-auto">
-        <AnimatePresence>
-          {isPanelOpen && (
+      {(!isPanelOpen && !isWindowsOpen) && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setIsPanelOpen((v) => !v);
+            if (isMobile) {
+              callback();
+            }
+          }}
+          className={`fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center`}
+        >
+          <MessageCircle size={20} />
+
+          {totalUnread > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className={`${isMobile ? "w-screen h-screen rounded-none" : "w-80"} bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden`}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-2 -right-2"
             >
-              <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-semibold text-white">Chats</div>
-                  <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
-                </div>
-                <button onClick={() => {
-                  setIsPanelOpen(false)
-                  if (isMobile) {
-                    callback();
-                  }
-                }} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="p-3 border-b border-zinc-800">
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search chats..."
-                  className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none"
-                />
-                <div className="flex gap-2 mt-2">
-                  {["all", "online"].map((id) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                        activeTab === id ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"
-                      }`}
-                    >
-                      {id.charAt(0).toUpperCase() + id.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="max-h-[420px] overflow-y-auto p-2">
-                {isLoadingConvos ? (
-                  <div className="p-4 text-zinc-500 text-sm">Loading…</div>
-                ) : (
-                  filteredConversations.map((conv) => {
-                    const title =
-                      conv.name ||
-                      conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
-                      "Chat";
-                    const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
-
-                    // Get last message preview
-                    const lastMsg = conv.last_message || conv.lastMessage;
-                    let lastMessagePreview = "No messages yet";
-                    if (lastMsg) {
-                      const content = lastMsg.content || lastMsg.original_content || "";
-                      const senderId = lastMsg.sender_id || lastMsg.sender?.id;
-                      const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
-                      const isOwn = String(senderId) === String(currentUser?.id);
-                      const displayName = isOwn ? "You" : senderName;
-
-                      if (displayName) {
-                        const preview = `${displayName}: ${content}`;
-                        lastMessagePreview = preview.length > 30 ? preview.slice(0, 30) + "..." : preview;
-                      } else {
-                        lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={conv.id}
-                        onClick={() => {
-                          openWindow({ conversationId: conv.id, title })
-                          if (isMobile) {
-                            setIsPanelOpen(false);
-                          }
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
-                          unreadCount > 0 ? "bg-zinc-800/50" : ""
-                        }`}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
-                            {title}
-                          </div>
-                          <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
-                            {lastMessagePreview}
-                          </div>
-                        </div>
-                        {unreadCount > 0 && (
-                          <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </span>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
-
-      {/* SECTION B: CHAT WINDOWS */}
-      <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
-        <AnimatePresence>
-          {windows.map((w) => {
-            const cid = String(w.conversationId);
-            const unreadCount = unread?.[cid] || 0;
-            const typingText = getTypingNames(cid);
-            const conv = (conversations || []).find((c) => String(c.id) === cid);
-            const isDirect = conv?.conversation_type === "direct";
-
-            const { presenceStatus, statusText } = isDirect
-              ? getPresenceForDirect({
-                  conv,
-                  currentUserId: currentUser?.id,
-                  onlineUsers,
-                  lastActiveAt,
-                  lastSeenAt,
-                  nowTs,
-                })
-              : { presenceStatus: "offline", statusText: "" };
-
-            return (
+        </motion.button>
+      )}
+      <div className={`fixed ${!isMobile ? "bottom-4 right-4" : "bottom-0 right-0"} z-[9999] flex items-end pointer-events-none`}>
+        {/* SECTION A: LAUNCHER & PANEL */}
+        <div className="flex flex-col items-end gap-3 pointer-events-auto">
+          <AnimatePresence>
+            {isPanelOpen && (
               <motion.div
-                key={cid}
-                initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className={`${isMobile ? "w-screen border-none h-screen" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col justify-between bg-zinc-900  shadow-2xl overflow-hidden pointer-events-auto`}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className={`${isMobile ? "w-screen h-screen rounded-none" : "w-80"} bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden`}
               >
-                {/* Header */}
                 <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    {/* Avatar for direct chats */}
-                    {isDirect && (() => {
-                      const other = conv?.participants?.find(
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-semibold text-white">Chats</div>
+                    <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
+                  </div>
+                  <button onClick={() => {
+                    setIsPanelOpen(false);
+                    if (isMobile) {
+                      callback();
+                    }
+                  }} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
+                    <X size={16} />
+                  </button>
+                </div>
+
+                <div className="p-3 border-b border-zinc-800">
+                  <input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search chats..."
+                    className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none"
+                  />
+                  <div className="flex gap-2 mt-2">
+                    {["all", "online"].map((id) => (
+                      <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium ${
+                          activeTab === id ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"
+                        }`}
+                      >
+                        {id.charAt(0).toUpperCase() + id.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="max-h-[420px] overflow-y-auto p-2">
+                  {isLoadingConvos ? (
+                    <div className="p-4 text-zinc-500 text-sm">Loading…</div>
+                  ) : filteredConversations.length === 0 ? (
+                    <div className="p-4 text-zinc-500 text-sm text-center">No conversations</div>
+                  ) : (
+                    filteredConversations.map((conv) => {
+                      const otherParticipant = conv.participants?.find(
                         (p) => String(p.id) !== String(currentUser?.id)
                       );
-                      const avatarUrl =
-                        other?.profilePicture ||
-                        other?.profile_picture ||
-                        other?.profile?.picture ||
-                        null;
+
+                      const title =
+                        conv.name ||
+                        `${otherParticipant?.firstName || otherParticipant?.first_name || ''} ${otherParticipant?.lastName || otherParticipant?.last_name || ''}`.trim() ||
+                        "Chat";
+
+                      const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
+
+                      const lastMsg = conv.last_message || conv.lastMessage;
+                      let lastMessagePreview = "No messages yet";
+                      if (lastMsg) {
+                        const content = lastMsg.content || lastMsg.original_content || "";
+                        const senderId = lastMsg.sender_id || lastMsg.sender?.id;
+                        const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
+                        const isOwn = String(senderId) === String(currentUser?.id);
+                        const displayName = isOwn ? "You" : senderName;
+
+                        if (displayName) {
+                          const preview = `${displayName}: ${content}`;
+                          lastMessagePreview = preview.length > 25 ? preview.slice(0, 25) + "..." : preview;
+                        } else {
+                          lastMessagePreview = content.length > 30 ? content.slice(0, 30) + "..." : content;
+                        }
+                      }
 
                       return (
                         <button
-                          type="button"
-                          onClick={() => goToProfile(other?.id)}
-                          className="flex-shrink-0"
-                        >
-                          <Avatar
-                            src={getProfilePicture(avatarUrl)}
-                            name={w.title}
-                            size="sm"
-                            presenceStatus={presenceStatus}
-                            showStatus={false}
-                          />
-                        </button>
-                      );
-                    })()}
-                    
-                    {/* Status indicator + Title */}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full flex-shrink-0  ${
-                            presenceStatus === "online"
-                              ? "bg-emerald-500"
-                              : presenceStatus === "idle"
-                                ? "bg-yellow-400"
-                                : "bg-zinc-500"
-                          }`}
-                        />
-                        <span className="text-sm font-semibold text-white truncate">{w.title}</span>
-                        
-                        {/* Unread badge in header when minimized */}
-                        {w.minimized && unreadCount > 0 && (
-                          <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </span>
-                        )}
-                      </div>
-                      {isDirect && !w.minimized && (
-                        <div className="text-[11px] text-zinc-400 truncate">{statusText}</div>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    <button
-                      onClick={() => toggleMinimize(cid)}
-                      className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
-                    >
-                      <Minus size={16} />
-                    </button>
-                    <button
-                      onClick={() => closeWindow(cid)}
-                      className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                </div>
-
-                <AnimatePresence>
-                  {!w.minimized && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      {/* Messages */}
-                      <div className="h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-0">
-                        {w.loading ? (
-                          <div className="text-sm text-zinc-500">Loading…</div>
-                        ) : (
-                          (w.messages || []).map((m, i) => {
-                            const isOwn = String(m.sender_id) === String(currentUser?.id);
-                            const showAvatar = shouldShowAvatar(w.messages, m, i, currentUser?.id);
-                            
-                            return (
-                              <MessageBubble
-                                key={m.id || `${cid}-${i}`}
-                                message={m}
-                                isOwn={isOwn}
-                                showAvatar={showAvatar}
-                                showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
-                                conversationType={conv?.conversation_type}
-                                variant="dock"
-                              />
-                            );
-                          })
-                        )}
-                        
-                        {/* Typing indicator with names */}
-                        {typingText && (
-                          <div className="flex items-center gap-2 px-2 py-1">
-                            <div className="flex gap-1">
-                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                            </div>
-                            <span className="text-xs text-zinc-500 italic">{typingText}</span>
-                          </div>
-                        )}
-                        
-                        <div ref={(el) => (messageEndRefs.current[cid] = el)} />
-                      </div>
-
-                      {/* Input */}
-                      <div className="bg-zinc-900 border-t border-zinc-800 p-2">
-                        <ChatInput
-                          value={w.draft || ""}
-                          onChange={(val) => {
-                            setWindows((prev) =>
-                              prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
-                            );
-                            if (socket) {
-                              socket.emit("typing_start", { conversation_id: cid });
-                              if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
-                              typingTimeoutsRef.current[cid] = setTimeout(
-                                () => socket.emit("typing_stop", { conversation_id: cid }),
-                                1200
-                              );
+                          key={conv.id}
+                          onClick={() => {
+                            openWindow({ conversationId: conv.id, title });
+                            if (isMobile) {
+                              setIsPanelOpen(false);
                             }
                           }}
-                          onSend={(payload) => {
-                            if (socket) socket.emit("typing_stop", { conversation_id: cid });
-                            sendMessage(cid, payload);
-                          }}
-                          socket={socket}
-                          conversationId={cid}
-                          onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
-                        />
-                      </div>
-                    </motion.div>
+                          className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
+                            unreadCount > 0 ? "bg-zinc-800/50" : ""
+                          }`}
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
+                              {title}
+                            </div>
+                            <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
+                              {lastMessagePreview}
+                            </div>
+                          </div>
+                          {unreadCount > 0 && (
+                            <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })
                   )}
-                </AnimatePresence>
+                </div>
               </motion.div>
-            );
-          })}
-        </AnimatePresence>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* SECTION B: CHAT WINDOWS */}
+        <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
+          <AnimatePresence>
+            {windows.map((w) => {
+              const cid = String(w.conversationId);
+              const unreadCount = unread?.[cid] || 0;
+              const typingText = getTypingNames(cid);
+              const conv = (conversations || []).find((c) => String(c.id) === cid);
+              const isDirect = conv?.conversation_type === "direct";
+
+              const { presenceStatus, statusText } = isDirect
+                ? getPresenceForDirect({
+                    conv,
+                    currentUserId: currentUser?.id,
+                    onlineUsers,
+                    lastActiveAt,
+                    lastSeenAt,
+                    nowTs,
+                  })
+                : { presenceStatus: "offline", statusText: "" };
+
+              return (
+                <motion.div
+                  key={cid}
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 50, scale: 0.9 }}
+                  transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                  className={`${isMobile ? "w-screen border-none h-screen" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col justify-between bg-zinc-900  shadow-2xl overflow-hidden pointer-events-auto`}
+                >
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {isDirect && (() => {
+                        const other = conv?.participants?.find(
+                          (p) => String(p.id) !== String(currentUser?.id)
+                        );
+                        const avatarUrl =
+                          other?.profilePicture ||
+                          other?.profile_picture ||
+                          other?.profile?.picture ||
+                          null;
+
+                        return (
+                          <button
+                            type="button"
+                            onClick={() => goToProfile(other?.id)}
+                            className="flex-shrink-0"
+                          >
+                            <Avatar
+                              src={getProfilePicture(avatarUrl)}
+                              name={w.title}
+                              size="sm"
+                              presenceStatus={presenceStatus}
+                              showStatus={false}
+                            />
+                          </button>
+                        );
+                      })()}
+
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`w-2 h-2 rounded-full flex-shrink-0  ${
+                              presenceStatus === "online"
+                                ? "bg-emerald-500"
+                                : presenceStatus === "idle"
+                                  ? "bg-yellow-400"
+                                  : "bg-zinc-500"
+                            }`}
+                          />
+                          <span className="text-sm font-semibold text-white truncate">{w.title}</span>
+
+                          {w.minimized && unreadCount > 0 && (
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          )}
+                        </div>
+                        {isDirect && !w.minimized && (
+                          <div className="text-[11px] text-zinc-400 truncate">{statusText}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <button
+                        onClick={() => toggleMinimize(cid)}
+                        className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                      >
+                        <Minus size={16} />
+                      </button>
+                      <button
+                        onClick={() => closeWindow(cid)}
+                        className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <AnimatePresence>
+                    {!w.minimized && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {/* Messages */}
+                        <div className="h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-0">
+                          {w.loading ? (
+                            <div className="text-sm text-zinc-500">Loading…</div>
+                          ) : (
+                            (w.messages || []).map((m, i) => {
+                              const isOwn = String(m.sender_id) === String(currentUser?.id);
+                              const showAvatar = shouldShowAvatar(w.messages, m, i, currentUser?.id);
+
+                              return (
+                                <MessageBubble
+                                  key={m.id || `${cid}-${i}`}
+                                  message={m}
+                                  isOwn={isOwn}
+                                  showAvatar={showAvatar}
+                                  showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
+                                  conversationType={conv?.conversation_type}
+                                  variant="dock"
+                                />
+                              );
+                            })
+                          )}
+
+                          {typingText && (
+                            <div className="flex items-center gap-2 px-2 py-1">
+                              <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                              </div>
+                              <span className="text-xs text-zinc-500 italic">{typingText}</span>
+                            </div>
+                          )}
+
+                          <div ref={(el) => (messageEndRefs.current[cid] = el)} />
+                        </div>
+
+                        {/* Input */}
+                        <div className="bg-zinc-900 border-t border-zinc-800 p-2">
+                          <ChatInput
+                            value={w.draft || ""}
+                            onChange={(val) => {
+                              setWindows((prev) =>
+                                prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
+                              );
+                              if (socket) {
+                                socket.emit("typing_start", { conversation_id: cid });
+                                if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
+                                typingTimeoutsRef.current[cid] = setTimeout(
+                                  () => socket.emit("typing_stop", { conversation_id: cid }),
+                                  1200
+                                );
+                              }
+                            }}
+                            onSend={(payload) => {
+                              if (socket) socket.emit("typing_stop", { conversation_id: cid });
+                              sendMessage(cid, payload);
+                            }}
+                            socket={socket}
+                            conversationId={cid}
+                            onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
       </div>
-      </div>
-      </>
+    </>
   );
 }
