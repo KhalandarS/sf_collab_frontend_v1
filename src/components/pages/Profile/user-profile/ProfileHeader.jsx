@@ -110,7 +110,7 @@ const ProfileHeader = ({
             </div>
             
             <p className="text-gray-300 mb-4 max-w-2xl">
-              {user?.profile.bio}
+              {user?.profile?.bio}
             </p>
 
             {/* User Details */}

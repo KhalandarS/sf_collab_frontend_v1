@@ -109,17 +109,16 @@ export default function App() {
 
   useEffect(() => {
     async function fetchUserRoles() {
-      if (access_token) {
         try {
           // console.log(access_token);
-          const response = await usersAPI.getMyRoles(access_token);
+          const response = await usersAPI.getMyRoles();
+          console.log("Response roles:", response.data);
           setUserRoles([...response.data.map(role => role.role), 'General']);
           // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
           // setActiveRole('member');
         } catch (error) {
           console.error("Error fetching user roles:", error);
         }
-      }
     }
     fetchUserRoles();
   }, [access_token]);

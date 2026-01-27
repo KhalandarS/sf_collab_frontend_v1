@@ -236,7 +236,7 @@ export default function Login() {
     const top = window.screen.height / 2 - height / 2;
     setAlertConf({title:"Authenticating with Google ....", message:"This will only take a moment. Please follow the Google sign-in window."});
     window.open(
-      `${API_URL}/google/login`,
+      `${API_URL}/google`,
       'Google Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -250,7 +250,7 @@ export default function Login() {
     const top = window.screen.height / 2 - height / 2;
     setAlertConf({title:"Authenticating with GitHub ....", message:"This will only take a moment. Please follow the GitHub sign-in window."});
     window.open(
-      `${API_URL}/github/login`,
+      `${API_URL}/github`,
       'Github Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
