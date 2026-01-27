@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { reduceText } from "@/utils/reduceText";
 
 
 
@@ -101,7 +102,6 @@ function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
 
   return false;
 }
-
 
 export default function MessageBubble({ message, isOwn, showAvatar, showSenderName = false }) {
   const getMsgStatus = (msg) => {
@@ -250,7 +250,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                     <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
                       <FileText size={18} className="opacity-80" />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm truncate">{message?.file_name || "Document"}</div>
+                        <div className="text-sm truncate">{reduceText(message?.file_name || "Document", 20)}</div>
                         <div className="text-[11px] opacity-70 truncate">{message?.file_type || "file"}</div>
                       </div>
 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Avatar from "./Avatar";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus="offline", onAvatarClick }) => {
   
@@ -29,7 +30,6 @@ const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus
       ? `${otherParticipant.firstName || otherParticipant.first_name || ""} ${otherParticipant.lastName || otherParticipant.last_name || ""}`.trim()
       : "Chat");
 
-  const avatarUrl = otherParticipant?.profilePicture || otherParticipant?.profile_picture || null;
 
   const statusColor =
     presenceStatus === "online"
@@ -53,7 +53,7 @@ const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus
             aria-label="Open profile menu"
           >
             <Avatar
-              src={avatarUrl}
+              src={getProfilePicture(otherParticipant)}
               name={displayName}
               size="md"
               presenceStatus={presenceStatus}

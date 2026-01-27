@@ -90,14 +90,14 @@ const ConversationItem = ({
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
-          <span className="text-xs text-zinc-500 flex-shrink-0">{lastTime}</span>
+          <span className="text-xs text-zinc-500 shrink-0">{lastTime}</span>
         </div>
 
         <div className="flex items-center justify-between gap-2 mt-0.5">
           <p className="text-xs text-zinc-500 truncate">{lastMessage}</p>
 
           {conversation.unread_count > 0 && (
-            <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full flex-shrink-0">
+            <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full shrink-0">
               {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
             </span>
           )}

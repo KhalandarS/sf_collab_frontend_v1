@@ -294,7 +294,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             )}
 
             <div
-              className={`relative w-full h-full ${!isRootPath ? "pt-3.5 max-sm:pb-16" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              className={`relative w-full h-full ${!isRootPath ? "pt-3.5" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
               <Outlet />
@@ -303,9 +303,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         </motion.div>
       </div>
       {/* Chat docks */}
-      <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
-      {/* {!isRootPath && !isChatRoute && !isMobile && ( */}
-      <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} />
+      {
+        location.pathname !== "/chat" &&
+        <>
+          <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
+          <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} />
+        </>
+      }
       {/* )} */}
     </>
   );

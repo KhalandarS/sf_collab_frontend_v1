@@ -49,7 +49,7 @@ const FilePreview = ({ file, onRemove }) => {
       ) : (
         <div className="h-16 px-3 flex items-center gap-2 bg-zinc-800 rounded-lg border border-zinc-700">
           <Paperclip size={16} className="text-zinc-400" />
-          <span className="text-xs text-zinc-300 max-w-[100px] truncate">{file.name}</span>
+          <span className="text-xs text-zinc-300 max-w-25 truncate">{file.name}</span>
         </div>
       )}
       <button
@@ -203,10 +203,10 @@ const ChatInput = ({
   };
 
   return (
-    <div className="border-t border-zinc-800 bg-zinc-900/50 h-24">
+    <div className="border-t border-zinc-800 bg-zinc-900/50">
       {/* File Preview */}
       {selectedFile && (
-        <div className="px-4 pt-3">
+        <div className="px-3 md:px-4 pt-2 md:pt-3">
           <FilePreview 
             file={selectedFile} 
             onRemove={() => setSelectedFile(null)} 
@@ -215,17 +215,17 @@ const ChatInput = ({
       )}
 
       {/* Input Area */}
-      <div className="p-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
+      <div className="p-2 md:p-3">
+        <form onSubmit={handleSubmit} className="flex items-center gap-1.5 md:gap-2">
           {/* Image button */}
           <button 
             type="button"
             onClick={() => imageInputRef.current?.click()}
-            className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
             disabled={disabled || isUploading}
             title="Send image"
           >
-            <ImageIcon size={20} />
+            <ImageIcon size={18} className="md:w-5 md:h-5" />
           </button>
           <input
             ref={imageInputRef}
@@ -239,11 +239,11 @@ const ChatInput = ({
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors"
+            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
             disabled={disabled || isUploading}
             title="Attach file"
           >
-            <Paperclip size={20} />
+            <Paperclip size={18} className="md:w-5 md:h-5" />
           </button>
           <input
             ref={fileInputRef}
@@ -254,7 +254,7 @@ const ChatInput = ({
           />
 
           {/* Text input */}
-          <div className="flex-1 relative">
+          <div className="flex-1 relative min-w-0">
             <input
               ref={inputRef}
               type="text"
@@ -263,18 +263,18 @@ const ChatInput = ({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={disabled || isUploading}
-              className="w-full px-4 py-2.5 bg-zinc-800 rounded-full text-white placeholder-zinc-500 focus:outline-none disabled:opacity-50 pr-10"
+              className="w-full px-3 md:px-4 py-2 md:py-2.5 pr-12 md:pr-14 bg-zinc-800 rounded-full text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all"
             />
             
             {/* Emoji button */}
-            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            <div className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 shrink-0">
               <button 
                 type="button"
                 onClick={() => setShowEmoji(!showEmoji)}
-                className="p-1 text-indigo-400 hover:text-indigo-300"
+                className="p-1 text-indigo-400 hover:text-indigo-300 rounded-full hover:bg-zinc-700/50 transition-colors"
                 disabled={disabled}
               >
-                <Smile size={20} />
+                <Smile size={18} className="md:w-5 md:h-5" />
               </button>
               
               <EmojiPicker 
@@ -287,22 +287,22 @@ const ChatInput = ({
 
           {/* Send or Like button */}
           {isUploading ? (
-            <div className="p-2 text-indigo-400">
-              <Loader2 size={20} className="animate-spin" />
+            <div className="p-1.5 md:p-2 text-indigo-400 shrink-0">
+              <Loader2 size={18} className="md:w-5 md:h-5 animate-spin" />
             </div>
           ) : (value?.trim() || selectedFile) ? (
             <button 
               type="submit" 
-              className="p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50"
+              className="p-1.5 md:p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 shrink-0 hover:bg-zinc-700/50 rounded-full"
               disabled={disabled}
             >
-              <Send size={20} />
+              <Send size={18} className="md:w-5 md:h-5" />
             </button>
           ) : (
             <button 
               type="button" 
               onClick={handleLike}
-              className="p-2 text-indigo-400 hover:text-indigo-300 transition-colors text-xl disabled:opacity-50"
+              className="p-1.5 md:p-2 text-lg md:text-xl hover:bg-zinc-700/50 rounded-full transition-colors shrink-0 disabled:opacity-50"
               disabled={disabled}
             >
               👍

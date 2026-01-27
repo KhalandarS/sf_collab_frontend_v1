@@ -1,11 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { reduceText } from "@/utils/reduceText";
 import { Plus, FileText, Download, Trash2 } from "lucide-react";
 export default function DocumentsSection({ onJoinClick, documents, isCreator, onDownload, onDelete }) {
-  const reduceText = (text, maxLength) => {
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength) + '...';
-  }
+  
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
   return (
     <div className="space-y-6">
