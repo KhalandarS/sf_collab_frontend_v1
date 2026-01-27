@@ -12,8 +12,7 @@ import { Heart } from "lucide-react";
 
 // filepath: /Users/ivandavidgomezsilva/Documents/Ivan/Trabajos/SFORGER/SForger_data/SFRepos/sf_collab_frontend_v1/src/components/pages/donate/Donate.jsx
 
-const stripePromise = loadStripe(STRIPE_PUBLIC_KEY);
-
+const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 function DonateCheckoutForm({ clientSecret, donationAmount, donorInfo }) {
   const checkoutState = useCheckout();
   const { user, access_token } = useSelector((state) => state.auth);

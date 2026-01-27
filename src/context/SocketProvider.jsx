@@ -1,7 +1,7 @@
 import { SOCKET_API_URL } from "@/utils/config";
 import { getSocketInstance } from "@/utils/getSocketInstance";
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-
+import { io } from "socket.io-client";
 
 const SocketContext = createContext(null);
 
@@ -15,7 +15,20 @@ export function SocketProvider({ token, children }) {
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
-    if (!token) {
+    // ✅ Normalize token properly (handles undefined, "undefined", null, "Bearer ...")
+    const rawToken = typeof token === "string" ? token.trim() : "";
+
+    const normalizedToken =
+      rawToken.startsWith("Bearer ") ? rawToken.slice(7).trim() : rawToken;
+
+    // ✅ block socket connection unless token looks valid
+    const isBadToken =
+      !normalizedToken ||
+      normalizedToken === "undefined" ||
+      normalizedToken === "null" ||
+      normalizedToken.length < 10; // JWTs are long; this prevents junk tokens
+
+    if (isBadToken) {
       if (socketRef.current) {
         socketRef.current.close();
         socketRef.current = null;
@@ -26,6 +39,7 @@ export function SocketProvider({ token, children }) {
       return;
     }
 
+    // If already connected socket exists, don't recreate
     if (socketRef.current) return;
 
     const s = getSocketInstance();
@@ -69,6 +83,7 @@ export function SocketProvider({ token, children }) {
       setOnlineUsers([]);
     };
   }, [token]);
+
 
   const value = useMemo(
     () => ({ socket, isConnected, onlineUsers }),

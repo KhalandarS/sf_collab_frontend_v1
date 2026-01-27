@@ -23,7 +23,7 @@ export function ChatContactsProvider({ token, children }) {
     setIsLoadingFriends(true);
     try {
       // 1) try friends endpoint
-      let response = await fetch(`${API_BASE_URL}/friends`, {
+      let response = await fetch(`${API_BASE_URL}/friend-requests`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       let data = await response.json();
