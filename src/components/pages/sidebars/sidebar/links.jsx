@@ -15,12 +15,15 @@ import {
   Building,
   Building2,
   Save,
+  Layers,
 } from "lucide-react";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
 import { createInvestorLinks } from "../investorSidebar/InvestorLinks";
 import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
+import { BsPeople } from "react-icons/bs";
+import getDashboardLink from "../getDashboardLink";
 
 // ✅ theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
@@ -62,18 +65,9 @@ export const CONTEXT_THEME = {
   },
 };
 
-export function createLinks(unreadMessagesCount) {
+export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-    {
-      id: 1,
-      icon: <LuLayoutDashboard size={22} />,
-      href: "/dashboard",
-      label: "Dashboard",
-      subItems: [
-        // { id: "overview", href: "/dashboard", label: "Overview", icon: <LuEye size={18} /> },
-        // { id: "my-startup", href: "/discover-startups", label: "My Startup", icon: <BriefcaseBusiness size={18} /> },
-      ],
-    },
+    getDashboardLink(userRoles, setActiveRole),
     {
       id: 3,
       icon: <Rocket size={21} />,

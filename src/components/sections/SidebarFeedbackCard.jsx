@@ -30,7 +30,7 @@ import { API_BASE_URL } from '@/utils/config';
 import { SiAboutdotme } from 'react-icons/si';
 import { RiFeedbackLine } from 'react-icons/ri';
 
-const SidebarFeedbackCard = () => {
+const SidebarFeedbackCard = ({ callback = () => {} }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [tooltipOpen, setTooltipOpen] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState('');
@@ -78,69 +78,31 @@ const SidebarFeedbackCard = () => {
   };
 
   return (
-    <div style={{zIndex: 999999999999}} className=" z-50 option-a option">
+    <div style={{ zIndex: 999999999999 }} className=" option-a option">
       <TooltipProvider>
         <Tooltip
-          // open={tooltipOpen} onOpenChange={setTooltipOpen}
+        // open={tooltipOpen} onOpenChange={setTooltipOpen}
         >
           <TooltipTrigger asChild>
-            <div 
+            <div
               className="cursor-pointer"
-              onClick={() => setIsOpen(true)}
-              // onMouseEnter={() => !isOpen && setTooltipOpen(true)}
-              // onMouseLeave={() => setTooltipOpen(false)}
+              onClick={() => {
+                setIsOpen(true);
+              }}
             >
-              <div 
-                className="w-13 h-13 group  transition-all text-gray-400 duration-700 flex items-center justify-center hover:scale-110"
+              <div
+                className=""
               >
-                <RiFeedbackLine size={25} className='text-purple-500'/>
+                <RiFeedbackLine size={20} className='text-white' />
               </div>
             </div>
           </TooltipTrigger>
-          {/* <TooltipContent 
-            arrowColor="bg-gray-800 fill-gray-800" 
-            className="max-w-xs bg-gray-800  fill-gray-800 border-gray-600 text-white p-4"
-            // onMouseEnter={() => setTooltipOpen(true)}
-            // onMouseLeave={() => setTooltipOpen(false)}
-          >
-            <h4 className="font-medium relative text-white text-center mb-2 flex items-center justify-center">
-              <img 
-                src="/feedback.png" 
-                className='p-2 h-12 w-12 absolute left-0 mt-1 group-hover:scale-105 transition-all duration-1000' 
-                alt="" 
-              /> 
-              <span>Feedback</span>
-            </h4>
-            <p className="text-xs text-gray-400 text-center mb-4">
-              Help us improve and earn more points.
-            </p>
-            
-            <Dialog open={isOpen} onOpenChange={handleDialogOpenChange} className="">
-              <DialogTrigger asChild>
-                <Button 
-                  size="sm"
-                  className={cn(
-                    "w-full mb-2 cursor-pointer",
-                    "transition-all duration-700",
-                    "bg-linear-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600",
-                    "border-none",
-                    "text-white text-sm"
-                  )}
-                  onClick={() => {
-                    setIsOpen(true);
-                    setTooltipOpen(false);
-                  }}
-                >
-                  Share Thoughts
-                </Button>
-              </DialogTrigger>
-            </Dialog>
-          </TooltipContent> */}
+
         </Tooltip>
       </TooltipProvider>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent 
+        <DialogContent
           className={cn(
             "sm:max-w-[450px]",
             "bg-gray-900/95 backdrop-blur-xl",
@@ -156,13 +118,13 @@ const SidebarFeedbackCard = () => {
                 We'd love to hear your thoughts
               </DialogDescription>
             </DialogHeader>
-          {/* Points Info Banner */}
-          <div className="mt-4 flex items-start gap-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
-            <FcAbout className="w-5 h-5 shrink-0 mt-0.5" />
-            <p className="text-xs text-blue-400">
-              You can earn 10-50 points for helpful feedback that helps us improve!
-            </p>
-          </div>
+            {/* Points Info Banner */}
+            <div className="mt-4 flex items-start gap-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+              <FcAbout className="w-5 h-5 shrink-0 mt-0.5" />
+              <p className="text-xs text-blue-400">
+                You can earn 10-50 points for helpful feedback that helps us improve!
+              </p>
+            </div>
             {/* Warning Banner */}
             <div className="mt-4 flex items-start gap-3 p-3 bg-red-900/20 border border-red-700/30 rounded-lg">
               <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
@@ -173,7 +135,7 @@ const SidebarFeedbackCard = () => {
 
             <div className="mt-4 space-y-3">
               <Label className="text-white text-sm">Your feedback</Label>
-              <textarea 
+              <textarea
                 name="feedback"
                 placeholder="What can we improve?"
                 className="w-full min-h-[120px] bg-gray-800/50 border-gray-700 text-white text-sm"
@@ -191,16 +153,16 @@ const SidebarFeedbackCard = () => {
 
             <DialogFooter className="mt-4">
               <DialogClose asChild>
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
                   className="text-gray-400 hover:bg-white/70 cursor-pointer hover:text-black"
                 >
                   Cancel
                 </Button>
               </DialogClose>
-              <Button 
+              <Button
                 type="submit"
                 size="sm"
                 disabled={!isValidFeedback}

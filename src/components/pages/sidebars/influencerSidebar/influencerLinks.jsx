@@ -3,20 +3,13 @@ import { BrainCircuit, Wand2, FileText, Lightbulb } from 'lucide-react';
 
 import { Badge } from "@/components/ui/badge";
 import { IoChatbubbles } from "react-icons/io5";
+import getDashboardLink from "../getDashboardLink";
 
 // filepath: /Users/ivandavidgomezsilva/Documents/Ivan/Trabajos/SFORGER/SForger_data/SFRepos/sf_collab_frontend_v1/src/components/sections/sidebars/influencerSidebar/influencerLinks.jsx
 
-export function createInfluencerLinks(unreadMessagesCount) {
+export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-    {
-      id: 1,
-      icon: <BarChart3 size={22} />,
-      href: "/dashboard",
-      label: "Dashboard",
-      subItems: [
-        { id: "overview", href: "/dashboard", label: "Overview" },
-      ]
-    },
+    getDashboardLink(userRoles, setActiveRole),
     {
       id: 2,
       icon: <BriefcaseBusiness size={22} />,

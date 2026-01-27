@@ -1,23 +1,30 @@
 import SidebarFeedbackCard from "@/components/sections/SidebarFeedbackCard";
 import { FileText, HelpCircle } from "lucide-react";
+import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 export default function BottomLinks({
-  onLinkClick
+  onLinkClick,
+  callback
 }) {
   const location = useLocation();
-  
+  const isMobile = window.matchMedia("(max-width: 1024px)").matches;
   return (
     <div className="flex flex-col gap-2 items-center">
-      <div className="flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors hover:bg-amber-500/30">
-        <SidebarFeedbackCard />
+      {
+        !isMobile && (
+      
+      <div className="flex items-center justify-center w-fit px-3 py-2 rounded-lg transition-all hover:bg-amber-500/40 cursor-pointer hover:scale-105 hover:shadow-lg hover:shadow-amber-500/50 border border-amber-500/50">
+        <SidebarFeedbackCard callback={callback} />
       </div>
+        )
+      }
       <Link
         to="/contribution"
-        className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${
+        className={`flex items-center justify-center w-fit px-3 py-2 rounded-lg transition-all font-semibold cursor-pointer hover:scale-105 ${
           location.pathname === "/contribution"
             ? "bg-amber-500 text-white shadow-lg shadow-amber-500/50"
-            : "text-amber-400 hover:bg-amber-500/20 hover:text-amber-300"
+            : "text-amber-400 hover:bg-amber-500/30 hover:text-amber-300 border border-amber-500/50"
         }`}
         onClick={onLinkClick}
       >
@@ -25,10 +32,10 @@ export default function BottomLinks({
       </Link>
       <Link
         to="/help"
-        className={`flex items-center justify-center w-fit px-2 py-2 rounded-lg transition-colors ${
+        className={`flex items-center justify-center w-fit px-3 py-2 rounded-lg transition-all font-semibold cursor-pointer hover:scale-105 ${
           location.pathname === "/help"
             ? "bg-[#2A2A2A] text-white"
-            : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+            : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white border border-gray-500/50"
         }`}
         onClick={onLinkClick}
       >

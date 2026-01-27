@@ -1,4 +1,5 @@
 import { SOCKET_API_URL } from '@/utils/config';
+import { getSocketInstance } from '@/utils/getSocketInstance';
 import io from 'socket.io-client';
 
 class ChatWebSocketClient {
@@ -49,28 +50,7 @@ class ChatWebSocketClient {
   // Initialize and connect to WebSocket server
   // Initialize and connect to WebSocket server
   connect() {
-    const defaultOptions = {
-      query: { user_id: this.userId },
-      withCredentials: true, 
-      transports: ['polling', 'websocket'], 
-      upgrade: true,
-      reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    };
-
-    const socketOptions = { ...defaultOptions, ...this.options };
-    
-    
-    this.socket = io(SOCKET_API_URL, {
-      query: {
-        token: localStorage.getItem('authToken') // MUST match your login storage key
-      },
-      transports: ["websocket"]
-    });
-
+    this.socket = getSocketInstance()
     this.setupDefaultHandlers();
     return this.socket;
   }

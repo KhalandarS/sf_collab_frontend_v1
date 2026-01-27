@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { createInvestorLinks } from './InvestorLinks';
 import SideBar from '../SideBar';
-const InvestorSidebar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin }) => {
-  const [links, setLinks] = useState(createInvestorLinks(unreadMessagesCount));
+const InvestorSidebar = ({ isOpen, setIsOpen, unreadMessagesCount, isAdmin, userRoles, setActiveRole }) => {
+  const [links, setLinks] = useState(createInvestorLinks(unreadMessagesCount, userRoles, setActiveRole));
   useEffect(() => {
-    setLinks(createInvestorLinks(unreadMessagesCount));
-  }, [unreadMessagesCount]);
-
+    setLinks(createInvestorLinks(unreadMessagesCount, userRoles, setActiveRole));
+  }, [unreadMessagesCount, userRoles, setActiveRole]);
   return <SideBar
     isOpen={isOpen}
     setIsOpen={setIsOpen}

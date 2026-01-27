@@ -28,21 +28,15 @@ export default function AnnouncementsSection({ userRoles }) {
     localStorage.setItem('preferences:announcementsExpanded', isExpanded);
   }, [isExpanded]);
 
-  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(() => {
-    const stored = localStorage.getItem('preferences:hideInfluencerInfo');
-    return stored === 'true';
-  });
+  const [hideInfluencerInfo, setHideInfluencerInfo] = useState(false);
   
-  const [hideShowJobApplication, setHideJobApplication] = useState(() => {
-    const stored = localStorage.getItem('preferences:hideJobApplication');
-    return stored === 'true';
-  });
+  const [hideShowJobApplication, setHideJobApplication] = useState(false);
 
   const tabs = useMemo(() => [
     { id: 'waitlist', label: 'Waitlist', icon: Bell },
     { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap },
     ...(user && (!hideShowJobApplication || !hideInfluencerInfo) 
-      ? [{ id: 'applications', label: 'Applications', icon: FileText }]
+      ? [{ id: 'applications', label: 'Jobs', icon: FileText }]
       : [])
   ], [user, hideShowJobApplication, hideInfluencerInfo]);
 
@@ -125,7 +119,7 @@ export default function AnnouncementsSection({ userRoles }) {
                       {!hideShowJobApplication && (
                         <JoinSFSection setHideJobApplication={setHideJobApplication} />
                       )}
-                      {user && !userRoles.includes("influencer") && !hideInfluencerInfo && (
+                      {user && !hideInfluencerInfo && (
                         <InfluencerProfileSection userData={user} setHideInfluencerInfo={setHideInfluencerInfo} />
                       )}
                     </div>

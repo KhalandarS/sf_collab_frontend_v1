@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { reduceText } from "@/utils/reduceText";
 
 
 
@@ -101,7 +102,6 @@ function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
 
   return false;
 }
-
 
 export default function MessageBubble({ message, isOwn, showAvatar, showSenderName = false }) {
   const getMsgStatus = (msg) => {
@@ -210,104 +210,100 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
       )}
 
       <div className={`group flex gap-1 px-1 py-0.01 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
-        <div className={`flex-shrink-0 w-8 ${showAvatar ? "visible" : "invisible"}`}>
+        <div className={`visible w-8 shrink-0`}>
           {showAvatar && (
-  <Avatar
-    src={
-      message.sender?.profilePicture ||
-      message.sender?.profile_picture ||
-      message.sender?.profile?.picture ||
-      message.sender?.profile?.avatar ||
-      null
-    }
-    name={senderName || " "}
-    size="sm"
-    showStatus={false}
-  />
-)}
+            <Avatar
+              src={
+                getProfilePicture(
+                  message?.sender)
+              }
+              name={senderName || " "}
+              size="sm"
+              showStatus={false}
+            />
+          )}
 
         </div>
 
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
           {!isOwn && showSenderName && senderName && (
-  <span className="text-[11px] text-zinc-400 mb-0">{senderName}</span>
-)}
+            <span className="text-[11px] text-zinc-400 mb-0">{senderName}</span>
+          )}
 
           <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
             <div
-              className={`px-3 py-2 rounded-2xl text-sm ${
-                isOwn ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" : "bg-zinc-800 text-zinc-100"
-              }`}
+              className={`px-3 py-2 rounded-2xl text-sm ${isOwn ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" : "bg-zinc-800 text-zinc-100"
+                }`}
             >
-            {fileUrl && (
-              <div className="mb-2">
-                {isImage ? (
-                  <button type="button" className="block" onClick={() => setViewerOpen(true)} title="View">
-                    <img
-                      src={fileUrl}
-                      alt={message?.file_name || "image"}
-                      className="max-w-full rounded-lg max-h-48 object-cover hover:opacity-90"
-                      loading="lazy"
-                    />
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
-                    <FileText size={18} className="opacity-80" />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm truncate">{message?.file_name || "Document"}</div>
-                      <div className="text-[11px] opacity-70 truncate">{message?.file_type || "file"}</div>
+              {fileUrl && (
+                <div className="mb-2">
+                  {isImage ? (
+                    <button type="button" className="block" onClick={() => setViewerOpen(true)} title="View">
+                      <img
+                        src={fileUrl}
+                        alt={message?.file_name || "image"}
+                        className="max-w-full rounded-lg max-h-48 object-cover hover:opacity-90"
+                        loading="lazy"
+                      />
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
+                      <FileText size={18} className="opacity-80" />
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm truncate">{reduceText(message?.file_name || "Document", 20)}</div>
+                        <div className="text-[11px] opacity-70 truncate">{message?.file_type || "file"}</div>
+                      </div>
+
+                      {/* Open via auth-fetch + blob so PDFs actually render even if endpoint needs Authorization */}
+                      <button
+                        type="button"
+                        className="p-1.5 rounded-lg hover:bg-black/20"
+                        title="Open"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpen();
+                        }}
+                      >
+                        <ExternalLink size={16} />
+                      </button>
+
+                      <button
+                        type="button"
+                        className="p-1.5 rounded-lg hover:bg-black/20"
+                        title="Download"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDownload();
+                        }}
+                      >
+                        <Download size={16} />
+                      </button>
                     </div>
+                  )}
+                </div>
+              )}
 
-                    {/* Open via auth-fetch + blob so PDFs actually render even if endpoint needs Authorization */}
-                    <button
-                      type="button"
-                      className="p-1.5 rounded-lg hover:bg-black/20"
-                      title="Open"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpen();
-                      }}
-                    >
-                      <ExternalLink size={16} />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="p-1.5 rounded-lg hover:bg-black/20"
-                      title="Download"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDownload();
-                      }}
-                    >
-                      <Download size={16} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {!hideAutoFileText({
-              fileUrl,
-              isImage,
-              content: message.content || message.original_content,
-              fileName: message?.file_name,
-            }) && (message.content || message.original_content)}
+              {!hideAutoFileText({
+                fileUrl,
+                isImage,
+                content: message.content || message.original_content,
+                fileName: message?.file_name,
+              }) && (message.content || message.original_content)}
 
 
-            {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
-          </div>
+              {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+            </div>
 
-          <span className="text-[10px] text-zinc-600 mt-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1">
-            <span>{formatTime(ts)}</span>
+            <span className="text-[10px] text-zinc-600 mt-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1">
+              <span>{formatTime(ts)}</span>
 
-            {isOwn && (() => {
-              const st = getMsgStatus(message);
-              if (st === "opened") return <Eye size={14} className="opacity-80" />;
-              if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
-              return <Check size={14} className="opacity-80" />;
-            })()}
-          </span>
+              {isOwn && (() => {
+                const st = getMsgStatus(message);
+                if (st === "opened") return <Eye size={14} className="opacity-80" />;
+                if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
+                return <Check size={14} className="opacity-80" />;
+              })()}
+            </span>
 
           </div>
         </div>

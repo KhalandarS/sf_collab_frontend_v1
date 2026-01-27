@@ -1,18 +1,11 @@
 import { CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb, Earth, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users } from 'lucide-react';
 
 import { LuLayoutDashboard } from 'react-icons/lu';
+import getDashboardLink from "../getDashboardLink";
 
-export function createBuilderLinks(unreadMessagesCount) {
+export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-  {
-      id: 1,
-      icon: <LuLayoutDashboard size={22} />,
-      href: "/dashboard",
-      label: "Dashboard",
-      subItems: [
-        // { id: "overview", href: "/dashboard", label: "Overview" },
-      ]
-    },
+  getDashboardLink(userRoles, setActiveRole),
     {
       id: 2,
       icon: <Rocket size={22} />,

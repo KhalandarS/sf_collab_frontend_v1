@@ -42,15 +42,14 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
         initial="hidden"
         animate="visible"
       >
-        {links.map((link) => {
+        {links.map((link, index) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
           const showSubs = shouldShowSubItems(link) || hoveredLinkId === link.id;
-
           return (
             <motion.div
               onMouseEnter={() => setHoveredLinkId(link.id)}
               onMouseLeave={() => setHoveredLinkId(null)}
-              key={link.id} className="w-full" variants={itemVariants}>
+              key={index} className="w-full" variants={itemVariants}>
               <div className="relative group w-full flex justify-center">
                 {hasSubItems(link) ? (
                   <motion.button
@@ -64,8 +63,8 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                       toggleExpand(link.id)
                     }}
                     className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${isActive
-                        ? "bg-blue-600/20 text-blue-400"
-                        : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                      ? "bg-blue-600/20 text-blue-400"
+                      : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
                       }`}
                   >
                     {link.icon}
@@ -80,8 +79,8 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                     <Link
                       to={link.href}
                       className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${isActive
-                          ? "bg-blue-600/20 text-blue-400"
-                          : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                        ? "bg-blue-600/20 text-blue-400"
+                        : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
                         }`}
                     >
                       {link.icon}
@@ -110,15 +109,24 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                   className="flex flex-col gap-0.5 mt-1 ml-1.5 pl-1.5 border-l border-zinc-700/50"
                 >
                   {(link?.subItems || []).map((subItem) => {
-                    const isSubActive = location.pathname === subItem.href;
+                    const isSubActive = location.pathname === subItem.href && location.pathname !== "/dashboard";
 
                     return (
-                      <motion.div key={subItem.id} className="relative group" whileHover={{ x: 4 }}>
+                      <motion.button
+                        onClick={() => {
+                          if (subItem.onLinkClick) {
+                            subItem.onLinkClick();
+                            navigate(subItem.href);
+                            return;
+                          }
+                        }
+                        }
+                        key={subItem.id} className="relative group" whileHover={{ x: 4 }}>
                         <Link
-                          to={subItem.href}
+                          to={subItem.onLinkClick ? "#" : subItem.href}
                           className={`flex items-center justify-center px-2 py-2 rounded-md transition-colors ${isSubActive
-                              ? "bg-blue-600/30 text-white"
-                              : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
+                            ? "bg-blue-600/30 text-white"
+                            : "text-gray-500 hover:bg-[#2A2A2A] hover:text-white"
                             }`}
                         >
                           {subItem.icon || (
@@ -134,7 +142,7 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                           {subItem.label}
                           <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-zinc-800" />
                         </motion.div>
-                      </motion.div>
+                      </motion.button>
                     );
                   })}
                 </motion.div>
@@ -149,8 +157,8 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
               <Link
                 to="/admin"
                 className={`w-full flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${location.pathname === "/admin"
-                    ? "bg-yellow-600/20 text-yellow-400"
-                    : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
+                  ? "bg-yellow-600/20 text-yellow-400"
+                  : "text-gray-400 hover:bg-[#2A2A2A] hover:text-white"
                   }`}
               >
                 <Crown size={22} />
@@ -171,5 +179,5 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
 
       <BottomLinks />
     </div>
-  )
+  );
 }

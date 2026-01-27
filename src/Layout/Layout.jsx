@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -56,6 +56,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const navContainerRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
+  const [disableNavbar, setDisableNavbar] = useState(false);
   const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
 
   useEffect(() => {
@@ -198,7 +199,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   // Sidebar resolver
   const SideBar = () => {
-    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin };
+    const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
 
     switch (activeRole) {
       case "founder":
@@ -232,7 +233,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     setIsOptionsVisible(false);
   };
 
-  const isMobile = window.matchMedia("(max-width: 1024px)").matches;
+  const isMobile = useMemo(() => window.matchMedia("(max-width: 1024px)").matches, []);
 
   return (
     <>
@@ -252,7 +253,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setCompletePopupVisible} />}
 
         {/* Top Nav */}
-        {!isRootPath && (
+        {!isRootPath && !disableNavbar && (
           <div
             ref={navContainerRef}
             // onMouseEnter={handleNavAreaEnter}
@@ -293,7 +294,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             )}
 
             <div
-              className={`relative w-full h-full ${!isRootPath ? "pt-3.5 max-sm:pb-16" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              className={`relative w-full h-full ${!isRootPath ? "pt-3.5" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
               <Outlet />
@@ -302,12 +303,14 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         </motion.div>
       </div>
       {/* Chat docks */}
-      <div className="z-10000000000">
-        <AIAssistant />
-      </div>
-        {!isRootPath && !isChatRoute && !isMobile && (
-            <ChatDock maxWindows={2} />
-        )}
+      {
+        location.pathname !== "/chat" &&
+        <>
+          <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
+          <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} />
+        </>
+      }
+      {/* )} */}
     </>
   );
 };

@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Copy, Instagram, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/utils/config";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 export default function CrowdfundingSection() {
   const [roles, setRoles] = useState([]); // builder / founder
@@ -81,6 +82,28 @@ const progressPercent = Math.min(
           <p className="text-white/60 max-w-2xl mx-auto">
             Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
           </p>
+          <div className="flex gap-4 justify-center mt-6">
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText("support@sfcollab.com")
+                toast.success("Email copied to clipboard!")
+              }
+              }
+              className="px-6 py-2 flex gap-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white hover:bg-neutral-700 transition"
+            >
+              <Copy size={22} />
+              Email
+            </button>
+            <a
+              href="https://instagram.com/sfcollab_official"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-6 py-2 flex gap-3 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 transition"
+            >
+              <Instagram size={22} className="inline-block mr-2" />
+              Instagram
+            </a>
+          </div>
         </header>
         {/* CROWDFUNDING METER */}
         <div className="max-w-3xl mx-auto space-y-4">

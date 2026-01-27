@@ -15,7 +15,6 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
     () => getCurrentContext(location.pathname),
     [location.pathname]
   );
-
   const CHAT_CONTEXT_ID = 4;
 
   // Auto-expand active context
@@ -104,6 +103,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
               toggleExpand={toggleExpand}
               hasSubItems={hasSubItems}
               shouldShowSubItems={shouldShowSubItems}  
+              callback={() => setIsOpen(false)}
             />
           </div>
         </div>

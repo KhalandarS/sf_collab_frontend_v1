@@ -5,21 +5,16 @@ import { FcFeedback } from 'react-icons/fc';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { LuLayoutDashboard } from 'react-icons/lu';
 import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
+import getDashboardLink from "../getDashboardLink";
 
 /**
  * Creates navigation links for the Founder sidebar
  * @param {number} unreadMessagesCount - Number of unread messages to display in badge
  * @returns {Array} Array of link objects for sidebar navigation
  */
-export function createFounderLinks(unreadMessagesCount = 0) {
+export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setActiveRole = () => {}) {
   return [
-    {
-      id: 1,
-      icon: <LuLayoutDashboard size={22} />,
-      href: "/dashboard",
-      label: "Dashboard",
-      subItems: []
-    },
+    getDashboardLink(userRoles, setActiveRole),
     {
       id: 2,
       icon: <Rocket size={22} />,

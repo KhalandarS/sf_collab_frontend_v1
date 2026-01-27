@@ -23,14 +23,9 @@ import {
 import SortableSection from "./SortableSection";
 import OverviewWebsite from "./OverviewWebsite";
 import DashboardSummaryCard from "./DashboardSummarySection";
-import WaitlistSection from "./WaitlistSection";
-import JoinSFSection from "./JoinSFSection";
-import InfluencerSection from "./InfluencerSection";
-import AdminSection from "./AdminSection";
+
 import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../DashboardChangeSection";
-import DonationSection from "./DonationSection";
-import CrowdfundingSection from "./CrowdfundingSection";
 import AnnouncementsSection from "./AnnouncementsSection";
 const Dashboard = ({
   activeRole, setActiveRole, userRoles

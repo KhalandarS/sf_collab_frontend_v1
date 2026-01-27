@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Edit3, MessageCircle } from 'lucide-react';
+import { Search, Edit3, MessageCircle, HamburgerIcon, Menu } from 'lucide-react';
 
 // Import chat components
 import Avatar from '@/components/chat/Avatar';
@@ -17,6 +17,7 @@ import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { usersAPI } from '@/utils/APIs/userAPI';
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -167,6 +168,7 @@ const ChatPage = () => {
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchParams] = useSearchParams();
 
@@ -688,25 +690,37 @@ useEffect(() => {
   // RENDER: Main chat page
   // ============================================
   return (
-    <div className="h-[calc(100vh-64px)] bg-zinc-950 flex">
+    <div className="h-[calc(100vh-64px)] bg-zinc-950 flex flex-col md:flex-row relative">
+      {/* Mobile overlay for sidebar */}
+      {sidebarOpen && (
+        <div 
+          className="fixed top-16 inset-x-0 bottom-0 bg-black bg-opacity-50 z-30 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ============================================ */}
       {/* LEFT SIDEBAR: Conversations List */}
       {/* ============================================ */}
-      <div className="w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col">
+      <div className={`fixed md:static top-16 left-0 z-40 w-full sm:w-80 md:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-80px)] md:h-auto transform transition-transform duration-300 ease-in-out ${
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      }`}>
         {/* Header */}
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h1 className="text-xl font-bold text-white">Chats</h1>
-            <div className="flex items-center gap-2">
+        <div className="p-3 md:p-4">
+          <div className="flex items-center justify-between mb-4 gap-2">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <h1 className="text-lg md:text-xl font-bold text-white truncate">Chats</h1>
               {/* Connection status */}
               <span 
-                className={`w-2 h-2 rounded-full ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`} 
+                className={`w-2 h-2 rounded-full shrink-0 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
                 title={isConnected ? 'Connected' : 'Disconnected'}
               />
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
               {/* New message button */}
               <button
                 onClick={() => setShowNewMessage(true)}
-                className="p-2 hover:bg-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors"
+                className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors shrink-0"
                 title="New message"
               >
                 <Edit3 size={18} />
@@ -715,19 +729,18 @@ useEffect(() => {
           </div>
 
           {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+          <div className="relative mb-3">
             <input
               type="text"
-              placeholder="Search Messenger"
+              placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-zinc-800 rounded-full text-sm text-white placeholder-zinc-500 focus:outline-none"
+              className="w-full px-3 md:px-4 py-2 md:py-2.5 bg-zinc-800 rounded-full text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
             />
           </div>
           
           {/* Category Tabs */}
-          <div className="flex gap-1 mt-3 overflow-x-auto pb-1">
+          <div className="flex gap-1 overflow-x-auto pb-1">
             {[
               { id: 'all', label: 'All' },
               { id: 'friends', label: 'Friends', type: 'direct' },
@@ -738,7 +751,7 @@ useEffect(() => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
+                className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
                   activeTab === tab.id
                     ? 'bg-indigo-500 text-zinc-900'
                     : 'bg-zinc-800 text-zinc-400 hover:text-white'
@@ -751,7 +764,7 @@ useEffect(() => {
         </div>
 
         {/* Conversation List */}
-        <div className="flex-1 overflow-y-auto px-2">
+        <div className="flex-1 overflow-y-auto px-1 md:px-2">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
               <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
@@ -767,7 +780,11 @@ useEffect(() => {
                 key={conv.id}
                 conversation={conv}
                 isActive={activeConversation?.id === conv.id}
-                onClick={() => handleSelectConversation(conv)}
+                onClick={() => {
+                  handleSelectConversation(conv)
+                  setSidebarOpen(false);
+                }
+                }
                 onlineUsers={onlineUsers}
                 currentUserId={currentUser.id}
                 lastActiveAt={lastActiveAt}
@@ -784,32 +801,56 @@ useEffect(() => {
       {/* ============================================ */}
       {/* CENTER: Chat Area */}
       {/* ============================================ */}
-      <div className="flex-1 flex flex-col bg-zinc-950">
+      <div className="flex-1 flex flex-col bg-zinc-950 w-full md:w-auto min-w-0">
+        {/* Mobile Header with Menu */}
+        <div className="md:hidden p-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+            title="Toggle sidebar"
+          >
+            <Menu size={20} />
+          </button>
+          <h2 className="text-sm font-semibold text-white flex-1 text-center">
+            {activeConversation ? activeConversation.name : 'Messages'}
+          </h2>
+          <div className="w-8" /> {/* Spacer for alignment */}
+        </div>
+        
         {activeConversation ? (
           <>
             
             
-            {/* Chat Header - No more Phone/Video/Info icons */}
-            <ChatHeader
-               conversation={activeConversation}
-               currentUserId={currentUser.id}
-               presenceStatus={presenceStatus}
-               statusText={statusText}
-               onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
-            />
+            {/* Chat Header - Hidden on mobile (shown in mobile header above) */}
+            <div className="hidden md:block">
+              <ChatHeader
+                 conversation={activeConversation}
+                 currentUserId={currentUser.id}
+                 presenceStatus={presenceStatus}
+                 statusText={statusText}
+                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+              />
+            </div>
+            
+            {/* Chat Header - Mobile Version (compact) */}
+            <div className="md:hidden border-b border-zinc-800">
+              <ChatHeader
+                 conversation={activeConversation}
+                 currentUserId={currentUser.id}
+                 presenceStatus={presenceStatus}
+                 statusText={statusText}
+                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+              />
+            </div>
 
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto py-4">
+            <div className="flex-1 overflow-y-auto py-2 md:py-4 px-2 md:px-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar
                     src={
-                      otherParticipant?.profilePicture ||
-                      otherParticipant?.profile_picture ||
-                      otherParticipant?.profile?.picture ||
-                      otherParticipant?.profile?.avatar ||
-                      null
+                     getProfilePicture(otherParticipant)
                     }
                     name={`${otherParticipant?.firstName || otherParticipant?.first_name || ""}`}
                     size="xl"
@@ -860,27 +901,29 @@ useEffect(() => {
             </div>
 
             {/* Chat Input - with file upload support */}
-            <ChatInput
-              value={messageInput}
-              onChange={handleInputChange}
-              onSend={handleSendMessage}
-              onFileUpload={handleFileUpload}
-              socket={socket}
-              conversationId={activeConversation?.id}
-              disabled={!activeConversation}
-            />
+            <div className="p-2 md:p-4 border-t border-zinc-800">
+              <ChatInput
+                value={messageInput}
+                onChange={handleInputChange}
+                onSend={handleSendMessage}
+                onFileUpload={handleFileUpload}
+                socket={socket}
+                conversationId={activeConversation?.id}
+                disabled={!activeConversation}
+              />
+            </div>
           </>
         ) : (
           /* No conversation selected */
-          <div className="flex-1 flex flex-col items-center justify-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-4">
-              <MessageCircle size={40} className="text-indigo-500" />
+          <div className="flex-1 flex flex-col items-center justify-center px-4">
+            <div className="w-16 md:w-20 h-16 md:h-20 bg-linear-to-br from-indigo-500/20 to-blue-500/20 rounded-full flex items-center justify-center mb-3 md:mb-4">
+              <MessageCircle size={32} className="text-indigo-500 md:w-10 md:h-10" />
             </div>
-            <h2 className="text-xl font-semibold text-white mb-2">Your Messages</h2>
-            <p className="text-zinc-500 text-sm mb-4">Send private messages to a friend or group</p>
+            <h2 className="text-lg md:text-xl font-semibold text-white mb-1 md:mb-2 text-center">Your Messages</h2>
+            <p className="text-zinc-500 text-xs md:text-sm mb-3 md:mb-4 text-center">Send private messages to a friend or group</p>
             <button
               onClick={() => setShowNewMessage(true)}
-              className="px-6 py-2.5 bg-indigo-500 hover:bg-indigo-400 text-zinc-900 font-medium rounded-full transition-colors"
+              className="px-4 md:px-6 py-2 md:py-2.5 bg-indigo-500 hover:bg-indigo-400 text-zinc-900 font-medium text-sm md:text-base rounded-full transition-colors"
             >
               Send message
             </button>
@@ -891,14 +934,16 @@ useEffect(() => {
       {/* ============================================ */}
       {/* RIGHT SIDEBAR: Online Contacts */}
       {/* ============================================ */}
-      <OnlineContactsSidebar
-        friends={friends}
-        onlineUsers={onlineUsers}
-        onOpenChat={handleOpenChatWithFriend}
-        onNewMessage={() => setShowNewMessage(true)}
-        token={token}
-        currentUserId={currentUser?.id}
-      />
+      <div className="hidden lg:block w-60 bg-zinc-900 border-l border-zinc-800 shrink-0">
+        <OnlineContactsSidebar
+          friends={friends}
+          onlineUsers={onlineUsers}
+          onOpenChat={handleOpenChatWithFriend}
+          onNewMessage={() => setShowNewMessage(true)}
+          token={token}
+          currentUserId={currentUser?.id}
+        />
+      </div>
 
       {/* ============================================ */}
       {/* NEW MESSAGE MODAL */}

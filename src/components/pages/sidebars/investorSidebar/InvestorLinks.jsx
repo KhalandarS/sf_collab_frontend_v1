@@ -3,16 +3,11 @@ import { Badge, BarChart2, ChartNoAxesGanttIcon, Earth, Eye, LucideLayoutDashboa
 import { FcDocument } from 'react-icons/fc';
 import { IoChatbubbles } from 'react-icons/io5';
 import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
+import getDashboardLink from "../getDashboardLink";
 
-export function createInvestorLinks(unreadMessagesCount) {
+export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-    {
-      id: 0,
-      icon: <LucideLayoutDashboard size={22} />,
-      href: "/dashboard",
-      label: "Dashboard",
-      subItems: []
-    },
+    getDashboardLink(userRoles, setActiveRole),
     // {
     //   id: 1,
     //   icon: <Portfolio size={22} />,

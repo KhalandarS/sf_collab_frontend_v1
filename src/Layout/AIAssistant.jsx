@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { X, Minus, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
 import { AIAPI } from "@/services/auth/AIAPI";
@@ -18,17 +19,20 @@ function normalizeMessage(m) {
   };
 }
 
-export default function AIAssistant() {
-  const { user: currentUser, access_token: token } = useSelector((state) => state.auth);
+export default function AIAssistant({ callback = () => {}, isMobile = false }) {
+  const { user: currentUser, access_token: token } = useSelector(
+    (state) => state.auth
+  );
+
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [draft, setDraft] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const messageEndRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
-    messageEndRef.current?.scrollIntoView?.({ behavior: "smooth" });
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
   useEffect(() => {
@@ -44,7 +48,6 @@ export default function AIAssistant() {
         content: content.trim(),
         sender_id: currentUser?.id,
         sender: { id: currentUser?.id, firstName: currentUser?.firstName },
-        created_at: new Date().toISOString(),
       });
 
       setMessages((prev) => [...prev, userMessage]);
@@ -52,170 +55,163 @@ export default function AIAssistant() {
       setIsLoading(true);
 
       try {
-        const res = await AIAPI.queryAssistant(content.trim(), token );
+        const res = await AIAPI.queryAssistant(content.trim(), token);
 
-        if (!res?.success) {
-          throw new Error(res?.message || "AI Assistant error");
-        }
-          const aiMessage = normalizeMessage({
-            id: `ai-${Date.now()}`,
-            content: res.data?.answer || "No response",
-            sender_id: "ai",
-            sender: { id: "ai", firstName: "AI Assistant" },
-            created_at: new Date().toISOString(),
-          });
-          setMessages((prev) => [...prev, aiMessage]);
-        
-      } catch (e) {
-        console.error("AIAssistant: send message failed:", e);
-        const errorMessage = normalizeMessage({
-          id: `error-${Date.now()}`,
-          content: "Sorry, something went wrong. Please try again.",
-          sender_id: "ai",
-          sender: { id: "ai", firstName: "AI Assistant" },
-          created_at: new Date().toISOString(),
+        if (!res?.success) throw new Error(res?.message);
+
+        const aiMessage = normalizeMessage({
+          id: `ai-${Date.now()}`,
+          content: res.data?.answer || "No response",
         });
-        setMessages((prev) => [...prev, errorMessage]);
+
+        setMessages((prev) => [...prev, aiMessage]);
+      } catch (e) {
+        console.error(e);
+        toast.error("AI Assistant failed to respond.");
+        setMessages((prev) => [
+          ...prev,
+          normalizeMessage({
+            id: `err-${Date.now()}`,
+            content: "Something went wrong. Please try again.",
+          }),
+        ]);
       } finally {
         setIsLoading(false);
       }
     },
-    [token, currentUser?.id, currentUser?.firstName]
+    [token, currentUser]
   );
+
   const handleAdminFileUpload = async (file) => {
     if (!token) return null;
-
     try {
       const res = await AIAPI.uploadDocument(file, token);
-      if (res?.success && res?.data?.filename) {
-        const file = res.data.filename;
-        toast.success("File uploaded successfully.");
-        return file;
-      } else {
-        throw new Error(res?.message || "File upload failed");
+      if (res?.success) {
+        toast.success("File uploaded");
+        return res.data.filename;
       }
-    } catch (e) {
-      console.error("AIAssistant: file upload failed:", e);
-      toast.error("File upload failed. Please try again.");
+      throw new Error();
+    } catch {
+      toast.error("Upload failed");
       return null;
     }
-  }
+  };
+
   if (!currentUser) return null;
 
   return (
-    <div className="fixed bottom-20 right-4 z-1000000 flex flex-col items-end gap-3 pointer-events-none md:bottom-20 md:right-4">
+    <>
+      {/* Floating button */}
+      {!isOpen && (
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setIsOpen(true);
+            isMobile ? callback() : null
+          }}
+          className="fixed bottom-20 right-4 z-10 w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg flex items-center justify-center"
+        >
+          <Sparkles size={20} />
+        </motion.button>
+      )}
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="fixed left-0 top-16 z-1000000  md:inset-auto w-full md:w-80 md:bottom-20 md:right-4 md:rounded-2xl bg-zinc-900 border border-zinc-800 md:border rounded-none md:rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+            initial={{ opacity: 0, y: 30, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 260, damping: 25 }}
+            className={cn(
+              "fixed z-[1000000] flex flex-col bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden",
+              // Mobile fullscreen
+              "inset-0 rounded-none",
+              // Desktop floating
+              "md:inset-auto md:bottom-20 md:right-4 md:w-80 md:h-[70vh] md:rounded-2xl"
+            )}
           >
-            <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+            {/* Header */}
+            <div className="shrink-0 h-14 flex items-center justify-between px-3 bg-zinc-950 border-b border-zinc-800">
               <div className="flex items-center gap-2">
                 <Sparkles size={16} className="text-indigo-400" />
-                <div className="text-sm font-semibold text-white">AI Assistant</div>
+                <span className="text-sm font-semibold text-white">
+                  AI Assistant
+                </span>
               </div>
+
               <div className="flex items-center gap-1">
-                <motion.button
-                  whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="p-2 rounded-xl text-zinc-400 hidden md:block"
+                {/* <button
+                  onClick={() => setIsMinimized((v) => !v)}
+                  className="hidden md:flex p-2 rounded-lg text-zinc-400 hover:bg-zinc-800"
                 >
                   <Minus size={16} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ backgroundColor: "rgba(39, 39, 42, 0.8)" }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsOpen(false)}
-                  className="p-2 rounded-xl text-zinc-400"
+                </button> */}
+                <button
+                  onClick={() => {
+                    setIsOpen(false)
+                    isMobile ? callback() : null
+                  }
+                  }
+                  className="p-2 rounded-lg text-zinc-400 hover:bg-zinc-800"
                 >
                   <X size={16} />
-                </motion.button>
+                </button>
               </div>
             </div>
 
-            <AnimatePresence>
-              {!isMinimized && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <div className="h-[calc(100vh-204px)] md:h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-2">
-                    {messages.length === 0 ? (
-                      <div className="text-sm text-zinc-500 text-center py-8">
-                        Ask me anything...
-                      </div>
-                    ) : (
-                      <motion.div layout>
-                        {messages.map((m, i) => (
-                          <motion.div
-                            key={m.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.02 }}
-                          >
-                            <MessageBubble
-                              message={m}
-                              isOwn={String(m.sender_id) === String(currentUser?.id)}
-                              currentUserId={currentUser?.id}
-                            />
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                    {isLoading && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-xs text-zinc-500 px-1 italic"
-                      >
-                        AI is thinking…
-                      </motion.div>
-                    )}
-                    <div ref={messageEndRef} />
-                  </div>
+            {!isMinimized && (
+              <>
+                {/* Messages */}
+                <div className="flex-1 overflow-y-auto overscroll-contain py-2 bg-zinc-950 space-y-2">
+                  {messages.length === 0 ? (
+                    <div className="text-sm text-zinc-500 text-center py-8">
+                      Ask me anything…
+                    </div>
+                  ) : (
+                    messages.map((m) => (
+                      <MessageBubble
+                        key={m.id}
+                        message={m}
+                        isOwn={String(m.sender_id) === String(currentUser.id)}
+                        currentUserId={currentUser.id}
+                      />
+                    ))
+                  )}
 
-                  <div className="bg-zinc-900">
-                    {currentUser?.role === 'admin' ? (
-                      <div className="text-xs text-zinc-500 px-3 pt-1 italic">
-                        As an admin, you can upload documents to provide context for the AI Assistant.
-                      </div>
-                    ) : null  
-                    }
-                    <ChatInput
-                      value={draft}
-                      onChange={setDraft}
-                      onSend={sendMessage}
-                      onFileUpload={handleAdminFileUpload}
-                      disabled={isLoading}
-                      allowEmojis={false}
-                      allowFiles={currentUser?.role === 'admin'}
-                      acceptMultipleFiles={currentUser?.role === 'admin'}
-                      allowImages={false}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  {isLoading && (
+                    <div className="text-xs text-zinc-500 italic">
+                      AI is thinking…
+                    </div>
+                  )}
+
+                  <div ref={messageEndRef} />
+                </div>
+
+                {/* Input */}
+                <div className="shrink-0 border-t border-zinc-800 bg-zinc-900">
+                  {currentUser.role === "admin" && (
+                    <div className="text-xs text-zinc-500 px-3 pt-1 italic">
+                      Admins can upload documents for context.
+                    </div>
+                  )}
+                  <ChatInput
+                    value={draft}
+                    onChange={setDraft}
+                    onSend={sendMessage}
+                    onFileUpload={handleAdminFileUpload}
+                    disabled={isLoading}
+                    allowFiles={currentUser.role === "admin"}
+                    acceptMultipleFiles={currentUser.role === "admin"}
+                    allowImages={false}
+                    allowEmojis={false}
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-
-      <motion.button
-        onClick={() => setIsOpen((v) => !v)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.95 }}
-        style={{ display: isOpen ? 'none' : 'flex' }}
-        className="relative w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg flex items-center justify-center pointer-events-auto"
-      >
-        <Sparkles size={20} />
-      </motion.button>
-    </div>
+    </>
   );
 }

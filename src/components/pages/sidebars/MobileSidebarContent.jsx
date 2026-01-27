@@ -4,7 +4,7 @@ import BottomLinks from "./BottomLinks";
 import { Crown } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 
-export default function MobileSidebarContent({ onLinkClick, links = [], currentContextId, isAdmin, toggleExpand, hasSubItems, shouldShowSubItems }) {
+export default function MobileSidebarContent({ onLinkClick, links = [], currentContextId, isAdmin, toggleExpand, hasSubItems, shouldShowSubItems, callback }) {
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -46,12 +46,12 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
         initial="hidden"
         animate="visible"
       >
-        {links.map((link) => {
+        {links.map((link, index) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
           const showSubs = shouldShowSubItems(link);
 
           return (
-            <motion.div key={link.id} className="w-full" variants={itemVariants}>
+            <motion.div key={index} className="w-full" variants={itemVariants}>
               {hasSubItems(link) ? (
                 <motion.button
                   onClick={() => {
@@ -117,9 +117,17 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
                         key={subItem.id}
                         whileHover={{ x: 4 }}
                         whileTap={{ scale: 0.98 }}
+                        onClick={() => {
+                          if (subItem.onLinkClick) {
+                            subItem.onLinkClick();
+                            return;
+                          }
+                          navigate(subItem.href);
+                        }
+                        }
                       >
                         <Link
-                          to={subItem.href}
+                          to={subItem.onLinkClick ? "#" : subItem.href}
                           onClick={onLinkClick}
                           className={`flex items-center gap-2.5 px-3 py-2 rounded-md transition-colors ${
                             isSubActive
@@ -165,7 +173,7 @@ export default function MobileSidebarContent({ onLinkClick, links = [], currentC
         )}
       </motion.div>
 
-      <BottomLinks onLinkClick={onLinkClick} />
+      <BottomLinks onLinkClick={onLinkClick} callback={callback} />
     </div>
   );
 }
