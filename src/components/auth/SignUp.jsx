@@ -2,9 +2,8 @@ import { useState, useEffect,useRef } from "react"
 import { Eye, EyeOff, Mail, Lock, User, MapPin, Building, Globe, Clock } from "lucide-react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { setUser,setToken } from "../../services/auth/authSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import NavBar from "../sections/NavBar";
-import useScrollHide from "../../utils/hooks/useScrollHide";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
 import { FaUserPlus } from "react-icons/fa6";
@@ -13,15 +12,16 @@ import { PasswordStrengthIndicator } from "../lightswind/password-strength-indic
 import {Button} from '../ui/button';
 import LoadingSpinner from "../LoadingSpinner";
 import { API_URL } from "@/utils/config";
-import { authAPI } from "@/utils/APIs/authAPI";
 import { toast } from "react-toastify";
 import MobileNavBar from "../sections/MobileNavBar";
+import useScrollHide from "@/utils/hooks/useScrollHide";
+import { authAPI } from "@/utils/APIs/authAPI";
 
 export default function SignUp() {
   const navigate = useNavigate();
   const dispatch=useDispatch();
   const [searchParams] = useSearchParams();
-  const { user, access_token, isAuthenticated } = useSelector((state) => state.auth);
+
   const referralCode = searchParams.get("ref");
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -139,7 +139,7 @@ export default function SignUp() {
   
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
-  }, [navigate]);
+  }, []);
   
 
   const handleInputChange = (field, value) => {
@@ -162,7 +162,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     
     window.open(
-      `${API_URL}/google?ref=${referralCode ?? ""}`,
+      `${API_URL}/auth/google?ref=${referralCode ?? ""}`,
       'Google Sign Up',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -176,7 +176,7 @@ export default function SignUp() {
     const top = window.screen.height / 2 - height / 2;
     // setAlertConf({title:"Authenticating with GitHub ....", message:"This will only take a moment. Please follow the GitHub sign-in window."});
     window.open(
-      `${API_URL}/github?ref=${referralCode ?? ""}`,
+      `${API_URL}/auth/github?ref=${referralCode ?? ""}`,
       'Github Sign In',
       `width=${width},height=${height},left=${left},top=${top}`
     );
@@ -252,7 +252,7 @@ export default function SignUp() {
         dispatch(setUser(result.user));
         
         setLoaderState(false);
-        // Redirect to dashboard
+        
         if (!result.user.isEmailVerified) {
           const response = await authAPI.sendVerificationCodeRequest(result.access_token);
             navigate(`/verify-email?token=${response.verification_token}`);
@@ -299,13 +299,6 @@ export default function SignUp() {
     { value: 'dark', label: 'Dark' },
     { value: 'auto', label: 'Auto' }
   ];
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    if (user && access_token) {
-      navigate('/dashboard', { replace: true });
-    }
-  }, [user, access_token, isAuthenticated]);
 
   return (
   <div>
@@ -314,9 +307,7 @@ export default function SignUp() {
       ref={navContainerRef}
       onMouseEnter={handleNavAreaEnter}
       onMouseLeave={handleNavAreaLeave}
-      className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-        isNavHidden ? "h-0" : "h-[60px]"
-      } lg:h-[60px]`}
+      className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${isNavHidden ? "h-0" : "h-[60px]"} lg:h-[60px]`}
       style={{zIndex:99999999}}
     >
       <NavBar isHidden={isNavHidden} />

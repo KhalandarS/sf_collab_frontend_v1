@@ -24,24 +24,24 @@ export const AuthProvider = ({ children }) => {
   // 1. Setup Axios defaults whenever the token changes
   const setSession = (token, userData) => {
     if (token) {
-      localStorage.setItem("authToken", token);
+      localStorage.setItem("access_token", token);
       // This ensures any axios call made AFTER this line has the header
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     } else {
-      localStorage.removeItem("authToken");
+      localStorage.removeItem("access_token");
       delete axios.defaults.headers.common["Authorization"];
     }
 
     if (userData) {
-      localStorage.setItem("userData", JSON.stringify(userData));
+      localStorage.setItem("user", JSON.stringify(userData));
     } else {
-      localStorage.removeItem("userData");
+      localStorage.removeItem("user");
     }
   };
 
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const userData = localStorage.getItem("userData");
+    const token = localStorage.getItem("access_token");
+    const userData = localStorage.getItem("user");
 
     if (token && userData) {
       try {

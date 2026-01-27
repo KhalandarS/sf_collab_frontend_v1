@@ -30,7 +30,8 @@ api.interceptors.response.use(
       console.error('❌ Cannot connect to backend at', API_BASE_URL);
     } else if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
-      window.location.href = '/login';
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data);
     }

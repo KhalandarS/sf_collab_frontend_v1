@@ -31,7 +31,7 @@
 
 // ProtectedRoute.jsx (updated)
 import React, { useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import LoadingSpinner from "./LoadingSpinner";
 import AccessRequestModal from "./auth/admin/AccessRequestModal";
@@ -39,13 +39,18 @@ import { hasPermission } from "../utils/permissionCheck";
 
 export const ProtectedRoute = ({ children, requiredPermission }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { access_token, loading, user } = useSelector((state) => state.auth);
   const [showAccessModal, setShowAccessModal] = useState(false);
   // console.log(user)
   if (loading) return <LoadingSpinner />;
 
-  if (!access_token) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+  if (!access_token && location.pathname !== '/oauth/callback' && location.pathname !== '/login') {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    navigate("/login", { state: { from: location }, replace: true });
+    return null;
   }
 
   // If no permission required, just render children

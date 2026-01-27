@@ -1,37 +1,32 @@
 import { useState, useEffect, useRef } from "react"
 import { Eye, EyeOff } from "lucide-react"
-import { useNavigate, useLocation } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 // import { useAuth } from "../../contexts/AuthContext"
-import Beams from '../ui/Beams';
 import ShinyText from '../ui/ShinyText';
 import {Button} from '../ui/button';
-import useScrollHide from "../../utils/hooks/useScrollHide";
-import { loginGoogleUser,loginUser} from "../../services/auth/authThunks";
+import { loginUser} from "../../services/auth/authThunks";
 
 import NavBar from "../sections/NavBar";
 import MobileNavBar from "../sections/MobileNavBar";
-import StarBorder from '../ui/StarBorder'
 import { setUser,setToken } from "../../services/auth/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import '../style/Login.css';
 import LoadingSpinner from "../LoadingSpinner";
-
 import { IoLogIn } from "react-icons/io5";
-import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
+import useScrollHide from "@/utils/hooks/useScrollHide";
 
 const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5001/api/auth';
 const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5001';
 
 export default function Login() {
   const navigate = useNavigate();
-  const location = useLocation();
   const dispatch=useDispatch();
   
   // const { login, loginWithGoogle } = useAuth();
   const [showPassword, setShowPassword] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
-  const { user, access_token, isAuthenticated } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   // If you have user logged in, you should be signed out to access login page
 
   const [alertConf, setAlertConf] = useState({title:"", message:""});
@@ -40,12 +35,7 @@ export default function Login() {
     email: "",
     password: ""
   })
-  //   useEffect(() => {
-  //   if (user && !formData.email && !formData.password) {
-  //     dispatch(setUser(null));
-  //     dispatch(setToken(null));
-  //   }
-  // }, [user, dispatch, formData.email, formData.password]);
+
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
@@ -98,7 +88,7 @@ export default function Login() {
 
   // Listen for OAuth popup messages
   useEffect(() => {
-    const handleOAuthMessage = (event) => {
+    const handleOAuthMessage = async (event) => {
       const allowedOrigins = [
         "http://localhost:5001",
         "http://localhost:5001",
@@ -135,15 +125,14 @@ export default function Login() {
         localStorage.setItem("refreshToken", refreshToken);
         localStorage.setItem("user", JSON.stringify(user));
         
-        dispatch(setToken(access_token));
         dispatch(setUser(user));
+        dispatch(setToken(access_token));
+        navigate("/dashboard", { replace: true });
+
+
         
         setLoaderState(false);
   
-        // Redirect to dashboard
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
       }else if(type === "oauth_error") {
         console.error("OAuth ERROR:", error);
         setLoaderState(false);
@@ -156,8 +145,14 @@ export default function Login() {
   
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
-  }, [navigate, ORIGIN]);
-  
+  }, []);
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard", { replace: true });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -191,42 +186,23 @@ export default function Login() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    if (!validateForm()) return
+    e.preventDefault();
+    if (!validateForm()) return;
 
-    setIsLoading(true)
+    setIsLoading(true);
     try {
-      const result = await dispatch(loginUser(formData)).unwrap();
-      
-      if (result.success) { 
-        dispatch(setToken(result.access_token));
-        dispatch(setUser(result.user));
-        
-        setLoaderState(false);
-  
-        // Redirect to dashboard
-        setTimeout(() => {
-          navigate('/dashboard');
-        }, 1000);
-        
-      } else {
-        setErrors(prev => ({
-          ...prev,
-          submit: result?.message || result?.error || "Login failed"
-        }))
-        
-      }
+      await dispatch(loginUser(formData)).unwrap();
+      // reducer already sets user + token
     } catch (error) {
-      // console.error('Login error:', error)
-      // console.log('Error response data:', error.response?.data);
       setErrors(prev => ({
         ...prev,
         submit: error?.message || "An error occurred during login"
-      }))
+      }));
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
 
   const handleGoogleSignIn = () => {
     setLoaderState(true);
@@ -256,14 +232,7 @@ export default function Login() {
     );
   };
   
-  useEffect(() => {
-  if (!isAuthenticated) return;
-
-  if (user && access_token) {
-    navigate('/dashboard', { replace: true });
-  }
-}, [user, access_token, isAuthenticated]);
-
+  
   return (
   <div>
     

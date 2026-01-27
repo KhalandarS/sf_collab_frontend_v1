@@ -44,12 +44,14 @@ const Home = () => {
       if (lenis) lenis.destroy();
     }
   }, [])
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token } = useSelector((state) => state.auth);
   useEffect(() => {
-      if (user) {
-        navigate('/dashboard');
-      }
-    }, [user, navigate]);
+  if (user && access_token) {
+    navigate('/dashboard');
+  }
+// eslint-disable-next-line react-hooks/exhaustive-deps
+}, [user, access_token]);
+
   return (
     <div className="overflow-y-hidden md:w-full w-screen">
         <NavBar/>
