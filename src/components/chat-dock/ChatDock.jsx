@@ -862,192 +862,58 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
   return (
     <>
-      {/* Launcher Button with Avatar Badge */}
-        {(!isPanelOpen && !isWindowsOpen) &&
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-              onClick={() => {
-                setIsPanelOpen((v) => !v)
-                if (isMobile) {
-                  callback();
-                }
-              }}
-            className={`fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center`}
-          >
-            <MessageCircle size={20} />
-          
-            {/* Avatar-based notification badge */}
-            {totalUnread > 0 && (
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-2 -right-2"
-              >
-                <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
-                  {totalUnread > 99 ? "99+" : totalUnread}
-                </span>
-              </motion.div>
-            )}
-          </motion.button>}
-    <div className={`fixed ${!isMobile ? "bottom-4 right-4" : "bottom-0 right-0"} z-[9999] flex items-end pointer-events-none`}>
-      {/* SECTION A: LAUNCHER & PANEL */}
-      <div className="flex flex-col items-end gap-3 pointer-events-auto">
-        <AnimatePresence>
-          {isPanelOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className={`${isMobile ? "w-screen h-screen rounded-none" : "w-80"} bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden`}
-            >
-              <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
-                <div className="flex items-center gap-2">
-                  <div className="text-sm font-semibold text-white">Chats</div>
-                  <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
-                </div>
-                <button onClick={() => {
-                  setIsPanelOpen(false)
-                  if (isMobile) {
-                    callback();
-                  }
-                }} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
-                  <X size={16} />
-                </button>
-              </div>
-
-              <div className="p-3 border-b border-zinc-800">
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search chats..."
-                  className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none"
-                />
-                <div className="flex gap-2 mt-2">
-                  {["all", "online"].map((id) => (
-                    <button
-                      key={id}
-                      onClick={() => setActiveTab(id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                        activeTab === id ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"
-                      }`}
-                    >
-                      {id.charAt(0).toUpperCase() + id.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="max-h-[420px] overflow-y-auto p-2">
-                {isLoadingConvos ? (
-                  <div className="p-4 text-zinc-500 text-sm">Loading…</div>
-                ) : (
-                  filteredConversations.map((conv) => {
-                    const title =
-                      conv.name ||
-                      conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
-                      "Chat";
-                    const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
-
-                    // Get last message preview
-                    const lastMsg = conv.last_message || conv.lastMessage;
-                    let lastMessagePreview = "No messages yet";
-                    if (lastMsg) {
-                      const content = lastMsg.content || lastMsg.original_content || "";
-                      const senderId = lastMsg.sender_id || lastMsg.sender?.id;
-                      const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
-                      const isOwn = String(senderId) === String(currentUser?.id);
-                      const displayName = isOwn ? "You" : senderName;
-
-                      if (displayName) {
-                        const preview = `${displayName}: ${content}`;
-                        lastMessagePreview = preview.length > 30 ? preview.slice(0, 30) + "..." : preview;
-                      } else {
-                        lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
-                      }
-                    }
-
-                    return (
-                      <button
-                        key={conv.id}
-                        onClick={() => {
-                          openWindow({ conversationId: conv.id, title })
-                          if (isMobile) {
-                            setIsPanelOpen(false);
-                          }
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
-                          unreadCount > 0 ? "bg-zinc-800/50" : ""
-                        }`}
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
-                            {title}
-                          </div>
-                          <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
-                            {lastMessagePreview}
-                          </div>
-                        </div>
-                        {unreadCount > 0 && (
-                          <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
-                            {unreadCount > 99 ? "99+" : unreadCount}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+      {/* Launcher Button - hide on mobile when panel/windows open */}
+      {(!isPanelOpen && !isWindowsOpen) && (
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => {
+            setIsPanelOpen((v) => !v);
+            if (isMobile) callback();
+          }}
+          className="fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998]"
+        >
+          <MessageCircle size={20} />
+          {totalUnread > 0 && (
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2">
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
+                {totalUnread > 99 ? "99+" : totalUnread}
+              </span>
             </motion.div>
           )}
-        </AnimatePresence>
-      </div>
+        </motion.button>
+      )}
 
-      {/* SECTION B: CHAT WINDOWS */}
-      <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
-        <AnimatePresence>
-          {windows.map((w) => {
-            const cid = String(w.conversationId);
-            const unreadCount = unread?.[cid] || 0;
-            const typingText = getTypingNames(cid);
-            const conv = (conversations || []).find((c) => String(c.id) === cid);
-            const isDirect = conv?.conversation_type === "direct";
-
-            const { presenceStatus, statusText } = isDirect
-              ? getPresenceForDirect({
-                  conv,
-                  currentUserId: currentUser?.id,
-                  onlineUsers,
-                  lastActiveAt,
-                  lastSeenAt,
-                  nowTs,
-                })
-              : { presenceStatus: "offline", statusText: "" };
-
-            return (
+      <div className={`fixed ${isMobile ? "inset-0" : "bottom-4 right-4"} z-[9999] flex items-end pointer-events-none`}>
+        {/* Panel */}
+        <div className="flex flex-col items-end gap-3 pointer-events-auto w-full">
+          <AnimatePresence>
+            {isPanelOpen && (
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 50, scale: 0.9 }}
-                transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className={`${isMobile ? "w-screen border-none h-screen" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col justify-between bg-zinc-900  shadow-2xl overflow-hidden pointer-events-auto`}
+                exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                className={`${isMobile ? "fixed inset-0 rounded-none" : "w-80 rounded-2xl"} bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden flex flex-col`}
               >
-                <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+                {/* Header */}
+                <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-semibold text-white">Chats</div>
                     <span className={`w-2 h-2 rounded-full ${isConnected ? "bg-emerald-500" : "bg-red-500"}`} />
                   </div>
-                  <button onClick={() => {
-                    setIsPanelOpen(false);
-                    if (isMobile) {
-                      callback();
-                    }
-                  }} className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400">
+                  <button
+                    onClick={() => {
+                      setIsPanelOpen(false);
+                      if (isMobile) callback();
+                    }}
+                    className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                  >
                     <X size={16} />
                   </button>
                 </div>
 
-                <div className="p-3 border-b border-zinc-800">
+                {/* Search */}
+                <div className="p-3 border-b border-zinc-800 flex-shrink-0">
                   <input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -1069,24 +935,19 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                   </div>
                 </div>
 
-                <div className="max-h-[420px] overflow-y-auto p-2">
+                {/* Conversations List */}
+                <div className="overflow-y-auto p-2 flex-1">
                   {isLoadingConvos ? (
                     <div className="p-4 text-zinc-500 text-sm">Loading…</div>
                   ) : filteredConversations.length === 0 ? (
                     <div className="p-4 text-zinc-500 text-sm text-center">No conversations</div>
                   ) : (
                     filteredConversations.map((conv) => {
-                      const otherParticipant = conv.participants?.find(
-                        (p) => String(p.id) !== String(currentUser?.id)
-                      );
-
                       const title =
                         conv.name ||
-                        `${otherParticipant?.firstName || otherParticipant?.first_name || ''} ${otherParticipant?.lastName || otherParticipant?.last_name || ''}`.trim() ||
+                        conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
                         "Chat";
-
                       const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
-
                       const lastMsg = conv.last_message || conv.lastMessage;
                       let lastMessagePreview = "No messages yet";
                       if (lastMsg) {
@@ -1095,12 +956,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                         const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
                         const isOwn = String(senderId) === String(currentUser?.id);
                         const displayName = isOwn ? "You" : senderName;
-
                         if (displayName) {
                           const preview = `${displayName}: ${content}`;
-                          lastMessagePreview = preview.length > 25 ? preview.slice(0, 25) + "..." : preview;
+                          lastMessagePreview = preview.length > 30 ? preview.slice(0, 30) + "..." : preview;
                         } else {
-                          lastMessagePreview = content.length > 30 ? content.slice(0, 30) + "..." : content;
+                          lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
                         }
                       }
 
@@ -1109,21 +969,25 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           key={conv.id}
                           onClick={() => {
                             openWindow({ conversationId: conv.id, title });
-                            if (isMobile) {
-                              setIsPanelOpen(false);
-                            }
+                            if (isMobile) setIsPanelOpen(false);
                           }}
                           className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
                             unreadCount > 0 ? "bg-zinc-800/50" : ""
                           }`}
                         >
-                          <Avatar
-                            src={getProfilePicture(avatarUrl)}
-                            name={w.title}
-                            size="sm"
-                            presenceStatus={presenceStatus}
-                            showStatus={false}
-                          />
+                          <div className="min-w-0 flex-1">
+                            <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
+                              {title}
+                            </div>
+                            <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
+                              {lastMessagePreview}
+                            </div>
+                          </div>
+                          {unreadCount > 0 && (
+                            <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </div>
+                          )}
                         </button>
                       );
                     })
@@ -1134,8 +998,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           </AnimatePresence>
         </div>
 
-        {/* SECTION B: CHAT WINDOWS */}
-        <div className="flex flex-row-reverse items-end gap-3 pointer-events-none">
+        {/* Chat Windows */}
+        <div className="flex flex-row-reverse items-end gap-3 pointer-events-none w-full h-full">
           <AnimatePresence>
             {windows.map((w) => {
               const cid = String(w.conversationId);
@@ -1162,21 +1026,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 50, scale: 0.9 }}
                   transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                  className={`${isMobile ? "w-screen border-none h-screen" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col justify-between bg-zinc-900  shadow-2xl overflow-hidden pointer-events-auto`}
+                  className={`${isMobile ? "fixed inset-0 rounded-none" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col bg-zinc-900 shadow-2xl overflow-hidden pointer-events-auto`}
                 >
                   {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800">
+                  <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {isDirect && (() => {
-                        const other = conv?.participants?.find(
-                          (p) => String(p.id) !== String(currentUser?.id)
-                        );
-                        const avatarUrl =
-                          other?.profilePicture ||
-                          other?.profile_picture ||
-                          other?.profile?.picture ||
-                          null;
-
+                        const other = conv?.participants?.find((p) => String(p.id) !== String(currentUser?.id));
                         return (
                           <button
                             type="button"
@@ -1184,7 +1040,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             className="flex-shrink-0"
                           >
                             <Avatar
-                              src={getProfilePicture(avatarUrl)}
+                              src={getProfilePicture(other)}
                               name={w.title}
                               size="sm"
                               presenceStatus={presenceStatus}
@@ -1193,11 +1049,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           </button>
                         );
                       })()}
-
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-2 h-2 rounded-full flex-shrink-0  ${
+                            className={`w-2 h-2 rounded-full flex-shrink-0 ${
                               presenceStatus === "online"
                                 ? "bg-emerald-500"
                                 : presenceStatus === "idle"
@@ -1206,7 +1061,6 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             }`}
                           />
                           <span className="text-sm font-semibold text-white truncate">{w.title}</span>
-
                           {w.minimized && unreadCount > 0 && (
                             <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
                               {unreadCount > 99 ? "99+" : unreadCount}
@@ -1218,16 +1072,23 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                         )}
                       </div>
                     </div>
-
                     <div className="flex items-center gap-1 flex-shrink-0">
+                      {!isMobile && (
+                        <button
+                          onClick={() => toggleMinimize(cid)}
+                          className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                        >
+                          <Minus size={16} />
+                        </button>
+                      )}
                       <button
-                        onClick={() => toggleMinimize(cid)}
-                        className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
-                      >
-                        <Minus size={16} />
-                      </button>
-                      <button
-                        onClick={() => closeWindow(cid)}
+                        onClick={() => {
+                          if (isMobile) {
+                            setIsPanelOpen(false);
+                            callback();
+                          }
+                          closeWindow(cid)}
+                        }
                         className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
                       >
                         <X size={16} />
@@ -1235,87 +1096,76 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                     </div>
                   </div>
 
-                  <AnimatePresence>
-                    {!w.minimized && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        exit={{ opacity: 0, height: 0 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        {/* Messages */}
-                        <div className="h-[60vh] overflow-y-auto p-3 bg-zinc-950 space-y-0">
-                          {w.loading ? (
-                            <div className="text-sm text-zinc-500">Loading…</div>
-                          ) : (
-                            (w.messages || []).map((m, i) => {
-                              const isOwn = String(m.sender_id) === String(currentUser?.id);
-                              const showAvatar = shouldShowAvatar(w.messages, m, i, currentUser?.id);
-
-                              return (
-                                <MessageBubble
-                                  key={m.id || `${cid}-${i}`}
-                                  message={m}
-                                  isOwn={isOwn}
-                                  showAvatar={showAvatar}
-                                  showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
-                                  conversationType={conv?.conversation_type}
-                                  variant="dock"
-                                />
-                              );
-                            })
-                          )}
-
-                          {typingText && (
-                            <div className="flex items-center gap-2 px-2 py-1">
-                              <div className="flex gap-1">
-                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                              </div>
-                              <span className="text-xs text-zinc-500 italic">{typingText}</span>
+                  {!w.minimized && (
+                    <>
+                      {/* Messages */}
+                      <div className={`${isMobile ? "flex-1" : "h-[60vh]"} overflow-y-auto p-3 bg-zinc-950 space-y-0`}>
+                        {w.loading ? (
+                          <div className="text-sm text-zinc-500">Loading…</div>
+                        ) : (
+                          (w.messages || []).map((m, i) => {
+                            const isOwn = String(m.sender_id) === String(currentUser?.id);
+                            const showAvatar = shouldShowAvatar(w.messages, m, i, currentUser?.id);
+                            return (
+                              <MessageBubble
+                                key={m.id || `${cid}-${i}`}
+                                message={m}
+                                isOwn={isOwn}
+                                showAvatar={showAvatar}
+                                showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
+                                conversationType={conv?.conversation_type}
+                                variant="dock"
+                              />
+                            );
+                          })
+                        )}
+                        {typingText && (
+                          <div className="flex items-center gap-2 px-2 py-1">
+                            <div className="flex gap-1">
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                              <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                             </div>
-                          )}
+                            <span className="text-xs text-zinc-500 italic">{typingText}</span>
+                          </div>
+                        )}
+                        <div ref={(el) => (messageEndRefs.current[cid] = el)} />
+                      </div>
 
-                          <div ref={(el) => (messageEndRefs.current[cid] = el)} />
-                        </div>
-
-                        {/* Input */}
-                        <div className="bg-zinc-900 border-t border-zinc-800 p-2">
-                          <ChatInput
-                            value={w.draft || ""}
-                            onChange={(val) => {
-                              setWindows((prev) =>
-                                prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
+                      {/* Input */}
+                      <div className="bg-zinc-900 border-t border-zinc-800 p-2 flex-shrink-0">
+                        <ChatInput
+                          value={w.draft || ""}
+                          onChange={(val) => {
+                            setWindows((prev) =>
+                              prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
+                            );
+                            if (socket) {
+                              socket.emit("typing_start", { conversation_id: cid });
+                              if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
+                              typingTimeoutsRef.current[cid] = setTimeout(
+                                () => socket.emit("typing_stop", { conversation_id: cid }),
+                                1200
                               );
-                              if (socket) {
-                                socket.emit("typing_start", { conversation_id: cid });
-                                if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);
-                                typingTimeoutsRef.current[cid] = setTimeout(
-                                  () => socket.emit("typing_stop", { conversation_id: cid }),
-                                  1200
-                                );
-                              }
-                            }}
-                            onSend={(payload) => {
-                              if (socket) socket.emit("typing_stop", { conversation_id: cid });
-                              sendMessage(cid, payload);
-                            }}
-                            socket={socket}
-                            conversationId={cid}
-                            onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
-                          />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                            }
+                          }}
+                          onSend={(payload) => {
+                            if (socket) socket.emit("typing_stop", { conversation_id: cid });
+                            sendMessage(cid, payload);
+                          }}
+                          socket={socket}
+                          conversationId={cid}
+                          onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
+                        />
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               );
             })}
           </AnimatePresence>
         </div>
       </div>
-      </div>
-      </>
+    </>
   );
 }

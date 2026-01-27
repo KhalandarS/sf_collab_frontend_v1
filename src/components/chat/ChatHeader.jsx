@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { ArrowLeft, Menu } from "lucide-react";
 
-const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus="offline", onAvatarClick }) => {
+const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus="offline", onAvatarClick, setSidebarOpen = () => {}, isMobile }) => {
   
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -42,6 +43,16 @@ const ChatHeader = ({ conversation, currentUserId, statusText="", presenceStatus
     <div className="h-16 px-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="relative" ref={menuRef}>
+          {
+            isMobile &&
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
+              title="Toggle sidebar"
+            >
+              <ArrowLeft size={30} />
+            </button>
+          }
           <button
             type="button"
             onClick={() => {

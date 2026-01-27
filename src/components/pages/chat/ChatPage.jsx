@@ -671,7 +671,7 @@ useEffect(() => {
   }
 
   const isOnline = presenceStatus === "online";
-
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
 // ============================================
   // RENDER: Not logged in
   // ============================================
@@ -693,7 +693,7 @@ useEffect(() => {
     <div className="h-[calc(100vh-64px)] bg-zinc-950 flex flex-col md:flex-row relative">
       {/* Mobile overlay for sidebar */}
       {sidebarOpen && (
-        <div 
+        <div
           className="fixed top-16 inset-x-0 bottom-0 bg-black bg-opacity-50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
@@ -702,16 +702,15 @@ useEffect(() => {
       {/* ============================================ */}
       {/* LEFT SIDEBAR: Conversations List */}
       {/* ============================================ */}
-      <div className={`fixed md:static top-16 left-0 z-40 w-full sm:w-80 md:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-80px)] md:h-auto transform transition-transform duration-300 ease-in-out ${
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-      }`}>
+      <div className={`fixed md:static top-16 left-0 z-40 w-full sm:w-80 md:w-80 bg-zinc-900 border-r border-zinc-800 flex flex-col h-[calc(100vh-80px)] md:h-auto transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+        }`}>
         {/* Header */}
         <div className="p-3 md:p-4">
           <div className="flex items-center justify-between mb-4 gap-2">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <h1 className="text-lg md:text-xl font-bold text-white truncate">Chats</h1>
               {/* Connection status */}
-              <span 
+              <span
                 className={`w-2 h-2 rounded-full shrink-0 ${isConnected ? 'bg-emerald-500' : 'bg-red-500'}`}
                 title={isConnected ? 'Connected' : 'Disconnected'}
               />
@@ -751,11 +750,10 @@ useEffect(() => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
-                  activeTab === tab.id
+                className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${activeTab === tab.id
                     ? 'bg-indigo-500 text-zinc-900'
                     : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                }`}
+                  }`}
               >
                 {tab.label}
               </button>
@@ -802,20 +800,6 @@ useEffect(() => {
       {/* CENTER: Chat Area */}
       {/* ============================================ */}
       <div className="flex-1 flex flex-col bg-zinc-950 w-full md:w-auto min-w-0">
-        {/* Mobile Header with Menu */}
-        <div className="md:hidden p-3 border-b border-zinc-800 flex items-center justify-between bg-zinc-950">
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
-            title="Toggle sidebar"
-          >
-            <Menu size={20} />
-          </button>
-          <h2 className="text-sm font-semibold text-white flex-1 text-center">
-            {activeConversation ? activeConversation.name : 'Messages'}
-          </h2>
-          <div className="w-8" /> {/* Spacer for alignment */}
-        </div>
         
         {activeConversation ? (
           <>
@@ -824,22 +808,26 @@ useEffect(() => {
             {/* Chat Header - Hidden on mobile (shown in mobile header above) */}
             <div className="hidden md:block">
               <ChatHeader
-                 conversation={activeConversation}
-                 currentUserId={currentUser.id}
-                 presenceStatus={presenceStatus}
-                 statusText={statusText}
-                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+                conversation={activeConversation}
+                currentUserId={currentUser.id}
+                presenceStatus={presenceStatus}
+                statusText={statusText}
+                onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+                setSidebarOpen={() => setSidebarOpen(true)}
+                isMobile={isMobile}
               />
             </div>
             
             {/* Chat Header - Mobile Version (compact) */}
             <div className="md:hidden border-b border-zinc-800">
               <ChatHeader
-                 conversation={activeConversation}
-                 currentUserId={currentUser.id}
-                 presenceStatus={presenceStatus}
-                 statusText={statusText}
-                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+                conversation={activeConversation}
+                currentUserId={currentUser.id}
+                presenceStatus={presenceStatus}
+                statusText={statusText}
+                onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
+                setSidebarOpen={() => setSidebarOpen(true)}
+                isMobile={isMobile}
               />
             </div>
 
@@ -850,7 +838,7 @@ useEffect(() => {
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar
                     src={
-                     getProfilePicture(otherParticipant)
+                      getProfilePicture(otherParticipant)
                     }
                     name={`${otherParticipant?.firstName || otherParticipant?.first_name || ""}`}
                     size="xl"
