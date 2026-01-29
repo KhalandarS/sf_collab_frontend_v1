@@ -8,7 +8,6 @@ const api = axios.create({
   },
 })
 
-// ✅ FIXED: Request interceptor syntax (Removed the broken try/catch)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -22,7 +21,6 @@ api.interceptors.request.use(
   }
 );
 
-// ✅ FIXED: Response interceptor (Added safety checks for error.response)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -32,14 +30,15 @@ api.interceptors.response.use(
       localStorage.removeItem('access_token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data);
     }
     return Promise.reject(error);
   }
 );
-
-
 // Users API
 export const usersAPI = {
   // Now these functions will automatically use the token from the interceptor!

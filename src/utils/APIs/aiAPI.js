@@ -10,7 +10,6 @@ const api = axios.create({
   },
 })
 
-// Request interceptor with token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -24,7 +23,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -32,13 +30,18 @@ api.interceptors.response.use(
       console.error('❌ Cannot connect to backend at', API_BASE_URL);
     } else if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
-      window.location.href = '/login';
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data);
     }
     return Promise.reject(error);
   }
 );
+
 
 // AI API
 export const aiAPI = {

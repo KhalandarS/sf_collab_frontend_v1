@@ -1,4 +1,4 @@
-import { API_URL } from '@/utils/config';
+import { API_BASE_URL, API_URL } from '@/utils/config';
 import axios from 'axios';
 
 // 1. Create a centralized instance
@@ -10,16 +10,25 @@ const api = axios.create({
   }
 });
 
-api.interceptors.request.use(
-  (config) => {
-    // console.log('API Request:', config.method?.toUpperCase(), config.url)
-    return config
-  },
+api.interceptors.response.use(
+  (response) => response,
   (error) => {
-    console.error('API Request Error:', error)
-    return Promise.reject(error)
+    if (error.code === 'ECONNREFUSED') {
+      console.error('❌ Cannot connect to backend at', API_BASE_URL);
+    } else if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    } else if (error.response) {
+      console.error('API Error:', error.response.status, error.response.data);
+    }
+    return Promise.reject(error);
   }
-)
+);
+
 
 export class authAPI {
   static async loginRequest(credentials) {

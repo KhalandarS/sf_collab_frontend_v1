@@ -10,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Add auth token to all requests
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -19,20 +18,30 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error);
+  }
 );
 
-// Handle auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.code === 'ECONNREFUSED') {
+      console.error('❌ Cannot connect to backend at', API_BASE_URL);
+    } else if (error.response?.status === 401) {
       localStorage.removeItem('access_token');
-      window.location.href = '/login';
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    } else if (error.response) {
+      console.error('API Error:', error.response.status, error.response.data);
     }
     return Promise.reject(error);
   }
 );
+
 
 /**
  * Connection API Functions

@@ -8,29 +8,33 @@ const api = axios.create({
   },
 })
 
-// Add request interceptor for debugging
 api.interceptors.request.use(
   (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
-    console.error('API Request Error:', error);
     return Promise.reject(error);
   }
 );
 
-// Add response interceptor for error handling
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend. Make sure the server is running on', API_BASE_URL);
+      console.error('❌ Cannot connect to backend at', API_BASE_URL);
+    } else if (error.response?.status === 401) {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data);
-    } else {
-      console.error('API Error:', error.message);
     }
     return Promise.reject(error);
   }

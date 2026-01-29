@@ -8,7 +8,6 @@ const api = axios.create({
   },
 })
 
-// Request interceptor for token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -22,7 +21,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -32,7 +30,9 @@ api.interceptors.response.use(
       localStorage.removeItem('access_token');
       localStorage.removeItem('refreshToken');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data);
     }
