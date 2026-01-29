@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -7,37 +8,14 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 })
-
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  requestInterceptor,
+  requestErrorInterceptor
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend at', API_BASE_URL);
-    } else if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    } else if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 
@@ -59,11 +37,8 @@ export const applicationAPI = {
     return response.data;
   },
 
-  getJobApplications: async (accessToken, params) => {
+  getJobApplications: async (_, params) => {
     const response = await api.get("/applications/jobs", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
@@ -73,11 +48,8 @@ export const applicationAPI = {
     return response.data;
   },
 
-  getInfluencerApplications: async (accessToken, params) => {
+  getInfluencerApplications: async (_, params) => {
     const response = await api.get("/applications/influencers", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
@@ -87,12 +59,8 @@ export const applicationAPI = {
     return response.data;
   },
 
-  getById: async (applicationId, accessToken) => {
-    const response = await api.get(`/applications/${applicationId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  getById: async (applicationId) => {
+    const response = await api.get(`/applications/${applicationId}`);
     return response.data;
   },
 
@@ -106,12 +74,8 @@ export const applicationAPI = {
     return response.data;
   },
 
-  delete: async (applicationId, accessToken) => {
-    const response = await api.delete(`/applications/${applicationId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  delete: async (applicationId) => {
+    const response = await api.delete(`/applications/${applicationId}`);
     return response.data;
   },
 };

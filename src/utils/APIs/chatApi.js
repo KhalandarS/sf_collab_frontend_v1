@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,35 +10,13 @@ const api = axios.create({
 })
 
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  requestInterceptor,
+  requestErrorInterceptor
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend at', API_BASE_URL);
-    } else if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    } else if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 // Chat API

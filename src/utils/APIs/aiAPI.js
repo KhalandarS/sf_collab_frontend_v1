@@ -1,7 +1,6 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-
-// filepath: /Users/ivandavidgomezsilva/Documents/Ivan/Trabajos/SFORGER/SForger_data/SFRepos/sf_collab_frontend_v1/src/utils/APIs/aiAPI.js
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -11,35 +10,13 @@ const api = axios.create({
 })
 
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  requestInterceptor,
+  requestErrorInterceptor
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend at', API_BASE_URL);
-    } else if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    } else if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 
@@ -58,7 +35,7 @@ export const aiAPI = {
   },
 
   // Generate content (business plan, pitch deck, etc.)
-  generateContent: async ({ prompt, model, contentType = 'chat', temperature = 0.7, maxTokens = 2048, outputFormat = 'text', metadata = {} }, accessToken) => {
+  generateContent: async ({ prompt, model, contentType = 'chat', temperature = 0.7, maxTokens = 2048, outputFormat = 'text', metadata = {} }) => {
     const response = await api.post('/ai/generate', {
       prompt,
       model,
@@ -67,8 +44,6 @@ export const aiAPI = {
       temperature,
       max_tokens: maxTokens,
       output_format: outputFormat,
-    },  {
-      headers: accessToken ? { Authorization: `Bearer ${accessToken}` } : {},
     });
     return response.data;
   },
@@ -93,7 +68,7 @@ export const aiAPI = {
   },
 
   // Generate logo
-  generateLogo: async ({ brandName, imagesAmount, industry = 'technology', style = 'minimal', colors = [], additionalNotes = '', subtitle = '', accessToken }) => {
+  generateLogo: async ({ brandName, imagesAmount, industry = 'technology', style = 'minimal', colors = [], additionalNotes = '', subtitle = '' }) => {
     const response = await api.post('/ai/logo/generate', {
       brandName,
       industry,
@@ -102,10 +77,6 @@ export const aiAPI = {
       additionalNotes,
       subtitle,
       imagesAmount
-    }, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
     });
     return response.data;
   },

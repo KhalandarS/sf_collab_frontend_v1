@@ -1,5 +1,6 @@
 import { API_BASE_URL, API_URL } from '@/utils/config';
 import axios from 'axios';
+import { responseErrorInterceptor, responseInterceptor } from './interceptors';
 
 // 1. Create a centralized instance
 const api = axios.create({
@@ -10,23 +11,10 @@ const api = axios.create({
   }
 });
 
+
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend at', API_BASE_URL);
-    } else if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login';
-      }
-    } else if (error.response) {
-      console.error('API Error:', error.response.status, error.response.data);
-    }
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 
@@ -108,11 +96,9 @@ export class authAPI {
     }
   }
 
-  static async logoutRequest(token) {
+  static async logoutRequest() {
     try {
-      const response = await api.post('/auth/logout', {}, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await api.post('/auth/logout', {});
       return response.data;
     } catch (error) {
       if (error.response) {
