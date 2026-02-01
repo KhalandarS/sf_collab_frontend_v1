@@ -19,14 +19,12 @@ export const NotificationProvider = ({ children }) => {
   const [hasMore, setHasMore] = useState(true);
   const [filters, setFilters] = useState({});
 
-  const token = access_token || localStorage.getItem("access_token") || "";
-  const userId = user?.id ? String(user.id) : "";
 
   // -----------------------------
   // SOCKET.IO (backend expects query.user_id)
   // -----------------------------
   useEffect(() => {
-    if (!token || !userId) return;
+    if (!access_token || !user?.id) return;
 
     const s = getSocketInstance();
 
@@ -62,14 +60,14 @@ export const NotificationProvider = ({ children }) => {
       s.close();
       setSocket(null);
     };
-  }, [token, userId]);
+  }, [access_token, user?.id]);
 
   // -----------------------------
   // API LOADERS
   // -----------------------------
   const loadNotifications = useCallback(
   async (pageNum = 1, newFilters = filters) => {
-    if (!token) return;
+    if (!access_token) return;
 
     try {
       setLoading(true);
@@ -100,11 +98,11 @@ export const NotificationProvider = ({ children }) => {
       setLoading(false);
     }
   },
-  [token, filters]
+  [access_token, filters]
 );
 
 const loadUnreadCount = useCallback(async () => {
-  if (!token) return;
+  if (!access_token) return;
   try {
     // ✅ Remove token parameter
     const data = await notificationService.getUnreadCount();
@@ -112,26 +110,27 @@ const loadUnreadCount = useCallback(async () => {
   } catch (err) {
     console.error("Error loading unread count:", err);
   }
-}, [token]);
+}, [access_token]);
 
-const loadStats = useCallback(async () => {
-  if (!token) return;
-  try {
-    // ✅ Remove token parameter
-    const data = await notificationService.getStats();
-    setStats(data);
-  } catch (err) {
-    console.error("Error loading stats:", err);
-  }
-}, [token]);
+// const loadStats = useCallback(async () => {
+//   if (!token) return;
+//   try {
+//     const data = await notificationService.getStats();
+//     console.log(data);
+//     setStats(data);
+//   } catch (err) {
+//     console.error("Error loading stats:", err);
+//   }
+// }, [token]);
 
   // initial load (and when token changes)
+
   useEffect(() => {
-    if (!token) return;
+    if (!access_token) return;
     loadNotifications(1);
     loadUnreadCount();
-    loadStats();
-  }, [token, loadNotifications, loadUnreadCount, loadStats]);
+    // loadStats();
+  }, [access_token, loadNotifications, loadUnreadCount]);
 
   const loadMore = useCallback(() => {
     if (!loading && hasMore) loadNotifications(page + 1);
@@ -148,8 +147,7 @@ const loadStats = useCallback(async () => {
   const refresh = useCallback(() => {
     loadNotifications(1);
     loadUnreadCount();
-    loadStats();
-  }, [loadNotifications, loadUnreadCount, loadStats]);
+  }, [loadNotifications, loadUnreadCount]);
 
   const value = useMemo(
     () => ({
@@ -173,10 +171,6 @@ const loadStats = useCallback(async () => {
   return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };
 
-export const useNotifications = () => {
-  const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error("useNotifications must be used within NotificationProvider");
-  return ctx;
-};
+
 
 export default NotificationContext;

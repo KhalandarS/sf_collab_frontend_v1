@@ -8,16 +8,10 @@ import { toast } from "react-toastify";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import { Briefcase, Users, Sparkles, X } from "lucide-react";
 
-const ROLES = [
-  // { value: "member", label: "Team Member" },
-  { value: "builder", label: "Builder" },
-  { value: "advisor", label: "Advisor" },
-  { value: "investor", label: "Investor" },
-  { value: "influencer", label: "Influencer" },
-];
 
-const ApplyToStartupModal = ({ isOpen, onClose, startup }) => {
-  const [role, setRole] = useState("member");
+
+const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
+  const [role, setRole] = useState(roleSelected);
   const [message, setMessage] = useState("");
   const [links, setLinks] = useState({
     portfolio: "",
@@ -57,8 +51,10 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup }) => {
     } catch (err) {
       if (err.response?.status === 409) {
         toast.error("You already applied to this startup");
-      } else {
-        toast.error("Something went wrong");
+      } else if (err?.data?.message) {
+        toast.error(err.data.message);
+      } else if (err.error) {
+        toast.error(err.error);
       }
     } finally {
       setLoading(false);
@@ -122,40 +118,42 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup }) => {
           </div>
 
           {/* RIGHT / FORM PANEL */}
-          <div className="
-            lg:col-span-3
-            p-5 sm:p-6
-            space-y-6
-            overflow-y-auto
-          ">
+                <div className="
+                lg:col-span-3
+                p-5 sm:p-6
+                space-y-6
+                overflow-y-auto
+                max-h-[96vh]
+                ">
 
-            {/* Role selection */}
-            <div>
-              <h3 className="text-white font-semibold mb-3">
-                Desired Role
-              </h3>
-              <div className="grid grid-cols-2 gap-3">
-                {ROLES.map(r => (
-                  <button
-                    key={r.value}
+                {/* Role selection */}
+                <div>
+                  <h3 className="text-white font-semibold mb-3">
+                  Desired Role
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-50 overflow-y-auto">
+                  {(Object.keys(startup?.roles || {})).map((r, idx) => (
+                    <button
+                    key={idx}
                     type="button"
-                    onClick={() => setRole(r.value)}
+                    onClick={() => setRole(r)}
                     className={`
                       px-4 py-3 rounded-lg border text-sm font-medium
                       transition-all
-                      ${role === r.value
-                        ? "bg-blue-500/20 border-blue-500 text-blue-300"
-                        : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500"
+                      ${role === r
+                      ? "bg-blue-500/20 border-blue-500 text-blue-300"
+                      : "bg-gray-800 border-gray-700 text-gray-300 hover:border-gray-500"
                       }
                     `}
-                  >
-                    {r.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+                    >
+                    {r}
+                    </button>
+                  ))}
+                  </div>
+                </div>
 
-            {/* Message */}
+                {/* Message */}
             <div>
               <label className="text-sm text-gray-300 mb-2 block font-semibold">
                 Why do you want to join?

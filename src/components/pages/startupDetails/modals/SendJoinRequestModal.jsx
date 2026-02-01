@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,22 +14,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { toast } from 'react-toastify';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
 
-/**
+/*
  * SendJoinRequestModal - For REGULAR USERS to send join requests to startups
  * 
  * This modal allows non-founder/non-creator users to express interest in joining
  * a startup by submitting a join request with their message, desired role, and links.
  */
-const SendJoinRequestModal = ({ isOpen, onClose, startupId, startupName, onSuccess }) => {
+const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startupName, onSuccess }) => {
   const [formData, setFormData] = useState({
     message: '',
-    role: 'member',
+    role: startupRoles.length > 0 ? startupRoles[0].roleType : 'member',
     portfolio_url: '',
     github_url: '',
     linkedin_url: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -43,7 +42,7 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupId, startupName, onSucce
       const payload = {
         startup_id: startupId,
         message: formData.message,
-        role: formData.role,
+        role: `${formData.role} (${startupRoles[formData.role]?.roleType || 'member'})`,
         portfolio_url: formData.portfolio_url || null,
         github_url: formData.github_url || null,
         linkedin_url: formData.linkedin_url || null,
@@ -89,13 +88,6 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupId, startupName, onSucce
     }));
   };
 
-  const roles = [
-    { value: 'member', label: 'Team Member' },
-    { value: 'builder', label: 'Builder' },
-    { value: 'advisor', label: 'Advisor' },
-    { value: 'investor', label: 'Investor' },
-    { value: 'influencer', label: 'Influencer' }
-  ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -132,14 +124,18 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupId, startupName, onSucce
             <label className="text-sm text-gray-300 mb-2 block font-semibold">
               Desired Role *
             </label>
-            <Select value={formData.role} onValueChange={(value) => handleFieldChange('role', value)}>
+            <Select value={formData.role} onValueChange={(value) => {
+
+              handleFieldChange('role', value)
+            }
+            }>
               <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-600">
-                {roles.map(role => (
-                  <SelectItem key={role.value} value={role.value} className="text-white">
-                    {role.label}
+                {Object.keys(startupRoles).filter(roleKey => (startupRoles[roleKey]?.available_roles || 1) > 0).map((roleKey, idx) => (
+                  <SelectItem key={idx} value={roleKey} className="text-white">
+                    {roleKey} ({startupRoles[roleKey].roleType})
                   </SelectItem>
                 ))}
               </SelectContent>

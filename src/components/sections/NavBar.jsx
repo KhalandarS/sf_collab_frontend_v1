@@ -20,6 +20,8 @@ import { ShineButton } from '../lightswind/shine-button';
 // IMPORTANT: Import the apiClient you created
 import apiClient from "@/services/apiClient";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import getNotificationsWithPreferences from "@/utils/getNotificationsWithPreferences";
+import { notificationAPI } from "@/utils/APIs/notificationAPI";
 
 // Simple icon components
 const BellIcon = () => (
@@ -106,29 +108,26 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
 
     try {
       // apiClient handles the BaseURL and the Bearer token automatically
-      const response = await apiClient.get('/notifications');
-      
-      const notificationsData = response.data?.data?.notifications || [];
+      const response = await notificationAPI.getAll();
+      const notificationsData = response.data?.notifications || [];
       
       const formattedNotifications = notificationsData
-        .filter(notif => !notif.isRead)
         .map(notif => ({
           id: notif.id,
           title: notif.title,
           text: notif.message,
           time: notif.createdAt,
           unread: !notif.isRead,
-          type: notif.notification_type
+          type: notif.notification_type,
         }));
-
-      setNotifications(formattedNotifications);
+        
+      setNotifications(getNotificationsWithPreferences(formattedNotifications, user));
       
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
       // Fallback to local user object if exists
-      if (user?.relationships?.notifications) {
-        const fallback = user.relationships.notifications
-          .filter(notif => !notif.isRead)
+      if (user?.notifications) {
+        const fallback = user.notifications
           .map(notif => ({
             id: notif.id,
             title: notif.title,
@@ -137,7 +136,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
             unread: !notif.isRead,
             type: notif.notification_type
           }));
-        setNotifications(fallback);
+        setNotifications(getNotificationsWithPreferences(fallback, user));
       }
     }
   };
@@ -188,9 +187,9 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"
+      className={`fixed top-0 z-100 left-0 flex px-6 items-center w-full h-16 justify-between transition-transform duration-300 will-change-transform ${isHidden ? "-translate-y-full" : "translate-y-0"
         }`}
-      style={{ zIndex: 9999999 }}
+
     >
       <div
         className="absolute inset-0 z-0"
@@ -210,23 +209,28 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
               <IoChatbubbles size={23} />
             </Link>
             <div className="relative" ref={notificationRef}>
-                          {/* 🔔 NOTIFICATIONS */}
-            <Tippy
-              content={
+              {/* 🔔 NOTIFICATIONS */}
+              <Tippy
+                content={
+                  
                   <GlareHover
                     width="100%"
                     height="100%"
                     glareColor="#ffffff"
                     glareOpacity={0.3}
-                    style={{ background: "rgba(58, 58, 58, 0.6)", backdropFilter: "blur(10px)" }}
+                    style={{ background: "rgba(58, 58, 58, 0.6)", backdropFilter: "blur(10px)", borderRadius: '15px' }}
                   >
                     <div style={{ borderRadius: '15px' }} className="w-80 overflow-hidden z-50">
                       <div className="p-4 border-b border-slate-700/50">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-bold text-white">Notifications</h3>
-                          <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
-                            {notifications.length} New
-                          </span>
+                          {
+                            notifications.filter(n => n.unread).length > 0 &&
+                          
+                            <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
+                              {notifications.filter(n => n.unread).length} New
+                            </span>
+                          }
                         </div>
                       </div>
                       <div className="max-h-80 overflow-y-auto">
@@ -258,41 +262,43 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-              visible={isNotificationsOpen}
-              interactive
-              placement="bottom"
-              appendTo={document.body}
-              onClickOutside={() => setIsNotificationsOpen(false)}
-            >
-              <button
-                onClick={() => {
-                  setIsProfileOpen(false);
-                  setIsNotificationsOpen(v => !v);
-                }}
-                className="relative p-2 rounded-lg bg-blue-500/10"
+                visible={isNotificationsOpen}
+                interactive
+                placement="bottom"
+                appendTo={document.body}
+                onClickOutside={() => setIsNotificationsOpen(false)}
               >
-                <BellIcon />
-                {notifications.length > 0 && (
-                  <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1">
-                    {notifications.length}
-                  </span>
-                )}
-              </button>
-            </Tippy>
+                <button
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    setIsNotificationsOpen(v => !v);
+                  }}
+                  className="relative p-2 rounded-lg bg-blue-500/10"
+                >
+                  <BellIcon />
+                  {notifications.filter(n => n.unread).length > 0 && (
+                    <span className="absolute top-0 right-0 text-xs bg-red-500 rounded-full px-1">
+                      {notifications.filter(n => n.unread).length}
+                    </span>
+                  )}
+                </button>
+              </Tippy>
 
             
             </div>
 
             <div className="relative" ref={profileRef}>
               {/* 👤 PROFILE */}
-            <Tippy
-              content={
+              <Tippy
+                content={
                   <GlareHover
                     width="100%"
                     height="100%"
-                    style={{ background: "rgba(58, 58, 58, 0.28)", backdropFilter: "blur(10px)" }}
+                    glareColor="#ffffff"
+                    glareOpacity={0.3}
+                    style={{ background: "rgba(58, 58, 58, 0.6)", backdropFilter: "blur(10px)", borderRadius: '15px' }}
                   >
-                    <div className="mt-3 w-full overflow-hidden z-50">
+                    <div style={{ borderRadius: '15px' }} className="w-80 overflow-hidden z-50">
                       <div className="p-4 border-b border-slate-700/50">
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-blue-500/30">
@@ -327,22 +333,22 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                     </div>
                   </GlareHover>
                 }
-              visible={isProfileOpen}
-              interactive
-              placement="bottom"
-              appendTo={document.body}
-              onClickOutside={() => setIsProfileOpen(false)}
-            >
-              <button
-                onClick={() => {
-                  setIsNotificationsOpen(false);
-                  setIsProfileOpen(v => !v);
-                }}
-                className="w-10 h-10 rounded-lg overflow-hidden"
+                visible={isProfileOpen}
+                interactive
+                placement="bottom"
+                appendTo={document.body}
+                onClickOutside={() => setIsProfileOpen(false)}
               >
-                <img src={getProfilePicture(user)} className="w-full h-full object-cover" />
-              </button>
-            </Tippy>
+                <button
+                  onClick={() => {
+                    setIsNotificationsOpen(false);
+                    setIsProfileOpen(v => !v);
+                  }}
+                  className="w-10 h-10 rounded-lg overflow-hidden"
+                >
+                  <img src={getProfilePicture(user)} className="w-full h-full object-cover" />
+                </button>
+              </Tippy>
             </div>
 
             <div className="lg:hidden border border-blue-500/20 rounded-lg">

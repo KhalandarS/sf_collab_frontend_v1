@@ -18,9 +18,10 @@ export default function TechStackSection({ startup }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {startup.tech_stack && startup.tech_stack.length > 0 ? (
+          {console.log(startup)}
+          {startup?.tech_stack && startup.tech_stack.length > 0 ? (
             <div className="flex flex-wrap gap-3">
-              {startup.tech_stack.map((tech, index) => (
+              {Array(startup.tech_stack).map((tech, index) => (
                 <motion.div
                   key={tech}
                   initial={{ opacity: 0, scale: 0.8 }}

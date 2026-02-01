@@ -225,8 +225,8 @@ export default function SignUp() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
           email: formData.email,
           password: formData.password,
           referralCode: referralCode, // This for the waitlist
@@ -240,8 +240,8 @@ export default function SignUp() {
         }),
       });
 
-      const result = await response.json();
-
+      let result = await response.json();
+      result = result.data;
       if (response.ok) {
         // Store tokens and user data
         localStorage.setItem('access_token', result.access_token);
@@ -252,10 +252,10 @@ export default function SignUp() {
         dispatch(setUser(result.user));
         
         setLoaderState(false);
-        
+        console.log(result);
         if (!result.user.isEmailVerified) {
           const response = await authAPI.sendVerificationCodeRequest(result.access_token);
-            navigate(`/verify-email?token=${response.verification_token}`);
+            navigate(`/verify-email?token=${response.data.verification_token}`);
             toast.info("Verification code sent to your email, continue to verify.");
         }
       }else {
@@ -263,14 +263,14 @@ export default function SignUp() {
       
         setErrors(prev => ({
           ...prev,
-          submit: result.error || 'Signup failed'
+          submit: result?.data?.error || 'Signup failed'
         }));
       }
     } catch (error) {
       console.error('Signup unexpected error:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error?.message || 'An unexpected error occurred'
+        submit: error?.data?.message || 'An unexpected error occurred'
       }));
     } finally {
       setIsLoading(false);

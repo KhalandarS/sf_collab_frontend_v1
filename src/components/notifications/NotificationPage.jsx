@@ -1,278 +1,218 @@
-/**
- * NotificationPage Component - Enhanced Version
- * Full-page view with category filtering support
- */
-
-import React, { useState, useEffect } from 'react';
-import { useNotifications } from '../../contexts/NotificationContext';
-import NotificationItem from '../NotificationItem';
+import { use, useEffect, useState } from "react";
 import {
-  Filter,
+  Bell,
   CheckCheck,
   Trash2,
   RefreshCw,
   Settings,
-  TrendingUp,
-  Bell,
-  User,
-  Users,
-  Lightbulb,
-  Briefcase,
-  ListTodo,
-  MessageSquare,
-  Calendar,
-  DollarSign,
-  Award,
-} from 'lucide-react';
-import './NotificationPage.css';
+  Filter,
+} from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
-const NotificationPage = () => {
+import NotificationItem from "./NotificationItem";
+import useNotifications from "@/contexts/useNotifications";
+import { notificationAPI } from "@/utils/APIs/notificationAPI";
+
+export default function NotificationPage() {
   const {
     notifications,
     unreadCount,
     loading,
     hasMore,
-    stats,
-    markAllAsRead,
-    deleteAllRead,
     loadMore,
     applyFilters,
     refresh,
   } = useNotifications();
-
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [showStats, setShowStats] = useState(false);
-
-  // Type filter options
-  const filterOptions = [
-    { value: 'all', label: 'All', filter: {} },
-    { value: 'unread', label: 'Unread', filter: { is_read: false } },
-    { value: 'success', label: 'Success', filter: { type: 'success' } },
-    { value: 'info', label: 'Info', filter: { type: 'info' } },
-    { value: 'warning', label: 'Warnings', filter: { type: 'warning' } },
-    { value: 'error', label: 'Errors', filter: { type: 'error' } },
-  ];
-
-  // Category filter options (from documentation 4.1-4.12)
-  const categoryOptions = [
-    { value: 'all', label: 'All Categories', icon: Bell },
-    { value: 'account', label: 'Account', icon: User },
-    { value: 'social', label: 'Social', icon: Users },
-    { value: 'idea', label: 'Ideas', icon: Lightbulb },
-    { value: 'startup', label: 'Startups', icon: Briefcase },
-    { value: 'task', label: 'Tasks', icon: ListTodo },
-    { value: 'message', label: 'Messages', icon: MessageSquare },
-    { value: 'event', label: 'Events', icon: Calendar },
-    { value: 'reward', label: 'Rewards', icon: Award },
-    { value: 'funding', label: 'Funding', icon: DollarSign },
-  ];
-
-  const handleFilterChange = (filterValue) => {
-    setActiveFilter(filterValue);
-    const filter = filterOptions.find((f) => f.value === filterValue);
-    const categoryFilter = activeCategory !== 'all' ? { category: activeCategory } : {};
-    applyFilters({ ...filter?.filter, ...categoryFilter } || {});
-  };
-
-  const handleCategoryChange = (categoryValue) => {
-    setActiveCategory(categoryValue);
-    const typeFilter = filterOptions.find((f) => f.value === activeFilter);
-    const categoryFilter = categoryValue !== 'all' ? { category: categoryValue } : {};
-    applyFilters({ ...typeFilter?.filter, ...categoryFilter });
-  };
-
-  const handleMarkAllAsRead = async () => {
-    if (window.confirm('Mark all notifications as read?')) {
-      try {
-        await markAllAsRead();
-      } catch (error) {
-        console.error('Failed to mark all as read:', error);
+  const markAllAsRead = async () => {
+    await notificationAPI.markAllRead();
+    refresh();
+  }
+  const [notificationsRead, setNotificationsRead] = useState([]);
+  const onMarkAsRead = (id) => {
+    setNotificationsRead((prev) => [...prev, id]);
+  }
+  useEffect(() => {
+    async function markReadBatch() {
+      if (notificationsRead.length > 5) {
+        await notificationAPI.markBatchRead(notificationsRead.map((n) => n.id));
+        refresh();
+        setNotificationsRead([]);
       }
     }
-  };
+    markReadBatch();
+  }, [notificationsRead, refresh]);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const filters = [
+    { id: "all", label: "All" },
+    { id: "unread", label: "Unread", filter: { is_read: false } },
+    { id: "success", label: "Success", filter: { type: "success" } },
+    { id: "info", label: "Info", filter: { type: "info" } },
+    { id: "warning", label: "Warnings", filter: { type: "warning" } },
+    { id: "error", label: "Errors", filter: { type: "error" } },
+  ];
 
-  const handleDeleteAllRead = async () => {
-    if (window.confirm('Delete all read notifications? This cannot be undone.')) {
-      try {
-        await deleteAllRead();
-      } catch (error) {
-        console.error('Failed to delete read notifications:', error);
-      }
-    }
+  const applyFilter = (f) => {
+    setActiveFilter(f.id);
+    applyFilters(f.filter || {});
   };
 
   return (
-    <div className="notification-page">
-      {/* Header */}
-      <div className="notification-page-header">
-        <div>
-          <h1>Notifications</h1>
-          {unreadCount > 0 && (
-            <p className="unread-count-text">
-              You have {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+    <div className="space-y-6 px-4 py-6">
+
+      {/* ================= HEADER ================= */}
+      <motion.header
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl bg-gradient-to-br from-indigo-900/30 to-slate-900/40 border border-indigo-500/20 p-6"
+      >
+        <div className="flex flex-col lg:flex-row justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-xl bg-indigo-600">
+                <Bell className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-white">Notifications</h1>
+            </div>
+            <p className="text-sm text-white/60">
+              {unreadCount > 0
+                ? `You have ${unreadCount} unread notifications`
+                : "You're all caught up"}
             </p>
-          )}
-        </div>
+          </div>
 
-        <div className="notification-page-actions">
-          <button
-            className="action-button"
-            onClick={() => setShowStats(!showStats)}
+          <div className="flex flex-wrap gap-2">
+            <HeaderButton icon={RefreshCw} onClick={refresh}>
+              Refresh
+            </HeaderButton>
+
+
+              <HeaderButton icon={CheckCheck} onClick={markAllAsRead}>
+                Mark all read
+              </HeaderButton>
+
+            <HeaderButton as="a" href="/user-profile?page=notifications" icon={Settings}>
+              Settings
+            </HeaderButton>
+          </div>
+        </div>
+      </motion.header>
+
+      {/* ================= FILTERS ================= */}
+      <motion.section
+        layout
+        className="rounded-xl bg-white/[0.03] border border-white/10 p-4 flex gap-2 overflow-x-auto"
+      >
+        {filters.map((f) => (
+          <motion.button
+            key={f.id}
+            layout
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            onClick={() => applyFilter(f)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition whitespace-nowrap
+              ${
+                activeFilter === f.id
+                  ? "bg-indigo-500/20 text-indigo-300 border border-indigo-500/40"
+                  : "text-white/50 hover:text-white hover:bg-white/5"
+              }`}
           >
-            <TrendingUp size={18} />
-            <span>Stats</span>
-          </button>
+            {f.label}
+            {f.id === "unread" && unreadCount > 0 && (
+              <span className="ml-2 px-2 py-0.5 rounded-full text-xs bg-indigo-500 text-white">
+                {unreadCount}
+              </span>
+            )}
+          </motion.button>
+        ))}
+      </motion.section>
 
-          <button className="action-button" onClick={refresh}>
-            <RefreshCw size={18} />
-            <span>Refresh</span>
-          </button>
-
-          {unreadCount > 0 && (
-            <button className="action-button" onClick={handleMarkAllAsRead}>
-              <CheckCheck size={18} />
-              <span>Mark All Read</span>
-            </button>
+      {/* ================= CONTENT ================= */}
+      <section className="space-y-3">
+        <AnimatePresence mode="popLayout">
+          {loading && notifications.length === 0 && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EmptyState label="Loading notifications…" />
+            </motion.div>
           )}
 
-          <button className="action-button danger" onClick={handleDeleteAllRead}>
-            <Trash2 size={18} />
-            <span>Clear Read</span>
-          </button>
+          {!loading && notifications.length === 0 && (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <EmptyState label="No notifications found" />
+            </motion.div>
+          )}
 
-          <a href="/settings/notifications" className="action-button">
-            <Settings size={18} />
-            <span>Settings</span>
-          </a>
-        </div>
-      </div>
+          {notifications.map((n) => (
+            <motion.div
+              key={n.id}
+              layout
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25, ease: "easeOut" }}
+            >
+              <NotificationItem notification={n} onMarkAsRead={onMarkAsRead}/>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </section>
 
-      {/* Stats Panel */}
-      {showStats && stats && (
-        <div className="notification-stats-panel">
-          <div className="stat-card">
-            <div className="stat-value">{stats.total}</div>
-            <div className="stat-label">Total</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-value unread">{stats.unread}</div>
-            <div className="stat-label">Unread</div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-value">{stats.read}</div>
-            <div className="stat-label">Read</div>
-          </div>
-          {/* Type breakdown */}
-          {Object.entries(stats.typeBreakdown || {}).map(([type, count]) => (
-            <div key={type} className="stat-card">
-              <div className={`stat-value type-${type}`}>{count}</div>
-              <div className="stat-label">{type}</div>
-            </div>
-          ))}
-          {/* Category breakdown */}
-          {Object.entries(stats.categoryBreakdown || {}).map(([category, count]) => (
-            <div key={category} className="stat-card">
-              <div className={`stat-value category-${category}`}>{count}</div>
-              <div className="stat-label">{category}</div>
-            </div>
-          ))}
+      {/* ================= LOAD MORE ================= */}
+      {hasMore && (
+        <div className="flex justify-center pt-6">
+          <motion.button
+            onClick={loadMore}
+            disabled={loading}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:border-indigo-500/40 transition disabled:opacity-50"
+          >
+            {loading ? "Loading…" : "Load more notifications"}
+          </motion.button>
         </div>
       )}
-
-      {/* Category Filters */}
-      <div className="notification-category-filters">
-        {categoryOptions.map((option) => {
-          const Icon = option.icon;
-          return (
-            <button
-              key={option.value}
-              className={`category-filter-button ${
-                activeCategory === option.value ? 'active' : ''
-              }`}
-              onClick={() => handleCategoryChange(option.value)}
-            >
-              <Icon size={16} />
-              <span>{option.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Type Filters */}
-      <div className="notification-page-filters">
-        {filterOptions.map((option) => (
-          <button
-            key={option.value}
-            className={`filter-tab ${
-              activeFilter === option.value ? 'active' : ''
-            }`}
-            onClick={() => handleFilterChange(option.value)}
-          >
-            {option.label}
-            {option.value === 'unread' && unreadCount > 0 && (
-              <span className="filter-badge">{unreadCount}</span>
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Notification List */}
-      <div className="notification-page-content">
-        {loading && notifications.length === 0 ? (
-          <div className="notification-page-loading">
-            <div className="spinner-large" />
-            <p>Loading notifications...</p>
-          </div>
-        ) : notifications.length === 0 ? (
-          <div className="notification-page-empty">
-            <div className="empty-icon">
-              <Filter size={48} />
-            </div>
-            <h3>No notifications found</h3>
-            <p>
-              {activeFilter === 'unread'
-                ? "You're all caught up!"
-                : activeCategory !== 'all'
-                ? `No ${activeCategory} notifications`
-                : 'Try adjusting your filters'}
-            </p>
-          </div>
-        ) : (
-          <>
-            <div className="notification-page-list">
-              {notifications.map((notification) => (
-                <NotificationItem
-                  key={notification.id}
-                  notification={notification}
-                />
-              ))}
-            </div>
-
-            {/* Load More */}
-            {hasMore && (
-              <div className="load-more-container">
-                <button
-                  className="load-more-button-large"
-                  onClick={loadMore}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <>
-                      <div className="spinner-small" />
-                      <span>Loading...</span>
-                    </>
-                  ) : (
-                    'Load More Notifications'
-                  )}
-                </button>
-              </div>
-            )}
-          </>
-        )}
-      </div>
     </div>
   );
-};
+}
 
-export default NotificationPage;
+/* ================= SUBCOMPONENTS ================= */
+
+function HeaderButton({ icon: Icon, danger, as = "button", ...props }) {
+  const Comp = motion[as] || motion.button;
+
+  return (
+    <Comp
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      {...props}
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition
+        ${
+          danger
+            ? "bg-red-500/10 text-red-400 hover:bg-red-500/20"
+            : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10"
+        }`}
+    >
+      <Icon className="w-4 h-4" />
+      {props.children}
+    </Comp>
+  );
+}
+
+function EmptyState({ label }) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[200px] text-white/40">
+      <Filter className="w-8 h-8 mb-2" />
+      <p className="text-sm">{label}</p>
+    </div>
+  );
+}

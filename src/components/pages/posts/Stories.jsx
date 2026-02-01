@@ -30,9 +30,9 @@ const fetchStories = async () => {
         headers: { Authorization: `Bearer ${token}` }
     });
     const data = await response.json();
-    
+    console.log("Fetched stories", data);
     if (data?.success) {
-      setStories(data.data || []);
+      setStories(data.data.stories || []);
     }
   } catch (error) {
     console.warn("Stories API bypassed or failed.");

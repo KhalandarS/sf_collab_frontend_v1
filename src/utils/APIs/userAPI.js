@@ -59,7 +59,11 @@ export const usersAPI = {
     const response = await api.get(`/users/${userId}/activity`);
     return response.data.data;
   },
-
+  getCurrentPlan : async () => {
+    const response = await api.get('/users/my-current-plan');
+    console.log("CURRENT PLAN:", response);
+    return response.data;
+  },
   getMyRoles: async () => {
     const response = await api.get('/user-roles/my-roles');
     return response.data;

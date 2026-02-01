@@ -3,103 +3,78 @@
  * Handles all API calls related to builder functionality
  */
 
-import { API_URL } from '@/utils/config';
+import { API_BASE_URL } from '@/utils/config';
+import axios from 'axios';
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from '../utils/APIs/interceptors';
 
-const API_BASE = `${API_URL}/builder`;
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+api.interceptors.request.use(
+  requestInterceptor,
+  requestErrorInterceptor
+);
+
+api.interceptors.response.use(
+  responseInterceptor,
+  responseErrorInterceptor
+);
 
 /**
  * Builder Profile APIs
  */
 export const builderProfileAPI = {
-  // Get builder's profile
   getProfile: async (accessToken) => {
-    const response = await fetch(`${API_BASE}/profile`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
+    const response = await api.get('/profile', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch builder profile');
-    return response.json();
+    return response.data;
   },
 
-  // Update builder's profile
   updateProfile: async (profileData, accessToken) => {
-    const response = await fetch(`${API_BASE}/profile`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(profileData),
+    const response = await api.put('/profile', profileData, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to update builder profile');
-    return response.json();
+    return response.data;
   },
 
-  // Add skill to profile
   addSkill: async (skillData, accessToken) => {
-    const response = await fetch(`${API_BASE}/skills`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(skillData),
+    const response = await api.post('/skills', skillData, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to add skill');
-    return response.json();
+    return response.data;
   },
 
-  // Remove skill from profile
   removeSkill: async (skillId, accessToken) => {
-    const response = await fetch(`${API_BASE}/skills/${skillId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.delete(`/skills/${skillId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to remove skill');
-    return response.json();
+    return response.data;
   },
 
-  // Get portfolio items
   getPortfolio: async (accessToken) => {
-    const response = await fetch(`${API_BASE}/portfolio`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/portfolio', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch portfolio');
-    return response.json();
+    return response.data;
   },
 
-  // Add portfolio item
   addPortfolioItem: async (itemData, accessToken) => {
-    const response = await fetch(`${API_BASE}/portfolio`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(itemData),
+    const response = await api.post('/portfolio', itemData, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to add portfolio item');
-    return response.json();
+    return response.data;
   },
 
-  // Remove portfolio item
   removePortfolioItem: async (itemId, accessToken) => {
-    const response = await fetch(`${API_BASE}/portfolio/${itemId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.delete(`/portfolio/${itemId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to remove portfolio item');
-    return response.json();
+    return response.data;
   },
 };
 
@@ -107,72 +82,40 @@ export const builderProfileAPI = {
  * Applications APIs
  */
 export const builderApplicationsAPI = {
-  // Get all applications
   getApplications: async (accessToken, filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/applications?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/applications', {
+      params: filters,
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch applications');
-    return response.json();
+    return response.data;
   },
 
-  // Get single application details
   getApplication: async (applicationId, accessToken) => {
-    const response = await fetch(`${API_BASE}/applications/${applicationId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get(`/applications/${applicationId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch application details');
-    return response.json();
+    return response.data;
   },
 
-  // Apply to a startup
   applyToStartup: async (startupId, applicationData, accessToken) => {
-    const response = await fetch(`${API_BASE}/applications`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        startup_id: startupId,
-        ...applicationData,
-      }),
+    const response = await api.post('/applications', { startup_id: startupId, ...applicationData }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to submit application');
-    return response.json();
+    return response.data;
   },
 
-  // Withdraw application
   withdrawApplication: async (applicationId, accessToken) => {
-    const response = await fetch(`${API_BASE}/applications/${applicationId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.delete(`/applications/${applicationId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to withdraw application');
-    return response.json();
+    return response.data;
   },
 
-  // Update application status (admin/startup)
   updateApplicationStatus: async (applicationId, status, accessToken) => {
-    const response = await fetch(`${API_BASE}/applications/${applicationId}/status`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status }),
+    const response = await api.patch(`/applications/${applicationId}/status`, { status }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to update application status');
-    return response.json();
+    return response.data;
   },
 };
 
@@ -180,55 +123,33 @@ export const builderApplicationsAPI = {
  * Saved Startups APIs
  */
 export const builderSavedStartupsAPI = {
-  // Get all saved startups
   getSavedStartups: async (accessToken, filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/saved-startups?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/saved-startups', {
+      params: filters,
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch saved startups');
-    return response.json();
+    return response.data;
   },
 
-  // Save a startup
   saveStartup: async (startupId, accessToken) => {
-    const response = await fetch(`${API_BASE}/saved-startups`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ startup_id: startupId }),
+    const response = await api.post('/saved-startups', { startup_id: startupId }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to save startup');
-    return response.json();
+    return response.data;
   },
 
-  // Remove saved startup
   unsaveStartup: async (startupId, accessToken) => {
-    const response = await fetch(`${API_BASE}/saved-startups/${startupId}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.delete(`/saved-startups/${startupId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to remove saved startup');
-    return response.json();
+    return response.data;
   },
 
-  // Check if startup is saved
   isStartupSaved: async (startupId, accessToken) => {
-    const response = await fetch(`${API_BASE}/saved-startups/${startupId}/check`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get(`/saved-startups/${startupId}/check`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to check saved status');
-    return response.json();
+    return response.data;
   },
 };
 
@@ -236,57 +157,34 @@ export const builderSavedStartupsAPI = {
  * Tasks APIs
  */
 export const builderTasksAPI = {
-  // Get active tasks
   getActiveTasks: async (accessToken, filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/tasks?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/tasks', {
+      params: filters,
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch tasks');
-    return response.json();
+    console.log("Active tasks:", response.data);
+    return response.data;
   },
 
-  // Get task details
   getTaskDetails: async (taskId, accessToken) => {
-    const response = await fetch(`${API_BASE}/tasks/${taskId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get(`/tasks/${taskId}`, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch task details');
-    return response.json();
+    return response.data;
   },
 
-  // Update task progress
   updateTaskProgress: async (taskId, progress, accessToken) => {
-    const response = await fetch(`${API_BASE}/tasks/${taskId}/progress`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ progress }),
+    const response = await api.patch(`/tasks/${taskId}/progress`, { progress }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to update task progress');
-    return response.json();
+    return response.data;
   },
 
-  // Submit deliverable
   submitDeliverable: async (taskId, deliverableData, accessToken) => {
-    const response = await fetch(`${API_BASE}/tasks/${taskId}/deliverables`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(deliverableData),
+    const response = await api.post(`/tasks/${taskId}/deliverables`, deliverableData, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to submit deliverable');
-    return response.json();
+    return response.data;
   },
 };
 
@@ -294,81 +192,47 @@ export const builderTasksAPI = {
  * Rewards APIs
  */
 export const builderRewardsAPI = {
-  // Get rewards summary
   getRewardsSummary: async (accessToken) => {
-    const response = await fetch(`${API_BASE}/rewards`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/rewards', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch rewards');
-    return response.json();
+    return response.data;
   },
 
-  // Get earnings history
   getEarningsHistory: async (accessToken, filters = {}) => {
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE}/earnings?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/earnings', {
+      params: filters,
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch earnings history');
-    return response.json();
+    return response.data;
   },
 
-  // Get equity holdings
   getEquityHoldings: async (accessToken) => {
-    const response = await fetch(`${API_BASE}/equity`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/equity', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch equity holdings');
-    return response.json();
+    return response.data;
   },
 
-  // Request payout
   requestPayout: async (amount, method, accessToken) => {
-    const response = await fetch(`${API_BASE}/payouts`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ amount, method }),
+    const response = await api.post('/payouts', { amount, method }, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to request payout');
-    return response.json();
+    return response.data;
   },
 
-  // Get payment methods
   getPaymentMethods: async (accessToken) => {
-    const response = await fetch(`${API_BASE}/payment-methods`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/payment-methods', {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch payment methods');
-    return response.json();
+    return response.data;
   },
 
-  // Add payment method
   addPaymentMethod: async (methodData, accessToken) => {
-    const response = await fetch(`${API_BASE}/payment-methods`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(methodData),
+    const response = await api.post('/payment-methods', methodData, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to add payment method');
-    return response.json();
+    return response.data;
   },
 };
 
@@ -376,31 +240,21 @@ export const builderRewardsAPI = {
  * Discovery APIs
  */
 export const builderDiscoveryAPI = {
-  // Get recommended startups
   getRecommendedStartups: async (accessToken, limit = 10) => {
-    const response = await fetch(`${API_BASE}/recommended-startups?limit=${limit}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
+    const response = await api.get('/recommended-startups', {
+      params: { limit },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (!response.ok) throw new Error('Failed to fetch recommendations');
-    return response.json();
+    return response.data;
   },
 
-  // Search startups
   searchStartups: async (query, filters = {}, accessToken) => {
-    const params = new URLSearchParams({
-      q: query,
-      ...filters,
+    const response = await api.get('/startups/search', {
+      params: { q: query, ...filters },
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-    const response = await fetch(`${API_BASE}/startups/search?${params}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    });
-    if (!response.ok) throw new Error('Failed to search startups');
-    return response.json();
+    return response.data;
   },
 };
+
+export default api;

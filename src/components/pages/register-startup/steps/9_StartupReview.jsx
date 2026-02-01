@@ -5,14 +5,25 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { roleTypes } from "../elements";
+import { API_URL } from "@/utils/config";
+
 export default function StartupReview({
   formData,
   logoFile,
+  existingLogo,
   bannerFile,
+  existingBanner,
   uploadedDocuments,
+  newDocuments,
+  existingDocuments,
+  removedDocumentIds,
   techStack,
   roles,
 }) {
+  const allDocuments = [...(uploadedDocuments || []), ...(existingDocuments || []), ...(newDocuments || [])].filter(
+    doc => !removedDocumentIds?.includes(doc.id)
+  );
+
   return (
     <div className="space-y-6 animate-fadeIn">
       <div className="text-center mb-6">
@@ -160,6 +171,14 @@ export default function StartupReview({
                       className="w-full h-full object-cover"
                     />
                   </div>
+                ) : existingLogo ? (
+                  <div className="w-16 h-16 rounded-xl border-2 border-blue-400/50 mx-auto overflow-hidden bg-gray-600">
+                    <img
+                      src={existingLogo.startsWith('http') ? existingLogo : `${API_URL}/${existingLogo}`}
+                      alt="Existing logo"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="w-16 h-16 rounded-xl border-2 border-dashed border-gray-500 flex items-center justify-center mx-auto bg-gray-600/50">
                     <Image className="w-6 h-6 text-gray-400" />
@@ -176,6 +195,14 @@ export default function StartupReview({
                       className="w-full h-full object-cover"
                     />
                   </div>
+                ) : existingBanner ? (
+                  <div className="w-full h-16 rounded-lg border-2 border-blue-400/50 overflow-hidden bg-gray-600">
+                    <img
+                      src={existingBanner.startsWith('http') ? existingBanner : `${API_URL}/${existingBanner}`}
+                      alt="Existing banner"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 ) : (
                   <div className="w-full h-16 rounded-lg border-2 border-dashed border-gray-500 flex items-center justify-center bg-gray-600/50">
                     <Image className="w-6 h-6 text-gray-400" />
@@ -186,14 +213,19 @@ export default function StartupReview({
                 
             {/* Documents */}
             <div>
-              <Label className="text-sm text-gray-400 mb-2 block">Documents ({uploadedDocuments.length})</Label>
-              {uploadedDocuments.length > 0 ? (
+              <Label className="text-sm text-gray-400 mb-2 block">Documents ({allDocuments.length})</Label>
+              {allDocuments.length > 0 ? (
                 <div className="space-y-2 max-h-32 overflow-y-auto custom-scrollbar">
-                  {uploadedDocuments.map((doc, index) => (
+                  {allDocuments.map((doc, index) => (
                     <div key={index} className="flex items-center justify-between p-2 border border-gray-600 rounded-lg bg-gray-600/30">
                       <div className="flex items-center gap-2">
                         <FileText className="w-4 h-4 text-blue-400" />
                         <span className="text-white text-sm truncate max-w-45">{doc.name}</span>
+                        {doc.id && !newDocuments?.find(d => d.id === doc.id) && (
+                          <Badge variant="outline" className="bg-gray-500/30 text-gray-300 border-gray-500 text-xs">
+                            Existing
+                          </Badge>
+                        )}
                       </div>
                       <Badge variant="outline" className="bg-gray-500/30 text-gray-300 border-gray-500 text-xs">
                         {(doc.size / 1024 / 1024).toFixed(2)} MB

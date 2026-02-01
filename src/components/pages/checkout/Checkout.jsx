@@ -88,6 +88,7 @@ export default function Checkout() {
         features: tier.features,
         price: tier.price,
         option: selectedOption, 
+        type: tierId.includes("crowdfunding") ? "crowdfunding" : "subscription"
       };
       setLoading(true);
       const response = await axios.post(

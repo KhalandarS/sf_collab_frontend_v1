@@ -5,6 +5,7 @@
 
 import axios from 'axios';
 import { getApiUrl } from '../utils/config';
+import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from '@/utils/APIs/interceptors';
 
 const API_BASE_URL = getApiUrl();
 
@@ -18,29 +19,14 @@ const api = axios.create({
 
 // Add token to requests
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem("access_token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  requestInterceptor,
+  requestErrorInterceptor
 );
 
 // Handle response errors
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('user');
-    }
-    return Promise.reject(error);
-  }
+  responseInterceptor,
+  responseErrorInterceptor
 );
 
 /**
@@ -153,6 +139,7 @@ export const notificationService = {
   getStats: async () => {
     try {
       const response = await api.get('/notifications/stats');
+      console.log("Notification stats response:", response);
       return response.data.data.stats;
     } catch (error) {
       console.error('Error fetching notification stats:', error);

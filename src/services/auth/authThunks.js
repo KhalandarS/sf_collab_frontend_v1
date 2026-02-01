@@ -12,11 +12,11 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      const data = await loginRequest(credentials);
-      console.log('From login user:', data);
-      localStorage.setItem('access_token', data.accessToken);
-      localStorage.setItem('refreshToken', data.refreshToken);
-      return data;
+      const response = await loginRequest(credentials);
+      localStorage.setItem('access_token', response.data.access_token);
+      localStorage.setItem('refreshToken', response.data.refresh_token);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      return response.data;
     } catch (err) {
       return rejectWithValue(err.message);
     }

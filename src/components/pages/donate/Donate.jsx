@@ -77,7 +77,7 @@ export default function Donate() {
   const [donationAmount, setDonationAmount] = useState(50);
   const [customAmount, setCustomAmount] = useState("");
   const [donorInfo, setDonorInfo] = useState({
-    name: "",
+    name: user?.name ? user.name : `${user?.firstName} ${user?.lastName}`,
     email: user?.email || "",
     message: "",
   });
@@ -95,6 +95,13 @@ const handleDonateClick = async () => {
   }
 
   setLoading(true);
+  console.log("Sending:", {
+        amount: finalAmount * 100,
+        name: donorInfo.name,
+        email: donorInfo.email,
+        message: donorInfo.message,
+        type: "donation"
+      });
   try {
     const response = await axios.post(
       `${API_URL}/payments/create-donation-session`,
@@ -103,6 +110,7 @@ const handleDonateClick = async () => {
         name: donorInfo.name,
         email: donorInfo.email,
         message: donorInfo.message,
+        type: "donation"
       },
       {
         headers: {

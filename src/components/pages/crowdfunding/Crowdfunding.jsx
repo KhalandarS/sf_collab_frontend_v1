@@ -5,6 +5,7 @@ import { API_BASE_URL } from "@/utils/config";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import useGetPlanId from "@/utils/hooks/useGetPlanId";
 
 export default function CrowdfundingSection() {
   const [roles, setRoles] = useState([]); // builder / founder
@@ -12,7 +13,7 @@ export default function CrowdfundingSection() {
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
   const [totalCrowdfunding, setTotalCrowdfunding] = useState(80);
-
+  const [planId] = useGetPlanId();
   const { access_token } = useSelector((state) => state.auth);
   useEffect(() => {
     const fetchTotalCrowdfunding = async () => {
@@ -38,7 +39,6 @@ export default function CrowdfundingSection() {
         const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
         if (res.data.length > 0) {
           const plan = res.data[0];
-          console.log(plan, "Plan");
           setRoles(plan.roles || []);
           setCurrency(plan.currency?.toUpperCase() || "USD");
         }
@@ -160,7 +160,7 @@ const progressPercent = Math.min(
         {/* TIERS */}
         <div className="flex flex-row items-stretch justify-center flex-wrap gap-6 mt-12">
           {activeRole.tiers.map((tier) => (
-            <Link key={tier.id} to={`/checkout/${tier.id}?`} className="min-w-[20rem] flex-1">
+            <Link key={tier.id} to={tier.id !== planId ?`/checkout/${tier.id}?`: "#"} className="min-w-[20rem] flex-1">
               <div className="flex flex-col justify-between bg-gradient-to-br from-neutral-900 to-neutral-800 border border-neutral-700 rounded-2xl p-6 h-full">
                 <div>
                   <h3 className="text-xl font-semibold mb-3">{tier.title}</h3>
@@ -185,10 +185,17 @@ const progressPercent = Math.min(
                     </ul>
                   )}
                 </div>
-
-                <button className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 font-semibold hover:opacity-90 transition">
-                  Choose Plan <ArrowRight className="w-4 h-4 inline-block ml-2" />
-                </button>
+                {
+                  tier.id === planId ? (
+                    <span className="text-sm text-green-400 font-semibold mb-4">
+                      ✓ Current Plan
+                    </span>
+                  ) :
+                
+                    <button className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 font-semibold hover:opacity-90 transition">
+                      Choose Plan <ArrowRight className="w-4 h-4 inline-block ml-2" />
+                    </button>
+                }
               </div>
             </Link>
           ))}

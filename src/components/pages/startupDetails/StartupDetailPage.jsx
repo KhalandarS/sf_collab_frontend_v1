@@ -1,10 +1,12 @@
+/* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, Users, Calendar, TrendingUp, Heart, Share2, ChevronRight, Home, Trash2, UserPlus, BarChart3,
   FileText, Target, MessageSquare,CheckCircle2Icon,XIcon,
-  Bookmark
+  Bookmark,
+  ClipboardList
 } from 'lucide-react';
 import {
     Alert,
@@ -23,7 +25,7 @@ import ShinyText from '../../ui/ShinyText';
 
 import { useSelector } from 'react-redux';
 
-import { calendarEventsAPI, projectGoalsAPI, startupsAPI } from '@/utils/APIs/startupsAPI';
+import { calendarEventsAPI, projectGoalsAPI, startupsAPI, tasksAPI } from '@/utils/APIs/startupsAPI';
 import { toast } from 'react-toastify';
 import SendJoinRequestModal from './modals/SendJoinRequestModal';
 import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
@@ -39,6 +41,8 @@ import TechStackSection from './sections/TechStackSection';
 import HeroSection from './sections/HeroSection';
 import StartupDetailSkeleton from './StartupDetailsSkeleton';
 import AddEventModal from './modals/AddEvent';
+import ProjectTasksSection from './sections/ProjectTasksSection';
+import AddTaskModal from './modals/AddTasksModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -66,6 +70,7 @@ const StartupDetailPage = () => {
   const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
   const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
+  const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   
   const [alertDescription, setAlertDescription] = useState("");
@@ -73,7 +78,7 @@ const StartupDetailPage = () => {
   const [alertVariant, setAlertVariant] = useState("success");
   
   const [showAlert, setShowAlert] = useState(false);
-  
+  const [projectTasks, setProjectTasks] = useState([]);
   const [projectGoals, setProjectGoals] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
   
@@ -97,11 +102,6 @@ const StartupDetailPage = () => {
     role: 'member'
   });
 
-  const [documentForm, setDocumentForm] = useState({
-    document: null,
-    document_type: 'general'
-  });
-
   const [joinRequests, setJoinRequests] = useState([]);
   const joinRequestCountRef = useRef(0);
 
@@ -121,7 +121,7 @@ const StartupDetailPage = () => {
         page: 1,
         include_milestones: true
       }
-      const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult] = await Promise.all([
+      const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult, tasksResult] = await Promise.all([
         startupsAPI.getById(id, token).catch(err => ({ success: false, error: err })),
         startupsAPI.getMembers(id, token, args).catch(err => ({ success: false, error: err })),
         startupsAPI.getDocuments(id, token).catch(err => ({ success: false, error: err })),
@@ -129,6 +129,7 @@ const StartupDetailPage = () => {
         projectGoalsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
         calendarEventsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
         startupsAPI.getBookmarkStatus({ startupId: id, userId: user?.id }).catch(err => ({ success: false, error: err })),
+        tasksAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
       ]);
       const startupData = startupResult.success ? startupResult : { success: false, data: null };
       const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
@@ -137,6 +138,7 @@ const StartupDetailPage = () => {
       const goalsData = goalsResult.success ? goalsResult : { success: false, data: { project_goals: [] } };
       const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
       const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
+      const tasksData = tasksResult.success ? tasksResult : { success: false, data: { tasks: [] } };
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) {
         setMembers(membersData.data.members);
@@ -145,6 +147,7 @@ const StartupDetailPage = () => {
       if (statsData.success) setStats(statsData.data.stats || {});
       if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
       if (eventsData.success) setCalendarEvents(eventsData.data.events || []);
+      if (tasksData.success) setProjectTasks(tasksData.data.tasks || []);
       if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
     } catch (error) {
       console.error('Error fetching startup data:', error);
@@ -156,24 +159,20 @@ const StartupDetailPage = () => {
   };
 
   const fetchJoinRequests = useCallback(async () => {
-    console.log('🚀 fetchJoinRequests called. Checking conditions...');
-    console.log('  isCreator:', isCreator);
-    console.log('  access_token:', access_token ? '✅ Present' : '❌ Missing');
-    console.log('  id:', id);
+
     
     if (!isCreator || !access_token || !id) {
-      console.log('⏭️ Skipping fetchJoinRequests:', { isCreator, hasToken: !!access_token, id });
+
       setJoinRequests([]);
       return;
     }
     try {
-      const response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
-      
+      let response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
+      response = response.data
       // Handle multiple possible response structures from backend
       // The API returns response.data.data which should be { join_requests: [...], ... }
       let pending = [];
       if (Array.isArray(response)) {
-        console.log('✅ Response is direct array');
         pending = response; // Direct array
       } else if (response?.join_requests && Array.isArray(response.join_requests)) {
         pending = response.join_requests; // Wrapped in join_requests key
@@ -185,8 +184,6 @@ const StartupDetailPage = () => {
       setJoinRequests(pending);
     } catch (error) {
       console.error('❌ Failed to load join requests:', error);
-      console.error('  Error message:', error.message);
-      console.error('  Error response:', error.response?.data);
       setJoinRequests([]);
     }
   }, [isCreator, access_token, id]);
@@ -197,6 +194,7 @@ const StartupDetailPage = () => {
       fetchStartupData();
 
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
 
@@ -221,69 +219,9 @@ const StartupDetailPage = () => {
     return variants[stage] || 'bg-gray-500/20 text-gray-400 border-gray-400/30';
   };
 
-  // Document handlers
-  const handleDocumentUpload = async (e) => {
-    e.preventDefault();
-    if (!documentForm.document) return;
 
-    const formData = new FormData();
-    formData.append('document', documentForm.document);
-    formData.append('document_type', documentForm.document_type);
-    formData.append('visible_by', documentForm.visible_by || 'private'); 
-    for (const pair of formData.entries()) {
-      console.log(`${pair[0]}: ${pair[1]}`);
-    }
-    try {
-      const response = await startupsAPI.uploadDocument(id, formData, access_token);
-      
-      if (response.success) {
-        toast.success('Document uploaded successfully');
-        setIsUploadDocModalOpen(false);
-        setDocumentForm({ document: null, document_type: 'general' });
-        fetchStartupData();
-      } else {
-        throw new Error(response.error || 'Upload failed');
-      }
-    } catch (error) {
-      toast.error('Error uploading document');
-    }
-  };
+  
 
-  const handleDocumentDelete = async (documentId) => {
-
-    try {
-      const response = await startupsAPI.deleteDocument(id, documentId, access_token);
-
-
-      
-      if (response.success) {
-        toast.success('Document deleted successfully');
-        fetchStartupData();
-      } else {
-        throw new Error('Delete failed');
-      }
-    } catch (error) {
-      toast.error('Error deleting document');
-    }
-  };
-
-  const downloadDocument = async (documentId, filename) => {
-    try {
-      const response = await startupsAPI.downloadDocument(id, documentId, access_token);
-      const blob = response.data; // response.data is already a Blob
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
-      toast.error('Error downloading document');
-      console.error('Error downloading document:', error);
-    }
-  };
 
   // Member handlers
   const handleAddMember = async (e) => {
@@ -301,7 +239,7 @@ const StartupDetailPage = () => {
       } else {
         throw new Error('Failed to add member');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error adding member');
     }
   };
@@ -319,7 +257,7 @@ const StartupDetailPage = () => {
       } else {
         throw new Error('Failed to remove member');
       }
-    } catch (error) {
+    } catch {
       toast.error('Error removing member');
     }
   };
@@ -366,7 +304,7 @@ const StartupDetailPage = () => {
         } else {
           throw new Error('Failed to remove bookmark');
         }
-    } catch (error) {
+    } catch {
         toast.error('Error updating favorite status');
     }
   };
@@ -403,7 +341,8 @@ const StartupDetailPage = () => {
     if (isJoinModalOpen && isCreator && access_token) {
       fetchJoinRequests();
     }
-  }, [isJoinModalOpen, access_token]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isJoinModalOpen, access_token, isCreator]);
 
   useEffect(() => {
     if (joinRequests.length > 0 && joinRequests.length > joinRequestCountRef.current) {
@@ -450,7 +389,7 @@ const StartupDetailPage = () => {
       console.error('Error creating event:', error);
     }
   }
-  const handleEditEvent = async (updatedData) => {
+  const handleEditEvent = async () => {
     // Implement event editing logic here
   }
   const handleDeleteEvent = async (eventId) => {
@@ -467,6 +406,24 @@ const StartupDetailPage = () => {
       console.error('Error deleting event:', error);
     }
     // Implement event deletion logic here
+  }
+  const handleCreateTask = async (taskData) => {
+    try {
+      const response = await tasksAPI.create({
+        ...taskData,
+        startup_id: id,
+        user_id: user?.id || user?.userId || user?.user_id,
+      });
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to create task');
+      }
+      toast.success('Task created successfully');
+      setIsAddTaskModalOpen(false);
+      setProjectTasks([...projectTasks, response.data?.task || response.task]);
+    } catch (error) {
+      toast.error('Error creating task');
+      console.error('Error creating task:', error);
+    }
   }
   if (loading) {
     return <StartupDetailSkeleton />;
@@ -487,7 +444,7 @@ const StartupDetailPage = () => {
   return (
     <div className="min-h-screen">
       {/* Navigation */}
-      <motion.nav 
+      <motion.nav
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="z-50  w-full"
@@ -495,8 +452,8 @@ const StartupDetailPage = () => {
         <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center justify-between">
             <div className="flex flex-wrap items-center justify-evenly gap-4">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => navigate('/discover-startups')}
                 className="text-gray-300 hover:text-white cursor-pointer bg-transparent hover:bg-transparent"
@@ -540,8 +497,8 @@ const StartupDetailPage = () => {
                       </span>
                     )}
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setIsAddMemberModalOpen(true)}
                     className="text-gray-300 hover:text-black"
@@ -549,8 +506,8 @@ const StartupDetailPage = () => {
                     <UserPlus className="w-4 h-4 mr-1" />
                     Add Member
                   </Button>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="sm"
                     onClick={() => setIsUploadDocModalOpen(true)}
                     className="text-gray-300 hover:text-black"
@@ -558,8 +515,8 @@ const StartupDetailPage = () => {
                     <FileText className="w-4 h-4 mr-1" />
                     Upload Doc
                   </Button>
-                  <Button 
-                    variant="destructive" 
+                  <Button
+                    variant="destructive"
                     size="sm"
                     onClick={() => setIsDeleteStartupModalOpen(true)}
                   >
@@ -568,8 +525,8 @@ const StartupDetailPage = () => {
                   </Button>
                 </>
               )}
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 size="sm"
                 onClick={() => handleBookmarkClick()}
                 className="text-gray-300 hover:text-yellow-500"
@@ -584,7 +541,7 @@ const StartupDetailPage = () => {
 
       {/* Hero Section */}
       <HeroSection
-        startup={startup} 
+        startup={startup}
         onJoinClick={() => isCreator ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         formatCurrency={formatCurrency}
         getStageBadgeVariant={getStageBadgeVariant}
@@ -597,52 +554,62 @@ const StartupDetailPage = () => {
       {/* Main Content with Tabs */}
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-5 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-6 bg-gray-800/50 p-1 rounded-xl backdrop-blur-sm">
             <TabsTrigger value="overview" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <BarChart3 className="w-4 h-4 mr-2" />
-              <ShinyText 
-                  text="Overview" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText
+                text="Overview"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
             </TabsTrigger>
             <TabsTrigger value="members" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Users className="w-4 h-4 mr-2" />
-              <ShinyText 
-                  text="Members" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText
+                text="Members"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
             </TabsTrigger>
             <TabsTrigger value="documents" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <FileText className="w-4 h-4 mr-2" />
-              <ShinyText 
-                  text="Documents" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText
+                text="Documents"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
+            </TabsTrigger>
+            <TabsTrigger value="tasks" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+              <ClipboardList className="w-4 h-4 mr-2" />
+              <ShinyText
+                text="Project Tasks"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
+             
             </TabsTrigger>
             <TabsTrigger value="goals" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Target className="w-4 h-4 mr-2" />
-              <ShinyText 
-                  text="Project Goals" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText
+                text="Project Goals"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
              
             </TabsTrigger>
             <TabsTrigger value="calendar" className="rounded-lg text-gray-400 data-[state=active]:bg-blue-600 data-[state=active]:text-white">
               <Calendar className="w-4 h-4 mr-2" />
-              <ShinyText 
-                  text="Calendar" 
-                  disabled={false} 
-                  speed={3} 
-                //   className='custom-title' 
-                />
+              <ShinyText
+                text="Calendar"
+                disabled={false}
+                speed={3}
+              //   className='custom-title' 
+              />
               
             </TabsTrigger>
           </TabsList>
@@ -658,7 +625,7 @@ const StartupDetailPage = () => {
           {/* Members Tab */}
           <TabsContent value="members">
             <TeamSection
-              members={members} 
+              members={members}
               isCreator={isCreator}
               onRemoveMember={handleRemoveMember}
               onJoinClick={() => setIsAddMemberModalOpen(true)}
@@ -670,13 +637,19 @@ const StartupDetailPage = () => {
             <DocumentsSection
               documents={documents}
               isCreator={isCreator}
-              onDownload={downloadDocument}
-              onDelete={handleDocumentDelete}
-              onJoinClick={() => setIsUploadDocModalOpen(true)}
-
+              id={id}
+              fetchStartupData={fetchStartupData}
             />
           </TabsContent>
-
+          <TabsContent value="tasks">
+            <ProjectTasksSection
+              tasks={projectTasks}
+              isCreator={isCreator}
+              setTasks={setProjectTasks}
+              startupId={id}
+              teamMembers={members}
+            />
+          </TabsContent>
           {/* Project Goals Tab */}
           <TabsContent value="goals">
             <ProjectGoalsSection
@@ -709,6 +682,7 @@ const StartupDetailPage = () => {
           isOpen={isSendJoinRequestModalOpen}
           onClose={() => setIsSendJoinRequestModalOpen(false)}
           startupId={id}
+          startupRoles={startup?.roles || []}
           startupName={startup?.name || ''}
           onSuccess={() => {
             setIsSendJoinRequestModalOpen(false);
@@ -719,65 +693,64 @@ const StartupDetailPage = () => {
       
       {isCreator &&
         <>
-      <AddMemberModal
-        isOpen={isAddMemberModalOpen}
-        onClose={() => setIsAddMemberModalOpen(false)}
-        onSubmit={handleAddMember}
-        formData={memberForm}
-        onFormChange={setMemberForm}
-      />
+          <AddMemberModal
+            isOpen={isAddMemberModalOpen}
+          onClose={() => setIsAddMemberModalOpen(false)}
+          roles={startup?.roles || []}
+            onSubmit={handleAddMember}
+            formData={memberForm}
+            onFormChange={setMemberForm}
+          />
 
-      <UploadDocumentModal
-        isOpen={isUploadDocModalOpen}
-        onClose={() => setIsUploadDocModalOpen(false)}
-        onSubmit={handleDocumentUpload}
-        formData={documentForm}
-        onFormChange={setDocumentForm}
-        onJoinClick={() => setIsUploadDocModalOpen(true)}
-        
-      />
-
-      <DeleteStartupModal
-        isOpen={isDeleteStartupModalOpen}
-        onClose={() => setIsDeleteStartupModalOpen(false)}
-        onConfirm={handleDeleteStartup}
-        startupName={startup.name}
-        />
-        <ManageJoinRequestsModal 
-          isOpen={isJoinModalOpen}
-          onClose={() => setIsJoinModalOpen(false)}
-          startupName={startup?.name || 'Your Startup'}
-          founderName={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'You'}
-          joinRequests={joinRequests}
-          loading={loading}
-          onAccept={handleAcceptJoinRequest}
-          onReject={handleRejectJoinRequest}
-        />
-        <AddEventModal
-          isOpen={isAddEventModalOpen}
-          onClose={() => setIsAddEventModalOpen(false)}
-          onCreate={handleCreateEvent}
-        />
-      </>
-      }
       
+
+          <DeleteStartupModal
+            isOpen={isDeleteStartupModalOpen}
+            onClose={() => setIsDeleteStartupModalOpen(false)}
+            onConfirm={handleDeleteStartup}
+            startupName={startup.name}
+          />
+          <ManageJoinRequestsModal
+            isOpen={isJoinModalOpen}
+            onClose={() => setIsJoinModalOpen(false)}
+            startupName={startup?.name || 'Your Startup'}
+            founderName={user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email || 'You'}
+            joinRequests={joinRequests}
+            loading={loading}
+            onAccept={handleAcceptJoinRequest}
+            onReject={handleRejectJoinRequest}
+          />
+          <AddEventModal
+            isOpen={isAddEventModalOpen}
+            onClose={() => setIsAddEventModalOpen(false)}
+            onCreate={handleCreateEvent}
+          />
+          <AddTaskModal
+            isOpen={isAddTaskModalOpen}
+            onClose={() => setIsAddTaskModalOpen(false)}
+            onCreate={handleCreateTask}
+            teamMembers={members}
+          />
+        </>
+      }
+
       {showAlert && (
-                <div className="w-full max-w-lg fixed top-46 right-6">
-                <Alert className={'relative '}>
+        <div className="w-full max-w-lg fixed top-46 right-6">
+          <Alert className={'relative '}>
                     
-                  <CheckCircle2Icon />
-                  <AlertTitle>{alertTitle}</AlertTitle>
-                  <AlertDescription>
-                    {alertDescription}
-                  </AlertDescription>
-                  <button className='cursor-pointer absolute right-2 top-1' onClick={() => setShowAlert(false)}>
-                    <XIcon className='size-5' />
-                    <span className='sr-only'>Close</span>
-                  </button>
-                </Alert> 
-              </div>
-            )
-        }
+            <CheckCircle2Icon />
+            <AlertTitle>{alertTitle}</AlertTitle>
+            <AlertDescription>
+              {alertDescription}
+            </AlertDescription>
+            <button className='cursor-pointer absolute right-2 top-1' onClick={() => setShowAlert(false)}>
+              <XIcon className='size-5' />
+              <span className='sr-only'>Close</span>
+            </button>
+          </Alert>
+        </div>
+      )
+      }
 
     </div>
   );

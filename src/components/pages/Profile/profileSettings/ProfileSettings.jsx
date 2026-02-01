@@ -14,7 +14,7 @@ import ProfileSection from './profileSection';
 import axios from 'axios';
 import { API_URL } from '@/utils/config';
 import { updateUser as updateUserSlice } from '@/services/auth/authSlice';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 /**
  * Updated Settings UI wired to backend routes:
   - GET /auth/me
@@ -25,9 +25,16 @@ import { Link } from 'react-router-dom';
 
 
 
-const ProfileSettings = ({ back }) => {
-  
-  const [activeSection, setActiveSection] = useState('profile');
+const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
+  const navigate = useNavigate();
+  const [queryParams] = useSearchParams()
+  const page = queryParams.get('page')
+  const [activeSection, setActiveSection] = useState(initialActiveSection || page || 'profile');
+  useEffect(() => {
+    if (activeSection === 'settings') {
+      setActiveSection('profile');
+    }
+  }, [activeSection]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { user, access_token } = useSelector((state) => state.auth);
@@ -35,7 +42,6 @@ const ProfileSettings = ({ back }) => {
     ...(json ? { "Content-Type": "application/json" } : {}),
     Authorization: `Bearer ${access_token}`,
   });
-
   // Unified formData that mirrors backend models:
   const [formData, setFormData] = useState({});
   // Initialize formData with default values from user data
@@ -89,10 +95,10 @@ useEffect(() => {
   const sections = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'accountSecurity', label: 'Account & Security', icon: Shield },
-    // { id: 'notifications', label: 'Notifications', icon: Bell },
+    { id: 'notifications', label: 'Notifications', icon: Bell },
     // { id: 'privacy', label: 'Privacy', icon: Shield },
     // { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'preferences', label: 'Preferences', icon: Globe },
+    // { id: 'preferences', label: 'Preferences', icon: Globe },
     // { id: 'saved', label: 'Saved Items', icon: Bookmark }
   ];
 
@@ -225,14 +231,27 @@ useEffect(() => {
       
       if (formData.roles.includes('influencer') && !user?.roles?.includes('influencer')) {
         toast.info(
-          <Link to="/apply-influencer" target="_blank" className="flex items-center gap-2">
-            <div>
-            <span>To complete your Influencer application, please fill out the Influencer Application Form.</span>
-            <ExternalLink className="w-4 h-4" />
-            
+          <div className="flex flex-col gap-3 max-w-sm">
+            <p className="text-sm text-white dark:text-gray-300">
+              To complete your Influencer application, please fill out the Influencer
+              Application Form.
+            </p>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  navigate("/apply-influencer");
+                  toast.dismiss();
+                }}
+                className="flex items-center gap-2 rounded-md bg-black px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800"
+              >
+                Apply now
+                <ExternalLink className="w-4 h-4" />
+              </button>
+
             </div>
-          </Link>
-        )
+          </div>
+        );
         formData.roles = formData.roles.filter(role => role !== 'influencer');
       }
       if (formData.roles.includes('builder') && !formData.preferences.builderPreferences) {
@@ -401,7 +420,7 @@ useEffect(() => {
               )}
 
               {activeSection === 'notifications' && (
-                <NotificationSection formData={formData}  onChange={(patch) => setFormData(prev => ({ ...prev, notifications: { ...(prev.notifications || {}), ...patch } }))} />
+                <NotificationSection formData={formData}  onChange={(patch) => setFormData(prev => ({ ...prev, notificationSettings: { ...(prev.notifications || {}), ...patch } }))} />
               )}
 
               {activeSection === 'privacy' && (

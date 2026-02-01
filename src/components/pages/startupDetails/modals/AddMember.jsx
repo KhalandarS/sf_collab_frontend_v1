@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { usersAPI } from '@/utils/APIs/userAPI';
 
-export default function AddMemberModal({ isOpen, onClose, onSubmit, formData, onFormChange }) {
+export default function AddMemberModal({ isOpen, onClose, onSubmit, roles, formData, onFormChange }) {
   const [userResults, setUserResults] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   useEffect(() => {
@@ -78,7 +78,7 @@ export default function AddMemberModal({ isOpen, onClose, onSubmit, formData, on
                 </Avatar>
                 <div>
                   <p className="text-white font-medium">{user.firstName} {user.lastName}</p>
-                  <p className="text-gray-400 text-sm">{user.roles.join(' ')}</p>
+                  <p className="text-gray-400 text-sm">{user.role}</p>
                 </div>
               </div>
             ))}
@@ -90,7 +90,7 @@ export default function AddMemberModal({ isOpen, onClose, onSubmit, formData, on
   </label>
 
   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-    {['member', 'founder', 'investor', 'influencer'].map((role) => {
+    {Object.keys(roles).map((role) => {
       const selected =
         Array.isArray(formData.role) && formData.role.includes(role);
 

@@ -8,11 +8,13 @@ export default function usePaginatedFetch({
   enabled = true,
   startPage = 1,
   searchDelay = 400, // ⬅ debounce time (ms)
+  totalAmountKey = "total_amount",
 }) {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(startPage);
   const [perPage, setPerPage] = useState(null);
   const [total, setTotal] = useState(0);
+  const [totalAmount, setTotalAmount] = useState(0);
   const [pages, setPages] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -45,6 +47,9 @@ export default function usePaginatedFetch({
       );
 
       setPerPage(res.data.pagination.per_page);
+      if (res.data.pagination[totalAmountKey] !== undefined) {
+        setTotalAmount(res.data.pagination[totalAmountKey]);
+      }
       setTotal(res.data.pagination.total);
       setPages(res.data.pagination.pages);
 
@@ -54,7 +59,7 @@ export default function usePaginatedFetch({
     } finally {
       setLoading(false);
     }
-  }, [fetchFn, page, search, enabled, loading, hasMore, objectKey, startPage]);
+  }, [fetchFn, page, search, enabled, loading, hasMore, objectKey, startPage, totalAmountKey]);
 
   // Infinite scroll
   useInfiniteObserver({
@@ -95,6 +100,7 @@ export default function usePaginatedFetch({
     page: page - 1,
     perPage,
     total,
+    totalAmount,
     pages,
     hasMore,
 

@@ -14,9 +14,8 @@ export default function InfiniteList({
         <p className="text-sm text-gray-400">{emptyText}</p>
       )}
 
-      <div className={containerClassName}>
+
         {items.map(renderItem)}
-      </div>
 
       <div ref={sentinelRef} className="h-10 flex items-center justify-center">
         {loading && (

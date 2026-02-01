@@ -18,7 +18,6 @@ import Posts from "./components/pages/posts/Posts.jsx";
 import Help from "./components/pages/Help.jsx";
 import ProjectManagement from "./components/pages/ProjectManagement.jsx";
 import VideoTutorials from "./components/pages/VideoTutorials.jsx";
-import Notifications from "./components/pages/Notifications.jsx";
 import NotFound from "./components/NotFound.jsx";
 import GettingStarted from "./components/pages/QucikGuides/gettingStarted.jsx";
 import TeamCollaboration from "./components/pages/QucikGuides/teamCollaboration.jsx";
@@ -97,6 +96,7 @@ import NotificationPage from './components/notifications/NotificationPage.jsx';
 
 export default function App() {
   const { access_token, user } = useSelector((state) => state.auth);
+
   const [userRoles, setUserRoles] = useState([]);
   const [activeRole, setActiveRole] = useState(localStorage.getItem('activeRole') || 'member');
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function App() {
         try {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles();
-          console.log("Response roles:", response.data);
+          console.log("Roles response:", response);
           setUserRoles([...response.data.map(role => role.role), 'General']);
           // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
           // setActiveRole('member');
@@ -120,6 +120,8 @@ export default function App() {
           console.error("Error fetching user roles:", error);
         }
     }
+    const location = window.location;
+    if (!['/login', '/signup', '/verify-email'].includes(location.pathname) || location.pathname !== '/' && access_token)
     fetchUserRoles();
   }, [access_token]);
   
@@ -151,166 +153,167 @@ export default function App() {
 
           <ChatContactsProvider token={access_token}>
             <NotificationProvider>
-            <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/about" element={<AboutPage />} />
-              <Route path="/team" element={<TeamPage />} />
-              <Route path="/contact" element={<ContactPage />} />
-              <Route path="/startuppage" element={<StartupPage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/explore_section" element={<Explore_Section />} />
+              <ScrollToTop />
+              <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<AboutPage />} />
+                <Route path="/team" element={<TeamPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/startuppage" element={<StartupPage />} />
+                <Route path="/products" element={<ProductsPage />} />
+                <Route path="/explore_section" element={<Explore_Section />} />
       
-              {/* Public Authentication Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              {/* Refer and Waitlist */}
+                {/* Public Authentication Routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<SignUp />} />
+                <Route path="/verify-email" element={<VerifyEmail />} />
+                {/* Refer and Waitlist */}
       
-              <Route path='membership-benefits' element={<MembershipBenefits />} />
-              <Route path='implementation-plans' element={<ImplementationPlans />} />
-              <Route path='featured-projects' element={<FeaturedProjects />} />
-              {/* Terms and conditions and privacy policy */}
-              <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/data-collection-and-tracking" element={<DataCollection />} />
-              <Route path="/pricing" element={<Pricing />} />
-              {/* Protected Routes */}
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
-                  </ProtectedRoute>
-                }
-              >
-                {/* Dashboard */}
-                <Route 
-                  path="dashboard" 
+                <Route path='membership-benefits' element={<MembershipBenefits />} />
+                <Route path='implementation-plans' element={<ImplementationPlans />} />
+                <Route path='featured-projects' element={<FeaturedProjects />} />
+                {/* Terms and conditions and privacy policy */}
+                <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/data-collection-and-tracking" element={<DataCollection />} />
+                <Route path="/pricing" element={<Pricing />} />
+                {/* Protected Routes */}
+                <Route
+                  path="/"
                   element={
-                    (() => {
-                      const props = { activeRole, setActiveRole, userRoles };
+                    <ProtectedRoute>
+                      <Layout activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />
+                    </ProtectedRoute>
+                  }
+                >
+                  {/* Dashboard */}
+                  <Route
+                    path="dashboard"
+                    element={
+                      (() => {
+                        const props = { activeRole, setActiveRole, userRoles };
 
-                      if (user && activeRole === 'influencer') {
-                        return <InfluencerDashboard {...props} />;
-                      } else if (user && activeRole === 'builder') {
-                        return <BuilderDashboard {...props} />;
-                      } else if (user && activeRole === 'founder') {
-                        return <FounderDashboard {...props} />;
-                      } else if (user && activeRole === 'investor') {
-                        return <InvestorDashboard {...props} />;
-                      } else {
-                        return <Dashboard {...props} />;
-                      }
-                    })()
-                  } 
-                />
-                {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
+                        if (user && activeRole === 'influencer') {
+                          return <InfluencerDashboard {...props} />;
+                        } else if (user && activeRole === 'builder') {
+                          return <BuilderDashboard {...props} />;
+                        } else if (user && activeRole === 'founder') {
+                          return <FounderDashboard {...props} />;
+                        } else if (user && activeRole === 'investor') {
+                          return <InvestorDashboard {...props} />;
+                        } else {
+                          return <Dashboard {...props} />;
+                        }
+                      })()
+                    }
+                  />
+                  {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
             
-                {/* ===== BUILDER DASHBOARD ROUTES ===== */}
-                <Route path="saved-startups" element={<SavedStartups />} />
-                <Route path="builder/my-applications" element={<MyApplications />} />
-                <Route path="builder/my-work" element={<MyWork />} />
-                <Route path="builder/rewards" element={<Rewards />} />
-                <Route path="builder/profile-skills" element={<SkillProfile />} />
-                <Route path="builder/profile" element={<SkillProfile />} />
-                {/* ===== END BUILDER ROUTES ===== */}
+                  {/* ===== BUILDER DASHBOARD ROUTES ===== */}
+                  <Route path="saved-startups" element={<SavedStartups />} />
+                  <Route path="builder/my-applications" element={<MyApplications />} />
+                  <Route path="builder/my-work" element={<MyWork />} />
+                  <Route path="builder/rewards" element={<Rewards />} />
+                  <Route path="builder/profile-skills" element={<SkillProfile />} />
+                  <Route path="builder/profile" element={<SkillProfile />} />
+                  {/* ===== END BUILDER ROUTES ===== */}
             
-                <Route path="ai-dashboard" element={<AIDashboard />} />
-                <Route path="waitlist" element={<Waitlist />} />
-                <Route path="waitlist-terms" element={<WaitlistTerms />} />
-                <Route path="influencer" element={<Influencer />} />
-                <Route path="admin" element={<AdminPage />} />
-                <Route path="refer" element={<ReferPage />} />
-                <Route path="join-sf" element={<JoinSF />} />
-                <Route path="apply-influencer" element={<InfluencerApplication />} />
-                <Route path="profile-setup" element={<ProfileSetup />} />
-                <Route path="users/:id" element={<UserPage />} />
-                <Route path="user-profile" element={<Profile />} />
-                {/* Projects */}
+                  <Route path="ai-dashboard" element={<AIDashboard />} />
+                  <Route path="waitlist" element={<Waitlist />} />
+                  <Route path="waitlist-terms" element={<WaitlistTerms />} />
+                  <Route path="influencer" element={<Influencer />} />
+                  <Route path="admin" element={<AdminPage />} />
+                  <Route path="refer" element={<ReferPage />} />
+                  <Route path="join-sf" element={<JoinSF />} />
+                  <Route path="apply-influencer" element={<InfluencerApplication />} />
+                  <Route path="profile-setup" element={<ProfileSetup />} />
+                  <Route path="users/:id" element={<UserPage />} />
+                  <Route path="user-profile" element={<Profile />} />
+                  {/* Projects */}
 
-                <Route path="projects" element={<Project />} />
-                <Route path="project-management" element={<ProjectManagement />} />
-                <Route path="project-details" element={<ProjectDetails />} />
+                  <Route path="projects" element={<Project />} />
+                  <Route path="project-management" element={<ProjectManagement />} />
+                  <Route path="project-details" element={<ProjectDetails />} />
         
-                {/* Ideation */}
-                <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
-                <Route path="ideation-details" element={<Ideationdetails />} />
+                  {/* Ideation */}
+                  <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
+                  <Route path="ideation-details" element={<Ideationdetails />} />
         
-                {/* Knowledge */}
-                <Route path="knowledge" element={<Knowledge />} />
-                <Route path="knowledge-details" element={<Knowledgedetails />} />
+                  {/* Knowledge */}
+                  <Route path="knowledge" element={<Knowledge />} />
+                  <Route path="knowledge-details" element={<Knowledgedetails />} />
         
-                {/* Help */}
-                <Route path="help" element={<Help />} />
-                <Route path="video-tutorials" element={<VideoTutorials />} />
-                {/* Chat and notifications */}
-                <Route path="chat" element={<ChatPage />} />
-                <Route path="connections" element={<ConnectionsPage />} />
-                <Route path="notifications" element={<NotificationPage />} />                {/* Posts */}
-                <Route path="posts" element={<Posts />} />
-        
-            
-                {/* Contribution */}
-                <Route path="contribution" element={<ContributionPage />} />
-                <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
-                <Route path="contribution-polls" element={<ContributionPollsPage />} />
-        
-                {/* Crowdfunding */}
-                <Route path="crowdfunding" element={<Crowdfunding />} />
-                <Route path="checkout/:tierId" element={<Checkout />} />
-                <Route path="checkout/return" element={<ReturnPage />} />
-                <Route path="donate" element={<Donate />} />
-                {/* Quick Guides */}
-                <Route path="getting-started" element={<GettingStarted />} />
-                <Route path="team-collaboration" element={<TeamCollaboration />} />
-        
-                {/* Saved Ideas */}
-                <Route path="saved-ideas" element={<SavedList />} />
-        
-                {/* Test Page */}
-                <Route path="test" element={<Test />} />
-                {/* Startups */}
-                <Route path="register-startup" element={<RegisterStartUp />} />
-                <Route path="discover-startups" element={<DiscoverStartups />} />
-                <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
-                <Route path="startup-details/:id" element={<StartupDetailPage />} />
-                {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
-                {/* Tools */}
-                <Route path="business-plan" element={<BusinessIdeaGenerator />} />
-                <Route path="multimodal-images" element={<ImageGenerator />} />
-                <Route path="logo-generator" element={<StartupLogoGenerator />} />
-                <Route path="data-scraper" element={<ScraperForm />} />
-                <Route path="qwen-chat" element={<QwenChat />} />
-                <Route path="pdf-signing" element={<PDFSigningApp />} />
-                {/* User */}
-                <Route path="discover-users" element={<DiscoverUsers />} />
+                  {/* Help */}
+                  <Route path="help" element={<Help />} />
+                  <Route path="video-tutorials" element={<VideoTutorials />} />
+                  {/* Chat and notifications */}
+                  <Route path="chat" element={<ChatPage />} />
+                  <Route path="connections" element={<ConnectionsPage />} />
+                  <Route path="notifications" element={<NotificationPage />} />
+                  {/* Posts */}
+                  <Route path="posts" element={<Posts />} />
+                
+                
+                  {/* Contribution */}
+                  <Route path="contribution" element={<ContributionPage />} />
+                  <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
+                  <Route path="contribution-polls" element={<ContributionPollsPage />} />
+                
+                  {/* Crowdfunding */}
+                  <Route path="crowdfunding" element={<Crowdfunding />} />
+                  <Route path="checkout/:tierId" element={<Checkout />} />
+                  <Route path="checkout/return" element={<ReturnPage />} />
+                  <Route path="donate" element={<Donate />} />
+                  {/* Quick Guides */}
+                  <Route path="getting-started" element={<GettingStarted />} />
+                  <Route path="team-collaboration" element={<TeamCollaboration />} />
+                
+                  {/* Saved Ideas */}
+                  <Route path="saved-ideas" element={<SavedList />} />
+                
+                  {/* Test Page */}
+                  <Route path="test" element={<Test />} />
+                  {/* Startups */}
+                  <Route path="register-startup" element={<RegisterStartUp />} />
+                  <Route path="discover-startups" element={<DiscoverStartups />} />
+                  <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
+                  <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                  {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
+                  {/* Tools */}
+                  <Route path="business-plan" element={<BusinessIdeaGenerator />} />
+                  <Route path="multimodal-images" element={<ImageGenerator />} />
+                  <Route path="logo-generator" element={<StartupLogoGenerator />} />
+                  <Route path="data-scraper" element={<ScraperForm />} />
+                  <Route path="qwen-chat" element={<QwenChat />} />
+                  <Route path="pdf-signing" element={<PDFSigningApp />} />
+                  {/* User */}
+                  <Route path="discover-users" element={<DiscoverUsers />} />
 
-                <Route path="setting" element={<Setting />}>
-                  <Route index element={<ProfileSetting />} />
-                  <Route path="preferences" element={<Preferences />} />
-                  <Route path="account" element={<AccountandSecurity />} />
+                  <Route path="setting" element={<Setting />}>
+                    <Route index element={<ProfileSetting />} />
+                    <Route path="preferences" element={<Preferences />} />
+                    <Route path="account" element={<AccountandSecurity />} />
+                  </Route>
                 </Route>
-              </Route>
-              <Route path="*" element={<NotFound />} />
-              {/* Catch all route */}
+                <Route path="*" element={<NotFound />} />
+                {/* Catch all route */}
       
-            </Routes>
-            <ToastContainer
-              position="bottom-center"
-              autoClose={5000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme="dark"
-              style={{ bottom: '20px' }}
+              </Routes>
+              <ToastContainer
+                position="bottom-center"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="dark"
+                style={{ bottom: '20px' }}
               />
               <ToastNotification />
-              </NotificationProvider>
+            </NotificationProvider>
           </ChatContactsProvider>
         </ChatNotificationProvider>
 

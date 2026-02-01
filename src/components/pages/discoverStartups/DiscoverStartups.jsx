@@ -76,7 +76,6 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [selectedStartup, setSelectedStartup] = useState(null);
   const navigate = useNavigate();
   
   const { user, access_token } = useSelector((state) => state.auth);
@@ -189,10 +188,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     setCustomMaxFunding("");
   };
 
-  const handleStartupClick = (startup) => {
 
-    navigate(`/startup-details/${startup.id}`);
-  };
 
   const activeFiltersCount = [
     selectedIndustry !== "All",
@@ -348,10 +344,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                       key={startup.id}
                       startup={startup}
                       index={index}
-                      onClick={() => handleStartupClick(startup)}
                       getStageBadgeVariant={getStageBadgeVariant}
                       mode={mode}
-                      setSelectedStartup={setSelectedStartup}
                     />
                   ))}
                                       {/* !user?.plan_id && (*/}
@@ -452,16 +446,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
         </div>
       </div>
     </div>
-    {
-      selectedStartup && (
-        <ApplyToStartupModal
-          startup={selectedStartup}
-          isOpen={!!selectedStartup}
-          onClose={() => setSelectedStartup(null)}
-          getStageBadgeVariant={getStageBadgeVariant}
-        />
-      )
-  }
+    
   </>
   );
 };

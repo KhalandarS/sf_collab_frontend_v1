@@ -13,10 +13,10 @@ export default function TeamSection({ members, onJoinClick, isCreator, onRemoveM
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <h2 className="text-lg font-semibold text-white">Team</h2>
-
+    {console.log(members)}
           {/* Compact avatar row */}
           <div className="flex -space-x-2">
-            {members.slice(0, 8).map((member) => (
+            {members.map((member) => (
               <TooltipProvider key={member.id}>
                 <Tooltip>
                   <TooltipTrigger asChild>

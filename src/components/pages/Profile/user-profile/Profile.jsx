@@ -15,7 +15,6 @@ import ProfileSettings from '../profileSettings/ProfileSettings';
 import { useSelector } from 'react-redux';
 import { data, useNavigate, useSearchParams } from 'react-router-dom';
 import { builderProfileAPI } from '@/services/builderAPI';
-import { API_BASE_URL } from '@/utils/config';
 import { usersAPI } from '@/utils/APIs/userAPI';
 
 const Profile = () => {
@@ -53,7 +52,7 @@ const Profile = () => {
   const viewedUserId = queryParams.get("userId");
   const page = queryParams.get("page");
   useEffect(() => {
-    if (page === "settings") {
+    if (page) {
       setShowSettings(true);
     } else {
       setShowSettings(false);
@@ -68,7 +67,7 @@ const Profile = () => {
     viewedUserId && authUser?.id && String(viewedUserId) !== String(authUser.id);
 
   const user = isOtherUser ? viewedUser : authUser;
-
+  console.log(user);
   useEffect(() => {
     const loadOtherUser = async () => {
       if (!isOtherUser) {
@@ -109,7 +108,7 @@ const Profile = () => {
 
   // Only allow settings page for your own profile
   if (showSettings && !isOtherUser) {
-    return <ProfileSettings user={authUser} back={() => window.history.back()} />;
+    return <ProfileSettings user={authUser} back={() => window.history.back()} initialActiveSection={page} />;
   }
 
   const calculateLevel = (xp) => Math.floor(xp / 1000) + 1;
@@ -135,14 +134,14 @@ const Profile = () => {
           levelProgress={levelProgress}
           xpToNextLevel={xpToNextLevel}
           isEditing={isEditing}
+          isOtherUser={isOtherUser}
           onEditToggle={() => setIsEditing(!isEditing)}
           onSettingsClick={() => navigate("/user-profile?page=settings")}
         />
-
         <ProfileStats
           user={user}
-          streakDays={user.streakDays}
-          activeStartups={user.activeStartupsCount}
+          streakDays={user.streak_days}
+          activeStartups={user.active_startups_count}
         />
 
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -197,12 +196,12 @@ const Profile = () => {
                   <span className="text-sm text-gray-400">Streak</span>
                   <span className="flex items-center gap-1 text-yellow-400">
                     <Zap className="w-4 h-4" />
-                    {user.streakDays} days
+                    {user.streak_days} days
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Startups</span>
-                  <span className="text-blue-400">{user?.activeStartupsCount} active</span>
+                  <span className="text-blue-400">{user?.active_startups_count} active</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Tasks Done</span>

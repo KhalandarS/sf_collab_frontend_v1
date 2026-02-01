@@ -282,7 +282,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             {!isRootPath && !isChatRoute && !isConnectionsRoute && (
               <div
                 ref={optionsRef}
-                className={`transition-all pointer-events-none duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
+                onMouseEnter={handleNavAreaEnter}
+                onMouseLeave={handleNavAreaLeave}
+                className={`transition-all pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
                 style={{ zIndex: 10 }}
               >
                 <Options

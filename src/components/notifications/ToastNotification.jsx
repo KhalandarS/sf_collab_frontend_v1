@@ -58,7 +58,7 @@ const ToastNotification = () => {
   };
 
   return (
-    <div className="toast-container">
+    <div className="toast-container z-1000">
       {toasts.map((toast) => (
         <div
           key={toast.id}

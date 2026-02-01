@@ -21,7 +21,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
       href: "/my-startups",
       label: "Startups",
       subItems: [
-        { id: "discover-startups", href: "/my-startups", label: "Discover", icon: <Rocket size={18} /> },
+        { id: "discover-startups", href: "/discover-startups", label: "Discover", icon: <Rocket size={18} /> },
         { id: "register-startup", href: "/register-startup", label: "Register", icon: <PlusSquare size={18} /> },
         { id: "my-startups", href: "/my-startups", label: "My Startups", icon: <Building2 size={18} /> },
         { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },

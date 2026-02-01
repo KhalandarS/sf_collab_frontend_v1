@@ -1,4 +1,4 @@
-import { CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb, Earth, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users } from 'lucide-react';
+import { CheckCircle, BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb, Earth, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList } from 'lucide-react';
 
 import { LuLayoutDashboard } from 'react-icons/lu';
 import getDashboardLink from "../getDashboardLink";
@@ -34,12 +34,12 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/builder/my-applications",
       label: "My Applications",
     },
-    // {
-    //   id: 6,
-    //   icon: <LucideLayoutDashboard size={22} />,
-    //   href: "/builder/my-work",
-    //   label: "My Work",
-    // },
+    {
+      id: 6,
+      icon: <ClipboardList size={22} />,
+      href: "/builder/my-work",
+      label: "My Work",
+    },
     {
       id: 7,
       icon: <Users size={22} />,

@@ -19,8 +19,7 @@ import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
 import { useSelector } from "react-redux";
-
-/* ================= MAIN ================= */
+import { motion } from "framer-motion";
 
 export default function BuilderDashboard({
   userRoles,
@@ -28,22 +27,18 @@ export default function BuilderDashboard({
   setActiveRole,
 }) {
   const { user } = useSelector((state) => state.auth);
-  const [data, setData] = useState(null);
+  const [startups, setStartups] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     dashboardAPI
       .getBuilderDashboard()
-      .then((res) => setData(res.data))
+      .then((res) => setStartups(res.data.startups || []))
       .catch((err) =>
         console.error("❌ Failed to load builder dashboard", err)
       )
       .finally(() => setLoading(false));
   }, []);
-
-  const startups = data?.startups ?? [];
-
-  /* ================= DERIVED STATS ================= */
 
   const totals = useMemo(() => {
     return startups.reduce(
@@ -57,11 +52,13 @@ export default function BuilderDashboard({
     );
   }, [startups]);
 
+  const completionRate = totals.totalTasks > 0 
+    ? Math.round((totals.completed / totals.totalTasks) * 100) 
+    : 0;
+
   if (loading) {
     return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
   }
-
-  /* ================= RENDER ================= */
 
   return (
     <div className="space-y-6 px-4 py-6">
@@ -81,7 +78,6 @@ export default function BuilderDashboard({
 
       <AnnouncementsSection userRoles={userRoles} />
 
-      {/* ================= HEADER ================= */}
       <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
         <div className="flex flex-col lg:flex-row justify-between gap-6">
           <div>
@@ -98,22 +94,20 @@ export default function BuilderDashboard({
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <QuickStat label="Active Startups" value={startups.length} icon={Briefcase} />
-            <QuickStat label="Total Tasks" value={totals.totalTasks} icon={CheckCircle} />
-            <QuickStat label="Pending" value={totals.pending} icon={Clock} />
+          <div className="flex gap-3 flex-wrap">
+            <QuickStat label="Completed" value={totals.completed} icon={CheckCircle} />
+            <QuickStat label="In Progress" value={totals.pending} icon={Clock} />
+            <QuickStat label="Completion Rate" value={`${completionRate}%`} icon={Layers} />
           </div>
         </div>
       </header>
 
-      {/* ================= QUICK ACTIONS ================= */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <QuickAction label="Browse Startups" href="/discover-startups" icon={Briefcase} />
         <QuickAction label="Saved Startups" href="/saved-startups" icon={Users} />
         <QuickAction label="My Applications" href="/builder/my-applications" icon={CheckCircle} />
       </div>
 
-      {/* ================= MY WORK ================= */}
       <Section
         icon={Briefcase}
         title="My Work"
@@ -144,8 +138,6 @@ export default function BuilderDashboard({
     </div>
   );
 }
-
-/* ================= SUBCOMPONENTS ================= */
 
 function Section({ icon: Icon, title, subtitle, action, children }) {
   return (
@@ -199,32 +191,32 @@ function QuickAction({ label, href, icon: Icon }) {
 
 function StartupWorkCard({ data }) {
   const { startup, role, tasks } = data;
+  const completionRate = tasks.total > 0 
+    ? Math.round((tasks.completed / tasks.total) * 100) 
+    : 0;
 
   return (
-    <Link
-      to={`/startups/${startup.id}`}
+    <motion.div
+      whileHover={{ y: -4, boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)" }}
       className="relative rounded-xl bg-gradient-to-br from-emerald-900/20 to-slate-900/20 border border-emerald-500/20 p-5 hover:border-emerald-500/50 transition overflow-hidden group"
     >
-      {/* Background accent */}
       <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/0 to-emerald-500/0 group-hover:from-emerald-500/5 group-hover:to-emerald-500/10 transition" />
 
-      <div className="relative z-10 space-y-4">
-        {/* Header */}
+      <Link to={`/startup-details/${startup.id}`} className="relative z-10 space-y-4 block">
         <div className="flex justify-between items-start gap-3">
           <div className="flex-1 min-w-0">
             <h4 className="font-semibold text-white truncate">{startup.name}</h4>
-            <p className="text-xs text-white/50">{role}</p>
+            <p className="text-xs text-white/50 mt-1">{role}</p>
           </div>
           <MoreHorizontal className="w-4 h-4 text-white/40 flex-shrink-0" />
         </div>
 
-        {/* Task metrics */}
-        <div className="grid grid-cols-2 gap-3 text-xs">
+        <div className="grid grid-cols-3 gap-3 pt-2 border-t border-white/10">
           <Stat label="Completed" value={tasks.completed} />
           <Stat label="Pending" value={tasks.pending} />
+          <Stat label="Progress" value={`${completionRate}%`} />
         </div>
 
-        {/* Tasks list */}
         {tasks.items.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-white/10">
             {tasks.items.slice(0, 2).map((task) => (
@@ -243,25 +235,25 @@ function StartupWorkCard({ data }) {
             No assigned tasks
           </p>
         )}
-      </div>
-
-      <Link to={`/startups/${startup.id}`} className="absolute inset-0" />
-    </Link>
+      </Link>
+    </motion.div>
   );
 }
 
 function TaskRow({ task }) {
+  const isCompleted = task.status === "completed" || task.status === "completed";
+  
   return (
     <div className="flex justify-between text-sm text-white/80">
       <span className="truncate">{task.title}</span>
       <span
-        className={`text-xs flex-shrink-0 ${
-          task.status === "completed"
+        className={`text-xs flex-shrink-0 font-medium ${
+          isCompleted
             ? "text-emerald-400"
             : "text-amber-400"
         }`}
       >
-        {task.status}
+        {isCompleted ? "✓" : "•"} {task.status.replace(/_/g, " ")}
       </span>
     </div>
   );
@@ -270,8 +262,8 @@ function TaskRow({ task }) {
 function Stat({ label, value }) {
   return (
     <div>
-      <p className="text-white/40">{label}</p>
-      <p className="text-white font-medium">{value}</p>
+      <p className="text-white/40 text-xs">{label}</p>
+      <p className="text-white font-medium text-sm">{value}</p>
     </div>
   );
 }

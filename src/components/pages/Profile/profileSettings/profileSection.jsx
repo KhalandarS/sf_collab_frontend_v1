@@ -6,40 +6,54 @@ import { useSelector } from "react-redux";
 import { getRenderImageUrl } from "./getRenderImageUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { builderFocusOptions } from "./builderFocus";
+import { motion } from "framer-motion";
+import { User, MapPin, Briefcase, Globe, Link as LinkIcon } from "lucide-react";
 
-/* ---------------------- ProfileSection ---------------------- */
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
   const timezones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'];
   const [loadingCountry, setLoadingCountry] = useState(false);
   const [roles, setRoles] = useState([]);
-  const { user} = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+  };
+
   const handleImage = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     uploadProfilePicture(file).then(url => {
       setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: url } }));
+      toast.success("Image uploaded successfully");
     }).catch(() => {
       toast.error("Failed to upload image");
     });
   };
-const handleAutoDetectTimezone = () => {
-  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-  if (!timeZone) {
-    toast.info("Could not detect timezone");
-    return;
-  }
-  console.log(formData);
-  setFormData(prev => ({
-    ...prev,
-    preferences: {
-      ...prev.preferences,
-      timezone: timeZone,
+  const handleAutoDetectTimezone = () => {
+    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (!timeZone) {
+      toast.info("Could not detect timezone");
+      return;
     }
-  }));
-
-  toast.success("Timezone detected automatically");
-};
+    setFormData(prev => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        timezone: timeZone,
+      }
+    }));
+    toast.success("Timezone detected automatically");
+  };
 
   const handleAutoDetectCountry = async () => {
     try {
@@ -48,106 +62,137 @@ const handleAutoDetectTimezone = () => {
       const data = await response.json();
       if (data.country_name && countries.includes(data.country_name)) {
         setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: data.country_name } }));
-        toast.success("Country detected automatically");
       }
       if (data.city) {
         setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: data.city } }));
       }
       if (!data.country_name && !data.city) {
         toast.info("Could not detect country or city");
+        return;
       }
       handleAutoDetectTimezone();
-
-
+      toast.success("Location detected automatically");
     } catch {
-      toast.error("Failed to detect country");
+      toast.error("Failed to detect location");
     } finally {
       setLoadingCountry(false);
     }
   };
+
   const fromSnakeToTitleCase = (str) => {
     return str
       .split('_')
       .map(word => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ');
-  }
-  const fromTitleToSnakeCase = (str) => {
+  };
 
-    return str
-      .toLowerCase()
-      .replace(/ /g, '_');
-  }
   useEffect(() => {
-    async function getRoles() {
-      try {
-        // if (!user.roles) {
-        //   const data = await usersAPI.getMyRoles();
-        //   return;
-        // }
-        setRoles(['influencer', 'investor', 'builder', 'founder']);
-      } catch {
-        toast.error("Failed to fetch roles");
-      }
-    }
-    getRoles();
+    setRoles(['influencer', 'investor', 'builder', 'founder']);
   }, []);
-  return (
-    <div className="space-y-10">
-      <h2 className="text-2xl font-bold mb-6">Profile Settings</h2>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Profile Picture</label>
-        <div className="flex items-center gap-4">
-          <div className="w-20 h-20 rounded-full bg-gray-700 overflow-hidden">
+  return (
+    <motion.div 
+      className="space-y-6"
+      initial="hidden"
+      animate="visible"
+      variants={containerVariants}
+    >
+      <motion.div variants={itemVariants}>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 bg-blue-600/20 rounded-lg">
+            <User className="w-6 h-6 text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold">Profile Settings</h2>
+            <p className="text-sm text-gray-400 mt-1">Manage your profile information</p>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Profile Picture */}
+      <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-blue-600/10 to-cyan-600/10 rounded-xl border border-blue-700/30">
+        <label className="block text-sm font-semibold text-gray-200 mb-4">Profile Picture</label>
+        <div className="flex items-center gap-6">
+          <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-600">
             {(user.profile.picture || formData.profile.picture) ? (
               <img src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
             ) : (
               <div className="flex items-center justify-center text-gray-400 text-sm h-full">No image</div>
             )}
           </div>
-
-          <label className="px-4 py-2 bg-gray-700 rounded-lg cursor-pointer">
-            Upload
-            <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
-          </label>
-
-          {formData.profile.picture && (
-            <button type="button" onClick={() => setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: null } }))} className="px-4 py-2 bg-red-600 rounded-lg">Remove</button>
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">First Name</label>
-          <input type="text" value={formData.firstName} onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Last Name</label>
-          <input type="text" value={formData.lastName} onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Email (read-only)</label>
-          <input type="text" value={formData.email} readOnly className="w-full bg-gray-600 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Account Status</label>
-          <input type="text" value={formData.status} readOnly className="w-full bg-gray-600 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 capitalize" />
-        </div>
-
-        {
-          formData.roles.length === 0 &&
-          <div className="col-span-2">
-            <h3 className="text-red-500 border border-red-500 rounded-lg px-4 py-3 font-medium">You must include one role to continue</h3>
+          <div className="flex gap-3">
+            <label className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg cursor-pointer transition-colors font-medium">
+              Upload
+              <input type="file" accept="image/*" className="hidden" onChange={handleImage} />
+            </label>
+            {formData.profile.picture && (
+              <button type="button" onClick={() => setFormData(prev => ({ ...prev, profile: { ...prev.profile, picture: null } }))} className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg transition-colors font-medium border border-red-600/50">
+                Remove
+              </button>
+            )}
           </div>
-        }
-        {
-          roles.length > 0 && roles.map(role => (
-            <div key={role}>
-              <input type="checkbox"
+        </div>
+      </motion.div>
+
+      {/* Basic Info */}
+      <motion.div variants={itemVariants} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">First Name</label>
+            <input 
+              type="text" 
+              value={formData.firstName} 
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))} 
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Last Name</label>
+            <input 
+              type="text" 
+              value={formData.lastName} 
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))} 
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Email (read-only)</label>
+            <input 
+              type="text" 
+              value={formData.email} 
+              readOnly 
+              className="w-full bg-gray-700/30 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 border border-gray-600"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-200 mb-2">Account Status</label>
+            <input 
+              type="text" 
+              value={formData.status} 
+              readOnly 
+              className="w-full bg-gray-700/30 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 capitalize border border-gray-600"
+            />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Roles */}
+      <motion.div variants={itemVariants}>
+        <label className="block text-sm font-semibold text-gray-300 uppercase tracking-wide px-4 mb-4">Select Your Roles</label>
+        {formData.roles.length === 0 && (
+          <div className="mb-4 p-3 bg-red-600/10 border border-red-600/50 rounded-lg">
+            <p className="text-red-400 text-sm font-medium">You must select at least one role to continue</p>
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3">
+          {roles.map(role => (
+            <motion.label key={role} whileHover={{ x: 2 }} className="flex items-center p-4 bg-gray-700/20 hover:bg-gray-700/30 border border-gray-700/50 rounded-lg cursor-pointer transition-colors">
+              <input 
+                type="checkbox"
+                checked={formData.roles?.includes(role)} 
                 onChange={(e) => {
                   if (e.target.checked) {
                     setFormData(prev => ({ ...prev, roles: [...(prev.roles || []), role] }));
@@ -155,19 +200,18 @@ const handleAutoDetectTimezone = () => {
                     setFormData(prev => ({ ...prev, roles: (prev.roles || []).filter(r => r !== role) }));
                   }
                 }}
-                checked={formData.roles?.includes(role)} className="w-full bg-gray-600 text-gray-400 rounded-lg px-4 py-3" />
+                className="w-4 h-4 rounded border-gray-600"
+              />
+              <span className="ml-3 text-gray-200 font-medium capitalize">{fromSnakeToTitleCase(role)}</span>
+            </motion.label>
+          ))}
+        </div>
+      </motion.div>
 
-              <label className="block text-sm font-medium text-gray-400 mb-2">{fromSnakeToTitleCase(role)} Role</label>
-            </div>
-          ))
-        }
-      </div>
+      {/* Builder Focus */}
       {formData.roles?.includes("builder") && (
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">
-            Builder Focus
-          </label>
-
+        <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-purple-600/10 to-pink-600/10 rounded-xl border border-purple-700/30">
+          <label className="block text-sm font-semibold text-gray-200 mb-3">Builder Focus</label>
           <select
             value={formData.preferences.builderPreferences || ""}
             onChange={(e) =>
@@ -179,66 +223,108 @@ const handleAutoDetectTimezone = () => {
                 }
               }))
             }
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3"
+            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-purple-500 focus:outline-none transition-colors"
           >
-            <option value="" disabled>
-              Select an option
-            </option>
+            <option value="" disabled>Select an option</option>
             {builderFocusOptions.map((option) => (
               <option key={option} value={option}>
                 {option.charAt(0).toUpperCase() + option.slice(1)}
               </option>
             ))}
           </select>
-        </div>
+        </motion.div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Bio</label>
-        <textarea value={formData.profile.bio || ''} onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))} rows={4} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
-        <p>{(formData.profile.bio || '').length}/300 characters</p>
-      </div>
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Country</label>
-          <div className="flex gap-2">
-            <select value={formData.profile.country || ''} onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: e.target.value } }))} className="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
+      {/* Bio */}
+      <motion.div variants={itemVariants}>
+        <label className="block text-sm font-semibold text-gray-200 mb-2">Bio</label>
+        <textarea 
+          value={formData.profile.bio || ''} 
+          onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))} 
+          rows={4} 
+          className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors resize-none"
+        />
+        <p className="text-xs text-gray-400 mt-2">{(formData.profile.bio || '').length}/300 characters</p>
+      </motion.div>
+
+      {/* Location */}
+      <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-green-600/10 to-emerald-600/10 rounded-xl border border-green-700/30 space-y-4">
+        <div className="flex items-center gap-3 mb-4">
+          <MapPin className="w-5 h-5 text-green-400" />
+          <label className="text-sm font-semibold text-gray-200">Location</label>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-2">Country</label>
+            <select 
+              value={formData.profile.country || ''} 
+              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: e.target.value } }))} 
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
+            >
               <option value="">Select country</option>
               {countries && countries.map(country => <option key={country} value={country}>{country}</option>)}
             </select>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">City</label>
-          <input type="text" value={formData.profile.city || ''} onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: e.target.value } }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
-        </div>
-
-      </div>
-      <button type="button" onClick={handleAutoDetectCountry} className="w-full px-4 py-2 bg-blue-600 rounded-lg whitespace-nowrap">
-        {
-          loadingCountry ? "Detecting..." : "Auto Detect"
-        }
-      </button>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Company</label>
-          <input type="text" value={formData.profile.company || ''} onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, company: e.target.value } }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3" />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-400 mb-2">Timezone (preference)</label>
-          <select value={formData.preferences.timezone} onChange={(e) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, timezone: e.target.value } }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-400 mb-2">City</label>
+            <input 
+              type="text" 
+              value={formData.profile.city || ''} 
+              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: e.target.value } }))} 
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
+            />
+          </div>
+          <div className="bg-linear-to-r md:col-span-2">
+          <div className="flex items-center gap-3 mb-4">
+            <Globe className="w-5 h-5 text-indigo-400" />
+            <label className="text-sm font-semibold text-gray-200">Timezone</label>
+          </div>
+          <select 
+            value={formData.preferences.timezone} 
+            onChange={(e) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, timezone: e.target.value } }))} 
+            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-indigo-500 focus:outline-none transition-colors"
+          >
             <option value="">Select timezone</option>
             {timezones.map(tz => <option key={tz} value={tz}>{tz}</option>)}
           </select>
         </div>
-      </div>
+        </div>
+        <button 
+          type="button" 
+          onClick={handleAutoDetectCountry} 
+          disabled={loadingCountry}
+          className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white rounded-lg transition-colors font-medium"
+        >
+          {loadingCountry ? "Detecting..." : "Auto Detect Location"}
+        </button>
+      </motion.div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Social Links</label>
-        <div className="grid grid-cols-2 gap-4">
+      {/* Work Info */}
+      <motion.div variants={itemVariants} className="space-y-4">
+        <div className="p-6 bg-linear-to-r from-orange-600/10 to-amber-600/10 rounded-xl border border-orange-700/30">
+          <div className="flex items-center gap-3 mb-4">
+            <Briefcase className="w-5 h-5 text-orange-400" />
+            <label className="text-sm font-semibold text-gray-200">Work Information</label>
+          </div>
+          <input 
+            type="text" 
+            placeholder="Company name"
+            value={formData.profile.company || ''} 
+            onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, company: e.target.value } }))} 
+            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-orange-500 focus:outline-none transition-colors"
+          />
+        </div>
+
+        
+      </motion.div>
+
+      {/* Social Links */}
+      <motion.div variants={itemVariants} className="p-6 bg-linear-to-r from-pink-600/10 to-rose-600/10 rounded-xl border border-pink-700/30">
+        <div className="flex items-center gap-3 mb-4">
+          <LinkIcon className="w-5 h-5 text-pink-400" />
+          <label className="text-sm font-semibold text-gray-200">Social Links</label>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
           {["linkedin", "twitter", "github", "portfolio", "facebook", "instagram", "youtube", "dribbble", "behance"].map(platform => (
             <input
               key={platform}
@@ -246,20 +332,12 @@ const handleAutoDetectTimezone = () => {
               placeholder={platform}
               value={formData.profile.socialLinks?.[platform] || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, socialLinks: { ...(prev.profile.socialLinks || {}), [platform]: e.target.value } } }))}
-              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3 capitalize"
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-pink-500 focus:outline-none transition-colors capitalize text-sm"
             />
           ))}
         </div>
-      </div>
+      </motion.div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-400 mb-2">Role Type</label>
-        <select value={formData.roleType || ''} onChange={(e) => setFormData(prev => ({ ...prev, roleType: e.target.value }))} className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-3">
-          <option value="">Select role type</option>
-          <option value="development">Development</option>
-          <option value="marketing">Marketing</option>
-        </select>
-      </div>
-    </div>
+    </motion.div>
   );
-};
+}

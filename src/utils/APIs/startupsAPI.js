@@ -99,44 +99,31 @@ export const startupsAPI = {
   },
 
   // Upload document
-  uploadDocument: async (startupId, formData, accessToken) => {
+  uploadDocument: async (startupId, formData) => {
     const response = await api.post(
       `/startups/${startupId}/documents`,
-      formData,
-      {
+      formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${accessToken}`,
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       }
     )
     return response.data
   },
 
   // Delete document
-  deleteDocument: async (startupId, documentId, access_token) => {
+  deleteDocument: async (startupId, documentId) => {
     const response = await api.delete(
-      `/startups/${startupId}/documents/${documentId}`,
-      {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      }
-    )
+      `/startups/${startupId}/documents/${documentId}`)
     return response.data
   },
 
   // Download document
-  downloadDocument: async (startupId, documentId, accessToken) => {
+  downloadDocument: async (startupId, documentId) => {
     const response = await api.get(
-      `/startups/${startupId}/documents/${documentId}/download`,
-      {
-        responseType: 'blob',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
-    )
+      `/startups/${startupId}/documents/${documentId}/download`, {
+        responseType: 'blob'
+      })
     return response
   },
 
@@ -459,6 +446,97 @@ export const calendarEventsAPI = {
       },
     })
     return response.data.data
+  },
+}
+
+export const tasksAPI = {
+  // Get all tasks with filters
+  getAll: async (params = {}) => {
+    const response = await api.get('/tasks', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 50,
+        ...params,
+      },
+    })
+    return response.data
+  },
+  getTasksStats: async (params = {}) => {
+    const response = await api.get('/tasks/stats', {
+      params: {
+        ...params,
+      },
+    })
+    return response.data
+  },
+  // Get single task by ID
+  getById: async (taskId) => {
+    const response = await api.get(`/tasks/${taskId}`)
+    return response.data.task
+  },
+
+  // Create new task
+  create: async (taskData) => {
+    const response = await api.post('/tasks', taskData)
+    return response.data
+  },
+
+  // Update task
+  update: async (taskId, taskData) => {
+    const response = await api.put(`/tasks/${taskId}`, taskData)
+    return response.data
+  },
+
+  // Complete task
+  completeTask: async (taskId) => {
+    const response = await api.post(`/tasks/${taskId}/complete`)
+    return response.data
+  },
+
+  // Assign task to user
+  assignTask: async (taskId, assignedTo) => {
+    const response = await api.put(`/tasks/${taskId}/assign`, { assigned_to: assignedTo })
+    return response.data.task
+  },
+
+  // Delete task
+  delete: async (taskId) => {
+    const response = await api.delete(`/tasks/${taskId}`)
+    return response.data
+  },
+
+  // Get task statistics
+  getStats: async (params = {}) => {
+    const response = await api.get('/tasks/stats', {
+      params: {
+        ...params,
+      },
+    })
+    return response.data.stats
+  },
+
+  // Get current user's tasks
+  getMyTasks: async (params = {}) => {
+    const response = await api.get('/tasks/my-tasks', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 20,
+        ...params,
+      },
+    })
+    return response.data
+  },
+
+  // Get overdue tasks
+  getOverdueTasks: async (params = {}) => {
+    const response = await api.get('/tasks/overdue', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 20,
+        ...params,
+      },
+    })
+    return response.data
   },
 }
 export default api

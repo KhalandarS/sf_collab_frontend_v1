@@ -14,7 +14,7 @@ const api = axios.create({
 
 api.interceptors.response.use(
   responseInterceptor,
-  responseErrorInterceptor
+  (error) => Promise.reject(error)
 );
 
 

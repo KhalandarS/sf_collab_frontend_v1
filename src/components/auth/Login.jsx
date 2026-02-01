@@ -17,7 +17,6 @@ import { ShineButton } from '../lightswind/shine-button';
 import useScrollHide from "@/utils/hooks/useScrollHide";
 
 const API_URL = import.meta.env.VITE_API_URL_AUTH || 'http://localhost:5001/api/auth';
-const ORIGIN = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5001';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -39,50 +38,23 @@ export default function Login() {
   const [errors, setErrors] = useState({})
   const [isLoading, setIsLoading] = useState(false)
 
-  const { isHidden: isNavHidden, onScroll } = useScrollHide({
+  const { isHidden: isNavHidden } = useScrollHide({
     deltaThreshold: 4,
     topReveal: 10,
   });
   
-  const [isOptionsVisible, setIsOptionsVisible] = useState(false);
-    const optionsRef = useRef(null);
-    const navContainerRef = useRef(null);
-    const revealImgRef = useRef(null);
+  const navContainerRef = useRef(null);
+  const revealImgRef = useRef(null);
+
+  // Handle mouse enter for the entire nav area
+  const handleNavAreaEnter = () => {
+    // Navigation area enter handler
+  };
   
-    // Handle mouse enter for the entire nav area
-    const handleNavAreaEnter = () => {
-      setIsOptionsVisible(true);
-    };
-    
-    useEffect(()=>{
-      setIsOptionsVisible(true);
-      
-      setTimeout(()=>{
-        setIsOptionsVisible(false);
-      },1000);
-    },[]);
-    
-    // Handle mouse leave with proper event delegation
-    const handleNavAreaLeave = (e) => {
-      // Check if we're moving to the options element
-      if (optionsRef.current && optionsRef.current.contains(e.relatedTarget)) {
-        return; // Don't hide if moving to options
-      }
-      setIsOptionsVisible(false);
-    };
-  
-    // Handle options area specifically
-    const handleOptionsEnter = () => {
-      setIsOptionsVisible(true);
-    };
-  
-    const handleOptionsLeave = (e) => {
-      // Check if we're moving back to the nav area
-      if (navContainerRef.current && navContainerRef.current.contains(e.relatedTarget)) {
-        return; // Don't hide if moving back to nav
-      }
-      setIsOptionsVisible(false);
-    };
+  // Handle mouse leave with proper event delegation
+  const handleNavAreaLeave = () => {
+    // Navigation area leave handler
+  };
   // Get the intended destination or default to dashboard
   // const from = location.state?.from?.pathname || '/dashboard'
 
@@ -127,7 +99,7 @@ export default function Login() {
         
         dispatch(setUser(user));
         dispatch(setToken(access_token));
-        navigate("/dashboard", { replace: true });
+        window.location.href = "/dashboard";
 
 
         
@@ -145,7 +117,7 @@ export default function Login() {
   
     window.addEventListener("message", handleOAuthMessage);
     return () => window.removeEventListener("message", handleOAuthMessage);
-  }, []);
+  }, [dispatch, navigate]);
   useEffect(() => {
     if (user) {
       navigate("/dashboard", { replace: true });
@@ -192,7 +164,7 @@ export default function Login() {
     setIsLoading(true);
     try {
       await dispatch(loginUser(formData)).unwrap();
-      // reducer already sets user + token
+      window.location.href = '/dashboard'
     } catch (error) {
       setErrors(prev => ({
         ...prev,
@@ -242,8 +214,8 @@ export default function Login() {
       onMouseEnter={handleNavAreaEnter}
       onMouseLeave={handleNavAreaLeave}
       className={`w-full overflow-hidden transition-[max-height] duration-300 ease-in-out ${
-        isNavHidden ? "h-0" : "h-[60px]"
-      } lg:h-[60px]`}
+        isNavHidden ? "h-0" : "h-15"
+      } lg:h-15`}
       style={{zIndex:99999999}}
     >
       <NavBar isHidden={isNavHidden} />

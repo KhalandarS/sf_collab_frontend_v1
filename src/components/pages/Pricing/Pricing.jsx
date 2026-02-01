@@ -1,139 +1,60 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
 import NavBar from "../../landing-page/Navbar";
 import Footer from "../../../components/landing-page/Footer";
 import AIPricing from "./aiPricing";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "@/utils/config";
+import { Loader2 } from "lucide-react";
 
 const Pricing = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const plans = [
-    {
-      title: "Builder",
-      description: "People Who Contribute",
-      subtitle: "Builders never pay upfront. They only pay when they earn.",
-      tiers: [
-        {
-          id: "builder-free",
-          name: "Builder Free",
-          price: "$0",
-          platformFee: "20%",
-          features: [
-            "Work on 1 project at a time",
-            "Core tools & dashboard",
-            "Ads visible",
-            "Basic project matching",
-            "Community support",
-          ],
-        },
-        {
-          id: "builder-pro",
-          name: "Builder Pro",
-          price: "$9/mo",
-          platformFee: "10%",
-          features: [
-            "Work on up to 3 projects simultaneously",
-            "Higher priority in project matching",
-            "Ad-free experience",
-            "Advanced filtering & search",
-            "Access to priority support",
-          ],
-        },
-        {
-          id: "builder-plus",
-          name: "Builder Plus",
-          price: "$19/mo",
-          platformFee: "5%",
-          features: [
-            "Everything in Builder Pro +",
-            "Unlimited simultaneous projects",
-            "Top-tier project matching algorithm",
-            "Direct messaging with founders",
-            "Portfolio showcase",
-          ],
-        },
-        {
-          id: "builder-elite",
-          name: "Builder Elite",
-          price: "$49/mo",
-          platformFee: "2%",
-          features: [
-            "Everything in Builder Plus +",
-            "Maximum visibility to founders",
-            "Access to high-value projects",
-            "Priority support",
-            "Skill endorsements",
-          ],
-        },
-      ],
-    },
-    {
-      title: "Founder",
-      description: "People Who Create Projects",
-      subtitle: "Unlock creation, visibility, and execution readiness.",
-      tiers: [
-        {
-          id: "founder-free",
-          name: "Founder Free",
-          price: "$0",
-          features: [
-            "Create 1 project at a time",
-            "Recruit & manage contributors",
-            "Ads visible",
-            "Basic contributor search",
-          ],
-        },
-        {
-          id: "founder-starter",
-          name: "Founder Starter",
-          price: "$49/mo",
-          features: [
-            "Everything in Founder Free +",
-            "Create up to 3 projects simultaneously",
-            "Ad-free platform experience",
-            "Boosted visibility in search",
-          ],
-        },
-        {
-          id: "founder-pro",
-          name: "Founder Pro",
-          price: "$149/mo",
-          features: [
-            "Everything in Founder Starter +",
-            "Create up to 10 projects simultaneously",
-            "Featured placement on homepage",
-            "Advanced team management tools",
-            "Contributor rating system",
-          ],
-        },
-        {
-          id: "founder-scale",
-          name: "Founder Scale",
-          price: "$299/mo",
-          features: [
-            "Everything in Founder Pro +",
-            "Unlimited projects",
-            "Maximum platform exposure",
-            "Priority customer support",
-            "Analytics dashboard",
-          ],
-        },
-        {
-          id: "founder-partner",
-          name: "Founder Partner",
-          price: "$499/mo",
-          features: [
-            "Everything in Founder Scale +",
-            "Top-tier access & white-glove support",
-            "Early access to beta features",
-            "Dedicated account manager",
-            "Custom branding options",
-          ],
-        },
-      ],
-    },
-  ];
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/payments/plans?type=standard`);
+        if (res.data.length > 0) {
+          const plan = res.data[0];
+          setPlans(
+            plan.roles.map((role) => ({
+              title: role.role.charAt(0).toUpperCase() + role.role.slice(1),
+              description: role.role === "builder" 
+                ? "People Who Contribute" 
+                : "People Who Create Projects",
+              subtitle: role.role === "builder"
+                ? "Builders never pay upfront. They only pay when they earn."
+                : "Unlock creation, visibility, and execution readiness.",
+              tiers: role.tiers.map((tier) => ({
+                id: tier.id,
+                name: tier.title,
+                price: `$${(tier.price / 100).toFixed(0)}/mo`,
+                platformFee: tier.fee ? `${(tier.fee * 100).toFixed(0)}%` : null,
+                features: tier.features || [],
+              })),
+            }))
+          );
+        }
+      } catch (err) {
+        console.error("❌ Failed to load pricing plans", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPlans();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-white/60" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-neutral-950 text-white">
@@ -162,7 +83,6 @@ const Pricing = () => {
             style={{ left: activeIndex === 0 ? "0%" : "50%" }}
           />
           {plans.map((plan, i) => (
-
             <button
               key={plan.title}
               onClick={() => setActiveIndex(i)}
@@ -171,8 +91,7 @@ const Pricing = () => {
               }`}
             >
               {plan.title}
-              </button>
-
+            </button>
           ))}
         </div>
 
@@ -192,43 +111,40 @@ const Pricing = () => {
             </div>
 
             <div className="flex flex-row items-stretch justify-center flex-wrap gap-6">
-              {plans[activeIndex].tiers.map((tier, idx) => (
-                <Link to={`/checkout/${tier.id}`}>
-                <motion.div
-                  key={tier.name}
-                  whileHover={{ y: -6 }}
-                  className="min-w-[20rem] flex-1 h-full bg-gradient-to-br from-neutral-900 to-neutral-800 border border-neutral-700 rounded-2xl p-6 flex flex-col justify-between"
-                >
-                  <div>
-                    <h3 className="text-xl font-semibold mb-3">{tier.name}</h3>
-                    <p className="text-4xl font-bold text-blue-400 mb-2">{tier.price}</p>
-                    
-                    {/* Platform Fee Highlight */}
-                    {tier.platformFee && (
-                      <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mb-4">
-                        <p className="text-sm font-semibold text-red-400">
-                          Platform Fee: {tier.platformFee}
-                        </p>
-                      </div>
-                    )}
+              {plans[activeIndex].tiers.map((tier) => (
+                <Link key={tier.id} to={`/checkout/${tier.id}`}>
+                  <motion.div
+                    whileHover={{ y: -6 }}
+                    className="min-w-[20rem] flex-1 h-full bg-gradient-to-br from-neutral-900 to-neutral-800 border border-neutral-700 rounded-2xl p-6 flex flex-col justify-between"
+                  >
+                    <div>
+                      <h3 className="text-xl font-semibold mb-3">{tier.name}</h3>
+                      <p className="text-4xl font-bold text-blue-400 mb-2">{tier.price}</p>
 
-                    <ul className="space-y-2 text-sm text-neutral-300 mb-6">
-                      {tier.features.map((f, i) => (
-                        <li key={i} className="flex gap-2">
-                          <span className="text-green-400 flex-shrink-0">✓</span>
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  
-                    <button
-                      className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 font-semibold hover:opacity-90 transition">
-                    Choose Plan
+                      {/* Platform Fee Highlight */}
+                      {tier.platformFee && (
+                        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-2 mb-4">
+                          <p className="text-sm font-semibold text-red-400">
+                            Platform Fee: {tier.platformFee}
+                          </p>
+                        </div>
+                      )}
+
+                      <ul className="space-y-2 text-sm text-neutral-300 mb-6">
+                        {tier.features.map((f, i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="text-green-400 flex-shrink-0">✓</span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <button className="w-full py-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 font-semibold hover:opacity-90 transition">
+                      Choose Plan
                     </button>
-                  
                   </motion.div>
-                  </Link>
+                </Link>
               ))}
             </div>
           </motion.div>
@@ -239,7 +155,7 @@ const Pricing = () => {
       <div className="w-full mx-auto px-6 lg:px-40 py-12">
         <div className="bg-neutral-900 border border-neutral-800 rounded-lg p-6 max-w-3xl mx-auto">
           <p className="text-neutral-300 text-sm leading-relaxed">
-        <span className="font-semibold text-white">Founder plans</span> unlock access to platform capabilities and define usage limits. Some services such as AI, hosting, email, automation, and external integrations are usage-based and billed separately. As SF evolves, new features will be added within existing plans based on capacity and access level.
+            <span className="font-semibold text-white">Founder plans</span> unlock access to platform capabilities and define usage limits. Some services such as AI, hosting, email, automation, and external integrations are usage-based and billed separately. As SF evolves, new features will be added within existing plans based on capacity and access level.
           </p>
         </div>
       </div>

@@ -16,6 +16,7 @@ const ProfileHeader = ({
   xpToNextLevel, 
   isEditing, 
   onEditToggle, 
+  isOtherUser,
   onSettingsClick 
 }) => {
   const { user: currentUser } = useSelector((state) => state.auth);
@@ -128,13 +129,16 @@ const ProfileHeader = ({
                 }
               </motion.div>
               
-              <motion.div 
-                whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
-              >
-                <Mail className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-300">{user?.email}</span>
-              </motion.div>
+              {
+                !isOtherUser &&
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  className="flex items-center gap-2 px-3 py-2 bg-gray-800/50 rounded-lg backdrop-blur-sm border border-gray-700"
+                >
+                  <Mail className="w-4 h-4 text-purple-400" />
+                  <span className="text-gray-300">{user?.email}</span>
+                </motion.div>
+              }
               
               <motion.div 
                 whileHover={{ scale: 1.05 }}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import {
   ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Plus, 
@@ -33,6 +33,22 @@ import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'l
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { startupsAPI } from '@/utils/APIs/startupsAPI'
 
+const colors = [
+  "#3B82F6", // Blue
+  "#10B981", // Green
+  "#F59E0B", // Yellow
+  "#EF4444", // Red
+  "#8B5CF6", // Purple
+  "#F97316", // Orange 
+]
+
+const isDateInRange = (date, start, end) => {
+  const day = new Date(date.setHours(0, 0, 0, 0));
+  const s = new Date(start.setHours(0, 0, 0, 0));
+  const e = new Date((end ?? start).setHours(0, 0, 0, 0));
+  return day >= s && day <= e;
+};
+
 export default function Calendar() {
   const { user, access_token } = useSelector((state) => state.auth)
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -41,11 +57,10 @@ export default function Calendar() {
   const [filteredEvents, setFilteredEvents] = useState([])
   const [showEventModal, setShowEventModal] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [selectedColor, setSelectedColor] = useState(null)
   const [showFilters, setShowFilters] = useState(true)
   const [loading, setLoading] = useState(false)
-
   const [exporting, setExporting] = useState(false)
-  const [exportFormat, setExportFormat] = useState('json')
   
   // Filter states
   const [filters, setFilters] = useState({
@@ -69,11 +84,21 @@ export default function Calendar() {
     color: '',
     location: '',
     startup_id: '',
+    link: '',
     reminder_minutes: 30
   })
 
-  // Get user's startups from Redux state
   const [userStartups, setUserStartups] = useState(user?.startups || [])
+
+  // Event colors mapping
+  const eventColors = useMemo(() => {
+    return events.map((_, i) => colors[i % colors.length]);
+  }, [events]);
+
+  const getEventColor = (event) => {
+    const index = events.findIndex((e) => e.id === event.id);
+    return eventColors[index] || "#3B82F6";
+  };
 
   useEffect(() => {
     if (!user) return
@@ -81,7 +106,6 @@ export default function Calendar() {
       try {
         const response = await startupsAPI.getUserStartupNames()
         if (response.success) {
-          console.log(response.data, "Startups");
           setUserStartups(response.data.startups || [])
         }
       } catch (error) {
@@ -91,7 +115,6 @@ export default function Calendar() {
     fetchUserStartups()
   }, [user, access_token])
 
-  // Event categories with colors
   const eventCategories = [
     { value: 'meeting', label: 'Meeting', color: '#3B82F6' },
     { value: 'deadline', label: 'Deadline', color: '#EF4444' },
@@ -99,7 +122,6 @@ export default function Calendar() {
     { value: 'event', label: 'Event', color: '#8B5CF6' }
   ]
 
-  // View options
   const viewOptions = [
     { value: 'month', label: 'Month', icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'week', label: 'Week', icon: <CalendarIcon className="h-4 w-4" /> },
@@ -108,7 +130,6 @@ export default function Calendar() {
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
-  // Fetch events on component mount and when filters change
   useEffect(() => {
     fetchEvents()
   }, [filters.view, filters.upcoming_only, filters.start_date, filters.end_date])
@@ -117,7 +138,6 @@ export default function Calendar() {
     fetchEvents()
   }, [])
   
-  // Apply filters when events or filters change
   useEffect(() => {
     applyFilters()
   }, [events, filters])
@@ -170,39 +190,17 @@ export default function Calendar() {
     }
   }
 
-  const fetchUpcomingEvents = async () => {
-    try {
-      const response = await fetch(`${API_URL}/calendar-events/upcoming`, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`
-        }
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        return data.data.events_to_remind || []
-      }
-    } catch (error) {
-      console.error('Error fetching upcoming events:', error)
-    }
-    return []
-  }
-
   const applyFilters = () => {
     let filtered = [...events]
 
-    // Apply category filter
     if (filters.category !== 'all') {
       filtered = filtered.filter(event => event.category === filters.category)
     }
 
-    // Apply startup filter
     if (filters.startup_id !== 'all') {
       filtered = filtered.filter(event => event.startup_id === parseInt(filters.startup_id))
     }
 
-    // Apply search filter
     if (filters.search) {
       const searchTerm = filters.search.toLowerCase()
       filtered = filtered.filter(event => 
@@ -227,16 +225,16 @@ export default function Calendar() {
     setSelectedDate(date);
     setEventForm({
       ...eventForm,
-      start_date: format(date, "dd/MM/yyyy'T'HH:mm"),
-      end_date: format(new Date(date.getTime() + 60 * 60 * 1000), "dd/MM/yyyy'T'HH:mm") // +1 hour
+      start_date: format(date, "yyyy-MM-dd'T'HH:mm"),
+      end_date: format(new Date(date.getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm")
     });
-    
     setShowEventModal(true);
     setSelectedEvent(null);
   };
 
-  const handleEventClick = (event) => {
+  const handleEventClick = (event, color) => {
     setSelectedEvent(event)
+    setSelectedColor(color)
     setEventForm({
       title: event.title,
       description: event.description || '',
@@ -244,9 +242,10 @@ export default function Calendar() {
       end_date: event.end_date ? format(parseISO(event.end_date), "yyyy-MM-dd'T'HH:mm") : '',
       all_day: event.all_day,
       category: event.category,
-      color: event.color,
+      color: color,
       location: event.location || '',
       startup_id: event.startup_id || '',
+      link: event.link || '',
       reminder_minutes: event.reminder_minutes || 30
     })
     setShowEventModal(true)
@@ -286,6 +285,7 @@ export default function Calendar() {
           color: '',
           location: '',
           startup_id: '',
+          link: '',
           reminder_minutes: 30
         })
       } else {
@@ -362,17 +362,16 @@ export default function Calendar() {
   }
 
   const getEventsForDate = (date) => {
-  return filteredEvents.filter(event => {
-    const eventStart = parseISO(event.start_date)
-    const eventEnd = event.end_date ? parseISO(event.end_date) : eventStart
-    const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
-    const start = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate())
-    const end = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate())
-    
-    return checkDate >= start && checkDate <= end
-  })
-}
-
+    return filteredEvents.filter(event => {
+      const eventStart = parseISO(event.start_date)
+      const eventEnd = event.end_date ? parseISO(event.end_date) : eventStart
+      const checkDate = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+      const start = new Date(eventStart.getFullYear(), eventStart.getMonth(), eventStart.getDate())
+      const end = new Date(eventEnd.getFullYear(), eventEnd.getMonth(), eventEnd.getDate())
+      
+      return checkDate >= start && checkDate <= end
+    })
+  }
 
   const renderMonthView = () => {
     const monthStart = startOfMonth(currentDate)
@@ -436,10 +435,10 @@ export default function Calendar() {
                   key={idx}
                   onClick={(e) => {
                     e.stopPropagation()
-                    handleEventClick(event)
+                    handleEventClick(event, getEventColor(event))
                   }}
                   className="text-xs p-1.5 rounded truncate cursor-pointer hover:opacity-90 transition-opacity"
-                  style={{ backgroundColor: event.color || '#3B82F6' }}
+                  style={{ backgroundColor: getEventColor(event) + "33", borderLeft: `3px solid ${getEventColor(event)}` }}
                 >
                   <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 rounded-full bg-white/80" />
@@ -496,14 +495,14 @@ export default function Calendar() {
                 key={idx}
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleEventClick(event)
+                  handleEventClick(event, getEventColor(event))
                 }}
                 className="p-2 rounded-lg text-sm cursor-pointer hover:shadow-md transition-shadow"
-                style={{ backgroundColor: event.color || '#3B82F6', color: 'white' }}
+                style={{ backgroundColor: getEventColor(event) + "33", borderLeft: `3px solid ${getEventColor(event)}` }}
               >
-                <div className="font-medium">{event.title}</div>
-                {!event.all_day && (
-                  <div className="text-xs opacity-90">
+                <div className="font-medium text-white">{event.title}</div>
+                {!event.all_day && event.end_date && (
+                  <div className="text-xs opacity-90 text-white">
                     {format(parseISO(event.start_date), 'HH:mm')} - {format(parseISO(event.end_date), 'HH:mm')}
                   </div>
                 )}
@@ -532,14 +531,14 @@ export default function Calendar() {
           <Card 
             key={event.id}
             className="border-gray-700 bg-gray-800/30 hover:bg-gray-700/50 cursor-pointer"
-            onClick={() => handleEventClick(event)}
+            onClick={() => handleEventClick(event, getEventColor(event))}
           >
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-3">
                   <div 
                     className="w-3 h-12 rounded"
-                    style={{ backgroundColor: event.color || '#3B82F6' }}
+                    style={{ backgroundColor: getEventColor(event) }}
                   />
                   <div>
                     <div className="flex items-center gap-2">
@@ -600,16 +599,13 @@ export default function Calendar() {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-
   const handleExportCalendar = async (format) => {
     try {
       setExporting(true)
       
-      // Build query parameters
       const params = new URLSearchParams()
       params.append('format', format)
       
-      // Add filters to export
       if (filters.startup_id && filters.startup_id !== 'all') {
         params.append('startup_id', filters.startup_id)
       }
@@ -638,12 +634,10 @@ export default function Calendar() {
         throw new Error('Export failed')
       }
   
-      // Handle different response types
       const contentType = response.headers.get('content-type')
       
       if (contentType.includes('application/json')) {
         const data = await response.json()
-        // For JSON, we can download it as a file
         const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -654,7 +648,6 @@ export default function Calendar() {
         window.URL.revokeObjectURL(url)
         document.body.removeChild(a)
       } else if (contentType.includes('text/csv') || contentType.includes('text/calendar')) {
-        // For CSV and iCal, use the built-in download
         const blob = await response.blob()
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -683,10 +676,8 @@ export default function Calendar() {
     }
   }
   
-  
   return (
     <div className="overflow-hidden text-white">
-
       <div className="w-full mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -735,6 +726,7 @@ export default function Calendar() {
                     color: '',
                     location: '',
                     startup_id: '',
+                    link: '',
                     reminder_minutes: 30
                   })
                   setShowEventModal(true)
@@ -828,10 +820,7 @@ export default function Calendar() {
                   <div data-aos='fade-left' data-aos-delay="300">
                     <Button 
                       className="rounded-md flex gap-2 w-[130px] items-center bg-transparent hover:bg-transparent cursor-pointer justify-center text-white"
-                      // label="Filters" 
-                      // icon={<Filter size={16} className="hover:animate-pulse" />}
                       size="sm" 
-                      // bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
                       onClick={() => setShowFilters(!showFilters)} 
                     >
                     <Filter size={16} className="hover:animate-pulse" /> Filters 
@@ -1000,7 +989,7 @@ export default function Calendar() {
           {filters.view === 'month' && (
             <div  className="mb-4 grid grid-cols-7 gap-px bg-gray-800 rounded-lg overflow-hidden">
               {weekDays.map((day) => (
-                <div onClick={()=>handleDateClick(day)} key={day} className="p-3 text-center bg-gray-800/50 border-b border-gray-700">
+                <div key={day} className="p-3 text-center bg-gray-800/50 border-b border-gray-700">
                   <span className="text-sm font-semibold text-gray-400">{day}</span>
                 </div>
               ))}
@@ -1036,6 +1025,7 @@ export default function Calendar() {
                         color: '',
                         location: '',
                         startup_id: '',
+                        link: '',
                         reminder_minutes: 30
                       })
                       setShowEventModal(true)
@@ -1168,45 +1158,33 @@ export default function Calendar() {
               </div>
             </div>
 
-            {/* Category & Startup */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-white">Category</Label>
-                <Select
-                  value={eventForm.category}
-                  onValueChange={(value) => setEventForm({...eventForm, category: value})}
-                >
-                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
-                    {eventCategories.map(cat => (
-                      <SelectItem key={cat.value} value={cat.value}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: cat.color }}
-                          />
-                          {cat.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-white">Startup</Label>
-                <div className="text-white">
-                  {eventForm?.startup_id ? (
-                    <p>{userStartups.find(s => s.id === selectedEvent?.startup_id)?.name}</p>
-                  ) : (
-                    <p>No startup selected</p>
-                  )}
-                </div>
-              </div>
+            {/* Category */}
+            <div className="space-y-2">
+              <Label className="text-white">Category</Label>
+              <Select
+                value={eventForm.category}
+                onValueChange={(value) => setEventForm({...eventForm, category: value})}
+              >
+                <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
+                  {eventCategories.map(cat => (
+                    <SelectItem key={cat.value} value={cat.value}>
+                      <div className="flex items-center gap-2">
+                        <div 
+                          className="w-3 h-3 rounded-full" 
+                          style={{ backgroundColor: cat.color }}
+                        />
+                        {cat.label}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Location & Reminder */}
+            {/* Location & Link */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-white">Location</Label>
@@ -1219,24 +1197,35 @@ export default function Calendar() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-white">Reminder</Label>
-                <Select
-                  value={eventForm.reminder_minutes.toString()}
-                  onValueChange={(value) => setEventForm({...eventForm, reminder_minutes: parseInt(value)})}
-                >
-                  <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
-                    <SelectValue placeholder="Select reminder" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
-                    <SelectItem value="0">No reminder</SelectItem>
-                    <SelectItem value="5">5 minutes before</SelectItem>
-                    <SelectItem value="15">15 minutes before</SelectItem>
-                    <SelectItem value="30">30 minutes before</SelectItem>
-                    <SelectItem value="60">1 hour before</SelectItem>
-                    <SelectItem value="1440">1 day before</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label className="text-white">Link</Label>
+                <Input
+                  value={eventForm.link}
+                  onChange={(e) => setEventForm({...eventForm, link: e.target.value})}
+                  placeholder="https://..."
+                  className="border-gray-700 bg-gray-800/50 text-white"
+                />
               </div>
+            </div>
+
+            {/* Reminder */}
+            <div className="space-y-2">
+              <Label className="text-white">Reminder</Label>
+              <Select
+                value={eventForm.reminder_minutes.toString()}
+                onValueChange={(value) => setEventForm({...eventForm, reminder_minutes: parseInt(value)})}
+              >
+                <SelectTrigger className="border-gray-700 bg-gray-800/50 text-white" style={{ zIndex: 9999999 }}>
+                  <SelectValue placeholder="Select reminder" />
+                </SelectTrigger>
+                <SelectContent className="bg-gray-800 border-gray-700 text-white" style={{ zIndex: 99999999 }}>
+                  <SelectItem value="0">No reminder</SelectItem>
+                  <SelectItem value="5">5 minutes before</SelectItem>
+                  <SelectItem value="15">15 minutes before</SelectItem>
+                  <SelectItem value="30">30 minutes before</SelectItem>
+                  <SelectItem value="60">1 hour before</SelectItem>
+                  <SelectItem value="1440">1 day before</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* All Day Switch */}
@@ -1249,51 +1238,50 @@ export default function Calendar() {
             </div>
           </div>
 
-          {
-            !selectedEvent?.startup_id && <DialogFooter className="gap-2">
-              {selectedEvent && (
-                <Button
-                  variant="destructive"
-                  onClick={() => handleDeleteEvent(selectedEvent.id)}
-                  className="mr-auto"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
-              )}
-            
+          <DialogFooter className="gap-2">
+            {selectedEvent && (
               <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEventModal(false)
-                  setSelectedEvent(null)
-                  setEventForm({
-                    title: '',
-                    description: '',
-                    start_date: '',
-                    end_date: '',
-                    all_day: false,
-                    category: 'event',
-                    color: '',
-                    location: '',
-                    startup_id: '',
-                    reminder_minutes: 30
-                  })
-                }}
-                className="border-gray-700 text-gray-300 hover:text-white"
+                variant="destructive"
+                onClick={() => handleDeleteEvent(selectedEvent.id)}
+                className="mr-auto"
               >
-                Cancel
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
               </Button>
-            
-              <Button
-                onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-                disabled={!eventForm.title || !eventForm.start_date}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {selectedEvent ? 'Update Event' : 'Create Event'}
-              </Button>
-            </DialogFooter>
-          }
+            )}
+          
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEventModal(false)
+                setSelectedEvent(null)
+                setEventForm({
+                  title: '',
+                  description: '',
+                  start_date: '',
+                  end_date: '',
+                  all_day: false,
+                  category: 'event',
+                  color: '',
+                  location: '',
+                  startup_id: '',
+                  link: '',
+                  reminder_minutes: 30
+                })
+              }}
+              className="border-gray-700 text-gray-300 hover:text-white"
+            >
+              Cancel
+            </Button>
+          
+            <Button
+              onClick={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+              disabled={!eventForm.title || !eventForm.start_date}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {selectedEvent ? 'Update Event' : 'Create Event'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

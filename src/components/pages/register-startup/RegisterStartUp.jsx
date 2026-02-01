@@ -37,6 +37,21 @@ import { startupsAPI } from "@/utils/APIs/startupsAPI";
 export default function RegisterStartUp() {
   const navigate = useNavigate();
   const { access_token, user } = useSelector((state) => state.auth);
+  const [roles, setRoles] = useState([{ title: "", roleType: "Full Time" }]);
+  const [logoFile, setLogoFile] = useState(null);
+  const [existingLogo, setExistingLogo] = useState(null);
+
+  const [bannerFile, setBannerFile] = useState(null);
+  const [existingBanner, setExistingBanner] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [xpPoints, setXpPoints] = useState(0);
+  const [techStack, setTechStack] = useState([]);
+  const [techInput, setTechInput] = useState("");
+
+  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  const [existingDocuments, setExistingDocuments] = useState([]);
+  const [newDocuments, setNewDocuments] = useState([]);
+  const [removedDocumentIds, setRemovedDocumentIds] = useState([]);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [query] = useSearchParams();
@@ -64,22 +79,31 @@ export default function RegisterStartUp() {
     tech_stack: []
   });
   useEffect(() => {
-    // Retrieve form data from local storage
-    const savedFormData = localStorage.getItem('formData');
-    if (savedFormData) {
-      setFormData(JSON.parse(savedFormData));
+    if (!id) {
+      const savedFormData = localStorage.getItem('formData');
+      if (savedFormData) {
+        setFormData(JSON.parse(savedFormData));
+      }
     }
-  }, []);
+  }, [id]);
+
 
   useEffect(() => {
-    // Save form data to local storage whenever it changes
-    localStorage.setItem('formData', JSON.stringify(formData));
-  }, [formData]);
+    if (!id) {
+      localStorage.setItem('formData', JSON.stringify(formData));
+    }
+  }, [formData, id]);
+
   useEffect(() => {
     if (id && user?.id) {
 
       async function fetchStartupData() {
         try {
+          if (!user?.id) {
+            toast.error('User not authenticated');
+            return;
+          }
+
           const response = await startupsAPI.getById(id)
           if (response.success && response.data?.startup) {
             const startup = response.data.startup;
@@ -87,10 +111,48 @@ export default function RegisterStartUp() {
               toast.error('Startup ID mismatch');
               navigate(`/register-startup`);
             }
-            setFormData({
-              
+            console.log("Startup data for editing:", {
+              id: startup.id,
+              creator_first_name: startup.creator.firstName || '',
+              creator_last_name: startup.creator.lastName || '',
+              creator_email: startup.creator.email || '',
               ...startup,
-            })
+            });
+            setFormData({
+              id: startup.id,
+              name: startup.name || "",
+              industry: startup.industry || "",
+              location: startup.location || "",
+              description: startup.description || "",
+              stage: startup.stage || "",
+              positions: startup.positions || 0,
+
+              creator_first_name: startup.creator?.firstName || "",
+              creator_last_name: startup.creator?.lastName || "",
+              creator_email: startup.creator?.email || "",
+
+              revenue: startup.revenue || 0,
+              funding_amount: startup.funding_amount || 0,
+              funding_round: startup.funding_round || "pre-seed",
+              burn_rate: startup.burn_rate || 0,
+              runway_months: startup.runway_months || 0,
+              valuation: startup.valuation || 0,
+              financial_notes: startup.financial_notes || "",
+
+              tech_stack: startup.tech_stack || [],
+            });
+
+            setTechStack(startup.tech_stack || []);
+            setRoles(
+              Object.entries(startup.roles || {}).map(([title, details]) => ({  
+                title,
+                roleType: details.roleType || "Full Time",
+                positionsNumber: details.positionsNumber || 0,
+              }))
+            );
+
+            setExistingBanner(startup.banner_url || null);
+            setExistingLogo(startup.logo_url || null);
             return
           }
           toast.error('Failed to load startup data for editing');
@@ -104,17 +166,18 @@ export default function RegisterStartUp() {
     }
   
 
-  }, [id, formData, user?.id]);
-// ...existing code...
-  const [roles, setRoles] = useState([{ title: "", roleType: "Full Time" }]);
-  const [logoFile, setLogoFile] = useState(null);
-  const [bannerFile, setBannerFile] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [xpPoints, setXpPoints] = useState(0);
-  const [techStack, setTechStack] = useState([]);
-  const [techInput, setTechInput] = useState("");
-
-  const [uploadedDocuments, setUploadedDocuments] = useState([]);
+  }, [id, user?.id]);
+  useEffect(() => {
+    async function getStartupDocuments() {
+      const response = await startupsAPI.getDocuments(id);
+      if (response.success && response.data?.documents) {
+        setExistingDocuments(response.data.documents);
+      }
+    }
+    if (id) {
+      getStartupDocuments();
+    }
+  }, [id]);
 
   const logoInputRef = useRef(null);
   const bannerInputRef = useRef(null);
@@ -156,18 +219,17 @@ export default function RegisterStartUp() {
 
   //! Get current user data from localStorage
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData && !id) {
-      const user = JSON.parse(userData);
-      setFormData({
-        ...formData,
+    if (user && !id) {
+
+      setFormData((prev) => ({
+        ...prev,
+        creator: null,
         creator_first_name: user?.first_name || user?.firstName || "",
         creator_last_name: user?.last_name || user?.lastName || "",
         creator_email: user?.email || ""
-      });
+      }));
     }
-  }, [formData, id]);
-
+  }, [id, user]);
   //! Add XP points when completing steps
   useEffect(() => {
     if (currentStep > 1) {
@@ -194,15 +256,15 @@ export default function RegisterStartUp() {
         }
         return true;
       case 2:
-        if (!formData.creator_first_name.trim()) {
+        if ((!formData?.creator_first_name || '').trim()) {
           toast.error('Please enter your first name');
           return false;
         }
-        if (!formData.creator_last_name.trim()) {
+        if ((!formData?.creator_last_name || '').trim()) {
           toast.error('Please enter your last name');
           return false;
         }
-        if (!formData.creator_email.trim()) {
+        if ((!formData?.creator_email || '').trim()) {
           toast.error('Please enter your email');
           return false;
         }
@@ -294,6 +356,9 @@ export default function RegisterStartUp() {
       else setBannerFile(file);
     }
   };
+  const handleAddDocuments = (files) => {
+    setNewDocuments(prev => [...prev, ...files]);
+  };
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
@@ -342,12 +407,15 @@ export default function RegisterStartUp() {
 
       // Convert roles array to the format expected by backend
       const rolesObject = roles.reduce((acc, role) => {
-        acc[role.title] = {
+        if (!role.title?.trim()) return acc;
+
+        acc[role.title.trim()] = {
           roleType: role.roleType,
-          positionsNumber: role.positionsNumber || 0
+          positionsNumber: Number(role.positionsNumber) || 0,
         };
         return acc;
       }, {});
+
 
       // Calculate total positions from all roles
       const totalPositions = roles.reduce((total, role) => total + (parseInt(role.positionsNumber) || 0), 0);
@@ -374,13 +442,29 @@ export default function RegisterStartUp() {
       
       submitData.append("tech_stack", JSON.stringify(techStack));
       
-      if (logoFile) submitData.append("logo", logoFile);
-      if (bannerFile) submitData.append("banner", bannerFile);
+      if (logoFile instanceof File) {
+        submitData.append("logo", logoFile);
+      }
+
+      if (bannerFile instanceof File) {
+        submitData.append("banner", bannerFile);
+      }
 
       // Append uploaded documents
       uploadedDocuments.forEach((doc) => {
         submitData.append("documents", doc);
       });
+      newDocuments.forEach(file => {
+        submitData.append("documents", file);
+      });
+
+      // tell backend what to delete
+      if (removedDocumentIds.length) {
+        submitData.append(
+          "removed_documents",
+          JSON.stringify(removedDocumentIds)
+        );
+}
       let response
       if (id) {
         response = await fetch(`${API_URL}/startups/${id}`, {
@@ -391,7 +475,6 @@ export default function RegisterStartUp() {
           },
           body: submitData,
         })
-        response = await startupsAPI.update(id, submitData, token);
       } else {
 
         response = await fetch(`${API_URL}/startups/register`, {
@@ -403,7 +486,12 @@ export default function RegisterStartUp() {
           body: submitData,
         });
       }
+      console.log("Startup registration response:", response);
+
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "Registration failed");
+      }
       if (response.status === 401) {
         toast.error("Session expired. Please log in again.");
         logoutUser();
@@ -436,9 +524,12 @@ export default function RegisterStartUp() {
           tech_stack: []
         })
         localStorage.removeItem('formData');
-        toast.success("Startup registered successfully!");
-        const response = await waitlistAPI.addPoints({ userId: creator_id, category: 'new_startup' }, token);
+        toast.success(`Startup ${id ? "updated" : "registered"} successfully!`);
+        if (!id) {
+          const response = await waitlistAPI.addPoints({ userId: creator_id, category: 'new_startup' }, token);
         toast.success(`You earned ${response.points} points for registering your startup!`);
+        }
+        
       } else {
         throw new Error(data.error || data.message || "Registration failed");
       }
@@ -456,7 +547,10 @@ export default function RegisterStartUp() {
     if (currentStep > maxStep) {
       setMaxStep(currentStep);
     }
-  }, [currentStep, maxStep]);
+    if (id) {
+      setMaxStep(9);
+    }
+  }, [currentStep, maxStep, id]);
   //! StepIndicator
   const StepIndicator = () => (
     <div className="mb-8 overflow-x-auto">
@@ -532,7 +626,6 @@ export default function RegisterStartUp() {
 
   return (
     <div className="min-h-screen">
-
       <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
         <div className="text-center mb-8">
@@ -766,10 +859,15 @@ export default function RegisterStartUp() {
                       </div>
                 
                       <div className="space-y-3 md:col-span-2">
-                        <Label htmlFor="email" className="text-sm font-medium text-white  items-center gap-2 flex justify-between w-full">
+                        <Label htmlFor="email" className="text-sm font-medium text-white items-center flex justify-between w-full gap-2">
                           <span>
                             Email <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                           </span>
+                          {
+                            id && (
+                              <span className="text-sm text-yellow-400 italic">(We encrypt your email for security, please write it again)</span>
+                            )
+                          }
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button type="button" className="rounded-full p-1 hover:bg-gray-600 transition-colors">
@@ -841,16 +939,16 @@ export default function RegisterStartUp() {
                         <Label className="text-sm font-medium mb-3 text-white flex items-center gap-2">
                           Current Stage <Badge variant="outline" className="bg-blue-400/10 text-blue-400 border-blue-400/30 text-xs">Required</Badge>
                         </Label>
-                        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                        <div className="flex flex-wrap gap-3">
                           {startupStages.map((stage) => (
                             <TooltipProvider key={stage.value}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Card
                                     onClick={() => handleInputChange("stage", stage.value)}
-                                    className={`p-4 cursor-pointer transition-all duration-200 border backdrop-blur-sm hover:scale-105 ${formData.stage === stage.value
-                                        ? 'border-blue-400 bg-blue-400/20 text-white shadow-lg shadow-blue-400/20'
-                                        : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-blue-400 hover:text-white'
+                                    className={`p-4 flex-1 cursor-pointer transition-all duration-200 border backdrop-blur-sm hover:scale-105 ${formData.stage === stage.value
+                                      ? 'border-blue-400 bg-blue-400/20 text-white shadow-lg shadow-blue-400/20'
+                                      : 'border-gray-600 bg-gray-700/50 text-gray-300 hover:border-blue-400 hover:text-white'
                                       }`}
                                   >
                                     <CardContent className="p-0 text-center">
@@ -919,11 +1017,11 @@ export default function RegisterStartUp() {
                           className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
                         >
                           <CardContent className="p-0">
-                            {logoFile ? (
+                            {logoFile || existingLogo ? (
                               <div className="space-y-3">
                                 <div className="w-24 h-24 rounded-2xl border-4 border-blue-400/30 mx-auto overflow-hidden">
                                   <img
-                                    src={URL.createObjectURL(logoFile)}
+                                    src={logoFile ? URL.createObjectURL(logoFile) : existingLogo.startsWith('http') ? existingLogo : `${API_URL}${existingLogo}`}
                                     alt="Logo preview"
                                     className="w-full h-full object-cover"
                                   />
@@ -970,10 +1068,10 @@ export default function RegisterStartUp() {
                           className="border-2 bg-blue-400/5 border-dashed border-gray-600 p-6 text-center cursor-pointer transition-all duration-200 hover:border-blue-400 hover:bg-blue-400/10 backdrop-blur-sm hover:scale-105"
                         >
                           <CardContent className="p-0">
-                            {bannerFile ? (
+                            {bannerFile || existingBanner ? (
                               <div className="space-y-3">
                                 <img
-                                  src={URL.createObjectURL(bannerFile)}
+                                  src={bannerFile ? URL.createObjectURL(bannerFile) : existingBanner.startsWith('http') ? existingBanner : `${API_URL}${existingBanner}`}
                                   alt="Banner preview"
                                   className="w-full h-20 rounded-lg object-cover"
                                 />
@@ -1012,10 +1110,10 @@ export default function RegisterStartUp() {
                       <CardTitle className="text-2xl mb-2 text-white">Company Documents</CardTitle>
                       <CardDescription className="text-gray-300">Upload important documents for your startup</CardDescription>
                     </div>
-                
+
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <Label className="text-sm font-medium text-white flex items-center gap-2  justify-between w-full">
+                        <Label className="text-sm font-medium text-white flex items-center gap-2 justify-between w-full">
                           Business Plan & Documents
                           <Tooltip>
                             <TooltipTrigger asChild>
@@ -1033,13 +1131,14 @@ export default function RegisterStartUp() {
                             <Upload className="w-10 h-10 text-blue-400 mx-auto mb-3" />
                             <div className="text-gray-300 font-medium mb-1">Upload Documents</div>
                             <div className="text-gray-500 text-xs">PDF, DOC, DOCX up to 10MB each</div>
+            
                             <input
                               type="file"
                               multiple
                               accept=".pdf,.doc,.docx,.txt"
                               className="hidden"
                               id="document-upload"
-                              onChange={(e) => handleDocumentUpload(e)}
+                              onChange={handleDocumentUpload}
                             />
                             <Button
                               onClick={() => document.getElementById('document-upload')?.click()}
@@ -1051,23 +1150,50 @@ export default function RegisterStartUp() {
                           </CardContent>
                         </Card>
                       </div>
-                
-                      {/* Uploaded documents list */}
+
+                      {/* Existing documents */}
+                      {existingDocuments.length > 0 && (
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium text-white">Existing Documents</Label>
+                          <div className="space-y-2">
+                            {existingDocuments
+                              .filter(doc => !removedDocumentIds.includes(doc.id))
+                              .map(doc => (
+                                <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg hover:bg-gray-700/50 transition-colors">
+                                  <a href={doc.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 flex-1">
+                                    <FileText className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                                    <span className="text-white text-sm truncate">{doc.filename}</span>
+                                  </a>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setRemovedDocumentIds(prev => [...prev, doc.id])}
+                                    className="text-red-400 hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
+                                  >
+                                    <X size={16} />
+                                  </Button>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Newly uploaded documents */}
                       {uploadedDocuments.length > 0 && (
                         <div className="space-y-3">
-                          <Label className="text-sm font-medium text-white">Uploaded Documents</Label>
+                          <Label className="text-sm font-medium text-white">New Documents</Label>
                           <div className="space-y-2">
                             {uploadedDocuments.map((doc, index) => (
-                              <div key={index} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg">
-                                <div className="flex items-center gap-3">
-                                  <FileText className="w-4 h-4 text-blue-400" />
-                                  <span className="text-white text-sm">{doc.name}</span>
+                              <div key={index} className="flex items-center justify-between p-3 border border-gray-600 rounded-lg bg-green-500/5 hover:bg-green-500/10 transition-colors">
+                                <div className="flex items-center gap-3 flex-1">
+                                  <FileText className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                  <span className="text-white text-sm truncate">{doc.name}</span>
                                 </div>
                                 <Button
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => removeDocument(index)}
-                                  className="text-red-400 hover:text-red-500 hover:bg-red-500/10"
+                                  className="text-red-400 hover:text-red-500 hover:bg-red-500/10 flex-shrink-0"
                                 >
                                   <X size={16} />
                                 </Button>
@@ -1079,6 +1205,7 @@ export default function RegisterStartUp() {
                     </div>
                   </div>
                 )}
+
 
                 {/* Step 7: Team & Roles */}
                 {currentStep === 7 && (
@@ -1098,7 +1225,7 @@ export default function RegisterStartUp() {
                 )}
 
                 {/* Step 8: Review */}
-                {currentStep === 8 && <StartupReview formData={formData} logoFile={logoFile} bannerFile={bannerFile} uploadedDocuments={uploadedDocuments} roles={roles} techStack={techStack} />}
+                {currentStep === 8 && <StartupReview formData={formData} logoFile={logoFile} existingLogo={existingLogo} bannerFile={bannerFile} existingBanner={existingBanner} newDocuments={newDocuments} existingDocuments={existingDocuments} removedDocumentIds={removedDocumentIds} roles={roles} techStack={techStack}  />}
 
                 {/* Step 9: Completion */}
                 {currentStep === 9 && (
@@ -1188,7 +1315,7 @@ export default function RegisterStartUp() {
                           <>Launching...</>
                         ) : (
                           <>
-                            Launch Startup
+                            {!id ? 'Launch' : 'Update'} Startup
                             <Rocket size={18} className="ml-2" />
                           </>
                         )}

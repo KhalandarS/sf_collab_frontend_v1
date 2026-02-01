@@ -87,6 +87,7 @@ const AdminDashboard = () => {
   const {
     items: donations,
     total: totalDonations,
+    totalAmount: totalDonationsAmount,
     loading: loadingDonations,
     targetRef: donationsRef,
   } = usePaginatedFetch({
@@ -95,6 +96,7 @@ const AdminDashboard = () => {
         page,
         per_page: 10,
       }),
+    totalAmountKey: 'total_donations',
     objectKey: 'donations',
     enabled: !!access_token,
   })
@@ -105,6 +107,7 @@ const AdminDashboard = () => {
   const {
     items: crowdfunding,
     total: totalCrowdfunding,
+    totalAmount: totalCrowdAmount,
     loading: loadingCrowdfunding,
     targetRef: crowdfundingRef,
   } = usePaginatedFetch({
@@ -113,20 +116,15 @@ const AdminDashboard = () => {
         page,
         per_page: 10,
       }),
+    totalAmountKey: 'total_crowdfunding',
     objectKey: 'crowdfunding_transactions',
     enabled: !!access_token,
   })
-  const totalFromCrowdfunding = useMemo(() => {
-    return crowdfunding.reduce((sum, item) => sum + (item.amount || 0), 0) / 100; // Crowdfunding amounts are in cents
-  }, [crowdfunding]);
-  const [totalRevenue] = useMemo(() => { 
 
-    if (donations.length === 0 && crowdfunding.length === 0) return [0];
-    const donationAmount = donations.reduce((sum, item) => sum + (item.amount || 0), 0) / 100; // Donations are in cents
-    const crowdfundingAmount = crowdfunding.reduce((sum, item) => sum + (item.amount || 0), 0) / 100; // Crowdfunding amounts are in cents
-    console.log("donationAmount + crowdfundingAmount:", donationAmount + crowdfundingAmount);
-    return [donationAmount + crowdfundingAmount];
-  }, [donations, crowdfunding]) // Example stat
+  const totalRevenue = useMemo(() => { 
+
+    return (totalDonationsAmount + totalCrowdAmount) / 100;
+  }, [totalCrowdAmount, totalDonationsAmount])
 
   const [activeUser, setActiveUser] = useState(null)
   const [selectedUser, setSelectedUser] = useState({});
@@ -248,7 +246,7 @@ const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div className="flex flex-col w-full">
                 <h3 className="text-lg font-semibold mb-3 text-green-300">
-                  Donations (Total: {donations.length}, ${totalFromDonations.toFixed(2)})
+                  Donations (Total: {totalDonations}, ${(totalDonationsAmount / 100).toFixed(2)})
                 </h3>
 
                 <div className="max-h-80 w-full overflow-y-auto">
@@ -294,7 +292,7 @@ const AdminDashboard = () => {
 
               <div className="flex flex-col w-full">
                 <h3 className="text-lg font-semibold mb-3 text-purple-300">
-                  Crowdfunding (Total: {crowdfunding.length}) (${totalFromCrowdfunding.toFixed(2)})
+                  Crowdfunding (Total: {totalCrowdfunding}, ${(totalCrowdAmount / 100).toFixed(2)})
                 </h3>
 
                 <div className="max-h-80 w-full overflow-y-auto">
