@@ -1,3 +1,10 @@
+/**
+ * ConnectionsPage.jsx - Fixed Version
+ * 
+ * FIXES:
+ * 1. Profile pictures now display correctly
+ * 2. Added "Discover Users" button to easily find new connections
+ */
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
@@ -6,7 +13,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users, UserPlus, Clock, Search, RefreshCw,
   Check, X, MessageCircle, User, Loader2, UserX,
-  ArrowLeft
+  ArrowLeft, Compass
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,11 +35,9 @@ const getRequestId = (r) =>
   null;
 
 const getReceiverId = (r) => {
-  // receiver as object
   const receiverObjId = getUserId(r?.receiver ?? r?.to_user ?? r?.requested);
   if (receiverObjId != null) return receiverObjId;
 
-  // receiver as scalar id (common API shapes)
   return (
     r?.receiver_id ??
     r?.to_user_id ??
@@ -63,8 +68,9 @@ const getSenderId = (r) => {
 const getSender = (r) => r?.sender ?? r?.from_user ?? r?.requester ?? r?.fromUser ?? null;
 const getReceiver = (r) => r?.receiver ?? r?.to_user ?? r?.requested ?? r?.toUser ?? null;
 
-
-
+/**
+ * FIXED: Get profile picture URL with proper resolution
+ */
 const getAvatarUrl = (u) => {
   if (!u) return null;
 
@@ -79,13 +85,31 @@ const getAvatarUrl = (u) => {
     null;
 
   if (!pic) return null;
-  const API_HOST = API_URL.replace(/\/api\/?$/, "");
-  return String(pic).startsWith("http")
-    ? pic
-    : `${API_HOST}${String(pic).startsWith("/") ? "" : "/"}${pic}`;
-
+  
+  const value = String(pic).trim();
+  
+  // Already a full URL
+  if (/^https?:\/\//i.test(value)) {
+    return value;
+  }
+  
+  // Data URI or blob
+  if (value.startsWith('data:') || value.startsWith('blob:')) {
+    return value;
+  }
+  
+  // Handle uploads paths and filenames
+  let filename = value;
+  if (filename.startsWith('/')) {
+    filename = filename.slice(1);
+  }
+  if (filename.startsWith('uploads/')) {
+    filename = filename.slice(8);
+  }
+  
+  // Build full URL using the avatars endpoint
+  return `${API_URL}/users/avatars/${filename}`;
 };
-
 
 const TABS = {
   CONNECTIONS: 'connections',
@@ -154,7 +178,6 @@ export default function ConnectionsPage() {
           const response = await connectionAPI.getConnections(access_token);
           const data = response.data || response;
           
-          // Map to get the OTHER user (not current user)
           const mapped = (data.friend_requests || []).map(fr => {
             const otherUser = fr.sender_id === currentUser?.id ? fr.receiver : fr.sender;
             return {
@@ -167,34 +190,32 @@ export default function ConnectionsPage() {
           break;
         }
         case TABS.INCOMING: {
-  const response = await connectionAPI.getIncomingRequests(access_token);
-  const data = response.data || response;
+          const response = await connectionAPI.getIncomingRequests(access_token);
+          const data = response.data || response;
 
-  const raw = normalizeFriendRequests(data);
-  const meId = getUserId(currentUser);
+          const raw = normalizeFriendRequests(data);
+          const meId = getUserId(currentUser);
 
-  // If the API doesn't include sender/receiver IDs, don't over-filter (keep list visible).
-  const incomingOnly = meId
+          const incomingOnly = meId
             ? raw.filter((r) => {
                 const rid = getReceiverId(r);
                 if (rid != null) return rid === meId;
-                // If receiver id isn't present, fall back to sender id: incoming requests are not sent by me
                 const sid = getSenderId(r);
                 return sid == null ? true : sid !== meId;
               })
             : raw;
 
-  setIncoming(incomingOnly);
-  break;
-}
+          setIncoming(incomingOnly);
+          break;
+        }
         case TABS.OUTGOING: {
-  const response = await connectionAPI.getOutgoingRequests(access_token);
-  const data = response.data || response;
+          const response = await connectionAPI.getOutgoingRequests(access_token);
+          const data = response.data || response;
 
-  const raw = normalizeFriendRequests(data);
-  const meId = getUserId(currentUser);
+          const raw = normalizeFriendRequests(data);
+          const meId = getUserId(currentUser);
 
-  const outgoingOnly = meId
+          const outgoingOnly = meId
             ? raw.filter((r) => {
                 const sid = getSenderId(r);
                 if (sid != null) return sid === meId;
@@ -203,9 +224,9 @@ export default function ConnectionsPage() {
               })
             : raw;
 
-  setOutgoing(outgoingOnly);
-  break;
-}
+          setOutgoing(outgoingOnly);
+          break;
+        }
       }
     } catch (err) {
       console.error('Failed to fetch data:', err);
@@ -220,7 +241,6 @@ export default function ConnectionsPage() {
 
   // ACCEPT
   const handleAccept = async (requestId) => {
-    console.log('Accepting:', requestId);
     if (!requestId) return;
     
     setActionLoading(requestId);
@@ -234,16 +254,14 @@ export default function ConnectionsPage() {
       }));
       toast.success('Connection accepted!');
     } catch (err) {
-      console.error('Accept error:', err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to accept');
     } finally {
       setActionLoading(null);
     }
   };
 
-  // DECLINE (uses reject endpoint)
+  // DECLINE
   const handleDecline = async (requestId) => {
-    console.log('Declining:', requestId);
     if (!requestId) return;
     
     setActionLoading(requestId);
@@ -253,7 +271,6 @@ export default function ConnectionsPage() {
       setCounts(prev => ({ ...prev, incoming: Math.max(0, prev.incoming - 1) }));
       toast.info('Request declined');
     } catch (err) {
-      console.error('Decline error:', err.response?.data);
       toast.error(err.response?.data?.message || 'Failed to decline');
     } finally {
       setActionLoading(null);
@@ -306,6 +323,14 @@ export default function ConnectionsPage() {
     });
   };
 
+  // Filter connections by search
+  const filteredConnections = connections.filter(conn => {
+    if (!searchQuery) return true;
+    const user = conn.connected_user;
+    const name = `${user?.first_name || ''} ${user?.last_name || ''}`.toLowerCase();
+    return name.includes(searchQuery.toLowerCase());
+  });
+
   return (
     <div className="min-h-screen">
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -326,8 +351,8 @@ export default function ConnectionsPage() {
           </Button>
         </motion.div>
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Header with Discover Users Button */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
               <Users className="w-6 h-6 text-blue-400" />
@@ -340,10 +365,26 @@ export default function ConnectionsPage() {
             </div>
           </div>
           
-          <Button onClick={() => { fetchData(); fetchCounts(); }} variant="outline" size="sm" className="border-slate-600 text-slate-300">
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* DISCOVER USERS BUTTON - Redirects to DiscoverUsers page */}
+            <Button 
+              onClick={() => navigate('/discover-users')} 
+              className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
+            >
+              <Compass className="w-4 h-4 mr-2" />
+              Discover Users
+            </Button>
+            
+            <Button 
+              onClick={() => { fetchData(); fetchCounts(); }} 
+              variant="outline" 
+              size="sm" 
+              className="border-slate-600 text-slate-300"
+            >
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
@@ -399,11 +440,15 @@ export default function ConnectionsPage() {
             >
               {/* CONNECTIONS */}
               {activeTab === TABS.CONNECTIONS && (
-                connections.length === 0 ? (
-                  <EmptyState icon={Users} title="No connections yet" description="Start connecting!" 
-                    action={{ label: 'Discover Users', onClick: () => navigate('/discover-users') }} />
+                filteredConnections.length === 0 ? (
+                  <EmptyState 
+                    icon={Users} 
+                    title="No connections yet" 
+                    description="Start discovering and connecting with people!" 
+                    action={{ label: 'Discover Users', onClick: () => navigate('/discover-users') }} 
+                  />
                 ) : (
-                  connections.map((conn) => (
+                  filteredConnections.map((conn) => (
                     <UserCard
                       key={conn.id}
                       user={conn.connected_user}
@@ -476,14 +521,18 @@ export default function ConnectionsPage() {
                       />
                     );
                   })
-
                 )
               )}
 
               {/* OUTGOING */}
               {activeTab === TABS.OUTGOING && (
                 outgoing.length === 0 ? (
-                  <EmptyState icon={Clock} title="No sent requests" description="Requests you send will appear here" />
+                  <EmptyState 
+                    icon={Clock} 
+                    title="No sent requests" 
+                    description="Find people to connect with!"
+                    action={{ label: 'Discover Users', onClick: () => navigate('/discover-users') }}
+                  />
                 ) : (
                   outgoing.map((req) => {
                     const reqId = getRequestId(req);
@@ -514,7 +563,6 @@ export default function ConnectionsPage() {
                       />
                     );
                   })
-
                 )
               )}
             </motion.div>
@@ -526,55 +574,39 @@ export default function ConnectionsPage() {
 }
 
 // Sub-components
+
+/**
+ * UserCard - Fixed with proper profile picture handling
+ */
 function UserCard({ user, subtitle, actions, onClick, isLoading }) {
-  const fullName = user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Unknown' : 'Unknown';
-  const initials = `${user?.first_name?.charAt(0) || ''}${user?.last_name?.charAt(0) || ''}`;
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+  const [imageError, setImageError] = useState(false);
+  
+  const fullName = user 
+    ? `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim() || 'Unknown' 
+    : 'Unknown';
+    
+  const initials = `${(user?.first_name || user?.firstName || '').charAt(0)}${(user?.last_name || user?.lastName || '').charAt(0)}`.toUpperCase();
 
-  const avatarUrl = (() => {
-    if (!user) return null;
-    const pic =
-      user.profilePicture ||
-      user.profile_picture ||
-      user.avatar_url ||
-      user.profile?.picture ||
-      user.profile?.avatar ||
-      user.picture ||
-      user.avatar ||
-      null;
-
-    if (!pic) return null;
-    const API_HOST = API_URL.replace(/\/api\/?$/, "");
-
-return String(pic).startsWith("http")
-  ? pic
-  : `${API_HOST}${String(pic).startsWith("/") ? "" : "/"}${pic}`;
-
-  })();
-
+  const avatarUrl = getAvatarUrl(user);
+  const showImage = avatarUrl && !imageError;
 
   return (
     <Card className={`p-5 bg-slate-800/50 border-slate-700 cursor-pointer ${isLoading ? 'opacity-60' : ''}`} onClick={onClick}>
       <div className="flex items-center gap-4">
+        {/* Avatar with proper fallback */}
         <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-  {avatarUrl ? (
-    <img
-      src={avatarUrl}
-      alt={fullName}
-      className="w-full h-full object-cover"
-      onError={(e) => {
-        e.currentTarget.style.display = "none";
-        const fallback = e.currentTarget.nextSibling;
-        if (fallback) fallback.style.display = "flex";
-      }}
-    />
-  ) : null}
-  <div
-    className={`w-full h-full items-center justify-center ${avatarUrl ? "hidden" : "flex"}`}
-  >
-    {(initials || "?").toUpperCase()}
-  </div>
-</div>
+          {showImage ? (
+            <img
+              src={avatarUrl}
+              alt={fullName}
+              className="w-full h-full object-cover"
+              onError={() => setImageError(true)}
+            />
+          ) : (
+            <span className="text-lg">{initials || '?'}</span>
+          )}
+        </div>
+        
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white truncate">{fullName}</h3>
           {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}

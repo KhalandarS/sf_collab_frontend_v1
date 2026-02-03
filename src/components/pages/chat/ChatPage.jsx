@@ -514,18 +514,26 @@ useEffect(() => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          participant_ids: userIds,
+          participant_ids: Array.from(new Set(userIds.map(String))).map((x) => Number.isNaN(Number(x)) ? x : Number(x)),
           name,
           conversation_type: 'group',
         }),
       });
+
       const data = await response.json();
-      if (data.success) {
-        fetchConversations();
-        handleSelectConversation(data.data.conversation);
+
+      if (!response.ok || !data?.success) {
+        // return a structured failure so the modal can show it
+        return { success: false, message: data?.error || data?.message || 'Failed to create group chat.' };
       }
+
+      fetchConversations();
+      handleSelectConversation(data.data.conversation);
+
+      return { success: true, data };
     } catch (error) {
       console.error('Failed to create group:', error);
+      return { success: false, message: error?.message || 'Failed to create group chat.' };
     }
   };
 
@@ -561,12 +569,18 @@ useEffect(() => {
     setMessageInput('');
   };
 
-  // Helper: Should show avatar for this message?
   const shouldShowAvatar = (message, index) => {
   if (index === 0) return true;
+
   const prevMessage = messages[index - 1];
+
+
+  if (shouldShowDateSeparator(message, prevMessage)) return true;
+
+
   return String(prevMessage?.sender_id) !== String(message?.sender_id);
 };
+
 
 
   function shouldShowSenderName(messages, index) {

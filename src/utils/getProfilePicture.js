@@ -1,9 +1,32 @@
 import { API_BASE_URL } from "./config";
 
 export function getProfilePicture(user) {
-  return user?.profile?.picture ?
-    (user.profile.picture.startsWith('http') ?
-      user.profile.picture : `${API_BASE_URL
-      }/users/avatars/${user.profile.picture.replace(/^\/?uploads\//, "")}`)
-    : "/default-user.jpeg"
+  if (!user) return "/default-user.jpeg";
+
+  const raw =
+    user?.profile?.picture ??
+    user?.profile?.photo ??
+    user?.profilePicture ??
+    user?.profile_picture ??
+    user?.avatar ??
+    user?.avatarUrl ??
+    user?.avatar_url ??
+    user?.photo ??
+    user?.photoUrl ??
+    user?.image ??
+    null;
+
+  if (!raw) return "/default-user.jpeg";
+
+  // Already full URL
+  if (typeof raw === "string" && raw.startsWith("http")) {
+    return raw;
+  }
+
+  // Clean filename
+  const filename = String(raw)
+    .replace(/^\/?uploads\//, "")
+    .replace(/^\/+/, "");
+
+  return `${API_BASE_URL}/users/avatars/${filename}`;
 }

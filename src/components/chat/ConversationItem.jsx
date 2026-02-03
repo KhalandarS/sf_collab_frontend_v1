@@ -1,5 +1,14 @@
+/**
+ * ConversationItem Component - Fixed Version
+ * 
+ * FIXES:
+ * 1. Profile pictures now display correctly using getProfilePicture utility
+ * 2. Better name extraction from various formats
+ */
+
 import React from "react";
 import Avatar from "./Avatar";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 const toMs = (ts) => {
   if (!ts) return null;
@@ -22,13 +31,17 @@ const ConversationItem = ({
 }) => {
   const isDirect = conversation.conversation_type === "direct";
 
+  // Get other participant for direct conversations
   const otherParticipant = isDirect
     ? conversation.participants?.find((p) => String(p.id) !== String(currentUserId))
     : null;
 
   const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
 
-  const connected = otherId ? (onlineUsers || []).map(String).includes(otherId) : false;
+  // Check if connected
+  const connected = otherId 
+    ? (onlineUsers || []).map(String).includes(otherId) 
+    : false;
 
   const lastActiveTs = otherId ? toMs(lastActiveAt?.[otherId]) : null;
   const lastSeenTs =
@@ -44,6 +57,7 @@ const ConversationItem = ({
 
   const diffMs = (ts) => (ts ? Math.max(0, nowTs - ts) : null);
 
+  // Calculate presence status
   let presenceStatus = "offline";
   if (isDirect && otherId) {
     if (connected) {
@@ -56,24 +70,30 @@ const ConversationItem = ({
     }
   }
 
-  // Determine conversation display name
+  // Get conversation display name - Fixed to handle various formats
   const conversationName = isDirect
     ? `${otherParticipant?.firstName || otherParticipant?.first_name || ""} ${
         otherParticipant?.lastName || otherParticipant?.last_name || ""
       }`.trim() || "User"
     : conversation.name || "Group Chat";
 
+  // Get avatar URL - Fixed to use getProfilePicture utility
   const avatarUrl = isDirect
-    ? otherParticipant?.profilePicture || otherParticipant?.profile_picture
+    ? getProfilePicture(otherParticipant)
     : conversation.avatar || null;
 
+  // Get last message preview
   const lastMessage = conversation.last_message?.content || "No messages yet";
   const lastTime = conversation.last_message?.created_at
-    ? new Date(conversation.last_message.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    ? new Date(conversation.last_message.created_at).toLocaleTimeString([], { 
+        hour: "2-digit", 
+        minute: "2-digit" 
+      })
     : "";
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
         isActive ? "bg-zinc-800/70" : "hover:bg-zinc-800/40"

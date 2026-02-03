@@ -290,6 +290,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const messageEndRefs = useRef({});
 
   const windowsRef = useRef(windows);
+
+  const seenMessageKeysRef = useRef(new Set());
   const isTabVisibleRef = useRef(isTabVisible);
   const conversationsRef = useRef(conversations);
   const consideredActiveRef = useRef(consideredActive);
@@ -692,6 +694,19 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return;
       }
 
+      // DEDUPE: backend may emit the same message on multiple events (e.g. new_message + conversation_message)
+      const key = String(messageNorm.id || `${cid}:${messageNorm.sender_id || "?"}:${messageNorm.created_at || messageNorm.timestamp || ""}:${(messageNorm.content || "").slice(0, 64)}`);
+      if (seenMessageKeysRef.current.has(key)) {
+        return;
+      }
+      seenMessageKeysRef.current.add(key);
+      // prevent unbounded growth
+      if (seenMessageKeysRef.current.size > 2000) {
+        const keep = Array.from(seenMessageKeysRef.current).slice(-1000);
+        seenMessageKeysRef.current = new Set(keep);
+      }
+
+
       // Update messages for open window
       setWindows((prev) => {
         return prev.map((w) => {
@@ -943,9 +958,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                     <div className="p-4 text-zinc-500 text-sm text-center">No conversations</div>
                   ) : (
                     filteredConversations.map((conv) => {
+                      // Get the other participant for direct chats
+                      const otherParticipant = conv.participants?.find(
+                        (p) => String(p.id) !== String(currentUser?.id)
+                      );
+                      const isDirect = conv.conversation_type === "direct";
+                      
                       const title =
                         conv.name ||
-                        conv.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
+                        otherParticipant?.firstName ||
                         "Chat";
                       const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
                       const lastMsg = conv.last_message || conv.lastMessage;
@@ -971,10 +992,20 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             openWindow({ conversationId: conv.id, title });
                             if (isMobile) setIsPanelOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center justify-between ${
+                          className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center gap-3 ${
                             unreadCount > 0 ? "bg-zinc-800/50" : ""
                           }`}
                         >
+                          {/* Avatar - Added */}
+                          <div className="flex-shrink-0">
+                            <Avatar
+                              src={isDirect ? getProfilePicture(otherParticipant) : null}
+                              name={title}
+                              size="sm"
+                              showStatus={false}
+                            />
+                          </div>
+                          
                           <div className="min-w-0 flex-1">
                             <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
                               {title}

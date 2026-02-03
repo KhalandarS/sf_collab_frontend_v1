@@ -1,5 +1,11 @@
 /**
- * OnlineContactsSidebar Component - Enhanced Version
+ * OnlineContactsSidebar Component - Fixed Version
+ * 
+ * FIXES:
+ * 1. Profile pictures now show properly
+ * 2. Click handler properly triggers chat opening
+ * 3. Better status handling
+ * 
  * Shows ONLY connected users (friends) with proper status indicators:
  * - Green = Online
  * - Red = Offline  
@@ -7,7 +13,8 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Plus, ChevronDown, ChevronRight, Users, Circle, UserCheck } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronRight, UserCheck } from 'lucide-react';
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // Status colors
 const STATUS_COLORS = {
@@ -18,6 +25,8 @@ const STATUS_COLORS = {
 
 // Avatar component with status indicator
 const Avatar = ({ src, name, size = 'sm', status = 'offline', showStatus = true }) => {
+  const [imageError, setImageError] = useState(false);
+  
   const sizes = {
     xs: 'w-6 h-6 text-[10px]',
     sm: 'w-8 h-8 text-xs',
@@ -32,18 +41,26 @@ const Avatar = ({ src, name, size = 'sm', status = 'offline', showStatus = true 
 
   const initials = name
     ?.split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || '?';
+
+  const showImage = src && !imageError;
 
   return (
     <div className="relative inline-block flex-shrink-0">
-      {src ? (
-        <img src={src} alt={name} className={`${sizes[size]} rounded-full object-cover`} />
+      {showImage ? (
+        <img 
+          src={src} 
+          alt={name} 
+          className={`${sizes[size]} rounded-full object-cover bg-zinc-700`}
+          onError={() => setImageError(true)}
+        />
       ) : (
         <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-semibold text-white`}>
-          {initials || '?'}
+          {initials}
         </div>
       )}
       {showStatus && (
@@ -55,48 +72,64 @@ const Avatar = ({ src, name, size = 'sm', status = 'offline', showStatus = true 
   );
 };
 
-// Contact Item
-const ContactItem = ({ user, status, statusText, onClick }) => (
-  <button
-    onClick={() => onClick(user)}
-    className="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-zinc-800/50 rounded-lg transition-colors group"
-  >
-    <Avatar
-      src={user.profilePicture || user.profile_picture || user.avatar}
-      name={`${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`}
-      size="sm"
-      status={status}
-    />
-    <div className="flex-1 min-w-0 text-left">
-      <span className={`text-sm truncate block ${
-        status === 'online' 
-          ? 'text-zinc-200 group-hover:text-white' 
-          : status === 'idle'
-            ? 'text-zinc-400 group-hover:text-zinc-300'
-            : 'text-zinc-500 group-hover:text-zinc-400'
-      }`}>
-        {user.firstName || user.first_name} {user.lastName || user.last_name}
-      </span>
-      {statusText && (
-        <span className={`text-[10px] block ${
-          status === 'online' ? 'text-emerald-500' : 
-          status === 'idle' ? 'text-gray-400' : 'text-zinc-600'
+// Contact Item - Fixed click handler
+const ContactItem = ({ user, status, statusText, onClick }) => {
+  const userName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.trim();
+  const profilePic = getProfilePicture(user);
+  
+  const handleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Call the onClick with the full user object
+    if (onClick && typeof onClick === 'function') {
+      onClick(user);
+    }
+  };
+  
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="w-full flex items-center gap-2.5 px-2 py-2 hover:bg-zinc-800/50 rounded-lg transition-colors group cursor-pointer"
+    >
+      <Avatar
+        src={profilePic}
+        name={userName}
+        size="sm"
+        status={status}
+      />
+      <div className="flex-1 min-w-0 text-left">
+        <span className={`text-sm truncate block ${
+          status === 'online' 
+            ? 'text-zinc-200 group-hover:text-white' 
+            : status === 'idle'
+              ? 'text-zinc-400 group-hover:text-zinc-300'
+              : 'text-zinc-500 group-hover:text-zinc-400'
         }`}>
-          {statusText}
+          {userName || 'Unknown User'}
         </span>
-      )}
-    </div>
-  </button>
-);
+        {statusText && (
+          <span className={`text-[10px] block ${
+            status === 'online' ? 'text-emerald-500' : 
+            status === 'idle' ? 'text-gray-400' : 'text-zinc-600'
+          }`}>
+            {statusText}
+          </span>
+        )}
+      </div>
+    </button>
+  );
+};
 
 // Section Header
-const SectionHeader = ({ title, count, isExpanded, onToggle, icon: Icon, statusColor }) => (
+const SectionHeader = ({ title, count, isExpanded, onToggle, statusColor }) => (
   <button
+    type="button"
     onClick={onToggle}
     className="w-full flex items-center justify-between px-2 py-1.5 hover:bg-zinc-800/30 rounded-lg transition-colors"
   >
     <div className="flex items-center gap-2">
-      {Icon && <Icon size={14} className="text-zinc-500" />}
       {statusColor && <span className={`w-2 h-2 rounded-full ${statusColor}`} />}
       <span className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
         {title}
@@ -118,8 +151,8 @@ const OnlineContactsSidebar = ({
   friends = [],           // Connected users (friends) - ONLY these will be shown
   onlineUsers = [],       // Array of online user IDs
   lastActiveAt = {},      // Map of userId -> last active timestamp (for idle detection)
-  onOpenChat, 
-  onNewMessage,
+  onOpenChat,             // Callback when clicking a user to open chat
+  onNewMessage,           // Callback for new message button
   token,               
   currentUserId,
   className = '' 
@@ -157,7 +190,7 @@ const OnlineContactsSidebar = ({
   };
 
   // Get status text
-  const getStatusText = (status, userId) => {
+  const getStatusText = (status) => {
     switch (status) {
       case 'online':
         return 'Active now';
@@ -191,15 +224,19 @@ const OnlineContactsSidebar = ({
     
     filtered.forEach((user) => {
       const status = getUserStatus(user.id);
+      const statusText = getStatusText(status);
+      
+      const userData = { ...user, status, statusText };
+      
       switch (status) {
         case 'online':
-          online.push({ ...user, status, statusText: getStatusText(status, user.id) });
+          online.push(userData);
           break;
         case 'idle':
-          idle.push({ ...user, status, statusText: getStatusText(status, user.id) });
+          idle.push(userData);
           break;
         default:
-          offline.push({ ...user, status, statusText: getStatusText(status, user.id) });
+          offline.push(userData);
       }
     });
     
@@ -208,6 +245,13 @@ const OnlineContactsSidebar = ({
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  // Handle opening chat with a user
+  const handleOpenChat = (user) => {
+    if (onOpenChat && typeof onOpenChat === 'function') {
+      onOpenChat(user);
+    }
   };
 
   const totalOnline = categorizedFriends.online.length;
@@ -226,6 +270,7 @@ const OnlineContactsSidebar = ({
           </div>
           <div className="flex items-center gap-1">
             <button 
+              type="button"
               onClick={onNewMessage}
               className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors"
               title="New message"
@@ -271,7 +316,7 @@ const OnlineContactsSidebar = ({
                     user={user}
                     status="online"
                     statusText={user.statusText}
-                    onClick={onOpenChat}
+                    onClick={handleOpenChat}
                   />
                 ))
               )}
@@ -298,7 +343,7 @@ const OnlineContactsSidebar = ({
                     user={user}
                     status="idle"
                     statusText={user.statusText}
-                    onClick={onOpenChat}
+                    onClick={handleOpenChat}
                   />
                 ))}
               </div>
@@ -327,7 +372,7 @@ const OnlineContactsSidebar = ({
                     user={user}
                     status="offline"
                     statusText={user.statusText}
-                    onClick={onOpenChat}
+                    onClick={handleOpenChat}
                   />
                 ))
               )}

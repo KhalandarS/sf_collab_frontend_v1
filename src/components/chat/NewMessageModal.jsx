@@ -1,5 +1,11 @@
 /**
- * NewMessageModal Component - Enhanced Version
+ * NewMessageModal Component - Fixed Version
+ * 
+ * FIXES:
+ * 1. Direct Message button works properly
+ * 2. Create Group button works properly
+ * 3. Profile pictures display correctly
+ * 4. Better error handling
  * 
  * Features:
  * - Search for ANY user to start a direct message (not just friends)
@@ -10,7 +16,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Check, Search, Users, MessageCircle, Loader2 } from 'lucide-react';
-import Avatar from './Avatar';
+import { getProfilePicture } from '@/utils/getProfilePicture';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -21,8 +27,10 @@ const STATUS_COLORS = {
   offline: 'bg-red-500',
 };
 
-// Simple Avatar for this modal
+// Avatar component for this modal
 const UserAvatar = ({ src, name, size = 'md', status = 'offline' }) => {
+  const [imageError, setImageError] = useState(false);
+  
   const sizes = {
     sm: 'w-8 h-8 text-xs',
     md: 'w-10 h-10 text-sm',
@@ -37,18 +45,26 @@ const UserAvatar = ({ src, name, size = 'md', status = 'offline' }) => {
 
   const initials = name
     ?.split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || '?';
+
+  const showImage = src && !imageError;
 
   return (
     <div className="relative inline-block flex-shrink-0">
-      {src ? (
-        <img src={src} alt={name} className={`${sizes[size]} rounded-full object-cover`} />
+      {showImage ? (
+        <img 
+          src={src} 
+          alt={name} 
+          className={`${sizes[size]} rounded-full object-cover bg-zinc-700`}
+          onError={() => setImageError(true)}
+        />
       ) : (
         <div className={`${sizes[size]} rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-semibold text-white`}>
-          {initials || '?'}
+          {initials}
         </div>
       )}
       <span 
@@ -76,8 +92,12 @@ const NewMessageModal = ({
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [error, setError] = useState(null);
+  
   const inputRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const abortRef = useRef(null);
+
 
   // Normalize onlineUsers
   const onlineSet = React.useMemo(() => {
@@ -101,53 +121,95 @@ const NewMessageModal = ({
   };
 
   // Search users API
-  const searchUsers = useCallback(async (query) => {
-    if (!query || query.length < 2 || !token) {
-      setSearchResults([]);
-      setShowSuggestions(true);
-      return;
+const searchUsers = useCallback(async (query) => {
+  const q = (query || '').trim();
+  if (!q || q.length < 2 || !token) {
+    setSearchResults([]);
+    setShowSuggestions(true);
+    return;
+  }
+
+  // cancel any in-flight request so old results don't overwrite new ones
+  try { abortRef.current?.abort?.(); } catch (_) {}
+  const controller = new AbortController();
+  abortRef.current = controller;
+
+  setIsSearching(true);
+  setShowSuggestions(false);
+  setError(null);
+
+  const normalizeList = (data) => {
+    const list =
+      data?.data?.users ||
+      data?.users ||
+      data?.results ||
+      (Array.isArray(data) ? data : []);
+
+    // normalize ids + filter out current user + de-dupe
+    const byId = new Map();
+    for (const u of list || []) {
+      const id = u?.id ?? u?.user_id ?? u?._id;
+      if (id == null) continue;
+      if (String(id) === String(currentUserId)) continue;
+      if (!byId.has(String(id))) byId.set(String(id), { ...u, id });
     }
+    return Array.from(byId.values());
+  };
 
-    setIsSearching(true);
-    setShowSuggestions(false);
+  try {
+    const attempts = [
+      `${API_BASE_URL}/users/search?q=${encodeURIComponent(q)}&limit=20`,
+      `${API_BASE_URL}/users/search?query=${encodeURIComponent(q)}&limit=20`,
+      `${API_BASE_URL}/users?search=${encodeURIComponent(q)}&limit=20`,
+      `${API_BASE_URL}/users?query=${encodeURIComponent(q)}&limit=20`,
+    ];
 
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/users/search?q=${encodeURIComponent(query)}&limit=20`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        // Filter out current user
-        const users = (data.data?.users || data.users || [])
-          .filter((u) => String(u.id) !== String(currentUserId));
-        setSearchResults(users);
-      } else {
-        // Fallback: search in all users endpoint
-        const fallbackRes = await fetch(
-          `${API_BASE_URL}/users?search=${encodeURIComponent(query)}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+    let users = [];
+    for (const url of attempts) {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        signal: controller.signal,
+      });
+
+      if (!res.ok) continue;
+
+      let data;
+      try { data = await res.json(); } catch (_) { continue; }
+
+      users = normalizeList(data);
+
+      // tighten relevance client-side
+      const needle = q.toLowerCase();
+      users = users.filter((u) => {
+        const first = (u.firstName || u.first_name || '').toLowerCase();
+        const last = (u.lastName || u.last_name || '').toLowerCase();
+        const name = `${first} ${last}`.trim();
+        const username = (u.username || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        return (
+          name.includes(needle) ||
+          first.includes(needle) ||
+          last.includes(needle) ||
+          username.includes(needle) ||
+          email.includes(needle)
         );
-        const fallbackData = await fallbackRes.json();
-        const users = (fallbackData.data?.users || fallbackData.users || [])
-          .filter((u) => String(u.id) !== String(currentUserId));
-        setSearchResults(users);
-      }
-    } catch (error) {
-      console.error('Search failed:', error);
-      setSearchResults([]);
-    } finally {
-      setIsSearching(false);
-    }
-  }, [token, currentUserId]);
+      });
 
-  // Debounced search
+      break;
+    }
+
+    setSearchResults(users);
+  } catch (err) {
+    if (err?.name === 'AbortError') return;
+    console.error('Search failed:', err);
+    setError('Search failed. Please try again.');
+    setSearchResults([]);
+  } finally {
+    setIsSearching(false);
+  }
+}, [token, currentUserId]);
+
+// Debounced search
   useEffect(() => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -175,12 +237,14 @@ const NewMessageModal = ({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
     if (!isOpen) {
+      // Reset state when modal closes
       setSearchTerm('');
       setSelectedUsers([]);
       setIsGroupMode(false);
       setGroupName('');
       setSearchResults([]);
       setShowSuggestions(true);
+      setError(null);
     }
   }, [isOpen]);
 
@@ -199,31 +263,74 @@ const NewMessageModal = ({
     return statusOrder[aStatus] - statusOrder[bStatus];
   });
 
-  // Handle user click
+  // Handle user click - Fixed to properly call callbacks
   const handleUserClick = (user) => {
     if (isGroupMode) {
+      // Toggle user selection for group
       setSelectedUsers((prev) =>
         prev.find((u) => u.id === user.id)
           ? prev.filter((u) => u.id !== user.id)
           : [...prev, user]
       );
     } else {
-      onSelectUser(user);
+      // Direct message - call callback and close
+      if (onSelectUser && typeof onSelectUser === 'function') {
+        onSelectUser(user);
+      }
       onClose();
     }
   };
 
-  // Handle create group
-  const handleCreateGroup = () => {
-    if (selectedUsers.length > 0 && groupName.trim()) {
-      onCreateGroup(selectedUsers.map((u) => u.id), groupName);
-      onClose();
-    }
-  };
+const handleCreateGroup = async () => {
+  if (selectedUsers.length === 0) {
+    setError('Please select at least one user');
+    return;
+  }
+
+  if (!groupName.trim()) {
+    setError('Please enter a group name');
+    return;
+  }
+
+  if (!onCreateGroup || typeof onCreateGroup !== 'function') {
+    setError('Group creation is not available right now.');
+    return;
+  }
+
+  setError(null);
+
+  const userIds = selectedUsers.map((u) => u.id);
+  const name = groupName.trim();
+
+  try {
+    await onCreateGroup(userIds, name);
+
+    onClose();
+  } catch (e) {
+    console.error('Create group failed:', e);
+    setError(e?.message || 'Failed to create group. Please try again.');
+  }
+};
+
+
 
   // Remove selected user
   const removeSelectedUser = (userId) => {
     setSelectedUsers((prev) => prev.filter((u) => u.id !== userId));
+  };
+
+  // Switch to direct message mode
+  const switchToDirectMode = () => {
+    setIsGroupMode(false);
+    setSelectedUsers([]);
+    setGroupName('');
+    setError(null);
+  };
+
+  // Switch to group mode
+  const switchToGroupMode = () => {
+    setIsGroupMode(true);
+    setError(null);
   };
 
   return (
@@ -233,6 +340,7 @@ const NewMessageModal = ({
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
           <h2 className="text-base font-semibold text-white">New message</h2>
           <button 
+            type="button"
             onClick={onClose} 
             className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-400 hover:text-white transition-colors"
           >
@@ -240,13 +348,11 @@ const NewMessageModal = ({
           </button>
         </div>
 
-        {/* Mode Toggle */}
+        {/* Mode Toggle - Fixed buttons */}
         <div className="flex px-2 py-2 border-b border-zinc-800 gap-1">
           <button
-            onClick={() => { 
-              setIsGroupMode(false); 
-              setSelectedUsers([]); 
-            }}
+            type="button"
+            onClick={switchToDirectMode}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
               !isGroupMode 
                 ? 'text-amber-500 bg-amber-500/10' 
@@ -257,7 +363,8 @@ const NewMessageModal = ({
             Direct Message
           </button>
           <button
-            onClick={() => setIsGroupMode(true)}
+            type="button"
+            onClick={switchToGroupMode}
             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${
               isGroupMode 
                 ? 'text-amber-500 bg-amber-500/10' 
@@ -268,6 +375,13 @@ const NewMessageModal = ({
             Create Group
           </button>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="px-4 py-2 bg-red-500/10 border-b border-red-500/20">
+            <p className="text-xs text-red-400">{error}</p>
+          </div>
+        )}
 
         {/* Search Field */}
         <div className="px-4 py-3 border-b border-zinc-800">
@@ -284,6 +398,7 @@ const NewMessageModal = ({
                   >
                     {user.firstName || user.first_name}
                     <button 
+                      type="button"
                       onClick={() => removeSelectedUser(user.id)} 
                       className="hover:text-white"
                     >
@@ -295,18 +410,16 @@ const NewMessageModal = ({
             )}
             
             {/* Search input */}
-            {(!isGroupMode || selectedUsers.length === 0) && (
-              <div className="flex-1 relative">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Search for users..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-transparent text-white text-sm placeholder-zinc-500 focus:outline-none"
-                />
-              </div>
-            )}
+            <div className="flex-1 relative">
+              <input
+                ref={inputRef}
+                type="text"
+                placeholder="Search for users..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent text-white text-sm placeholder-zinc-500 focus:outline-none"
+              />
+            </div>
             
             {isSearching && (
               <Loader2 size={16} className="text-amber-500 animate-spin" />
@@ -369,10 +482,11 @@ const NewMessageModal = ({
               const status = getUserStatus(user.id);
               const isSelected = selectedUsers.find((u) => u.id === user.id);
               const userName = `${user.firstName || user.first_name || ''} ${user.lastName || user.last_name || ''}`.trim();
-              const profilePic = user.profilePicture || user.profile_picture || user.avatar;
+              const profilePic = getProfilePicture(user);
 
               return (
                 <button
+                  type="button"
                   key={user.id}
                   onClick={() => handleUserClick(user)}
                   className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/50 transition-colors ${
@@ -408,10 +522,11 @@ const NewMessageModal = ({
           )}
         </div>
 
-        {/* Create Group Button */}
+        {/* Create Group Button - Fixed */}
         {isGroupMode && selectedUsers.length > 0 && (
           <div className="p-4 border-t border-zinc-800">
             <button
+              type="button"
               onClick={handleCreateGroup}
               disabled={!groupName.trim()}
               className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-900 font-semibold rounded-xl transition-colors"

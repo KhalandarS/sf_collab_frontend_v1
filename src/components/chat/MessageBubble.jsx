@@ -1,13 +1,25 @@
-import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
+/**
+ * MessageBubble Component - Fixed Version
+ * 
+ * FIXES:
+ * 1. Profile pictures now display correctly using getProfilePicture utility
+ * 2. Better sender name extraction
+ * 3. Consistent avatar display
+ */
+
+import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
-import { reduceText } from "@/utils/reduceText";
 
-
-
+// Helper to reduce text length
+const reduceText = (text, maxLength = 20) => {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength) + '...';
+};
 
 // Files are typically served from the backend host (often NOT /api)
 const FILE_BASE_URL =
@@ -42,7 +54,6 @@ async function fetchBlobWithAuth(url, token) {
     credentials: "include",
   });
 
-  // If backend returns JSON error (401/403), blob will be invalid for PDFs/images
   if (!res.ok) {
     let hint = "";
     try {
@@ -72,7 +83,6 @@ async function forceDownload(url, filename, token) {
     a.remove();
     URL.revokeObjectURL(href);
   } catch {
-    // last resort: open raw URL (may fail if endpoint requires Authorization header)
     window.open(url, "_blank", "noopener,noreferrer");
   }
 }
@@ -82,7 +92,6 @@ async function openInNewTab(url, token) {
     const blob = await fetchBlobWithAuth(url, token);
     const href = URL.createObjectURL(blob);
     window.open(href, "_blank", "noopener,noreferrer");
-    // give the new tab time to load, then clean up
     setTimeout(() => URL.revokeObjectURL(href), 60_000);
   } catch {
     window.open(url, "_blank", "noopener,noreferrer");
@@ -103,8 +112,7 @@ function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
   return false;
 }
 
-export default function MessageBubble({ message, isOwn, showAvatar, showSenderName = false }) {
-  const getMsgStatus = (msg) => {
+function getMsgStatus(msg) {
   const s = String(msg?.status || msg?.delivery_status || "").toLowerCase();
 
   // opened/read
@@ -115,15 +123,13 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
 
   // default: sent (exists on server)
   return "sent";
-};
+}
 
-
+export default function MessageBubble({ message, isOwn, showAvatar, showSenderName = false }) {
   const navigate = useNavigate();
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const profileMenuRef = useRef(null);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const { access_token: token } = useSelector((state) => state.auth || {});
-  const [viewerOpen, setViewerOpen] = useState(false);
 
   const ts =
     message?.created_at ??
@@ -133,12 +139,20 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
     message?.sentAt ??
     null;
 
+  // Get sender name - Fixed to handle various formats
   const senderName = useMemo(() => {
     if (message?.sender) {
-      return `${message.sender.firstName || ""} ${message.sender.lastName || ""}`.trim();
+      const firstName = message.sender.firstName || message.sender.first_name || "";
+      const lastName = message.sender.lastName || message.sender.last_name || "";
+      return `${firstName} ${lastName}`.trim();
     }
     return message?.sender_name || message?.senderName || "";
   }, [message]);
+
+  // Get sender profile picture - Fixed
+  const senderAvatar = useMemo(() => {
+    return getProfilePicture(message?.sender);
+  }, [message?.sender]);
 
   const fileUrl = message?.file_url ? resolveUrl(message.file_url) : null;
 
@@ -157,6 +171,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
     await openInNewTab(fileUrl, token);
   }, [fileUrl, token]);
 
+  // System message
   if (message.message_type === "system") {
     return (
       <div className="flex justify-center my-3">
@@ -176,7 +191,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
           onClick={() => setViewerOpen(false)}
         >
           <div className="relative w-full h-full flex items-center justify-center p-4">
-            {/* Download icon is always top-right */}
             <button
               className="absolute top-4 right-4 p-2 rounded-full bg-black/40 hover:bg-black/60 text-white"
               onClick={(e) => {
@@ -209,36 +223,44 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
         </div>
       )}
 
-      <div className={`group flex gap-1 px-1 py-0.01 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
-        <div className={`visible w-8 shrink-0`}>
+      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+        {/* Avatar column */}
+        <div className="w-8 shrink-0">
           {showAvatar && (
             <Avatar
-              src={
-                getProfilePicture(
-                  message?.sender)
-              }
+              src={senderAvatar}
               name={senderName || " "}
               size="sm"
               showStatus={false}
             />
           )}
-
         </div>
 
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
+          {/* Sender name for group chats */}
           {!isOwn && showSenderName && senderName && (
-            <span className="text-[11px] text-zinc-400 mb-0">{senderName}</span>
+            <span className="text-[11px] text-zinc-400 mb-0.5">{senderName}</span>
           )}
 
           <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
+            {/* Message bubble */}
             <div
-              className={`px-3 py-2 rounded-2xl text-sm ${isOwn ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" : "bg-zinc-800 text-zinc-100"
-                }`}
+              className={`px-3 py-2 rounded-2xl text-sm ${
+                isOwn 
+                  ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" 
+                  : "bg-zinc-800 text-zinc-100"
+              }`}
             >
+              {/* File/Image attachment */}
               {fileUrl && (
                 <div className="mb-2">
                   {isImage ? (
-                    <button type="button" className="block" onClick={() => setViewerOpen(true)} title="View">
+                    <button 
+                      type="button" 
+                      className="block" 
+                      onClick={() => setViewerOpen(true)} 
+                      title="View"
+                    >
                       <img
                         src={fileUrl}
                         alt={message?.file_name || "image"}
@@ -250,11 +272,14 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                     <div className="flex items-center gap-2 p-2 bg-black/20 rounded-lg">
                       <FileText size={18} className="opacity-80" />
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm truncate">{reduceText(message?.file_name || "Document", 20)}</div>
-                        <div className="text-[11px] opacity-70 truncate">{message?.file_type || "file"}</div>
+                        <div className="text-sm truncate">
+                          {reduceText(message?.file_name || "Document", 20)}
+                        </div>
+                        <div className="text-[11px] opacity-70 truncate">
+                          {message?.file_type || "file"}
+                        </div>
                       </div>
 
-                      {/* Open via auth-fetch + blob so PDFs actually render even if endpoint needs Authorization */}
                       <button
                         type="button"
                         className="p-1.5 rounded-lg hover:bg-black/20"
@@ -283,6 +308,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                 </div>
               )}
 
+              {/* Message content */}
               {!hideAutoFileText({
                 fileUrl,
                 isImage,
@@ -290,10 +316,10 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                 fileName: message?.file_name,
               }) && (message.content || message.original_content)}
 
-
               {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
             </div>
 
+            {/* Timestamp and status */}
             <span className="text-[10px] text-zinc-600 mt-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1">
               <span>{formatTime(ts)}</span>
 
@@ -304,7 +330,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                 return <Check size={14} className="opacity-80" />;
               })()}
             </span>
-
           </div>
         </div>
       </div>

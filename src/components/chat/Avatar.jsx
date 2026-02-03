@@ -1,21 +1,81 @@
 /**
- * Avatar Component - Enhanced Version
+ * Avatar Component - Fixed Version
  * 
  * Status Colors:
  * - Online = Green (emerald-500)
  * - Idle = Grey (gray-400)
  * - Offline = Red (red-500)
+ * 
+ * FIXES:
+ * - Properly resolves profile picture URLs from various backend formats
+ * - Better fallback handling when images fail to load
+ * - Consistent image error handling
  */
 
-import React from "react";
+import React, { useState } from "react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+// Remove /api suffix to get server base URL
+const getServerBaseUrl = () => API_BASE_URL.replace(/\/api\/?$/, '');
 
 // Status color mapping
 const STATUS_COLORS = {
   online: "bg-emerald-500",   // Green
   idle: "bg-gray-400",        // Grey  
   offline: "bg-red-500",      // Red
+};
+
+/**
+ * Resolve avatar source URL
+ * Handles various backend response formats
+ */
+const resolveAvatarSrc = (value) => {
+  if (!value) return null;
+
+  const v = String(value).trim();
+  
+  // Already a full URL or data URI
+  if (/^https?:\/\//i.test(v) || v.startsWith("data:") || v.startsWith("blob:")) {
+    return v;
+  }
+
+  // Local public asset (not an uploads path)
+  if (v.startsWith("/") && !v.startsWith("/uploads/")) {
+    return v;
+  }
+  
+  // Default avatar
+  if (v === '/default-user.jpeg' || v === '/default-avatar.png') {
+    return v;
+  }
+
+  // Handle uploads paths and filenames
+  let filename = v;
+  if (filename.startsWith('/')) {
+    filename = filename.slice(1);
+  }
+  if (filename.startsWith('uploads/')) {
+    filename = filename.slice(8);
+  }
+  
+  // Build full URL using avatars endpoint
+  return `${API_BASE_URL}/users/avatars/${filename}`;
+};
+
+/**
+ * Extract initials from name
+ */
+const getInitials = (name) => {
+  if (!name) return "?";
+  
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2) || "?";
 };
 
 export default function Avatar({
@@ -29,6 +89,8 @@ export default function Avatar({
   showStatus = true,
   className = "",
 }) {
+  const [imageError, setImageError] = useState(false);
+  
   const sizes = {
     xs: "w-6 h-6 text-[10px]",
     sm: "w-8 h-8 text-xs",
@@ -47,37 +109,9 @@ export default function Avatar({
     "2xl": "w-4 h-4 border-2",
   };
 
-  const initials =
-    name
-      ?.split(" ")
-      .filter(Boolean)
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2) || "";
-
-  const resolveAvatarSrc = (value) => {
-    if (!value) return null;
-
-    // If it's already a full URL or data URI, keep it.
-    if (typeof value === "string" && (/^https?:\/\//i.test(value) || value.startsWith("data:"))) {
-      return value;
-    }
-
-    // Common backend shapes:
-    // - "uploads/xxx.jpg" or "/uploads/xxx.jpg"
-    // - just "xxx.jpg"
-    // - "/default-user.jpeg"
-    const v = String(value).trim();
-
-    // If it's an absolute path but not an uploads path, treat as local public asset.
-    if (v.startsWith("/") && !v.startsWith("/uploads/")) {
-      return v;
-    }
-
-    const fileName = v.replace(/^\/?uploads\//, "").replace(/^\//, "");
-    return `${API_BASE_URL}/users/avatars/${fileName}`;
-  };
+  const initials = getInitials(name);
+  const resolvedSrc = resolveAvatarSrc(src);
+  const showImage = resolvedSrc && !imageError;
 
   // Determine final status
   const status = presenceStatus || (isOnline ? "online" : "offline");
@@ -90,30 +124,26 @@ export default function Avatar({
     offline: "Offline",
   }[status] || "Offline";
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   return (
     <div className={`relative inline-block flex-shrink-0 ${className}`}>
-      {resolveAvatarSrc(src) ? (
+      {showImage ? (
         <img 
-          src={resolveAvatarSrc(src)} 
+          src={resolvedSrc} 
           alt={name || "User"} 
-          className={`${sizes[size]} rounded-full object-cover`}
-          onError={(e) => {
-            // Fallback to initials on image load error
-            e.target.style.display = 'none';
-            e.target.nextSibling?.style && (e.target.nextSibling.style.display = 'flex');
-          }}
+          className={`${sizes[size]} rounded-full object-cover bg-zinc-700`}
+          onError={handleImageError}
         />
-      ) : null}
-      
-      {/* Fallback initials (shown when no image or image fails to load) */}
-      <div
-        className={`${sizes[size]} rounded-full bg-gradient-to-br from-amber-500 to-orange-600 items-center justify-center font-semibold text-white ${
-          resolveAvatarSrc(src) ? 'hidden' : 'flex'
-        }`}
-        style={{ display: resolveAvatarSrc(src) ? 'none' : 'flex' }}
-      >
-        {initials || "?"}
-      </div>
+      ) : (
+        <div
+          className={`${sizes[size]} rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center font-semibold text-white`}
+        >
+          {initials}
+        </div>
+      )}
 
       {showStatus && (
         <span
