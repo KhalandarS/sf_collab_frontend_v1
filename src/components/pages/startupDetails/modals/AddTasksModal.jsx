@@ -24,12 +24,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { API_URL } from "@/utils/config";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 const emptyTaskForm = {
   title: "",
   description: "",
   priority: "medium",
-  status: "today",
+  status: "in_progress",
   due_date: "",
   estimated_hours: "",
   assigned_to: "",
@@ -67,7 +68,7 @@ export default function AddTaskModal({
         title: task.title || "",
         description: task.description || "",
         priority: task.priority || "medium",
-        status: task.status || "today",
+        status: task.status || "in_progress",
         due_date: task.due_date ? task.due_date.split("T")[0] : "",
         estimated_hours: task.estimated_hours || "",
         assigned_to: task.assigned_to || null,
@@ -223,7 +224,6 @@ export default function AddTaskModal({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
-                  <SelectItem value="today">Today</SelectItem>
                   <SelectItem value="in_progress">In Progress</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
@@ -270,8 +270,7 @@ export default function AddTaskModal({
                 {teamMembers.map((member) => (
                   <SelectItem key={member.id} value={member.userId.toString()}>
                     <img src={
-                      member.profilePicture ?
-                      member.profilePicture.startsWith("http") ? member.profilePicture : `${API_URL}/${member.profilePicture}` : `/default-user.jpeg`} alt="Profile picture" className="h-3 rounded-full" />
+                      getProfilePicture(member)} alt="Profile picture" className="h-3 rounded-full" />
                     {member.fullName || `${member.firstName} ${member.lastName}`}
                   </SelectItem>
                 ))}

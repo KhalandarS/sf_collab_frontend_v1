@@ -17,8 +17,6 @@ import { IoChatbubbles, IoLogIn } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
 
-// IMPORTANT: Import the apiClient you created
-import apiClient from "@/services/apiClient";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import getNotificationsWithPreferences from "@/utils/getNotificationsWithPreferences";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
@@ -152,7 +150,14 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
     setIsProfileOpen(false);
   }, [location]);
 
-
+  const markAllRead = async () => {
+    try {
+      await notificationAPI.markAllRead();
+      setNotifications(prevNotifs => prevNotifs.map(n => ({ ...n, unread: false })));
+    } catch (error) {
+      console.error("Failed to mark notifications as read:", error);
+    }
+  };
   if (loaderState) return (
     <nav
       className={`flex px-6 items-center w-full h-16 justify-between relative transition-transform duration-300 will-change-transform ${
@@ -222,14 +227,20 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                   >
                     <div style={{ borderRadius: '15px' }} className="w-80 overflow-hidden z-50">
                       <div className="p-4 border-b border-slate-700/50">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between">
                           <h3 className="text-lg font-bold text-white">Notifications</h3>
                           {
                             notifications.filter(n => n.unread).length > 0 &&
-                          
+                            <>
                             <span className="px-2.5 py-1 bg-red-600/10 text-rose-400 text-xs font-semibold rounded-full ring-1 ring-rose-500/20">
                               {notifications.filter(n => n.unread).length} New
-                            </span>
+                              </span>
+                              <span
+                                onClick={markAllRead}
+                                className="px-2.5 py-1 bg-blue-600/10 text-blue-400 text-xs font-semibold rounded-full ring-1 ring-blue-500/20">
+                              Mark all as read
+                              </span>
+                              </>
                           }
                         </div>
                       </div>

@@ -263,6 +263,7 @@ useEffect(() => {
       await updateUser(formData, false);
       toast.success("Profile updated");
       back();
+      window.location.reload();
 
     } catch (e) {
       toast.error(e.message);
@@ -349,7 +350,6 @@ useEffect(() => {
   // Helper: global Save based on active section
   const handleSave = async () => {
     if (saving) return;
-    console.log(activeSection);
     if (activeSection === 'profile') await saveProfile();
     else if (activeSection === 'preferences') await savePreferences();
     else if (activeSection === 'notifications') await saveNotificationSettings();

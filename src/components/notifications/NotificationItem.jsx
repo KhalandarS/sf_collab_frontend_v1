@@ -6,9 +6,12 @@ import {
   Info,
   AlertTriangle,
   XCircle,
+  Trash, // Import the Trash icon
 } from "lucide-react";
 import { notificationColors, priorityStyles } from "./colors";
 import { API_URL } from "@/utils/config";
+import { notificationAPI } from "@/utils/APIs/notificationAPI"; // Import the notificationAPI
+import { toast } from "react-toastify";
 
 const iconsByType = {
   success: CheckCircle,
@@ -17,7 +20,7 @@ const iconsByType = {
   error: XCircle,
 };
 
-export default function NotificationItem({ notification, onMarkAsRead }) {
+export default function NotificationItem({ notification, onMarkAsRead, onDelete }) {
   const {
     id,
     title,
@@ -49,6 +52,17 @@ export default function NotificationItem({ notification, onMarkAsRead }) {
   const color = notificationColors[type] ?? notificationColors.info;
   const priorityClass = priorityStyles[priority] ?? "";
   const Icon = iconsByType[type] ?? Bell;
+
+  const handleDelete = async () => {
+    try {
+      await notificationAPI.delete(id); // Call the delete API
+      onDelete(id);
+      toast.success("Notification deleted.");
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+      toast.error(error?.error ? error.error : "Failed to delete notification")
+    }
+  };
 
   return (
     <motion.div
@@ -136,6 +150,11 @@ export default function NotificationItem({ notification, onMarkAsRead }) {
           </motion.p>
         )}
       </div>
+
+      {/* ================= DELETE BUTTON ================= */}
+      <button onClick={handleDelete} className="absolute bottom-3 right-3 cursor-pointer p-1 rounded hover:bg-white/10 transition">
+        <Trash className="h-5 w-5 text-red-500" />
+      </button>
     </motion.div>
   );
 }

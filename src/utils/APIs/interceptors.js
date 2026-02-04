@@ -27,7 +27,8 @@ export const responseErrorInterceptor = (error) => {
   const isAuthRoute =
     path.startsWith('/login') ||
     path.startsWith('/signup') ||
-    path.startsWith('/auth');
+    path.startsWith('/auth') ||
+    path === '/';
 
   // Only hard-logout if NOT already on auth pages
   if (status === 401 && !isAuthRoute) {

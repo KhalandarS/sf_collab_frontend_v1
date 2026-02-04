@@ -32,7 +32,6 @@ import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
 import ProjectGoalsSection from './sections/ProjectGoalsSection';
 import CalendarSection from './sections/CalendarSection';
 import DeleteStartupModal from './modals/DeleteStartup';
-import UploadDocumentModal from './modals/UploadDocument';
 import AddMemberModal from './modals/AddMember';
 import DocumentsSection from './sections/DocumentsSection';
 import TeamSection from './sections/TeamSection';
@@ -40,11 +39,8 @@ import DescriptionSection from './sections/DescriptionSection';
 import TechStackSection from './sections/TechStackSection';
 import HeroSection from './sections/HeroSection';
 import StartupDetailSkeleton from './StartupDetailsSkeleton';
-import AddEventModal from './modals/AddEvent';
 import ProjectTasksSection from './sections/ProjectTasksSection';
 import AddTaskModal from './modals/AddTasksModal';
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 /**
  * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
@@ -67,9 +63,7 @@ const StartupDetailPage = () => {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [isSendJoinRequestModalOpen, setIsSendJoinRequestModalOpen] = useState(false);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
-  const [isUploadDocModalOpen, setIsUploadDocModalOpen] = useState(false);
   const [isDeleteStartupModalOpen, setIsDeleteStartupModalOpen] = useState(false);
-  const [isAddEventModalOpen, setIsAddEventModalOpen] = useState(false);
   const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
   
@@ -99,7 +93,7 @@ const StartupDetailPage = () => {
     user_id: '',
     first_name: '',
     last_name: '',
-    role: 'member'
+    role: ''
   });
 
   const [joinRequests, setJoinRequests] = useState([]);
@@ -139,10 +133,9 @@ const StartupDetailPage = () => {
       const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
       const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
       const tasksData = tasksResult.success ? tasksResult : { success: false, data: { tasks: [] } };
+
       if (startupData.success) setStartup(startupData.data.startup);
-      if (membersData.success) {
-        setMembers(membersData.data.members);
-      }
+      if (membersData.success) setMembers(membersData.data.members);
       if (documentsData.success) setDocuments(documentsData.data.documents);
       if (statsData.success) setStats(statsData.data.stats || {});
       if (goalsData.success) setProjectGoals(goalsData.data.project_goals || []);
@@ -227,6 +220,14 @@ const StartupDetailPage = () => {
   const handleAddMember = async (e) => {
     e.preventDefault();
     try {
+      if (!memberForm.role) {
+        toast.error('Please select a role for the member');
+        return
+      }
+      if (!memberForm.user_id) {
+        toast.error('Please select a user to add as a member');
+        return
+      }
       const response = await startupsAPI.addMember(id, memberForm, access_token);
 
 
@@ -239,8 +240,9 @@ const StartupDetailPage = () => {
       } else {
         throw new Error('Failed to add member');
       }
-    } catch {
-      toast.error('Error adding member');
+    } catch (error) {
+
+      toast.error(error?.error || 'Error adding member');
     }
   };
 
@@ -266,6 +268,7 @@ const StartupDetailPage = () => {
     const requestId = request?.id || request?.request_id;
     if (!requestId) return;
     try {
+
       await startupsAPI.acceptJoinRequest(id, requestId);
       toast.success(`${request?.full_name || `${request?.first_name ?? ''} ${request?.last_name ?? ''}`.trim() || 'Member'} has been added.`);
       // Remove from list immediately for better UX
@@ -315,7 +318,7 @@ const StartupDetailPage = () => {
       const userId = user?.id || user?.userId || user?.user_id;
       
       // Check 1: Is user the startup creator?
-      const isStartupCreator = startup?.creator_id === userId;
+      const isStartupCreator = startup?.creator?.id === userId;
       
       // Check 2: Is user a member with creator/founder role?
       const isMemberWithRole = members.find(m => m.userId === userId && ['creator', 'founder'].includes(m.role));
@@ -323,8 +326,6 @@ const StartupDetailPage = () => {
       // User is creator if they are the startup creator OR have member founder role
       const isCreatorUser = isStartupCreator || !!isMemberWithRole;
       setIsCreator(isCreatorUser);
-    } else {
-      setIsCreator(false);
     }
   }, [members, user, startup]);
 
@@ -368,45 +369,6 @@ const StartupDetailPage = () => {
       console.error('Error deleting startup:', error);
     }
   };
-  const handleCreateEvent = async (eventData) => {
-    try {
-      const body = {
-        ...eventData,
-        startup_id: id,
-        user_id: user?.id || user?.userId || user?.user_id,
-      }
-      const response = await calendarEventsAPI.create(body);
-      
-      if (response.success || response.event) {
-        toast.success('Event created successfully');
-        setIsAddEventModalOpen(false);
-        setCalendarEvents([...calendarEvents, response.data?.event || response.event]);
-      } else {
-        throw new Error(response.error || 'Failed to create event');
-      }
-    } catch (error) {
-      toast.error('Error creating event');
-      console.error('Error creating event:', error);
-    }
-  }
-  const handleEditEvent = async () => {
-    // Implement event editing logic here
-  }
-  const handleDeleteEvent = async (eventId) => {
-    try {
-      const response = await calendarEventsAPI.delete(eventId);
-      if (response.success) {
-        toast.success('Event deleted successfully');
-        setCalendarEvents(calendarEvents.filter(event => event.id !== eventId));
-      } else {
-        throw new Error('Failed to delete event');
-      }
-    } catch (error) {
-      toast.error('Error deleting event');
-      console.error('Error deleting event:', error);
-    }
-    // Implement event deletion logic here
-  }
   const handleCreateTask = async (taskData) => {
     try {
       const response = await tasksAPI.create({
@@ -475,7 +437,7 @@ const StartupDetailPage = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => navigate(`/register-startup?id=${startup.id}`)}
+                    onClick={() => navigate(`/register-startup?id=${startup?.id}`)}
                     className="relative text-gray-300"
                   >
                     <MessageSquare className="w-4 h-4 mr-1" />
@@ -496,24 +458,6 @@ const StartupDetailPage = () => {
                         {joinRequests.length}
                       </span>
                     )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAddMemberModalOpen(true)}
-                    className="text-gray-300 hover:text-black"
-                  >
-                    <UserPlus className="w-4 h-4 mr-1" />
-                    Add Member
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsUploadDocModalOpen(true)}
-                    className="text-gray-300 hover:text-black"
-                  >
-                    <FileText className="w-4 h-4 mr-1" />
-                    Upload Doc
                   </Button>
                   <Button
                     variant="destructive"
@@ -543,7 +487,8 @@ const StartupDetailPage = () => {
       <HeroSection
         startup={startup}
         onJoinClick={() => isCreator ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
-        formatCurrency={formatCurrency}
+        members={members}
+        isCreator={isCreator}
         getStageBadgeVariant={getStageBadgeVariant}
         setAlertDescription={setAlertDescription}
         setShowAlert={setShowAlert}
@@ -664,11 +609,9 @@ const StartupDetailPage = () => {
           {/* Calendar Tab */}
           <TabsContent value="calendar">
             <CalendarSection
-              events={calendarEvents}
+              calendarEvents={calendarEvents}
+              setCalendarEvents={setCalendarEvents}
               isCreator={isCreator}
-              onCreateEvent={() => setIsAddEventModalOpen(true)}
-              onEditEvent={handleEditEvent}
-              onDeleteEvent={handleDeleteEvent}
 
             />
           </TabsContent>
@@ -676,7 +619,6 @@ const StartupDetailPage = () => {
       </div>
 
       {/* Modals */}
-
       {!isCreator && (
         <SendJoinRequestModal
           isOpen={isSendJoinRequestModalOpen}
@@ -720,11 +662,7 @@ const StartupDetailPage = () => {
             onAccept={handleAcceptJoinRequest}
             onReject={handleRejectJoinRequest}
           />
-          <AddEventModal
-            isOpen={isAddEventModalOpen}
-            onClose={() => setIsAddEventModalOpen(false)}
-            onCreate={handleCreateEvent}
-          />
+          
           <AddTaskModal
             isOpen={isAddTaskModalOpen}
             onClose={() => setIsAddTaskModalOpen(false)}
@@ -743,7 +681,7 @@ const StartupDetailPage = () => {
             <AlertDescription>
               {alertDescription}
             </AlertDescription>
-            <button className='cursor-pointer absolute right-2 top-1' onClick={() => setShowAlert(false)}>
+            <button className='cursor-pointer absolute right-2 top-1 pointer-events-auto' onClick={() => setShowAlert(false)}>
               <XIcon className='size-5' />
               <span className='sr-only'>Close</span>
             </button>
@@ -763,9 +701,7 @@ const StartupDetailPage = () => {
 // Gamified Stats Overview
 const GamifiedStatsOverview = ({ goals, startup, stats, formatCurrency }) => {
   const milestoneProgress = useMemo(() => {
-    console.log(goals);
     if (goals.length === 0) return 0;
-    console.log("Goals:", goals);
     let progress = 0;
     const totalMilestonesCompleted = goals.reduce((count, goal) => {
       return count + goal.milestones_completed
@@ -774,7 +710,6 @@ const GamifiedStatsOverview = ({ goals, startup, stats, formatCurrency }) => {
       return count + goal.milestones_total
     }, 0);
     progress = totalMilestones === 0 ? 0 : Math.floor((totalMilestonesCompleted / totalMilestones) * 100);
-    console.log("Calculated milestone progress:", progress);
     return progress
   }, [goals]);
   const gamifiedStats = [

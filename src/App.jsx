@@ -91,6 +91,10 @@ import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
 import { NotificationProvider } from './contexts/NotificationContext';
 import ToastNotification from './components/notifications/ToastNotification.jsx';
 import NotificationPage from './components/notifications/NotificationPage.jsx';
+import ToolsDashboard from "./components/pages/dashboards/toolsDashboard/ToolsDashboard.jsx";
+import CalculatorPage from "./components/pages/calculatorPage/CalculatorPage.jsx";
+import NotesPage from "./components/pages/notes/NotesPage.jsx";
+import BoardPage from "./components/pages/board/BoardPage.jsx";
 
 
 
@@ -112,7 +116,6 @@ export default function App() {
         try {
           // console.log(access_token);
           const response = await usersAPI.getMyRoles();
-          console.log("Roles response:", response);
           setUserRoles([...response.data.map(role => role.role), 'General']);
           // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
           // setActiveRole('member');
@@ -219,6 +222,7 @@ export default function App() {
                   {/* ===== END BUILDER ROUTES ===== */}
             
                   <Route path="ai-dashboard" element={<AIDashboard />} />
+                  <Route path="tools-dashboard" element={<ToolsDashboard />} />
                   <Route path="waitlist" element={<Waitlist />} />
                   <Route path="waitlist-terms" element={<WaitlistTerms />} />
                   <Route path="influencer" element={<Influencer />} />
@@ -279,13 +283,18 @@ export default function App() {
                   <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                   <Route path="startup-details/:id" element={<StartupDetailPage />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
-                  {/* Tools */}
+                  {/* AI Tools */}
                   <Route path="business-plan" element={<BusinessIdeaGenerator />} />
                   <Route path="multimodal-images" element={<ImageGenerator />} />
                   <Route path="logo-generator" element={<StartupLogoGenerator />} />
                   <Route path="data-scraper" element={<ScraperForm />} />
                   <Route path="qwen-chat" element={<QwenChat />} />
+                  {/* Tools */}
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
+                  <Route path="calculator" element={<CalculatorPage />} />
+                  <Route path="notes" element={<NotesPage />} />
+                  {/* <Route path="board" element={<BoardPage />} /> */}
+
                   {/* User */}
                   <Route path="discover-users" element={<DiscoverUsers />} />
 

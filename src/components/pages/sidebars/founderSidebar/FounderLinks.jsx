@@ -1,20 +1,17 @@
-import { Badge, BarChart3, Building2, Earth, File, Save } from 'lucide-react';
-import { FaTasks } from 'react-icons/fa';
-import { FaMoneyBill } from 'react-icons/fa6';
-import { FcFeedback } from 'react-icons/fc';
+import { Building2, Save } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
-import { LuLayoutDashboard } from 'react-icons/lu';
-import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
-import getDashboardLink from "../getDashboardLink";
+import { Lightbulb } from 'lucide-react';
+import { aiTools, dashboardLink, toolsSection } from '../sidebarCommons';
 
 /**
  * Creates navigation links for the Founder sidebar
  * @param {number} unreadMessagesCount - Number of unread messages to display in badge
  * @returns {Array} Array of link objects for sidebar navigation
  */
+// eslint-disable-next-line no-unused-vars
 export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setActiveRole = () => {}) {
   return [
-    getDashboardLink(userRoles, setActiveRole),
+    dashboardLink(userRoles, setActiveRole),
     {
       id: 2,
       icon: <Rocket size={22} />,
@@ -56,19 +53,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
         { id: "ideation-board", href: "/ideation", label: "Ideation Board", icon: <Lightbulb size={18} /> },
       ]
     },
-    {
-          id: 6,
-          icon: <BrainCircuit size={23} />,
-          href: "/ai-dashboard",
-          label: "AI Tools",
-          subItems: [
-            { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
-            { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-            { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
-            { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
-            { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
-            { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Earth size={18} /> },
-          ],
-        },
+    aiTools(6),
+    toolsSection(7)
   ];
 }

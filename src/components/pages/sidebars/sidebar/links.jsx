@@ -23,9 +23,9 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import getDashboardLink from "../getDashboardLink";
+import { aiTools, dashboardLink, toolsSection } from "../sidebarCommons";
 
-// ✅ theme must be top-level (NOT inside any function)
+// theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
   1: {
     pillBg: "bg-blue-600/20",
@@ -67,7 +67,7 @@ export const CONTEXT_THEME = {
 
 export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-    getDashboardLink(userRoles, setActiveRole),
+    dashboardLink(userRoles, setActiveRole),
     {
       id: 3,
       icon: <Rocket size={21} />,
@@ -124,20 +124,8 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
       ],
     },
-    {
-          id: 6,
-          icon: <BrainCircuit size={23} />,
-          href: "/ai-dashboard",
-          label: "AI Tools",
-          subItems: [
-            { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
-            { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-            { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
-            { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
-            { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
-            { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Earth size={18} /> },
-          ],
-        },
+    aiTools(8),
+    toolsSection(9)
   ];
 };
 

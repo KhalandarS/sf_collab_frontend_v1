@@ -32,6 +32,7 @@ import { ShineButton } from '../lightswind/shine-button'
 import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { startupsAPI } from '@/utils/APIs/startupsAPI'
+import { API_URL } from '@/utils/config'
 
 const colors = [
   "#3B82F6", // Blue
@@ -128,7 +129,6 @@ export default function Calendar() {
     { value: 'list', label: 'List', icon: <ListFilter className="h-4 w-4" /> }
   ]
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
   useEffect(() => {
     fetchEvents()
@@ -179,12 +179,9 @@ export default function Calendar() {
 
       if (data.success) {
         setEvents(data.data.events || [])
-      } else {
-        toast.error(data.message || 'Failed to fetch events')
       }
     } catch (error) {
       console.error('Error fetching events:', error)
-      toast.error('Failed to fetch events')
     } finally {
       setLoading(false)
     }

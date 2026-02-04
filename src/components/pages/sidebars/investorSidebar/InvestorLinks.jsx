@@ -1,13 +1,11 @@
 
-import { Badge, BarChart2, ChartNoAxesGanttIcon, Earth, Eye, LucideLayoutDashboard } from 'lucide-react';
+import { BarChart2, ChartNoAxesGanttIcon, Eye } from 'lucide-react';
 import { FcDocument } from 'react-icons/fc';
-import { IoChatbubbles } from 'react-icons/io5';
-import { BrainCircuit, Wand2, FileText, BriefcaseBusiness, Lightbulb } from 'lucide-react';
-import getDashboardLink from "../getDashboardLink";
+import  { aiTools, toolsSection, dashboardLink } from '../sidebarCommons';
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
-    getDashboardLink(userRoles, setActiveRole),
+    dashboardLink(userRoles, setActiveRole),
     // {
     //   id: 1,
     //   icon: <Portfolio size={22} />,
@@ -43,19 +41,7 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       label: "Documents",
       subItems: []
     },
-    {
-              id: 6,
-              icon: <BrainCircuit size={23} />,
-              href: "/ai-dashboard",
-              label: "AI Tools",
-              subItems: [
-                { id: "logo-generator", href: "/logo-generator", label: "Logo Generator", icon: <Wand2 size={18} /> },
-                { id: "pdf-signing", href: "/pdf-signing", label: "PDF Signing", icon: <FileText size={18} /> },
-                { id: "business-plan", href: "/business-plan", label: "Business Plan", icon: <BriefcaseBusiness size={18} /> },
-                { id: "qwen-chat", href: "/qwen-chat", label: "Qwen Chat", icon: <BrainCircuit size={18} /> },
-                { id: "data-scraper", href: "/data-scraper", label: "Data Scraper", icon: <Lightbulb size={18} /> },
-                { id: "multimodal-images", href: "/multimodal-images", label: "Multimodal Images", icon: <Earth size={18} /> },
-              ],
-            },
+    aiTools(6),
+    toolsSection(7)
   ];
 }

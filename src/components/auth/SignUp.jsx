@@ -380,7 +380,7 @@ export default function SignUp() {
           el.style.setProperty('--my', '-9999px');
         }
       }}
-      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
+      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-2">
         <img
           ref={revealImgRef}
           src="/shiny_logo.png"
@@ -414,13 +414,13 @@ export default function SignUp() {
             </h1>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-wrap items-center justify-between gap-4">
                {/* Google Sign In Button */}
                <Button
                 // as="button"
                 // color="white"
                 // speed="5s"
-                className="w-1/2   bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                className="w-1/2 flex-1   bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
                 onClick={handleGoogleSignUp}
                 // thickness="10px"
               >
@@ -435,7 +435,7 @@ export default function SignUp() {
               
                {/* Github Sign In Button */}
                 <Button
-                  className="w-1/2 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                  className="w-1/2 flex-1 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
                   onClick={handleGithubSignUp}
                 >
                   <svg 
@@ -466,7 +466,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label htmlFor="firstName" className="text-white text-sm">First Name *</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
                     <User size={16} className="text-gray-500" />
                   </div>
                   <input
@@ -483,7 +483,7 @@ export default function SignUp() {
               <div className="space-y-2">
                 <label htmlFor="lastName" className="text-white text-sm">Last Name *</label>
                 <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
                     <User size={16} className="text-gray-500" />
                   </div>
                   <input
@@ -500,10 +500,10 @@ export default function SignUp() {
             </div>
 
             {/* Email Field */}
-            <div className="space-y-2">
+            <div className="space-y-2 mb-2">
               <label htmlFor="email" className="text-white text-sm">Email *</label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="absolute inset-y-0 right-3 pl-3 flex items-center pointer-events-none">
                   <Mail size={16} className="text-gray-500" />
                 </div>
                 <input
@@ -518,125 +518,10 @@ export default function SignUp() {
               {errors.email && <p className="text-red-500 text-xs">{errors.email}</p>}
             </div>
 
-            {/* Company Field */}
-            {/* <div className="space-y-2">
-              <label htmlFor="profile_company" className="text-white text-sm">Company</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Building size={16} className="text-gray-500" />
-                </div>
-                <input
-                  id="profile_company"
-                  type="text"
-                  placeholder="eg: Tech Corp Inc"
-                  value={formData.profile_company}
-                  onChange={(e) => handleInputChange("profile_company", e.target.value)}
-                  className="border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10"
-                />
-              </div>
-            </div> */}
-
-            {/* Location Fields */}
-            {/* <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="profile_country" className="text-white text-sm">Country</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MapPin size={16} className="text-gray-500" />
-                  </div>
-                  <select
-                    id="profile_country"
-                    value={formData.profile_country}
-                    onChange={(e) => handleInputChange("profile_country", e.target.value)}
-                    className="border border-gray-700 text-white bg-black focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10 appearance-none"
-                  >
-                    <option value="">Select Country</option>
-                    {countries.map(country => (
-                      <option key={country} value={country}>{country}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="profile_city" className="text-white text-sm">City</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <MapPin size={16} className="text-gray-500" />
-                  </div>
-                  <input
-                    id="profile_city"
-                    type="text"
-                    placeholder="eg: New York"
-                    value={formData.profile_city}
-                    onChange={(e) => handleInputChange("profile_city", e.target.value)}
-                    className="border border-gray-700 text-white placeholder:text-gray-500 focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10"
-                  />
-                </div>
-              </div>
-            </div> */}
-
-            {/* Preferences */}
-            {/* <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="pref_language" className="text-white text-sm">Language</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Globe size={16} className="text-gray-500" />
-                  </div>
-                  <select
-                    id="pref_language"
-                    value={formData.pref_language}
-                    onChange={(e) => handleInputChange("pref_language", e.target.value)}
-                    className="border border-gray-700 text-white bg-black focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10 appearance-none"
-                  >
-                    {languages.map(lang => (
-                      <option key={lang.value} value={lang.value}>{lang.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <label htmlFor="pref_timezone" className="text-white text-sm">Timezone</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Clock size={16} className="text-gray-500" />
-                  </div>
-                  <select
-                    id="pref_timezone"
-                    value={formData.pref_timezone}
-                    onChange={(e) => handleInputChange("pref_timezone", e.target.value)}
-                    className="border border-gray-700 text-white bg-black focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2 pl-10 appearance-none"
-                  >
-                    {timezones.map(tz => (
-                      <option key={tz} value={tz}>{tz}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div> */}
-
-            {/* Theme Preference */}
-            {/* <div className="space-y-2">
-              <label htmlFor="pref_theme" className="text-white text-sm">Theme Preference</label>
-              <select
-                id="pref_theme"
-                value={formData.pref_theme}
-                onChange={(e) => handleInputChange("pref_theme", e.target.value)}
-                className="border border-gray-700 text-white bg-black focus:border-gray-600 focus:ring-gray-600 w-full rounded px-3 py-2"
-              >
-                {themes.map(theme => (
-                  <option key={theme.value} value={theme.value}>{theme.label}</option>
-                ))}
-              </select>
-            </div> */}
-
             {/* Password Field */}
-            <div className="space-y-2">
+            <div className="space-y-2 mb-2">
               {/* <label htmlFor="password" className="text-white text-sm">Password *</label> */}
-              <div className="relative">
-                <div className="absolute bottom-7 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock size={16} className="text-gray-500" />
-                </div>
+                <div className="relative">
                 <PasswordStrengthIndicator
                   value={formData.password}
                   onChange={(value) => handleInputChange("password", value)}
@@ -696,7 +581,6 @@ export default function SignUp() {
               type="submit"
               disabled={isLoading}
               label={isLoading ? "Creating Account..." : "Sign Up"}
-              icon={<FaUserPlus size={20} className="absolute left-35 "/>}
               size="md" 
               bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
             />

@@ -79,7 +79,6 @@ const Profile = () => {
       setLoadingViewedUser(true);
       try {
         const response = await usersAPI.getById(viewedUserId, token);
-        console.log(response);
         const fetchedUser = response?.data?.user || response?.data || null;
 
         if (response?.success && fetchedUser) {

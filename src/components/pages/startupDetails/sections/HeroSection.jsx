@@ -1,17 +1,65 @@
 import { API_URL } from "@/utils/config";
-import { Building2, DollarSign, MapPin, Mail, Rocket, Share2 } from "lucide-react";
+import { Building2, DollarSign, MapPin, Mail, Rocket, Share2, BookPlus, Check, DoorOpen } from "lucide-react";
 import { Badge } from "../../../ui/badge";
 import { Button } from "@/components/ui/button";
+import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { startupsAPI } from "@/utils/APIs/startupsAPI";
+import { formatCurrency } from "@/lib/utils";
+import { FcLeave } from "react-icons/fc";
+import { toast } from "react-toastify";
 
 // Hero Section Component
-export default function HeroSection({ startup, onJoinClick, formatCurrency, getStageBadgeVariant, setAlertDescription, setShowAlert, setAlertTitle, setAlertVariant }) {
+export default function HeroSection({
+  members,
+  isCreator,
+  startup,
+  onJoinClick,
+  getStageBadgeVariant,
+  setAlertDescription,
+  setShowAlert,
+  setAlertTitle,
+  setAlertVariant }) {
+  const { user } = useSelector((state) => state.auth);
+  const [joinRequest, setJoinRequest] = useState(null);
+  const isMember = useMemo(() => {
+    if (!user || !startup) return false;
+    if (startup.creator?.id === user.id) return true;
+    const isMember = members.some(member => member.userId === user.id);
+    if (isMember) return true;
+    return false;
+  }, [user, startup, members]);
+  useEffect(() => {
+    async function fetchJoinRequest() {
+      if (user && startup) {
+        try {
+          const response = await startupsAPI.getJoinRequestByUserAndStartup(startup.id, user.id);
+          setJoinRequest(response.data.join_request || null);
+        }
+        catch (err) {
+          console.error("Error fetching join request:", err);
+        }
+      }
+    }
+    fetchJoinRequest();
+  }, [user, startup]);
+  async function handleLeaveStartup(startupId) {
+    try {
+      await startupsAPI.leaveStartup(startupId);
+      toast.success("You have left the startup.");
+      window.location.reload();
+    } catch (error) {
+      console.error("Error leaving startup:", error);
+      toast.error("Failed to leave the startup. Please try again.");
+    }
+  }
   return (
     <div className="relative ">
       {/* Banner */}
       <div className="h-64 rounded-lg mx-auto w-full object-fit bg-gradient-to-r from-blue-600/40 via-purple-600/40 to-blue-800/40 relative overflow-hidden">
         {startup.banner_url && (
           <img
-            src={`${API_URL}${startup.banner_url}`}
+            src={startup.banner_url.startsWith("http") ? startup.banner_url : `${API_URL}${startup.banner_url}`}
             alt={startup.name}
             className="w-full  h-full object-cover opacity-40"
           />
@@ -67,15 +115,41 @@ export default function HeroSection({ startup, onJoinClick, formatCurrency, getS
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3 mt-6 lg:mt-0">
             <Button
-              onClick={onJoinClick}
-              className="bg-blue-600 hover:bg-blue-700 cursor-pointer text-white"
+              onClick={(!joinRequest || !isMember) && onJoinClick}
+              className={`${joinRequest?.isPending ? 'bg-green-600 hover:bg-green-700' :
+                  isMember ? 'bg-green-600 hover:bg-green-700' :
+                    'bg-blue-600 hover:bg-blue-700'
+                } cursor-pointer text-white`}
             >
-              <Mail className="w-4 h-4 mr-2" />
-              Join Team
+              {
+                joinRequest?.isPending ?
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Request Sent
+                  </>
+                  :
+                  user.id === startup.creator?.id ?
+                      <>
+                        <BookPlus className="w-4 h-4 mr-2" />
+                        Founder
+                      </>
+                      :
+
+                  isMember ?
+                    <>
+                      <Check className="w-4 h-4 mr-2" />
+                      Member
+                    </>
+                    :
+                    <>
+                        <BookPlus className="w-4 h-4 mr-2" />
+                        Join Team
+                      </>
+              }
             </Button>
             <Button
               onClick={() => {
-                const url = `${window.location.origin}/startups/${startup.id}`;
+                const url = `${window.location.origin}/startups/${startup?.id}`;
                 navigator.clipboard.writeText(url);
                 setShowAlert(true);
                 setAlertTitle("Link Copied!");
@@ -86,15 +160,24 @@ export default function HeroSection({ startup, onJoinClick, formatCurrency, getS
               <Share2 className="w-4 h-4 mr-2" />
               Share
             </Button>
-            {startup.funding_amount > 0 && (
+            {startup?.funding_amount > 0 && (
               <Button variant="outline" className="border-gray-600 text-black hover:bg-black/30 hover:text-white">
                 <DollarSign className="w-4 h-4 mr-2" />
                 {formatCurrency(startup.funding_amount)} raised
               </Button>
             )}
+            {
+              (isMember && !isCreator) &&
+              <Button
+                onClick={() => handleLeaveStartup(startup.id)}
+                variant="outline" className="border-red-600 bg-red-600 text-white hover:bg-red-600/20 hover:text-white">
+                <DoorOpen className="w-4 h-4 mr-2" />
+                Leave Startup
+              </Button>
+            }
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

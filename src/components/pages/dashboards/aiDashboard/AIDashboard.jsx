@@ -59,10 +59,10 @@ export default function AIDashboard() {
 
         {/* Tools Grid - Full Screen */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          {tools.map(({ name, description, icon: Icon, path, gradient }) => (
+          {tools.map(({ name, available = true, description, icon: Icon, path, gradient }) => (
             <Link
               key={name}
-              to={path}
+              to={available ? path : "#"}
               className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.05] h-full"
             >
               {/* Gradient Background */}
@@ -94,10 +94,18 @@ export default function AIDashboard() {
                 </p>
 
                 {/* CTA */}
-                <div className="flex items-center gap-2 text-sm font-semibold text-white opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:gap-3">
-                  <span>Launch Tool</span>
-                  <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
-                </div>
+                {
+                  available ? (
+                    <div className="flex items-center gap-2 text-sm font-semibold text-white opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:gap-3">
+                      <span>Launch Tool</span>
+                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
+                    </div>
+                  ) : (
+                    <div className="text-sm font-semibold text-red-400 opacity-70">
+                      Coming Soon
+                    </div>
+                  )
+                }
               </div>
 
               {/* Corner Accent */}

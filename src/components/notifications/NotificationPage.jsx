@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import {
   Bell,
   CheckCheck,
@@ -63,17 +63,17 @@ export default function NotificationPage() {
       <motion.header
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-gradient-to-br from-indigo-900/30 to-slate-900/40 border border-indigo-500/20 p-6"
+        className="rounded-xl bg-gray-800 border border-gray-700 p-6"
       >
-        <div className="flex flex-col lg:flex-row justify-between gap-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-indigo-600">
-                <Bell className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-white">Notifications</h1>
+              <Bell className="w-5 h-5 text-blue-400" />
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                Notifications
+              </h1>
             </div>
-            <p className="text-sm text-white/60">
+            <p className="text-sm text-gray-400">
               {unreadCount > 0
                 ? `You have ${unreadCount} unread notifications`
                 : "You're all caught up"}
@@ -84,15 +84,30 @@ export default function NotificationPage() {
             <HeaderButton icon={RefreshCw} onClick={refresh}>
               Refresh
             </HeaderButton>
-
-
-              <HeaderButton icon={CheckCheck} onClick={markAllAsRead}>
-                Mark all read
-              </HeaderButton>
-
-            <HeaderButton as="a" href="/user-profile?page=notifications" icon={Settings}>
+            <HeaderButton icon={Settings} onClick={() => window.location.href = "/user-profile?page=notifications"}>
               Settings
             </HeaderButton>
+            {
+              notifications.length > 0 &&
+            <>
+            <HeaderButton icon={CheckCheck} onClick={markAllAsRead}>
+              Mark all read
+            </HeaderButton>
+
+            
+
+            <HeaderButton 
+              danger 
+              icon={Trash2} 
+              onClick={async () => {
+                await notificationAPI.deleteAllRead();
+                refresh();
+              }}
+            >
+              Delete all read
+            </HeaderButton>
+              </>
+            }
           </div>
         </div>
       </motion.header>
@@ -161,7 +176,7 @@ export default function NotificationPage() {
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
             >
-              <NotificationItem notification={n} onMarkAsRead={onMarkAsRead}/>
+              <NotificationItem notification={n} onMarkAsRead={onMarkAsRead} onDelete={() => refresh()} />
             </motion.div>
           ))}
         </AnimatePresence>

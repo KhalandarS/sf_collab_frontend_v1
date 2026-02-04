@@ -525,10 +525,6 @@ export default function RegisterStartUp() {
         })
         localStorage.removeItem('formData');
         toast.success(`Startup ${id ? "updated" : "registered"} successfully!`);
-        if (!id) {
-          const response = await waitlistAPI.addPoints({ userId: creator_id, category: 'new_startup' }, token);
-        toast.success(`You earned ${response.points} points for registering your startup!`);
-        }
         
       } else {
         throw new Error(data.error || data.message || "Registration failed");

@@ -126,9 +126,9 @@ export default function StartupCard({
           </div>
 
           {/* Content */}
-          <div className="p-5 space-y-4">
+          <div className="p-5 space-y-4 z-1000">
             {/* Image */}
-            <div className="-mt-12">
+            <div className="-mt-12 ">
               {startup.logo_url ? (
                 <img
                   src={startup.logo_url.startsWith("http")
@@ -214,7 +214,7 @@ export default function StartupCard({
                 >
                   <span className="flex items-center gap-2">
                     <Briefcase className="w-4 h-4" />
-                    Other roles ({Object.keys(startup.roles).length - 1})
+                    Other roles ({Object.keys(startup.roles).length})
                   </span>
                   <ChevronDown
                     className={`w-4 h-4 transition-transform ${expandedRoles ? "rotate-180" : ""

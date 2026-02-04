@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -29,6 +29,9 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
     linkedin_url: ''
   });
   const [isLoading, setIsLoading] = useState(false);
+  const availableRoles = useMemo(() => {
+    return Object.keys(startupRoles).filter(roleKey => (startupRoles[roleKey]?.available_roles || 1) > 0)
+  }, [startupRoles]);
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -91,28 +94,28 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-gray-800 border border-white/10">
+      <DialogContent className="max-w-2xl bg-gray-800 border border-white/10 w-[95vw] max-h-[80vh] overflow-y-auto rounded-lg">
         <DialogHeader>
-          <DialogTitle className="text-white text-2xl">
+          <DialogTitle className="text-white text-xl md:text-2xl">
             Join {startupName}
           </DialogTitle>
-          <DialogDescription className="text-gray-400">
+          <DialogDescription className="text-gray-400 text-xs md:text-sm">
             Tell us why you'd like to join this team and how you can contribute
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 md:space-y-6 py-4 px-2 md:px-0">
           {/* Message Field */}
           <div>
-            <label className="text-sm text-gray-300 mb-2 block font-semibold">
+            <label className="text-xs md:text-sm text-gray-300 mb-2 block font-semibold">
               Your Message *
             </label>
             <Textarea
               required
-              placeholder="Tell us why you're interested in joining this startup and what you can bring to the team..."
+              placeholder="Tell us why you're interested..."
               value={formData.message}
               onChange={(e) => handleFieldChange('message', e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white min-h-[120px]"
+              className="bg-gray-700 border-gray-600 text-white min-h-[100px] md:min-h-[120px] text-sm"
             />
             <p className="text-xs text-gray-400 mt-1">
               {formData.message.length}/500 characters
@@ -121,21 +124,17 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
 
           {/* Role Selection */}
           <div>
-            <label className="text-sm text-gray-300 mb-2 block font-semibold">
+            <label className="text-xs md:text-sm text-gray-300 mb-2 block font-semibold">
               Desired Role *
             </label>
-            <Select value={formData.role} onValueChange={(value) => {
-
-              handleFieldChange('role', value)
-            }
-            }>
-              <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+            <Select value={formData.role} onValueChange={(value) => handleFieldChange('role', value)}>
+              <SelectTrigger className="bg-gray-700 border-gray-600 text-white text-sm">
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-600">
-                {Object.keys(startupRoles).filter(roleKey => (startupRoles[roleKey]?.available_roles || 1) > 0).map((roleKey, idx) => (
-                  <SelectItem key={idx} value={roleKey} className="text-white">
-                    {roleKey} ({startupRoles[roleKey].roleType})
+                {availableRoles.map((roleKey, idx) => (
+                  <SelectItem key={idx} value={roleKey} className="text-white text-sm">
+                    {roleKey}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -143,73 +142,66 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
           </div>
 
           {/* Links Section */}
-          <div className="border-t border-gray-700 pt-4">
-            <p className="text-sm text-gray-300 font-semibold mb-3">
+          <div className="border-t border-gray-700 pt-3 md:pt-4">
+            <p className="text-xs md:text-sm text-gray-300 font-semibold mb-3">
               Links (Optional)
             </p>
-
-            <div className="space-y-3">
-              {/* Portfolio URL */}
+            <div className="space-y-2 md:space-y-3">
               <div>
-                <label className="text-xs text-gray-400 block mb-1">Portfolio/Website</label>
+                <label className="text-xs text-gray-400 block mb-1">Portfolio</label>
                 <Input
                   type="url"
                   placeholder="https://yourportfolio.com"
                   value={formData.portfolio_url}
                   onChange={(e) => handleFieldChange('portfolio_url', e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white text-sm"
+                  className="bg-gray-700 border-gray-600 text-white text-xs"
                 />
               </div>
-
-              {/* GitHub URL */}
               <div>
-                <label className="text-xs text-gray-400 block mb-1">GitHub Profile</label>
+                <label className="text-xs text-gray-400 block mb-1">GitHub</label>
                 <Input
                   type="url"
                   placeholder="https://github.com/yourprofile"
                   value={formData.github_url}
                   onChange={(e) => handleFieldChange('github_url', e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white text-sm"
+                  className="bg-gray-700 border-gray-600 text-white text-xs"
                 />
               </div>
-
-              {/* LinkedIn URL */}
               <div>
-                <label className="text-xs text-gray-400 block mb-1">LinkedIn Profile</label>
+                <label className="text-xs text-gray-400 block mb-1">LinkedIn</label>
                 <Input
                   type="url"
                   placeholder="https://linkedin.com/in/yourprofile"
                   value={formData.linkedin_url}
                   onChange={(e) => handleFieldChange('linkedin_url', e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white text-sm"
+                  className="bg-gray-700 border-gray-600 text-white text-xs"
                 />
               </div>
             </div>
           </div>
 
           {/* Info Box */}
-          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3">
+          <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 md:p-3">
             <p className="text-xs text-blue-300">
-              💡 <strong>Note:</strong> The startup founder will review your request and get back to you soon.
-              You can have only one pending request per startup at a time.
+              💡 <strong>Note:</strong> The founder will review your request soon. One pending request per startup.
             </p>
           </div>
 
           {/* Footer Buttons */}
-          <DialogFooter className="pt-4 border-t border-gray-700">
+          <DialogFooter className="pt-3 md:pt-4 border-t border-gray-700 gap-2 flex-col md:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
               disabled={isLoading}
-              className="border-gray-600 text-gray-300"
+              className="border-gray-600 text-black w-full md:w-auto"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading || !formData.message.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white w-full md:w-auto"
             >
               {isLoading ? 'Sending...' : 'Send Join Request'}
             </Button>
@@ -217,6 +209,7 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
         </form>
       </DialogContent>
     </Dialog>
+
   );
 };
 

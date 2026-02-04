@@ -63,7 +63,10 @@ export const startupsAPI = {
     const response = await api.delete(`/startups/${startupId}`)
     return response.data
   },
-
+  leaveStartup: async (startupId) => {
+    const response = await api.delete(`/startups/${startupId}/leave`)
+    return response.data
+  },
   // Get startup members
   getMembers: async (startupId) => {
     const response = await api.get(`/startups/${startupId}/members`)
@@ -169,6 +172,12 @@ export const startupsAPI = {
       },
     })
     console.log("Join requests:", response);
+    return response.data
+  },
+  getJoinRequestByUserAndStartup: async (startupId, userId) => {
+    const response = await api.get(
+      `/startups/user/${userId}/startup/${startupId}`
+    )
     return response.data
   },
   // Send a join request as a regular user

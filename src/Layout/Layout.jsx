@@ -57,7 +57,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   const [isOpen, setIsOpen] = useState(false);
   const [disableNavbar, setDisableNavbar] = useState(false);
-  const [isCompletePopupVisible, setCompletePopupVisible] = useState(false);
+  const [isCompletePopupVisible, setIsCompletePopupVisible] = useState(false);
 
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
@@ -186,17 +186,18 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   // Profile completion reminder
   useEffect(() => {
-    if (!user || !access_token) return;
-
+    if (!user) return;
+    console.log(location.pathname);
+    console.log(user.isEmailVerified, !isUserProfileComplete(user), !location.pathname.startsWith("/user-profile"));
     const checkProfileCompletion = async () => {
-      if (!isUserProfileComplete(user) && !location.pathname.startsWith("/user-profile")) {
-        setCompletePopupVisible(true);
+      if (!isUserProfileComplete(user) && !location.pathname.startsWith("/user-profile") && user.isEmailVerified) {
+        setIsCompletePopupVisible(true);
       }
     };
 
     checkProfileCompletion();
-  }, [user, access_token, location.pathname]);
-
+  }, [user, location]);
+  console.log("Complete Pop Up:", isCompletePopupVisible);
   // Sidebar resolver
   const SideBar = () => {
     const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
@@ -247,10 +248,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         />
 
         {/* Email Verification Banner */}
-        {user && !user.is_email_verified && <EmailVerifyPopUp />}
+        {user && !user.isEmailVerified && <EmailVerifyPopUp />}
 
         {/* Profile Completion Modal */}
-        {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setCompletePopupVisible} />}
+        {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setIsCompletePopupVisible} />}
 
         {/* Top Nav */}
         {!isRootPath && !disableNavbar && (
@@ -282,8 +283,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
             {!isRootPath && !isChatRoute && !isConnectionsRoute && (
               <div
                 ref={optionsRef}
-                onMouseEnter={handleNavAreaEnter}
-                onMouseLeave={handleNavAreaLeave}
                 className={`transition-all pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
                 style={{ zIndex: 10 }}
               >

@@ -1,19 +1,18 @@
-import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { authAPI } from '@/utils/APIs/authAPI';
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 const EmailVerifyPopUp = () => {
   const navigate = useNavigate();
   const { user, access_token } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
+
   const handleResendVerification = async () => {
     setLoading(true);
     try {
-      
-      console.log(loading, "Loading state");
       const response = await authAPI.sendVerificationCodeRequest(access_token);
       
       if (response.error) {
@@ -35,22 +34,56 @@ const EmailVerifyPopUp = () => {
     <>
       {user && !user.isEmailVerified && (
         <motion.div
-          initial={{ y: -100 }}
-          animate={{ y: 0 }}
-          className="fixed top-0 left-0 right-0 z-50 bg-linear-to-r from-purple-500 to-blue-500 text-black px-4 py-4 h-full"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 py-4"
         >
-          <div className="flex items-center justify-between max-w-7xl mx-auto gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">⚠️</span>
-              <p className="font-medium">Your email is not verified. Please check your inbox.</p>
+          <motion.div
+            initial={{ scale: 0.95, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className="w-full max-w-md bg-gradient-to-br from-white to-gray-50 rounded-xl p-6 shadow-2xl"
+          >
+            <div className="flex items-start gap-4">
+              <motion.div
+                animate={{ rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="text-3xl flex-shrink-0 mt-1"
+              >
+                ⚠️
+              </motion.div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  Email Verification Required
+                </h3>
+                <p className="text-sm text-gray-600">
+                  Please verify your email address to access all features.
+                </p>
+              </div>
             </div>
-            <button
-              className="px-4 py-2 bg-black/20 hover:bg-black/30 rounded-lg font-semibold transition-colors whitespace-nowrap"
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full mt-6 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-lg transition-all shadow-md"
             >
-              {loading ? "Sending..." : "Verify Now"}
-            </button>
-          </div>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                    className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+                  />
+                  Sending...
+                </span>
+              ) : (
+                "Verify Now"
+              )}
+            </motion.button>
+          </motion.div>
         </motion.div>
       )}
     </>

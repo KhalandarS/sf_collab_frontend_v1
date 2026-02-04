@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Code } from "lucide-react";
 import { Badge } from '../../../ui/badge';
 export default function TechStackSection({ startup }) {
+
   return (
     <motion.section
       initial={{ y: 30, opacity: 0 }}
@@ -18,10 +19,9 @@ export default function TechStackSection({ startup }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {console.log(startup)}
           {startup?.tech_stack && startup.tech_stack.length > 0 ? (
             <div className="flex flex-wrap gap-3">
-              {Array(startup.tech_stack).map((tech, index) => (
+              {startup.tech_stack.map((tech, index) => (
                 <motion.div
                   key={tech}
                   initial={{ opacity: 0, scale: 0.8 }}

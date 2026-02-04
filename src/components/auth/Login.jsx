@@ -288,7 +288,7 @@ export default function Login() {
           el.style.setProperty('--my', '-9999px');
         }
       }}
-      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-8">
+      className="w-full h-full lg:w-1/2 max-h-screen flex items-center justify-center p-2">
         <img
           ref={revealImgRef}
           src="/shiny_logo.png"
@@ -321,13 +321,13 @@ export default function Login() {
               </h1>
             </div>
   
-             <div className="flex items-center justify-between gap-4">
+             <div className="flex flex-wrap items-center justify-between gap-4">
                {/* Google Sign In Button */}
                <Button
                 // as="button"
                 // color="white"
                 // speed="5s"
-                className="w-1/2   bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                className="w-1/2 flex-1 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
                 onClick={handleGoogleSignIn}
                 // thickness="10px"
               >
@@ -343,7 +343,7 @@ export default function Login() {
               
                {/* Github Sign In Button */}
                 <Button
-                  className="w-1/2 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
+                  className="w-1/2 flex-1 bg-white border border-gray-300  text-black flex items-center justify-center py-2 rounded-sm hover:bg-white hover:shadow-[0px_0px_10px_white] cursor-pointer duration-400 transition-all"
                   onClick={handleGithubSignIn}
                 >
                   <svg 
@@ -417,7 +417,6 @@ export default function Login() {
                 type="submit"
                 disabled={isLoading}
                 label={isLoading ? "Logging in..." : "Log in"}
-                icon={<IoLogIn size={20} className="absolute left-30 "/>}
                 size="md" 
                 bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)" 
               />

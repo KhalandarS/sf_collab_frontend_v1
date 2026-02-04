@@ -37,10 +37,11 @@ export const tools = [
     gradient: "from-orange-600 to-amber-600"
   },
   {
-    name: "PDF Signing AI",
-    description: "Securely sign, verify, and manage documents using AI workflows.",
+    name: "Landing Page Generator",
+    description: "Generate responsive and engaging landing pages tailored to your startup.",
     icon: FileSignature,
-    path: "/pdf-signing",
-    gradient: "from-slate-600 to-gray-600"
+    path: "/landing-page-generator",
+    gradient: "from-slate-600 to-gray-600",
+    available: false
   }
 ];

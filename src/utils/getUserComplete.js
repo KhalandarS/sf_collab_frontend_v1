@@ -1,19 +1,29 @@
 export function isUserProfileComplete(user) {
-    if (!user) return false;
-
-    const requiredFields = [
-        'email',
-        'firstName',
-        'lastName',
-        'roles',
-    ];
-  
-    for (const field of requiredFields) {
-        const value = user[field];
-        if (!value || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)) {
+    try {
+        if (!user) {
+            console.log("User object is null or undefined");
             return false;
         }
-    }
+        
+        const requiredFields = [
+            'email',
+            'firstName',
+            'lastName',
+            'roles',
+        ];
+      
+        for (const field of requiredFields) {
+            const value = user[field];
+            if (!value || (typeof value === 'string' && value.trim() === '') || (Array.isArray(value) && value.length === 0)) {
+                console.log(`Profile incomplete: Missing or empty field - ${field}`);
+                return false;
+            }
+        }
 
-    return true;
-} 
+        console.log("Profile is complete");
+        return true;
+    } catch (error) {
+        console.error("An error occurred while checking user profile completeness:", error);
+        return false;
+    }
+}

@@ -6,12 +6,34 @@ import {
   DialogTitle
 } from "@/components/ui/dialog";
 import { Clock, MapPin, Pencil, Trash2, Repeat2, Bell, Link } from "lucide-react";
+import { useMemo } from "react";
 
 export default function EventDetailsModal({
   event, open, onClose, isCreator, onEdit, onDelete, color
 }) {
-  if (!event) return null;
-
+  
+  const timeLeft = useMemo(() => {
+    if (event?.end_date) {
+      const now = new Date();
+      const end = new Date(event.end_date);
+      const diffMs = end - now;
+      
+      if (diffMs <= 0) return "Ended";
+      
+      const diffSecs = Math.floor(diffMs / 1000);
+      const days = Math.floor(diffSecs / 86400);
+      const hours = Math.floor((diffSecs % 86400) / 3600);
+      const minutes = Math.floor((diffSecs % 3600) / 60);
+      
+      const parts = [];
+      if (days > 0) parts.push(`${days}d`);
+      if (hours > 0) parts.push(`${hours}h`);
+      if (minutes > 0) parts.push(`${minutes}m`);
+      
+      return parts.length > 0 ? parts.join(" ") : "Less than a minute";
+    }
+    return "";
+  }, [event]);
   const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString();
   };
@@ -22,7 +44,7 @@ export default function EventDetailsModal({
       minute: '2-digit' 
     });
   };
-
+  if (!event) return null;
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="bg-gray-900 border border-gray-800 text-white max-w-lg">
@@ -50,7 +72,7 @@ export default function EventDetailsModal({
                 <p className="font-semibold">{formatDateTime(event.start_date)}</p>
                 {event.end_date && (
                   <p className="text-xs text-gray-400">
-                    Until {formatDateTime(event.end_date)} ({event.duration_minutes} min)
+                    Until {formatDateTime(event.end_date)} ({timeLeft})
                   </p>
                 )}
                 {event.all_day && <p className="text-xs text-gray-400">All day event</p>}

@@ -13,6 +13,7 @@ import { projectGoalsAPI } from "@/utils/APIs/startupsAPI";
 import { useSelector } from "react-redux";
 import { Check } from "lucide-react";
 import { toast } from "react-toastify";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 const emptyGoalForm = {
   title: "",
   description: "",
@@ -148,7 +149,7 @@ export default function CreateGoalDialog({
       setGoals((prev) => [...prev, response.data.project_goal]);
       onClose();
     } catch (err) {
-      toast.error(editMode ? "Failed to update goal. Please try again." : "Failed to create goal. Please try again.");
+      toast.error(err?.error ? err.error : editMode ? "Failed to update goal" : "Failed to create goal");
       console.error(editMode ? "Failed to update goal" : "Failed to create goal", err);
     } finally {
       setLoading(false);
@@ -301,13 +302,21 @@ export default function CreateGoalDialog({
                       ${selected ? "bg-blue-600/20" : "hover:bg-gray-700"}
                     `}
                   >
-                    <div>
+                    <div className="flex items-center">
+                      <div className="inline-block">
+                        <img
+                          src={getProfilePicture(member)}
+                          alt={member.fullName}
+                          className="w-6 h-6 rounded-full mr-2 inline-block"
+                        />
+                      </div>
+                      <div>
                       <div className="font-medium">{member.fullName}</div>
                       <div className="text-xs text-gray-400">
                         {member.role}
+                        </div>
+                        </div>
                       </div>
-                    </div>
-
                     {selected && (
                       <Check className="w-4 h-4 text-blue-400" />
                     )}
