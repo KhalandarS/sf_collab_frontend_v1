@@ -1,12 +1,4 @@
-/**
- * ConnectionsPage.jsx - Fixed Version
- * 
- * FIXES:
- * 1. Profile pictures now display correctly
- * 2. Added "Discover Users" button to easily find new connections
- */
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -21,6 +13,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { connectionAPI } from '@/utils/APIs/connectionAPI';
 import { toast } from 'react-toastify';
+import usePaginatedFetch from '@/utils/hooks/usePaginated';
+import InfiniteList from '@/components/InfiniteList';
+import { getProfilePicture } from '@/utils/getProfilePicture';
+import UserCard from './UserCard';
+import LoadingSkeleton from './LoadingSkeleton';
+import ConfirmationModal from './ConfirmationModal';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -68,48 +66,6 @@ const getSenderId = (r) => {
 const getSender = (r) => r?.sender ?? r?.from_user ?? r?.requester ?? r?.fromUser ?? null;
 const getReceiver = (r) => r?.receiver ?? r?.to_user ?? r?.requested ?? r?.toUser ?? null;
 
-/**
- * FIXED: Get profile picture URL with proper resolution
- */
-const getAvatarUrl = (u) => {
-  if (!u) return null;
-
-  const pic =
-    u.profilePicture ||
-    u.profile_picture ||
-    u.avatar_url ||
-    u.profile?.picture ||
-    u.profile?.avatar ||
-    u.picture ||
-    u.avatar ||
-    null;
-
-  if (!pic) return null;
-  
-  const value = String(pic).trim();
-  
-  // Already a full URL
-  if (/^https?:\/\//i.test(value)) {
-    return value;
-  }
-  
-  // Data URI or blob
-  if (value.startsWith('data:') || value.startsWith('blob:')) {
-    return value;
-  }
-  
-  // Handle uploads paths and filenames
-  let filename = value;
-  if (filename.startsWith('/')) {
-    filename = filename.slice(1);
-  }
-  if (filename.startsWith('uploads/')) {
-    filename = filename.slice(8);
-  }
-  
-  // Build full URL using the avatars endpoint
-  return `${API_URL}/users/avatars/${filename}`;
-};
 
 const TABS = {
   CONNECTIONS: 'connections',
@@ -132,7 +88,6 @@ const normalizeFriendRequests = (data) => {
   );
 };
 
-
 export default function ConnectionsPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -143,14 +98,11 @@ export default function ConnectionsPage() {
     Object.values(TABS).includes(initialTab) ? initialTab : TABS.CONNECTIONS
   );
 
-  const [connections, setConnections] = useState([]);
-  const [incoming, setIncoming] = useState([]);
-  const [outgoing, setOutgoing] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [counts, setCounts] = useState({ connections: 0, incoming: 0, outgoing: 0 });
-
+  const [confirmPopup, setConfirmPopup] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
   // Fetch counts
   const fetchCounts = useCallback(async () => {
     if (!access_token) return;
@@ -167,77 +119,109 @@ export default function ConnectionsPage() {
     }
   }, [access_token]);
 
-  // Fetch data
-  const fetchData = useCallback(async () => {
-    if (!access_token) return;
-    setLoading(true);
+  // Paginated fetchers for each tab
+  const {
+    items: connections,
+    setItems: setConnections,
+    loading: loadingConnections,
+    targetRef: connectionsRef,
+  } = usePaginatedFetch({
+    fetchFn: async ({ page, search }) => {
+      const response = await connectionAPI.getConnections(access_token, { page, search });
+      const data = response.data || response;
     
-    try {
-      switch (activeTab) {
-        case TABS.CONNECTIONS: {
-          const response = await connectionAPI.getConnections(access_token);
-          const data = response.data || response;
-          
-          const mapped = (data.friend_requests || []).map(fr => {
-            const otherUser = fr.sender_id === currentUser?.id ? fr.receiver : fr.sender;
-            return {
-              id: fr.id,
-              connected_user: otherUser,
-              connected_at: fr.updated_at,
-            };
-          });
-          setConnections(mapped);
-          break;
-        }
-        case TABS.INCOMING: {
-          const response = await connectionAPI.getIncomingRequests(access_token);
-          const data = response.data || response;
+      // API returns: { connections: [{ id, connected_user: {...}, connected_at }] }
+      return {
+        data: {
+          connections: data.connections || [],
+          pagination: data.pagination || {
+            total: 0,
+            per_page: 10,
+            pages: 1,
+          },
+        },
+      };
+    },
+    objectKey: 'connections',
+    search: searchQuery,
+    enabled: activeTab === TABS.CONNECTIONS && !!access_token,
+  });
 
-          const raw = normalizeFriendRequests(data);
-          const meId = getUserId(currentUser);
+  const {
+    items: incoming,
+    setItems: setIncoming,
+    loading: loadingIncoming,
+    targetRef: incomingRef,
+  } = usePaginatedFetch({
+    fetchFn: async ({ page }) => {
+      const response = await connectionAPI.getIncomingRequests(access_token, { page });
+      const data = response.data || response;
 
-          const incomingOnly = meId
-            ? raw.filter((r) => {
-                const rid = getReceiverId(r);
-                if (rid != null) return rid === meId;
-                const sid = getSenderId(r);
-                return sid == null ? true : sid !== meId;
-              })
-            : raw;
+      const raw = normalizeFriendRequests(data);
+      const meId = getUserId(currentUser);
 
-          setIncoming(incomingOnly);
-          break;
-        }
-        case TABS.OUTGOING: {
-          const response = await connectionAPI.getOutgoingRequests(access_token);
-          const data = response.data || response;
+      const incomingOnly = meId
+        ? raw.filter((r) => {
+            const rid = getReceiverId(r);
+            if (rid != null) return rid === meId;
+            const sid = getSenderId(r);
+            return sid == null ? true : sid !== meId;
+          })
+        : raw;
 
-          const raw = normalizeFriendRequests(data);
-          const meId = getUserId(currentUser);
+      return {
+        data: {
+          incoming_requests: incomingOnly,
+          pagination: data.pagination || {
+            total: incomingOnly.length,
+            per_page: 10,
+            pages: 1,
+          },
+        },
+      };
+    },
+    objectKey: 'incoming_requests',
+    enabled: activeTab === TABS.INCOMING && !!access_token,
+  });
 
-          const outgoingOnly = meId
-            ? raw.filter((r) => {
-                const sid = getSenderId(r);
-                if (sid != null) return sid === meId;
-                const rid = getReceiverId(r);
-                return rid == null ? true : rid !== meId;
-              })
-            : raw;
+  const {
+    items: outgoing,
+    setItems: setOutgoing,
+    loading: loadingOutgoing,
+    targetRef: outgoingRef,
+  } = usePaginatedFetch({
+    fetchFn: async ({ page }) => {
+      const response = await connectionAPI.getOutgoingRequests(access_token, { page });
+      const data = response.data || response;
 
-          setOutgoing(outgoingOnly);
-          break;
-        }
-      }
-    } catch (err) {
-      console.error('Failed to fetch data:', err);
-      toast.error('Failed to load data');
-    } finally {
-      setLoading(false);
-    }
-  }, [activeTab, access_token, currentUser?.id]);
+      const raw = normalizeFriendRequests(data);
+      const meId = getUserId(currentUser);
+
+      const outgoingOnly = meId
+        ? raw.filter((r) => {
+            const sid = getSenderId(r);
+            if (sid != null) return sid === meId;
+            const rid = getReceiverId(r);
+            return rid == null ? true : rid !== meId;
+          })
+        : raw;
+
+      return {
+        data: {
+          outgoing_requests: outgoingOnly,
+          pagination: data.pagination || {
+            total: outgoingOnly.length,
+            per_page: 10,
+            pages: 1,
+          },
+        },
+      };
+    },
+    objectKey: 'outgoing_requests',
+    enabled: activeTab === TABS.OUTGOING && !!access_token,
+  });
 
   useEffect(() => { fetchCounts(); }, [fetchCounts]);
-  useEffect(() => { fetchData(); }, [fetchData]);
 
   // ACCEPT
   const handleAccept = async (requestId) => {
@@ -295,7 +279,6 @@ export default function ConnectionsPage() {
 
   // REMOVE
   const handleRemove = async (connectionId) => {
-    if (!confirm('Remove this connection?')) return;
     setActionLoading(connectionId);
     try {
       await connectionAPI.removeConnection(connectionId, access_token);
@@ -323,34 +306,16 @@ export default function ConnectionsPage() {
     });
   };
 
-  // Filter connections by search
-  const filteredConnections = connections.filter(conn => {
-    if (!searchQuery) return true;
-    const user = conn.connected_user;
-    const name = `${user?.first_name || ''} ${user?.last_name || ''}`.toLowerCase();
-    return name.includes(searchQuery.toLowerCase());
-  });
+
+  const isLoading = 
+    (activeTab === TABS.CONNECTIONS && loadingConnections) ||
+    (activeTab === TABS.INCOMING && loadingIncoming) ||
+    (activeTab === TABS.OUTGOING && loadingOutgoing);
 
   return (
+    <>
     <div className="min-h-screen">
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
-        {/* BACK TO DASHBOARD */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="mb-6"
-        >
-          <Button
-            onClick={() => navigate('/dashboard')}
-            variant="outline"
-            className="text-gray-300 border-gray-600 hover:bg-gray-800 hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        </motion.div>
-
         {/* Header with Discover Users Button */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-4">
@@ -366,7 +331,6 @@ export default function ConnectionsPage() {
           </div>
           
           <div className="flex items-center gap-2">
-            {/* DISCOVER USERS BUTTON - Redirects to DiscoverUsers page */}
             <Button 
               onClick={() => navigate('/discover-users')} 
               className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
@@ -376,12 +340,12 @@ export default function ConnectionsPage() {
             </Button>
             
             <Button 
-              onClick={() => { fetchData(); fetchCounts(); }} 
+              onClick={() => { fetchCounts(); }} 
               variant="outline" 
               size="sm" 
-              className="border-slate-600 text-slate-300"
+              className="border-slate-600 text-black"
             >
-              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
           </div>
@@ -390,7 +354,7 @@ export default function ConnectionsPage() {
         {/* Search */}
         {activeTab === TABS.CONNECTIONS && (
           <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <Input
               placeholder="Search connections..."
               value={searchQuery}
@@ -429,7 +393,7 @@ export default function ConnectionsPage() {
 
         {/* Content */}
         <AnimatePresence mode="wait">
-          {loading ? (
+          {isLoading && connections.length === 0 && incoming.length === 0 && outgoing.length === 0 ? (
             <LoadingSkeleton />
           ) : (
             <motion.div
@@ -440,214 +404,149 @@ export default function ConnectionsPage() {
             >
               {/* CONNECTIONS */}
               {activeTab === TABS.CONNECTIONS && (
-                filteredConnections.length === 0 ? (
-                  <EmptyState 
-                    icon={Users} 
-                    title="No connections yet" 
-                    description="Start discovering and connecting with people!" 
-                    action={{ label: 'Discover Users', onClick: () => navigate('/discover-users') }} 
+                <div className="max-h-[600px] overflow-y-auto">
+                  <InfiniteList
+                    items={connections}
+                    renderItem={(conn) => (
+                      <UserCard
+                        key={conn.id}
+                        user={conn.connected_user}
+                        subtitle={`Connected ${formatDate(conn.connected_at)}`}
+                        isLoading={actionLoading === conn.id}
+                        actions={
+                          <>
+                            <Button size="sm" variant="outline" onClick={() => goToChat(conn.connected_user?.id)}
+                              className="border-slate-600 text-black">
+                              <MessageCircle className="w-4 h-4 mr-1" />Message
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => goToProfile(conn.connected_user?.id)}
+                              className="border-slate-600 text-black">
+                              <User className="w-4 h-4 mr-1" />Profile
+                            </Button>
+                            <Button size="sm" variant="ghost" onClick={() => {
+                              setConfirmPopup(true)
+                              setSelectedRequest(conn);
+                            }
+                            }
+                              className="text-red-400 hover:bg-red-500">
+                              <UserX className="w-4 h-4" />
+                            </Button>
+                          </>
+                        }
+                        onClick={() => goToProfile(conn.connected_user?.id)}
+                      />
+                    )}
+                    sentinelRef={connectionsRef}
+                    loading={loadingConnections}
+                    emptyText="No connections yet. Discover users to start connecting!"
                   />
-                ) : (
-                  filteredConnections.map((conn) => (
-                    <UserCard
-                      key={conn.id}
-                      user={conn.connected_user}
-                      subtitle={`Connected ${formatDate(conn.connected_at)}`}
-                      isLoading={actionLoading === conn.id}
-                      actions={
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => goToChat(conn.connected_user?.id)}
-                            className="border-slate-600 text-slate-300">
-                            <MessageCircle className="w-4 h-4 mr-1" />Message
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => goToProfile(conn.connected_user?.id)}
-                            className="border-slate-600 text-slate-300">
-                            <User className="w-4 h-4 mr-1" />Profile
-                          </Button>
-                          <Button size="sm" variant="ghost" onClick={() => handleRemove(conn.id)}
-                            className="text-red-400 hover:bg-red-500/10">
-                            <UserX className="w-4 h-4" />
-                          </Button>
-                        </>
-                      }
-                      onClick={() => goToProfile(conn.connected_user?.id)}
-                    />
-                  ))
-                )
+                </div>
               )}
 
               {/* INCOMING */}
               {activeTab === TABS.INCOMING && (
-                incoming.length === 0 ? (
-                  <EmptyState icon={UserPlus} title="No pending requests" description="Requests will appear here" />
-                ) : (
-                  incoming.map((req) => {
-                    const reqId = getRequestId(req);
-                    const sender = getSender(req);
+                <div className="max-h-[600px] overflow-y-auto">
+                  <InfiniteList
+                    items={incoming}
+                    renderItem={(req) => {
+                      const reqId = getRequestId(req);
+                      const sender = getSender(req);
 
-                    return (
-                      <UserCard
-                        key={reqId || req.id}
-                        user={sender}
-                        subtitle={`Requested ${formatDate(req.created_at)}`}
-                        isLoading={actionLoading === reqId}
-                        actions={
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={(e) => { e.stopPropagation(); handleAccept(reqId); }}
-                              disabled={!reqId || actionLoading === reqId}
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              {actionLoading === reqId
-                                ? <Loader2 className="w-4 h-4 animate-spin" />
-                                : <Check className="w-4 h-4 mr-1" />
-                              }
-                              Accept
-                            </Button>
+                      return (
+                        <UserCard
+                          key={reqId || req.id}
+                          user={sender}
+                          subtitle={`Requested ${formatDate(req.created_at)}`}
+                          isLoading={actionLoading === reqId}
+                          actions={
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); handleAccept(reqId); }}
+                                disabled={!reqId || actionLoading === reqId}
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                              >
+                                {actionLoading === reqId
+                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  : <Check className="w-4 h-4 mr-1" />
+                                }
+                                Accept
+                              </Button>
 
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => { e.stopPropagation(); handleDecline(reqId); }}
-                              disabled={!reqId || actionLoading === reqId}
-                              className="border-red-500/50 text-red-400 hover:bg-red-500/20"
-                            >
-                              <X className="w-4 h-4 mr-1" />Decline
-                            </Button>
-                          </>
-                        }
-                        onClick={() => goToProfile(sender?.id)}
-                      />
-                    );
-                  })
-                )
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => { e.stopPropagation(); handleDecline(reqId); }}
+                                disabled={!reqId || actionLoading === reqId}
+                                className="border-red-500/50 bg-red-500 text-white hover:bg-white hover:text-red-500 hover:border-red-500 transition-all"
+                              >
+                                <X className="w-4 h-4 mr-1" />Decline
+                              </Button>
+                            </>
+                          }
+                          onClick={() => goToProfile(sender?.id)}
+                        />
+                      );
+                    }}
+                    sentinelRef={incomingRef}
+                    loading={loadingIncoming}
+                    emptyText="No pending requests"
+                  />
+                </div>
               )}
 
               {/* OUTGOING */}
               {activeTab === TABS.OUTGOING && (
-                outgoing.length === 0 ? (
-                  <EmptyState 
-                    icon={Clock} 
-                    title="No sent requests" 
-                    description="Find people to connect with!"
-                    action={{ label: 'Discover Users', onClick: () => navigate('/discover-users') }}
-                  />
-                ) : (
-                  outgoing.map((req) => {
-                    const reqId = getRequestId(req);
-                    const receiver = getReceiver(req);
+                <div className="max-h-[600px] overflow-y-auto">
+                  <InfiniteList
+                    items={outgoing}
+                    renderItem={(req) => {
+                      const reqId = getRequestId(req);
+                      const receiver = getReceiver(req);
 
-                    return (
-                      <UserCard
-                        key={reqId || req.id}
-                        user={receiver}
-                        subtitle={`Sent ${formatDate(req.created_at)}`}
-                        isLoading={actionLoading === reqId}
-                        actions={
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => { e.stopPropagation(); handleCancel(reqId); }}
-                            disabled={!reqId || actionLoading === reqId}
-                            className="border-slate-600 text-slate-300"
-                          >
-                            {actionLoading === reqId
-                              ? <Loader2 className="w-4 h-4 animate-spin" />
-                              : <X className="w-4 h-4 mr-1" />
-                            }
-                            Cancel
-                          </Button>
-                        }
-                        onClick={() => goToProfile(receiver?.id)}
-                      />
-                    );
-                  })
-                )
+                      return (
+                        <UserCard
+                          key={reqId || req.id}
+                          user={receiver}
+                          subtitle={`Sent ${formatDate(req.created_at)}`}
+                          isLoading={actionLoading === reqId}
+                          actions={
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={(e) => { e.stopPropagation(); handleCancel(reqId); }}
+                              disabled={!reqId || actionLoading === reqId}
+                              className="border-slate-600 text-black"
+                            >
+                              {actionLoading === reqId
+                                ? <Loader2 className="w-4 h-4 animate-spin" />
+                                : <X className="w-4 h-4 mr-1" />
+                              }
+                              Cancel
+                            </Button>
+                          }
+                          onClick={() => goToProfile(receiver?.id)}
+                        />
+                      );
+                    }}
+                    sentinelRef={outgoingRef}
+                    loading={loadingOutgoing}
+                    emptyText="No sent requests. Discover users to start connecting!"
+                  />
+                </div>
               )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
     </div>
+      {confirmPopup && <ConfirmationModal onClose={() => setConfirmPopup(false)} onConfirm={() => {
+        handleRemove(selectedRequest?.connected_user?.id)
+        setConnections(prev => prev.filter(c => c.id !== selectedRequest.id));
+        setConfirmPopup(false);
+      }
+      } message={"Are you sure you want to remove this connection?"} />} 
+    </>
   );
 }
 
-// Sub-components
-
-/**
- * UserCard - Fixed with proper profile picture handling
- */
-function UserCard({ user, subtitle, actions, onClick, isLoading }) {
-  const [imageError, setImageError] = useState(false);
-  
-  const fullName = user 
-    ? `${user.first_name || user.firstName || ''} ${user.last_name || user.lastName || ''}`.trim() || 'Unknown' 
-    : 'Unknown';
-    
-  const initials = `${(user?.first_name || user?.firstName || '').charAt(0)}${(user?.last_name || user?.lastName || '').charAt(0)}`.toUpperCase();
-
-  const avatarUrl = getAvatarUrl(user);
-  const showImage = avatarUrl && !imageError;
-
-  return (
-    <Card className={`p-5 bg-slate-800/50 border-slate-700 cursor-pointer ${isLoading ? 'opacity-60' : ''}`} onClick={onClick}>
-      <div className="flex items-center gap-4">
-        {/* Avatar with proper fallback */}
-        <div className="w-14 h-14 rounded-xl overflow-hidden bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold flex-shrink-0">
-          {showImage ? (
-            <img
-              src={avatarUrl}
-              alt={fullName}
-              className="w-full h-full object-cover"
-              onError={() => setImageError(true)}
-            />
-          ) : (
-            <span className="text-lg">{initials || '?'}</span>
-          )}
-        </div>
-        
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-white truncate">{fullName}</h3>
-          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
-        </div>
-        <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>{actions}</div>
-      </div>
-    </Card>
-  );
-}
-
-function EmptyState({ icon: Icon, title, description, action }) {
-  return (
-    <div className="text-center py-16">
-      <div className="inline-flex p-4 rounded-2xl bg-slate-800/50 border border-slate-700 mb-6">
-        <Icon className="w-10 h-10 text-slate-500" />
-      </div>
-      <h3 className="text-xl font-semibold text-slate-300 mb-2">{title}</h3>
-      <p className="text-slate-500 mb-6">{description}</p>
-      {action && (
-        <Button onClick={action.onClick} className="bg-blue-600 hover:bg-blue-700 text-white">
-          {action.label}
-        </Button>
-      )}
-    </div>
-  );
-}
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      {[1, 2, 3].map((i) => (
-        <Card key={i} className="p-5 bg-slate-800/50 border-slate-700 animate-pulse">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-slate-700 rounded-xl" />
-            <div className="flex-1 space-y-2">
-              <div className="h-5 bg-slate-700 rounded w-1/3" />
-              <div className="h-3 bg-slate-700 rounded w-1/4" />
-            </div>
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-}

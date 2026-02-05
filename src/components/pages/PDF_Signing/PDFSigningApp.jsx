@@ -13,6 +13,7 @@ import { Progress } from '../../ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Switch } from '../../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
+import { toolsAPI } from '@/utils/APIs/toolsAPI';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -167,25 +168,24 @@ const PDFSigningApp = () => {
 
   const loadSignedDocuments = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pdf/documents`);
-      const data = await response.json();
-      
-      if (data.success) {
-        const formattedDocs = data.documents.map(doc => ({
-          id: doc.id,
-          name: doc.name,
-          date: new Date(doc.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-          }),
-          size: formatFileSize(doc.size),
-          downloadUrl: doc.download_url
-        }));
-        setSignedDocuments(formattedDocs);
-      }
+      const data = await toolsAPI.listSignedDocuments();
+
+      console.log("Data:", data);
+      const formattedDocs = data.documents.map(doc => ({
+        id: doc.id,
+        name: doc.name,
+        date: new Date(doc.date).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        }),
+        size: formatFileSize(doc.size),
+        downloadUrl: doc.download_url
+      }));
+      setSignedDocuments(formattedDocs);
+
     } catch (error) {
       console.error('Error loading documents:', error);
       showAlert('Failed to load documents', 'error');
@@ -307,8 +307,7 @@ const PDFSigningApp = () => {
     setSelectedFile(file);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+
 
       const progressInterval = setInterval(() => {
         setProgress(prev => {
@@ -320,19 +319,11 @@ const PDFSigningApp = () => {
         });
       }, 200);
 
-      const response = await fetch(`${API_BASE_URL}/pdf/upload`, {
-        method: 'POST',
-        body: formData
-      });
-
+      const data = await toolsAPI.uploadPDF(file);
+      console.log("Document", data);
       clearInterval(progressInterval);
       setProgress(100);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Upload failed');
-      }
 
       setUploadedFileData(data);
       showAlert('PDF uploaded successfully!', 'success');
@@ -419,35 +410,23 @@ const PDFSigningApp = () => {
         height: signaturePosition.height * dpiRatio,
         page: signaturePosition.page
       };
-  
-      const response = await fetch(`${API_BASE_URL}/pdf/sign`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          file_id: uploadedFileData.file_id,
-          filename: uploadedFileData.filename,
-          original_filename: uploadedFileData.original_filename,
-          signature: signatureData,
-          position: pdfPosition // Use converted position
-        })
-      });
+
+      await toolsAPI.signPDF(
+        uploadedFileData.file_id,
+        uploadedFileData.filename,
+        signatureData,
+        pdfPosition
+      );
   
       clearInterval(progressInterval);
       setProgress(100);
+
   
-      const data = await response.json();
-  
-      if (!response.ok) {
-        throw new Error(data.error || 'Signing failed');
-      }
-  
-      if (data.success) {
-        showAlert('Document signed successfully!', 'success');
-        await loadSignedDocuments();
-        resetState();
-      }
+
+      showAlert('Document signed successfully!', 'success');
+      await loadSignedDocuments();
+      resetState();
+
   
       setTimeout(() => setProgress(0), 1000);
   
@@ -479,10 +458,9 @@ const PDFSigningApp = () => {
 
   const downloadSignedDoc = async (doc) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pdf/download/${doc.id}`);
-      if (!response.ok) throw new Error('Download failed');
+      const blob = await toolsAPI.downloadSignedPDF(doc.name);
       
-      const blob = await response.blob();
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -499,18 +477,13 @@ const PDFSigningApp = () => {
 
   const deleteSignedDoc = async (doc) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/pdf/delete/${doc.id}`, {
-        method: 'DELETE'
-      });
+      await toolsAPI.deleteDocument(doc.name);
 
-      const data = await response.json();
 
-      if (data.success) {
-        showAlert('Document deleted successfully!', 'success');
-        await loadSignedDocuments();
-      } else {
-        showAlert(data.error || 'Delete failed', 'error');
-      }
+
+      showAlert('Document deleted successfully!', 'success');
+      await loadSignedDocuments();
+
     } catch (error) {
       showAlert('Error deleting document: ' + error.message, 'error');
     }
@@ -969,7 +942,7 @@ const PDFSigningApp = () => {
                                 onClick={() => downloadSignedDoc(doc)}
                                 variant="outline"
                                 size="sm"
-                                className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                                className="border-emerald-500/50 text-white bg-emerald-600 hover:text-emerald-500 hover:bg-white transition-all"
                               >
                                 <Download className="h-4 w-4 mr-2" />
                                 Download
@@ -978,7 +951,7 @@ const PDFSigningApp = () => {
                                 onClick={() => deleteSignedDoc(doc)}
                                 variant="outline"
                                 size="sm"
-                                className="border-red-500/50 text-red-400 hover:bg-red-500/10 transition-all"
+                                className="border-red-500/50 text-white bg-red-600 hover:text-red-500 hover:bg-white transition-all"
                               >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Delete

@@ -49,14 +49,17 @@ export default function AddTaskModal({
   setTasks
 }) {
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState(emptyTaskForm);
+  const [form, setForm] = useState(localStorage.getItem("taskForm") ? JSON.parse(localStorage.getItem("taskForm")) : emptyTaskForm);
   const [tagInput, setTagInput] = useState("");
   const [labelInput, setLabelInput] = useState("");
   const [labelColor, setLabelColor] = useState("#3B82F6");
-
+  useEffect(() => {
+    localStorage.setItem("taskForm", JSON.stringify(form));
+  }, [form]);
   useEffect(() => {
     if (!isOpen) {
       setForm(emptyTaskForm);
+      localStorage.removeItem("taskForm");
       setTagInput("");
       setLabelInput("");
     }
@@ -225,6 +228,7 @@ export default function AddTaskModal({
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
                   <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="to_do">To Do</SelectItem>s
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
                 </SelectContent>

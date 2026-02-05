@@ -187,7 +187,7 @@ export function ConnectionButton({
         variant="outline"
         className={`
           ${config.button}
-          border-gray-600 text-gray-400
+          border-gray-600 text-black
           hover:bg-gray-700 hover:text-white hover:border-red-500
           ${className}
         `}
@@ -266,7 +266,7 @@ export function ConnectionButton({
             onClick={() => setShowRemoveConfirm(false)}
             size="sm"
             variant="outline"
-            className="h-8 px-2 border-gray-600"
+            className="h-8 px-2 border-gray-600 text-black"
           >
             <X size={14} />
           </Button>
@@ -280,8 +280,8 @@ export function ConnectionButton({
         variant="outline"
         className={`
           ${config.button}
-          border-green-500/50 text-green-400
-          hover:bg-green-500/10 hover:border-green-500
+          border-green-500/50 bg-green-500 text-white
+          hover:bg-white hover:text-green-700 hover:border-green-700
           ${className}
         `}
         title="Click to remove connection"

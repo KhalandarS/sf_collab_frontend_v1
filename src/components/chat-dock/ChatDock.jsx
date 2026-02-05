@@ -886,7 +886,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
             setIsPanelOpen((v) => !v);
             if (isMobile) callback();
           }}
-          className="fixed w-12 h-12 bottom-4 right-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998]"
+          className="fixed w-12 h-12 bottom-4 right-20 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998]"
         >
           <MessageCircle size={20} />
           {totalUnread > 0 && (

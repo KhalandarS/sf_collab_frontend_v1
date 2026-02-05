@@ -117,6 +117,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
           time: notif.createdAt,
           unread: !notif.isRead,
           type: notif.notification_type,
+          linkUrl: notif.linkUrl
         }));
         
       setNotifications(getNotificationsWithPreferences(formattedNotifications, user));
@@ -249,7 +250,15 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
                           <p className="p-4 text-center text-slate-400 text-sm">No new notifications</p>
                         ) : (
                           notifications.map((notif) => (
-                            <div key={notif.id} className="p-4 hover:bg-slate-800/50 border-b border-slate-800/50 last:border-0 cursor-pointer">
+                            <div
+                              onClick={() => {
+                                if (notif?.linkUrl) {
+                                  navigate(notif.linkUrl)
+                                } else {
+                                  navigate('/notifications')
+                                }
+                              }}
+                              key={notif.id} className="p-4 hover:bg-slate-800/50 border-b border-slate-800/50 last:border-0 cursor-pointer">
                               <div className="flex items-start gap-3">
                                 <div className="p-1.5 rounded-lg bg-blue-500/10 ring-1 ring-blue-500/20">
                                   <BellIcon />

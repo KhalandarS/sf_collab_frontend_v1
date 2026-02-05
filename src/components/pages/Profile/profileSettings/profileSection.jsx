@@ -227,7 +227,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           >
             <option value="" disabled>Select an option</option>
             {builderFocusOptions.map((option) => (
-              <option key={option} value={option}>
+              <option key={option} value={option} className="text-black bg-white">
                 {option.charAt(0).toUpperCase() + option.slice(1)}
               </option>
             ))}

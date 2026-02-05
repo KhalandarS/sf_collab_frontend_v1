@@ -23,7 +23,7 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, socialSection, toolsSection } from "../sidebarCommons";
 
 // theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
@@ -105,16 +105,7 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
     //     </Badge>
     //   ),
     // },
-    {
-      id: 5,
-      icon: <MessageSquareHeart size={22} />,
-      href: "/posts",
-      label: "Social",
-      subItems: [
-        { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
-        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
-      ],
-    },
+    socialSection(6),
     {
       id: 7,
       icon: <BookOpen size={22} />,

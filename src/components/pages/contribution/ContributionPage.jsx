@@ -13,7 +13,8 @@ import {
   Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import FeedbackPopup from "@/components/sections/SidebarFeedbackCard";
 
 /* ================= DATA ================= */
 
@@ -158,13 +159,17 @@ const itemVariants = {
 /* ================= PAGE ================= */
 
 export default function ContributionPage() {
-  const userPoints = 42;
-
-  const currentStage = "Waitlist — Stage 2";
-  const nextUnlock = "Stage 3 (75 points)";
-  const progressPercentage = (userPoints / 75) * 100;
-
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(localStorage.getItem("feedbackOpenedFromContributionPage") === "true");
+  useEffect(() => {
+    if (isFeedbackOpen) {
+      localStorage.removeItem("feedbackOpenedFromContributionPage");  
+    }
+  }, [isFeedbackOpen]);
+  
   return (
+    <>
+    <FeedbackPopup open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} trigger="none" />
+    {console.log(isFeedbackOpen)}
     <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-purple-950/20 to-neutral-950 px-6 py-10 text-white">
       <div className="max-w-7xl mx-auto space-y-12">
 
@@ -182,37 +187,6 @@ export default function ContributionPage() {
               Your contributions shape SFCollab's future. Earn points through ideas, feedback, testing, and community engagement. Contributions matter more than referrals—quality always wins.
             </p>
           </div>
-
-          {/* Progress Section */}
-          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6">
-            <StatusCard label="Your Points" value={userPoints} />
-            <StatusCard label="Current Stage" value={currentStage} />
-            <StatusCard label="Next Unlock" value={nextUnlock} />
-          </div> */}
-
-          {/* Progress Bar */}
-          {/* <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="bg-neutral-900 border border-neutral-800 rounded-xl p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-gray-300">Progress to Next Stage</p>
-              <p className="text-sm font-bold text-purple-400">{userPoints} / 75 pts</p>
-            </div>
-            <div className="w-full bg-neutral-800 rounded-full h-3 overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                className="h-full bg-gradient-to-r from-purple-500 to-purple-600 rounded-full"
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {75 - userPoints} points remaining to unlock Stage 3 rewards
-            </p>
-          </motion.div> */}
         </motion.section>
       {/* ================= ACTIONS ================= */}
         <motion.section
@@ -227,10 +201,25 @@ export default function ContributionPage() {
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {contributionActions.map((action) => (
-              <Link to={action.to || "#"} key={action.title} className={`w-full ${action.important ? 'md:col-span-2' : ''}`}>
-                <ActionCard key={action.title} action={action} />
-                </Link>
+              {contributionActions.map((action, idx) => (
+              <>
+                {
+                  action.title !== "Report Bugs & Feedback" ?
+                    <Link
+                      to={action.to || "#"} key={idx} className={`w-full ${action.important ? 'md:col-span-2' : ''}`}>
+                      <ActionCard action={action} />
+                      </Link>
+                      :
+                      <div
+                        onClick={() => {
+                          setIsFeedbackOpen(true);
+                        }}
+                      >
+                      <ActionCard
+                          key={idx} action={action} />
+                      </div>
+                  }
+                </>
             ))}
           </div>
           <motion.div
@@ -281,65 +270,8 @@ export default function ContributionPage() {
             </div>
           </motion.div>
 
-          {/* <motion.div
-            variants={itemVariants}
-            className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4 font-mono text-sm text-blue-300"
-          >
-            <p className="mb-2">Your Rank Score Formula:</p>
-            <p>Referrals + Contributions + Engagement + Early Bonus</p>
-          </motion.div> */}
+          
         </motion.section>
-
-        {/* ================= CONTRIBUTION POINT RANGES ================= */}
-        {/* <motion.section
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="space-y-6"
-        >
-          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
-            <TrendingUp className="h-6 w-6 text-green-400" />
-            Contribution Point Ranges
-          </motion.h2>
-
-          <p className="text-gray-400 max-w-2xl">
-            Different contributions have different values. Here's the complete breakdown:
-          </p>
-
-          <motion.div
-            variants={containerVariants}
-            className="grid grid-cols-1 md:grid-cols-2 gap-4"
-          >
-            {pointRanges.map((item, idx) => (
-              <motion.div
-                key={idx}
-                variants={itemVariants}
-                className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-all"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-semibold text-white">{item.action}</p>
-                    <p className="text-xs text-gray-500 mt-1">{item.detail}</p>
-                  </div>
-                  <span className="text-lg font-bold text-purple-400 whitespace-nowrap ml-4">
-                    {item.range}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 text-sm text-blue-300"
-          >
-            <p className="font-semibold mb-2">💡 Point Transparency</p>
-            <p>
-              All points are verified by our team. One-time contributions like ideas may earn more than recurring engagement like polls. Both count toward your rank immediately.
-            </p>
-          </motion.div>
-        </motion.section> */}
 
         
         {/* ================= WHY CONTRIBUTIONS MATTER ================= */}
@@ -417,61 +349,6 @@ export default function ContributionPage() {
           </motion.div>
         </motion.section>
 
-        {/* ================= WHAT UNLOCKS NEXT ================= */}
-        {/* <motion.section
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true }}
-          className="rounded-2xl border border-neutral-800 bg-neutral-900/50 backdrop-blur p-8 space-y-6"
-        >
-          <motion.h2 variants={itemVariants} className="text-2xl font-bold flex items-center gap-3">
-            <Gift className="h-6 w-6 text-blue-400" />
-            What Unlocks Next
-          </motion.h2>
-
-          <motion.div variants={containerVariants} className="space-y-3">
-            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-semibold text-white">Stage 3 Unlock</p>
-                <span className="text-sm text-purple-400 font-bold">75 points</span>
-              </div>
-              <p className="text-sm text-gray-400">
-                Priority support access, voting weight increases, exclusive Discord channel, early feature previews
-              </p>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-semibold text-white">Top 1,000 Rank</p>
-                <span className="text-sm text-yellow-400 font-bold">MVP Access</span>
-              </div>
-              <p className="text-sm text-gray-400">
-                Guaranteed early access, lifetime discount (1-2 months free), "Bronze MVP" badge, founding member benefits
-              </p>
-            </motion.div>
-
-            <motion.div variants={itemVariants} className="bg-neutral-800/50 border border-neutral-700 rounded-lg p-4">
-              <div className="flex items-center justify-between mb-2">
-                <p className="font-semibold text-white">Top 100 Rank</p>
-                <span className="text-sm text-blue-400 font-bold">Gold Tier</span>
-              </div>
-              <p className="text-sm text-gray-400">
-                12 months free access, ×2 voting weight, priority support, "Gold Member" status with lifetime benefits
-              </p>
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-4 text-sm text-purple-300"
-          >
-            <p className="font-semibold mb-2">📊 Your Progress</p>
-            <p>
-              You have <span className="font-bold text-white">{userPoints} points</span>. Keep contributing to reach Stage 3 and unlock even better rewards!
-            </p>
-          </motion.div>
-        </motion.section> */}
 
         {/* ================= FINAL CTAs ================= */}
         <motion.section
@@ -502,13 +379,10 @@ export default function ContributionPage() {
               </motion.button>
             </Link>
           </div>
-
-          {/* <p className="text-center text-sm text-gray-500">
-            💡 Tip: Start with ideas or bug reports. They have the highest point potential and make the biggest impact.
-          </p> */}
         </motion.section>
       </div>
     </div>
+    </>
   );
 }
 

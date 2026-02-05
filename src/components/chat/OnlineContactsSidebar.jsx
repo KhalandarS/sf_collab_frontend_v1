@@ -2,9 +2,11 @@
  * OnlineContactsSidebar Component - Fixed Version
  * 
  * FIXES:
- * 1. Profile pictures now show properly
- * 2. Click handler properly triggers chat opening
- * 3. Better status handling
+ * 1. Only shows MUTUAL CONNECTIONS (friends) - not all users
+ * 2. Better scroll handling for many users
+ * 3. Search works properly across all fields
+ * 4. Profile pictures display correctly
+ * 5. Click handler properly triggers chat opening
  * 
  * Shows ONLY connected users (friends) with proper status indicators:
  * - Green = Online
@@ -12,8 +14,8 @@
  * - Grey = Idle (inactive for 5+ minutes)
  */
 
-import React, { useEffect, useMemo, useState } from 'react';
-import { Search, Plus, ChevronDown, ChevronRight, UserCheck } from 'lucide-react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import { Search, Plus, ChevronDown, ChevronRight, UserCheck, Loader2 } from 'lucide-react';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // Status colors
@@ -81,7 +83,6 @@ const ContactItem = ({ user, status, statusText, onClick }) => {
     e.preventDefault();
     e.stopPropagation();
     
-    // Call the onClick with the full user object
     if (onClick && typeof onClick === 'function') {
       onClick(user);
     }
@@ -155,6 +156,7 @@ const OnlineContactsSidebar = ({
   onNewMessage,           // Callback for new message button
   token,               
   currentUserId,
+  isLoading = false,      // Show loading state while fetching friends
   className = '' 
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -164,15 +166,24 @@ const OnlineContactsSidebar = ({
     offline: false 
   });
 
-  // Normalize onlineUsers to Set of strings
+  // Normalize onlineUsers to Set of strings for fast lookup
   const onlineSet = useMemo(() => {
     if (Array.isArray(onlineUsers)) return new Set(onlineUsers.map(String));
     if (onlineUsers instanceof Set) return new Set([...onlineUsers].map(String));
     return new Set();
   }, [onlineUsers]);
 
+  // Filter out current user from friends list
+  const filteredFriends = useMemo(() => {
+    if (!friends || !Array.isArray(friends)) return [];
+    return friends.filter(friend => {
+      const friendId = String(friend.id || friend.user_id || friend._id);
+      return friendId !== String(currentUserId);
+    });
+  }, [friends, currentUserId]);
+
   // Determine user status (online/idle/offline)
-  const getUserStatus = (userId) => {
+  const getUserStatus = useCallback((userId) => {
     const id = String(userId);
     const isConnected = onlineSet.has(id);
     
@@ -187,7 +198,7 @@ const OnlineContactsSidebar = ({
     }
     
     return 'online';
-  };
+  }, [onlineSet, lastActiveAt]);
 
   // Get status text
   const getStatusText = (status) => {
@@ -203,27 +214,42 @@ const OnlineContactsSidebar = ({
     }
   };
 
-  // Filter by search
-  const filterBySearch = (users) => {
-    if (!searchTerm) return users;
-    const term = searchTerm.toLowerCase();
+  // Filter by search - improved to search multiple fields
+  const filterBySearch = useCallback((users) => {
+    if (!searchTerm || !searchTerm.trim()) return users;
+    
+    const term = searchTerm.toLowerCase().trim();
     return users.filter((u) => {
-      const name = `${u.firstName || u.first_name || ''} ${u.lastName || u.last_name || ''}`.toLowerCase();
+      const firstName = (u.firstName || u.first_name || '').toLowerCase();
+      const lastName = (u.lastName || u.last_name || '').toLowerCase();
+      const fullName = `${firstName} ${lastName}`.trim();
       const email = (u.email || '').toLowerCase();
-      return name.includes(term) || email.includes(term);
+      const username = (u.username || '').toLowerCase();
+      const title = (u.title || u.profile?.title || '').toLowerCase();
+      const company = (u.company || u.profile?.company || '').toLowerCase();
+      
+      return (
+        fullName.includes(term) ||
+        firstName.includes(term) ||
+        lastName.includes(term) ||
+        email.includes(term) ||
+        username.includes(term) ||
+        title.includes(term) ||
+        company.includes(term)
+      );
     });
-  };
+  }, [searchTerm]);
 
   // Categorize friends by status
   const categorizedFriends = useMemo(() => {
-    const filtered = filterBySearch(friends);
+    const filtered = filterBySearch(filteredFriends);
     
     const online = [];
     const idle = [];
     const offline = [];
     
     filtered.forEach((user) => {
-      const status = getUserStatus(user.id);
+      const status = getUserStatus(user.id || user.user_id || user._id);
       const statusText = getStatusText(status);
       
       const userData = { ...user, status, statusText };
@@ -239,9 +265,20 @@ const OnlineContactsSidebar = ({
           offline.push(userData);
       }
     });
+
+    // Sort each category alphabetically by name
+    const sortByName = (a, b) => {
+      const nameA = `${a.firstName || a.first_name || ''} ${a.lastName || a.last_name || ''}`.toLowerCase();
+      const nameB = `${b.firstName || b.first_name || ''} ${b.lastName || b.last_name || ''}`.toLowerCase();
+      return nameA.localeCompare(nameB);
+    };
+
+    online.sort(sortByName);
+    idle.sort(sortByName);
+    offline.sort(sortByName);
     
     return { online, idle, offline };
-  }, [friends, searchTerm, onlineSet, lastActiveAt]);
+  }, [filteredFriends, filterBySearch, getUserStatus]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
@@ -254,15 +291,20 @@ const OnlineContactsSidebar = ({
     }
   };
 
+  // Clear search
+  const handleClearSearch = () => {
+    setSearchTerm('');
+  };
+
   const totalOnline = categorizedFriends.online.length;
   const totalIdle = categorizedFriends.idle.length;
   const totalOffline = categorizedFriends.offline.length;
-  const totalConnections = friends.length;
+  const totalConnections = filteredFriends.length;
 
   return (
     <div className={`w-60 bg-zinc-950 border-l border-zinc-800 flex flex-col h-full ${className}`}>
       {/* Header */}
-      <div className="p-3 border-b border-zinc-800/50">
+      <div className="p-3 border-b border-zinc-800/50 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <UserCheck size={16} className="text-amber-500" />
@@ -282,107 +324,139 @@ const OnlineContactsSidebar = ({
 
         {/* Search */}
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
+          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
           <input
             type="text"
             placeholder="Search connections..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 bg-zinc-800/50 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+            className="w-full pl-8 pr-8 py-1.5 bg-zinc-800/50 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
           />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+            >
+              ×
+            </button>
+          )}
         </div>
+
+        {/* Search Results Count */}
+        {searchTerm && (
+          <p className="text-[10px] text-zinc-500 mt-1.5 px-1">
+            {totalOnline + totalIdle + totalOffline} result{totalOnline + totalIdle + totalOffline !== 1 ? 's' : ''} found
+          </p>
+        )}
       </div>
 
-      {/* Contact List */}
-      <div className="flex-1 overflow-y-auto">
-        {/* ONLINE Section (Green) */}
-        <div className="p-2">
-          <SectionHeader
-            title="Online"
-            count={totalOnline}
-            isExpanded={expandedSections.online}
-            onToggle={() => toggleSection('online')}
-            statusColor={STATUS_COLORS.online}
-          />
+      {/* Contact List - Scrollable */}
+      <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-8">
+            <Loader2 size={24} className="text-amber-500 animate-spin mb-2" />
+            <p className="text-xs text-zinc-500">Loading connections...</p>
+          </div>
+        ) : totalConnections === 0 ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4">
+            <UserCheck size={32} className="text-zinc-600 mb-2" />
+            <p className="text-xs text-zinc-500 text-center">
+              No connections yet. Start connecting with other users!
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* ONLINE Section (Green) */}
+            <div className="p-2">
+              <SectionHeader
+                title="Online"
+                count={totalOnline}
+                isExpanded={expandedSections.online}
+                onToggle={() => toggleSection('online')}
+                statusColor={STATUS_COLORS.online}
+              />
 
-          {expandedSections.online && (
-            <div className="mt-1 space-y-0.5">
-              {totalOnline === 0 ? (
-                <p className="text-xs text-zinc-600 px-2 py-2">No connections online</p>
-              ) : (
-                categorizedFriends.online.map((user) => (
-                  <ContactItem
-                    key={user.id}
-                    user={user}
-                    status="online"
-                    statusText={user.statusText}
-                    onClick={handleOpenChat}
-                  />
-                ))
+              {expandedSections.online && (
+                <div className="mt-1 space-y-0.5">
+                  {totalOnline === 0 ? (
+                    <p className="text-xs text-zinc-600 px-2 py-2">No connections online</p>
+                  ) : (
+                    categorizedFriends.online.map((user, idx) => (
+                      <ContactItem
+                        key={idx}
+                        user={user}
+                        status="online"
+                        statusText={user.statusText}
+                        onClick={handleOpenChat}
+                      />
+                    ))
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
 
-        {/* IDLE Section (Grey) */}
-        {totalIdle > 0 && (
-          <div className="p-2 border-t border-zinc-800/30">
-            <SectionHeader
-              title="Away"
-              count={totalIdle}
-              isExpanded={expandedSections.idle}
-              onToggle={() => toggleSection('idle')}
-              statusColor={STATUS_COLORS.idle}
-            />
+            {/* IDLE Section (Grey) - Only show if there are idle users */}
+            {totalIdle > 0 && (
+              <div className="p-2 border-t border-zinc-800/30">
+                <SectionHeader
+                  title="Away"
+                  count={totalIdle}
+                  isExpanded={expandedSections.idle}
+                  onToggle={() => toggleSection('idle')}
+                  statusColor={STATUS_COLORS.idle}
+                />
 
-            {expandedSections.idle && (
-              <div className="mt-1 space-y-0.5">
-                {categorizedFriends.idle.map((user) => (
-                  <ContactItem
-                    key={user.id}
-                    user={user}
-                    status="idle"
-                    statusText={user.statusText}
-                    onClick={handleOpenChat}
-                  />
-                ))}
+                {expandedSections.idle && (
+                  <div className="mt-1 space-y-0.5">
+                    {categorizedFriends.idle.map((user, idx) => (
+                      <ContactItem
+                        key={idx}
+                        user={user}
+                        status="idle"
+                        statusText={user.statusText}
+                        onClick={handleOpenChat}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
 
-        {/* OFFLINE Section (Red) */}
-        <div className="p-2 border-t border-zinc-800/30">
-          <SectionHeader
-            title="Offline"
-            count={totalOffline}
-            isExpanded={expandedSections.offline}
-            onToggle={() => toggleSection('offline')}
-            statusColor={STATUS_COLORS.offline}
-          />
+            {/* OFFLINE Section (Red) */}
+            <div className="p-2 border-t border-zinc-800/30">
+              <SectionHeader
+                title="Offline"
+                count={totalOffline}
+                isExpanded={expandedSections.offline}
+                onToggle={() => toggleSection('offline')}
+                statusColor={STATUS_COLORS.offline}
+              />
 
-          {expandedSections.offline && (
-            <div className="mt-1 space-y-0.5">
-              {totalOffline === 0 ? (
-                <p className="text-xs text-zinc-600 px-2 py-2">All connections are online!</p>
-              ) : (
-                categorizedFriends.offline.map((user) => (
-                  <ContactItem
-                    key={user.id}
-                    user={user}
-                    status="offline"
-                    statusText={user.statusText}
-                    onClick={handleOpenChat}
-                  />
-                ))
+              {expandedSections.offline && (
+                <div className="mt-1 space-y-0.5">
+                  {totalOffline === 0 ? (
+                    <p className="text-xs text-zinc-600 px-2 py-2">All connections are online!</p>
+                  ) : (
+                    categorizedFriends.offline.map((user, idx) => (
+                      <ContactItem
+                        key={idx}
+                        user={user}
+                        status="offline"
+                        statusText={user.statusText}
+                        onClick={handleOpenChat}
+                      />
+                    ))
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
+          </>
+        )}
       </div>
 
       {/* Footer with status legend */}
-      <div className="p-3 border-t border-zinc-800/50">
+      <div className="p-3 border-t border-zinc-800/50 flex-shrink-0">
         <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500">
           <div className="flex items-center gap-1">
             <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.online}`} />

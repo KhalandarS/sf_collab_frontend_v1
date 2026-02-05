@@ -14,9 +14,10 @@ import {
 import SpotlightCard from '../ui/SpotlightCard'
 import { IoMdClock } from "react-icons/io"
 import { US, GB, JP, AU, FR, DE, IT, ES, CN, IN, BR, CA, MX, RU, KR, SG, NZ, NL, SE, NO, DK, FI, CH, AT, BE, PT, IE, PL, CZ, HU, RO, BG, GR, TR, SA, AE, IL, ZA, EG, NG, KE, MA, AR, CL, CO, PE, VE, PH, MY } from 'country-flag-icons/react/3x2'
-import { getUserCountry } from '../../utils/getUserCountry'
 import countries from '../../utils/countries'
 import ShinyText from '../ui/ShinyText'
+import { getUserCountry } from '@/utils/getUserCountry'
+import { toast } from 'react-toastify'
 
 const TIME_ZONES = [
   { city: "New York", country: "USA", flag: <US className="w-6 h-4" />, offset: -4, utc: "UTC-4", gradient: "from-blue-500/30 via-white/30 to-red-500/30", color: "rgba(59, 130, 246, 0.15)" },
@@ -75,7 +76,6 @@ const TIME_ZONES = [
 export default function WorldClock() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [country, setCountry] = useState(null)
-  const [countryCode, setCountryCode] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedRegion, setSelectedRegion] = useState('all')
   const [showAll, setShowAll] = useState(false)
@@ -89,10 +89,25 @@ export default function WorldClock() {
   
   useEffect(() => {
     const detectCountry = async () => {
-      const countryCode = await getUserCountry()
-      const countryObj = countries.find(v => v.value === countryCode)
-      setCountry(countryObj)
-      setCountryCode(countryCode)
+      try {
+            const response = await fetch('https://ipapi.co/json/');
+            const data = await response.json();
+            if (data.country_name && countries.includes(data.country_name)) {
+              setCountry({ label: data.country_name, flag: React.createElement(countries[data.country_name], { className: 'w-6 h-4' }) });
+            }
+            if (data.city) {
+              setCountry((prev) => ({
+                ...prev,
+                label: `${data.city}, ${data.country_name}`
+              }));
+            }
+            if (!data.country_name && !data.city) {
+              toast.info("Could not detect country or city");
+              return;
+            }
+          } catch {
+            toast.error("Failed to detect location");
+          }
     }
     detectCountry()
   }, [])
@@ -193,7 +208,7 @@ export default function WorldClock() {
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Search */}
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   placeholder="Search cities or countries..."
                   value={searchQuery}

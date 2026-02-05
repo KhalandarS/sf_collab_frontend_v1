@@ -1,6 +1,6 @@
 import { CheckCircle, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList, Calculator, FileTerminal } from 'lucide-react';
 
-import { aiTools, dashboardLink, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
 
 export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -39,16 +39,7 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       href: "/builder/my-work",
       label: "My Work",
     },
-    {
-      id: 7,
-      icon: <Users size={22} />,
-      href: "/discover-users",
-      label: "Discover Builders",
-      subItems: [
-        { id: "discover-builders", href: "/discover-users", label: "Discover Builders", icon: <Users size={18} /> },
-        { id: "social-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} />, badge: unreadMessagesCount > 0 ? unreadMessagesCount : null },
-      ]
-    },
+    socialSection(7),
     aiTools(8),
     toolsSection(9)
   ];

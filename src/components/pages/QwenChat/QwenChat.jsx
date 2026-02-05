@@ -230,7 +230,7 @@ const QwenChat = () => {
   return (
     <TooltipProvider>
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 py-8 px-4">
-        <div className="w-full mx-auto w-full">
+        <div className="w-full mx-auto">
           {/* Header with animated background similar to DiscoverUsers */}
           <div className="text-center mb-8 relative overflow-hidden">
             <div className="absolute inset-0 overflow-hidden">
@@ -254,22 +254,21 @@ const QwenChat = () => {
             
             {/* Model Status Badge */}
             <div className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gray-800/50 backdrop-blur-sm border border-gray-700/50">
-              <div className={`w-2 h-2 rounded-full ${
-                modelStatus === 'ready' ? 'bg-green-400 animate-pulse' :
-                modelStatus === 'loading' ? 'bg-yellow-400 animate-pulse' :
-                'bg-red-400'
-              }`} />
+              <div className={`w-2 h-2 rounded-full ${modelStatus === 'ready' ? 'bg-green-400 animate-pulse' :
+                  modelStatus === 'loading' ? 'bg-yellow-400 animate-pulse' :
+                    'bg-red-400'
+                }`} />
               <span className="text-sm text-gray-300">
                 {modelStatus === 'ready' ? 'Ready' :
-                 modelStatus === 'loading' ? 'Loading...' :
-                 'Offline'}
+                  modelStatus === 'loading' ? 'Loading...' :
+                    'Offline'}
               </span>
             </div>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-4">
+          <div className="flex flex-wrap flex-col-reverse md:flex-row mx-auto gap-6">
             {/* Settings Sidebar */}
-            <div className="lg:col-span-1 space-y-6">
+            <div className="flex-1 space-y-6">
               {/* Configuration Card */}
               <div className="relative overflow-hidden rounded-2xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 p-6">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:20px_20px]" />
@@ -296,80 +295,78 @@ const QwenChat = () => {
                   </div>
 
                   {/* Temperature Slider */}
-                            <div className="space-y-2">
-                            <div className="flex justify-between items-center">
-                              <Label className="text-sm font-medium text-gray-300">
-                              Creativity
-                              </Label>
-                              <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                              {temperature.toFixed(1)}
-                              </span>
-                            </div>
-                            <Slider
-                              value={[temperature]}
-                              onValueChange={([value]) => setTemperature(value)}
-                              min={0.1}
-                              max={1.0}
-                              step={0.1}
-                              className="w-full"
-                            />
-                            <p className="text-xs text-gray-500">
-                              {temperature < 0.3 ? '🎯 Precise' :
-                               temperature < 0.7 ? '⚖️ Balanced' :
-                               '🎨 Creative'}
-                            </p>
-                            </div>
-<div className="w-full my-2">
-  <Label className="text-sm font-medium text-gray-300 mb-2 block">
-    Model Response Type
-  </Label>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <Label className="text-sm font-medium text-gray-300">
+                        Creativity
+                      </Label>
+                      <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        {temperature.toFixed(1)}
+                      </span>
+                    </div>
+                    <Slider
+                      value={[temperature]}
+                      onValueChange={([value]) => setTemperature(value)}
+                      min={0.1}
+                      max={1.0}
+                      step={0.1}
+                      className="w-full"
+                    />
+                    <p className="text-xs text-gray-500">
+                      {temperature < 0.3 ? '🎯 Precise' :
+                        temperature < 0.7 ? '⚖️ Balanced' :
+                          '🎨 Creative'}
+                    </p>
+                  </div>
+                  <div className="w-full my-2">
+                    <Label className="text-sm font-medium text-gray-300 mb-2 block">
+                      Model Response Type
+                    </Label>
 
-  <div className="flex gap-2">
-    {/* Page Context */}
-    <button
-      onClick={() => setModelResponseType("page_context")}
-      className={`
+                    <div className="flex gap-2">
+                      {/* Page Context */}
+                      <button
+                        onClick={() => setModelResponseType("page_context")}
+                        className={`
         flex-1 px-2 py-1 rounded-full border text-sm font-medium transition-all
-        ${
-          modelResponseType === "page_context"
-            ? "bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 text-white border-transparent shadow-lg scale-[1.02]"
-            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
-        }
+        ${modelResponseType === "page_context"
+                            ? "bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 text-white border-transparent shadow-lg scale-[1.02]"
+                            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
+                          }
       `}
-      aria-pressed={modelResponseType === "page_context"}
-    >
-      Page Context
-    </button>
+                        aria-pressed={modelResponseType === "page_context"}
+                      >
+                        Page Context
+                      </button>
 
-    {/* General Knowledge */}
-    <button
-      onClick={() => setModelResponseType("general_knowledge")}
-      className={`
+                      {/* General Knowledge */}
+                      <button
+                        onClick={() => setModelResponseType("general_knowledge")}
+                        className={`
         flex-1 px-2 py-1 rounded-full border text-sm font-medium transition-all
-        ${
-          modelResponseType === "general_knowledge"
-            ? "bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 text-white border-transparent shadow-lg scale-[1.02]"
-            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
-        }
+        ${modelResponseType === "general_knowledge"
+                            ? "bg-gradient-to-r from-purple-600 via-purple-500 to-pink-400 text-white border-transparent shadow-lg scale-[1.02]"
+                            : "border-gray-600/50 text-gray-300 hover:border-gray-400 hover:text-white"
+                          }
       `}
-      aria-pressed={modelResponseType === "general_knowledge"}
-    >
-      General Knowledge
-    </button>
-  </div>
+                        aria-pressed={modelResponseType === "general_knowledge"}
+                      >
+                        General Knowledge
+                      </button>
+                    </div>
 
-  {/* Selected mode hint */}
-  <p className="mt-2 text-xs text-gray-400">
-    Selected mode:{" "}
-    <span className="text-white font-medium">
-      {modelResponseType === "page_context"
-        ? "Page Context (uses SForger information only)"
-        : "General Knowledge (model knowledge only)"}
-    </span>
-  </p>
-</div>
+                    {/* Selected mode hint */}
+                    <p className="mt-2 text-xs text-gray-400">
+                      Selected mode:{" "}
+                      <span className="text-white font-medium">
+                        {modelResponseType === "page_context"
+                          ? "Page Context (uses SForger information only)"
+                          : "General Knowledge (model knowledge only)"}
+                      </span>
+                    </p>
+                  </div>
 
-                            {/* Action Buttons */}
+                  {/* Action Buttons */}
                   <div className="space-y-2 pt-4 border-t border-gray-700/50">
                     <Button
                       onClick={clearChat}
@@ -421,7 +418,7 @@ const QwenChat = () => {
             </div>
 
             {/* Main Chat Area */}
-            <div className="lg:col-span-3">
+            <div className="flex-3">
               <div className="relative overflow-hidden rounded-2xl bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 h-[calc(100vh-12rem)] flex flex-col">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[length:20px_20px]" />
                 
@@ -445,11 +442,10 @@ const QwenChat = () => {
                       key={message.id}
                       className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
                     >
-                      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                        message.role === 'user' 
-                          ? 'bg-blue-500' 
+                      <div className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${message.role === 'user'
+                          ? 'bg-blue-500'
                           : 'bg-purple-500'
-                      }`}>
+                        }`}>
                         {message.role === 'user' ? (
                           <img src={getProfilePicture(user)} alt="User Avatar" className="w-8 h-8 rounded-full object-cover" />
                         ) : (
@@ -458,19 +454,17 @@ const QwenChat = () => {
                       </div>
                       
                       <div className={`max-w-[75%] ${message.role === 'user' ? 'items-end' : ''}`}>
-                        <div className={`rounded-2xl px-4 py-3 ${
-                          message.role === 'user'
+                        <div className={`rounded-2xl px-4 py-3 ${message.role === 'user'
                             ? 'bg-blue-600 text-white'
                             : message.isError
-                            ? 'bg-red-900/30 border border-red-700/50 text-red-200'
-                            : 'bg-gray-700/80 text-gray-100'
-                        }`}>
+                              ? 'bg-red-900/30 border border-red-700/50 text-red-200'
+                              : 'bg-gray-700/80 text-gray-100'
+                          }`}>
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
                         </div>
                         
-                        <div className={`flex items-center gap-2 mt-1 text-xs ${
-                          message.role === 'user' ? 'justify-end' : ''
-                        }`}>
+                        <div className={`flex items-center gap-2 mt-1 text-xs ${message.role === 'user' ? 'justify-end' : ''
+                          }`}>
                           <span className="text-gray-500">
                             {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </span>

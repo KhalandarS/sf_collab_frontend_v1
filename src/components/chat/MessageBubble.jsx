@@ -9,10 +9,11 @@
 
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { chatAPI } from "@/utils/APIs/chatApi";
 
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
@@ -125,9 +126,25 @@ function getMsgStatus(msg) {
   return "sent";
 }
 
-export default function MessageBubble({ message, isOwn, showAvatar, showSenderName = false }) {
+export default function MessageBubble({ 
+  message, 
+  isOwn, 
+  showAvatar, 
+  showSenderName = false,
+  setMessages = null,
+  onMessageUpdated = null,
+  conversationId = null 
+}) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoadingEditing, setIsLoadingEditing] = useState(false);
+  const [editContent, setEditContent] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [deletePopupOpen, setDeletePopupOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const menuRef = useRef(null);
 
   const { access_token: token } = useSelector((state) => state.auth || {});
 
@@ -139,7 +156,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
     message?.sentAt ??
     null;
 
-  // Get sender name - Fixed to handle various formats
   const senderName = useMemo(() => {
     if (message?.sender) {
       const firstName = message.sender.firstName || message.sender.first_name || "";
@@ -149,7 +165,6 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
     return message?.sender_name || message?.senderName || "";
   }, [message]);
 
-  // Get sender profile picture - Fixed
   const senderAvatar = useMemo(() => {
     return getProfilePicture(message?.sender);
   }, [message?.sender]);
@@ -160,6 +175,102 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
     Boolean(message?.is_image) ||
     (message?.file_type && (String(message.file_type) === "image" || String(message.file_type).startsWith("image/"))) ||
     message?.message_type === "image";
+
+  // Handle edit
+  const handleEditClick = useCallback(() => {
+    console.log("[MessageBubble] handleEditClick triggered");
+    console.log("[MessageBubble] message.content:", message.content);
+    console.log("[MessageBubble] message.original_content:", message.original_content);
+    
+    const contentToEdit = message.content || message.original_content || "";
+    console.log("[MessageBubble] contentToEdit:", contentToEdit);
+    
+    setEditContent(contentToEdit);
+    setIsEditing(true);
+    setMenuOpen(false);
+    console.log("[MessageBubble] Edit mode enabled");
+  }, [message.content, message.original_content]);
+
+  const handleSaveEdit = useCallback(async () => {
+    console.log("[MessageBubble] handleSaveEdit triggered");
+    console.log("[MessageBubble] editContent:", editContent);
+    console.log("[MessageBubble] editContent.trim():", editContent.trim());
+    console.log("[MessageBubble] conversationId:", conversationId);
+    console.log("[MessageBubble] message.id:", message.id);
+    
+    if (!editContent.trim() || !conversationId) {
+      console.warn("[MessageBubble] Validation failed - empty content or missing conversationId");
+      return;
+    }
+
+    try {
+      console.log("[MessageBubble] Calling chatAPI.editMessage");
+      setIsLoadingEditing(true);
+      await chatAPI.editMessage(conversationId, message.id, editContent.trim());
+      console.log("[MessageBubble] Edit API call successful");
+      if (setMessages) {
+
+        const updatedMessage = {
+          ...message,
+          original_content: editContent.trim(),
+          content: editContent.trim(),
+          is_edited: true,
+          edited_at: new Date().toISOString()
+        };
+        console.log("[MessageBubble] Calling onMessageUpdated with:", updatedMessage);
+        setMessages((msgs) => msgs.map((m) => (m.id === message.id ? updatedMessage : m)));
+      }
+      
+      setIsEditing(false);
+      console.log("[MessageBubble] Edit mode disabled");
+    } catch (error) {
+      console.error("[MessageBubble] Failed to edit message:", error);
+    } finally {
+      setIsLoadingEditing(false);
+    }
+  }, [editContent, conversationId, message, onMessageUpdated]);
+
+  const handleCancelEdit = useCallback(() => {
+    setIsEditing(false);
+    setEditContent("");
+  }, []);
+
+  // Handle delete
+  const handleDeleteClick = useCallback(async () => {
+    
+    if (!conversationId) return;
+
+    setDeleting(true);
+    try {
+      await chatAPI.deleteMessage(conversationId, message.id);
+      
+      if (setMessages) {
+        setMessages((msgs) => msgs.map((m) => 
+          m.id === message.id ? { ...m, is_deleted: true } : m
+        ));
+      }
+      
+      setMenuOpen(false);
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    } finally {
+      setDeleting(false);
+    }
+  }, [conversationId, message, onMessageUpdated]);
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+
+    if (menuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }
+  }, [menuOpen]);
 
   const onDownload = useCallback(async () => {
     if (!fileUrl) return;
@@ -181,7 +292,23 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
       </div>
     );
   }
-
+    // Early return for deleted messages
+  if (message?.is_deleted) {
+    return (
+      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+        <div className="w-8 shrink-0" />
+        <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
+          <div className={`px-3 py-2 rounded-2xl text-sm italic ${
+            isOwn 
+              ? "bg-gradient-to-r from-indigo-500/30 to-blue-500/30 text-white/50" 
+              : "bg-zinc-800/50 text-zinc-500"
+          }`}>
+            This message was deleted
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <>
       {/* Image Viewer Modal */}
@@ -245,7 +372,7 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
           <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
             {/* Message bubble */}
             <div
-              className={`px-3 py-2 rounded-2xl text-sm ${
+              className={`px-3 py-2 rounded-2xl text-sm relative ${
                 isOwn 
                   ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" 
                   : "bg-zinc-800 text-zinc-100"
@@ -308,16 +435,84 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
                 </div>
               )}
 
-              {/* Message content */}
-              {!hideAutoFileText({
-                fileUrl,
-                isImage,
-                content: message.content || message.original_content,
-                fileName: message?.file_name,
-              }) && (message.content || message.original_content)}
+              {/* Edit mode */}
+              {isEditing ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full px-2 py-1 bg-black/20 rounded text-white text-sm resize-none"
+                    rows="3"
+                    autoFocus
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="px-2 py-1 text-xs bg-black/30 hover:bg-black/50 rounded"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveEdit}
+                      className="px-2 py-1 text-xs bg-green-600 hover:bg-green-700 rounded"
+                    >
+                      {isLoadingEditing ? "Saving..." : "Save"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Message content */}
+                  {!hideAutoFileText({
+                    fileUrl,
+                    isImage,
+                    content: message.content || message.original_content,
+                    fileName: message?.file_name,
+                  }) && (message.content || message.original_content)}
 
-              {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+                  {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+                </>
+              )}
             </div>
+
+            {/* Actions menu */}
+            {isOwn && conversationId && !isEditing && (
+              <div className="relative" ref={menuRef}>
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-1.5 rounded-lg hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 opacity-0 md:group-hover:opacity-100 transition-opacity"
+                  title="More"
+                >
+                  <MoreVertical size={16} />
+                </button>
+
+                {menuOpen && (
+                  <div className="absolute right-0 mt-1 w-32 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50">
+                    <button
+                      type="button"
+                      onClick={handleEditClick}
+                      disabled={deleting}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-zinc-700 rounded-t-lg disabled:opacity-50"
+                    >
+                      <Edit2 size={14} />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeletePopupOpen(true)}
+                      disabled={deleting}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-red-400 hover:bg-red-500/20 rounded-b-lg disabled:opacity-50"
+                    >
+                      <Trash2 size={14} />
+                      {deleting ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Timestamp and status */}
             <span className="text-[10px] text-zinc-600 mt-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center gap-1">
@@ -333,6 +528,33 @@ export default function MessageBubble({ message, isOwn, showAvatar, showSenderNa
           </div>
         </div>
       </div>
+      {/* Delete Confirmation Popup */}
+      {deletePopupOpen && (
+        <div className="fixed inset-0 z-[9999] bg-black/50 flex items-center justify-center">
+          <div className="bg-zinc-900 p-6 rounded-lg shadow-lg w-80">
+            <h3 className="text-lg font-semibold mb-4 text-white">Confirm Deletion</h3>
+            <p className="mb-6 text-zinc-300">Are you sure you want to delete this message?</p>
+            <div className="flex justify-end gap-4">
+              <button
+                type="button"
+                onClick={() => setDeletePopupOpen(false)}
+                className="px-4 py-2 bg-zinc-700 hover:bg-zinc-600 rounded text-zinc-200"
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteClick}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded text-white"
+                disabled={deleting}
+              >
+                {deleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

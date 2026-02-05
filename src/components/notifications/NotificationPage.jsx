@@ -175,7 +175,14 @@ export default function NotificationPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
+              className="cursor-pointer"
+              onClick={() => {
+                if (n.linkUrl) {
+                  window.location.href = n.linkUrl;
+                }
+              }}
             >
+              
               <NotificationItem notification={n} onMarkAsRead={onMarkAsRead} onDelete={() => refresh()} />
             </motion.div>
           ))}

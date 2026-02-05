@@ -12,6 +12,7 @@ export default function CrowdfundingSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
+
   const [totalCrowdfunding, setTotalCrowdfunding] = useState(80);
   const [planId] = useGetPlanId();
   const { access_token } = useSelector((state) => state.auth);
@@ -72,6 +73,7 @@ const progressPercent = Math.min(
 );
 
   return (
+    <>
     <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
       <div className="w-full px-6 md:px-40 mx-auto space-y-16">
         {/* HEADER */}
@@ -209,5 +211,6 @@ const progressPercent = Math.min(
         <p>● All core tools remain free for builders</p>
       </div>
     </section>
+    </>
   );
 }

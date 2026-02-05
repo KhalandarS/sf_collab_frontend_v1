@@ -37,6 +37,7 @@ const AdminDashboard = () => {
   const [usersFilter, setUsersFilter] = useState('');
   const {
     items: users,
+    setItems: setUsers,
     total: totalUsers,
     loading: loadingUsers,
     targetRef: usersRef,
@@ -100,9 +101,6 @@ const AdminDashboard = () => {
     objectKey: 'donations',
     enabled: !!access_token,
   })
-  const totalFromDonations = useMemo(() => {
-    return donations.reduce((sum, item) => sum + (item.amount || 0), 0) / 100; // Donations are in cents
-  }, [donations]);
 
   const {
     items: crowdfunding,
@@ -190,7 +188,17 @@ const AdminDashboard = () => {
     }
     fetchApplications();
   }, [access_token]);
-  console.log("Crowdfunding:", crowdfunding);
+  const handleGivePointsPopup = async (feedbackItem) => {
+    let user = users.find(u => u.id === feedbackItem.userId);
+    if (!user) {
+      const response = await usersAPI.getById(feedbackItem.userId, access_token);
+      if (!response.data) return;
+      console.log("User response",response);
+      user = response.data.user;
+    }
+    setSelectedUser(user);
+    setShowPointsModal(true);
+  };
   return (
     <>
       {activeUser && <UserPopUp user={activeUser} onClose={() => setActiveUser(null)} />}
@@ -410,12 +418,11 @@ const AdminDashboard = () => {
     
                     <button
                       onClick={() => {
-                        setSelectedUser(users.find(u => u.id === item.userId));
-                        setShowPointsModal(true);
+                        handleGivePointsPopup(item);
                       }}
                       className="px-3 py-1 text-sm bg-green-600 hover:bg-green-500 rounded"
                     >
-                      + Give Points
+                      + Give Points 
                     </button>
                   </div>
 

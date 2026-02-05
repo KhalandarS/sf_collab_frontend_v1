@@ -1,12 +1,4 @@
-/**
- * ConversationItem Component - Fixed Version
- * 
- * FIXES:
- * 1. Profile pictures now display correctly using getProfilePicture utility
- * 2. Better name extraction from various formats
- */
-
-import React from "react";
+import React, { useMemo } from "react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 
@@ -31,65 +23,70 @@ const ConversationItem = ({
 }) => {
   const isDirect = conversation.conversation_type === "direct";
 
-  // Get other participant for direct conversations
   const otherParticipant = isDirect
     ? conversation.participants?.find((p) => String(p.id) !== String(currentUserId))
     : null;
 
   const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
 
-  // Check if connected
   const connected = otherId 
     ? (onlineUsers || []).map(String).includes(otherId) 
     : false;
 
-  const lastActiveTs = otherId ? toMs(lastActiveAt?.[otherId]) : null;
-  const lastSeenTs =
-    otherId
+  const lastActiveTs = useMemo(() => (otherId ? toMs(lastActiveAt?.[otherId]) : null), [otherId, lastActiveAt]);
+  
+  const lastSeenTs = useMemo(() => {
+    return otherId
       ? toMs(
           lastSeenAt?.[otherId] ??
-            otherParticipant?.last_seen ??
-            otherParticipant?.lastSeen ??
-            otherParticipant?.last_login ??
-            otherParticipant?.lastLogin
+          otherParticipant?.last_seen ??
+          otherParticipant?.lastSeen ??
+          otherParticipant?.last_login ??
+          otherParticipant?.lastLogin
         )
       : null;
+  }, [otherId, lastSeenAt, otherParticipant]);
 
   const diffMs = (ts) => (ts ? Math.max(0, nowTs - ts) : null);
 
-  // Calculate presence status
-  let presenceStatus = "offline";
-  if (isDirect && otherId) {
-    if (connected) {
-      const d = diffMs(lastActiveTs);
-      if (d == null || d < 5 * 60 * 1000) presenceStatus = "online";
-      else if (d < 6 * 60 * 1000) presenceStatus = "idle";
-      else presenceStatus = "offline";
-    } else {
-      presenceStatus = "offline";
+  const presenceStatus = useMemo(() => {
+    if (isDirect && otherId) {
+      if (connected) {
+        const d = diffMs(lastActiveTs);
+        if (d == null || d < 5 * 60 * 1000) return "online";
+        else if (d < 6 * 60 * 1000) return "idle";
+      }
     }
-  }
+    return "offline";
+  }, [isDirect, otherId, connected, lastActiveTs, nowTs]);
 
-  // Get conversation display name - Fixed to handle various formats
-  const conversationName = isDirect
-    ? `${otherParticipant?.firstName || otherParticipant?.first_name || ""} ${
-        otherParticipant?.lastName || otherParticipant?.last_name || ""
-      }`.trim() || "User"
-    : conversation.name || "Group Chat";
+  const conversationName = useMemo(() => {
+    return isDirect
+      ? `${otherParticipant?.firstName || otherParticipant?.first_name || ""} ${
+          otherParticipant?.lastName || otherParticipant?.last_name || ""
+        }`.trim() || "User"
+      : conversation.name || "Group Chat";
+  }, [isDirect, otherParticipant, conversation]);
 
-  // Get avatar URL - Fixed to use getProfilePicture utility
-  const avatarUrl = isDirect
-    ? getProfilePicture(otherParticipant)
-    : conversation.avatar || null;
+  const avatarUrl = useMemo(() => {
+    return getProfilePicture(isDirect ? otherParticipant : conversation);
+  }, [isDirect, otherParticipant, conversation]);
 
-  // Get last message preview
-  const lastMessage = conversation.last_message?.content || "No messages yet";
-  const lastTime = conversation.last_message?.created_at
-    ? new Date(conversation.last_message.created_at).toLocaleTimeString([], { 
-        hour: "2-digit", 
-        minute: "2-digit" 
-      })
-    : "";
+  const lastMessage = useMemo(() => {
+    if (conversation.last_message?.is_deleted) {
+      return "This message was deleted";
+    }
+    return conversation.last_message?.content || "No messages yet";
+  }, [conversation]);
+
+  const lastTime = useMemo(() => {
+    return conversation.last_message?.created_at
+      ? new Date(conversation.last_message.created_at).toLocaleTimeString([], { 
+          hour: "2-digit", 
+          minute: "2-digit" 
+        })
+      : "";
+  }, [conversation]);
 
   return (
     <button

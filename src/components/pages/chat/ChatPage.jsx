@@ -18,6 +18,7 @@ import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { usersAPI } from '@/utils/APIs/userAPI';
 import { getProfilePicture } from '@/utils/getProfilePicture';
+import { chatAPI } from '@/utils/APIs/chatApi';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
@@ -188,59 +189,54 @@ const ChatPage = () => {
     if (!token) return;
     
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await chatAPI.getAllChats();
+      const data = response.data;
+      console.log("data:", data);
+
+      const convos = data.conversations || [];
+      console.log(response);
+      setConversations(convos);
+
+      // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
+      // (works even if you didn't witness the user go offline in this session)
+      setLastSeenAt((prev) => {
+        const next = { ...prev };
+        for (const c of convos) {
+          if (c?.conversation_type !== "direct") continue;
+          const other = c.participants?.find(
+            (p) => String(p.id) !== String(currentUser?.id)
+          );
+          if (!other?.id) continue;
+
+          const ts =
+            other.last_seen ??
+            other.lastSeen ??
+            other.last_login ??
+            other.lastLogin ??
+            null;
+
+          const ms = toMs(ts);
+          if (ms) next[String(other.id)] = ms;
+        }
+        return next;
       });
-      const data = await response.json();
-      if (data.success) {
-        const convos = data.data.conversations || [];
-        setConversations(convos);
 
-        // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
-        // (works even if you didn't witness the user go offline in this session)
-        setLastSeenAt((prev) => {
-          const next = { ...prev };
-          for (const c of convos) {
-            if (c?.conversation_type !== "direct") continue;
-            const other = c.participants?.find(
-              (p) => String(p.id) !== String(currentUser?.id)
-            );
-            if (!other?.id) continue;
-
-            const ts =
-              other.last_seen ??
-              other.lastSeen ??
-              other.last_login ??
-              other.lastLogin ??
-              null;
-
-            const ms = toMs(ts);
-            if (ms) next[String(other.id)] = ms;
-          }
-          return next;
-        });
-      }
     } catch (error) {
       console.error('Failed to fetch conversations:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [token]);
+  }, [token, currentUser?.id]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
     
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${conversationId}/messages`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const data = await response.json();
-      if (data.success) {
-        setMessages((data.data.messages || []).map(normalizeMessage));
-        socket?.emit('mark_read', { conversation_id: conversationId });
-      }
+      const response = await chatAPI.getMessages(conversationId, 100, 0);
+      const data = response.data;
+      setMessages((data.messages || []).map(normalizeMessage));
+      socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
     }
@@ -251,27 +247,11 @@ const ChatPage = () => {
   // ============================================
   const handleFileUpload = useCallback(async (file) => {
     if (!token || !file) return null;
-    
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('content', file.name);
-    formData.append('message_type', file.type.startsWith('image/') ? 'image' : 'file');
-    
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/chat/conversations/${activeConversation.id}/messages`,
-        {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}` },
-          body: formData,
-        }
-      );
-      const data = await response.json();
+      const response = await chatAPI.uploadFile(activeConversation?.id, file, file.name);
+      const data = response.data;
       
-      if (data.success && data.data.message) {
-        return data.data.message.file_url;
-      }
-      return null;
+      return data.message.file_url;
     } catch (error) {
       console.error('File upload failed:', error);
       return null;
@@ -286,7 +266,8 @@ const ChatPage = () => {
   useEffect(() => {
     if (!token) return;
     fetchConversations();
-  }, [token, fetchConversations]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
 
   // Open DM if URL has ?user=<id>
@@ -465,41 +446,65 @@ useEffect(() => {
 
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
+    console.log('handleOpenChatWithFriend called with friend:', friend);
+    
     // Check if conversation already exists
-    const existing = conversations.find(c =>
-      c.conversation_type === 'direct' &&
-      c.participants?.some(p => String(p.id) === String(friend.id))
-    );
-
+    const existing = conversations.find(c => {
+      console.log('Checking conversation:', c);
+      const isDirectType = c.conversation_type === 'direct';
+      console.log('  - Is direct type:', isDirectType);
+      const hasParticipant = c.participants?.some(p => {
+        const matches = String(p.id) === String(friend.id);
+        console.log(`    - Participant ${p.id} matches friend ${friend.id}:`, matches);
+        return matches;
+      });
+      console.log('  - Has friend participant:', hasParticipant);
+      return isDirectType && hasParticipant;
+    });
+    
+    console.log('Existing conversation found:', existing);
+    
     if (existing) {
+      console.log('Using existing conversation, selecting it...');
       handleSelectConversation(existing);
     } else {
+      console.log('No existing conversation, creating new one...');
       // Create new conversation
       try {
-        const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            participant_ids: [friend.id],
-            conversation_type: 'direct',
-          }),
-        });
-        const data = await response.json();
-        if (data.success) {
-          await fetchConversations();
-
+        console.log('Creating direct conversation for friend ID:', friend.id);
+        const response = await chatAPI.createDirectConversation(friend.id);
+        console.log('API response:', response);
+        
+        const data = response.data;
+        console.log('Response data:', data);
+        
+        console.log('Conversation created successfully');
           
-          const createdId = data?.data?.conversation?.id;
-          const updated = (conversations || []).find((c) => String(c.id) === String(createdId));
-
-          handleSelectConversation(updated || data.data.conversation);
-        }
+        console.log('Fetching updated conversations...');
+        await fetchConversations();
+          
+        const createdId = data?.conversation?.id;
+        console.log('Created conversation ID:', createdId);
+        console.log('Current conversations:', conversations);
+          
+        const updated = (conversations || []).find((c) => {
+          console.log(`  - Checking conversation ${c.id} against created ID ${createdId}`);
+          return String(c.id) === String(createdId);
+        });
+          
+        console.log('Found updated conversation:', updated);
+        const convoToSelect = updated || data.conversation;
+        console.log('Selecting conversation:', convoToSelect);
+          
+        handleSelectConversation(convoToSelect);
 
       } catch (error) {
         console.error('Failed to create conversation:', error);
+        console.error('Error details:', {
+          message: error.message,
+          stack: error.stack,
+          response: error.response?.data,
+        });
       }
     }
   };
@@ -507,33 +512,22 @@ useEffect(() => {
   // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/chat/conversations`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          participant_ids: Array.from(new Set(userIds.map(String))).map((x) => Number.isNaN(Number(x)) ? x : Number(x)),
-          name,
-          conversation_type: 'group',
-        }),
-      });
-
-      const data = await response.json();
-
+      const response = await chatAPI.createGroupConversation(name, userIds);
+      const data = response.data;
       if (!response.ok || !data?.success) {
-        // return a structured failure so the modal can show it
-        return { success: false, message: data?.error || data?.message || 'Failed to create group chat.' };
+        return {
+          success: false,
+          message: data?.error || data?.message || `Failed to create group chat (HTTP ${response.status})`,
+        };
       }
 
-      fetchConversations();
-      handleSelectConversation(data.data.conversation);
+      await fetchConversations();              
+      handleSelectConversation(data.conversation);
 
       return { success: true, data };
     } catch (error) {
       console.error('Failed to create group:', error);
-      return { success: false, message: error?.message || 'Failed to create group chat.' };
+      return { success: false, message: error?.error || error?.message || 'Failed to create group chat.' };
     }
   };
 
@@ -787,9 +781,9 @@ useEffect(() => {
               <p>No conversations yet</p>
             </div>
           ) : (
-            filteredConversations.map((conv) => (
+            filteredConversations.map((conv, idx) => (
               <ConversationItem
-                key={conv.id}
+                key={idx}
                 conversation={conv}
                 isActive={activeConversation?.id === conv.id}
                 onClick={() => {
@@ -871,7 +865,7 @@ useEffect(() => {
                   const isOwn = String(message.sender_id) === String(currentUser.id);
                   
                   return (
-                    <React.Fragment key={message.id || index}>
+                    <React.Fragment key={index}>
                       {/* Date separator (Today, Yesterday, etc.) */}
                       {shouldShowDateSeparator(message, prevMessage) && (
                         <DateSeparator date={message.created_at} />
@@ -882,8 +876,10 @@ useEffect(() => {
                         message={message}
                         isOwn={isOwn}
                         showAvatar={shouldShowAvatar(message, index)}
-                        currentUserId={currentUser.id}
+                        currentUserId={currentUser?.id}
+                        conversationId={activeConversation?.id}
                         conversationType={activeConversation?.conversation_type}
+                        setMessages={setMessages}
                         showSenderName={
                           activeConversation?.conversation_type !== "direct" &&
                           shouldShowSenderName(messages, index)
@@ -903,7 +899,7 @@ useEffect(() => {
             </div>
 
             {/* Chat Input - with file upload support */}
-            <div className="p-2 md:p-4 border-t border-zinc-800">
+            <div className="border-t border-zinc-800">
               <ChatInput
                 value={messageInput}
                 onChange={handleInputChange}

@@ -110,7 +110,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
             setIsOpen(true);
             isMobile ? callback() : null
           }}
-          className="fixed bottom-20 right-4 z-10 w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg flex items-center justify-center"
+          className="fixed bottom-4 right-4 z-10 w-12 h-12 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg flex items-center justify-center"
         >
           <Sparkles size={20} />
         </motion.button>

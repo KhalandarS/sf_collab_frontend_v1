@@ -308,7 +308,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         location.pathname !== "/chat" &&
         <>
           <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
-          <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} />
+          { !isMobile && <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} /> }
         </>
       }
       {/* )} */}

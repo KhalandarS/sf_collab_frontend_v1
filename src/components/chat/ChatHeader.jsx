@@ -49,9 +49,6 @@ const ChatHeader = ({
       ? `${otherParticipant.firstName || otherParticipant.first_name || ""} ${otherParticipant.lastName || otherParticipant.last_name || ""}`.trim()
       : "Chat");
 
-  // Get profile picture - Fixed to use getProfilePicture utility
-  const avatarUrl = getProfilePicture(otherParticipant);
-
   // Status color based on presence
   const statusColor =
     presenceStatus === "online"
@@ -93,7 +90,7 @@ const ChatHeader = ({
             aria-label="Open profile menu"
           >
             <Avatar
-              src={avatarUrl}
+              src={getProfilePicture(otherParticipant)}
               name={displayName}
               size="md"
               presenceStatus={presenceStatus}

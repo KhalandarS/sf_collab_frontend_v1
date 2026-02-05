@@ -78,7 +78,6 @@ const Ideation = ({ activeRole}) => {
       }
 
       const response = await ideaAPI.getAllIdeas(access_token, params);
-      console.log("Response: ", response);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch ideas");
       }

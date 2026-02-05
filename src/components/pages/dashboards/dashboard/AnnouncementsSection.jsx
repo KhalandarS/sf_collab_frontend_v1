@@ -36,7 +36,7 @@ export default function AnnouncementsSection({ userRoles }) {
     { id: 'waitlist', label: 'Waitlist', icon: Bell },
     { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap },
     ...(user && (!hideShowJobApplication || !hideInfluencerInfo) 
-      ? [{ id: 'applications', label: 'Jobs', icon: FileText }]
+      ? [{ id: 'applications', label: 'Applications', icon: FileText }]
       : [])
   ], [user, hideShowJobApplication, hideInfluencerInfo]);
 

@@ -1,7 +1,7 @@
 import { Building2, Save } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
-import { aiTools, dashboardLink, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
 
 /**
  * Creates navigation links for the Founder sidebar
@@ -25,16 +25,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
 
       ]
     },
-    {
-      id: 3,
-      icon: <MessageSquareHeart size={22} />,
-      href: "/posts",
-      label: "Social",
-      subItems: [
-        { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
-        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
-      ]
-    },
+    socialSection(3),
     {
       id: 4,
       icon: <BookOpen size={22} />,
