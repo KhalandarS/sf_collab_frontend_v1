@@ -1,19 +1,25 @@
-/**
- * NotificationBell Component
- * Bell icon with unread badge that opens notification dropdown
- */
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell } from 'lucide-react';
-import { useNotifications } from '../contexts/NotificationContext';
-import NotificationDropdown from './NotificationDropdown';
-import './NotificationBell.css';
+import { useNavigate } from 'react-router-dom';
+import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
+import { useNotifications } from '../../contexts/useNotifications';
 
 const NotificationBell = () => {
-  const { unreadCount } = useNotifications();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
-
+  
+  const { 
+    notifications, 
+    unreadCount, 
+    Loading,
+    markAsRead,
+    markAllAsRead,
+    refresh
+  } = useNotifications();
+  
+  // Get only the 5 most recent notifications for dropdown
+  const recentNotifications = notifications.slice(0, 5);
+  
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -21,36 +27,246 @@ const NotificationBell = () => {
         setIsOpen(false);
       }
     };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+  
+  // Generate link URL for notification - UPDATED FOR SF COLLAB ROUTES
+  const getNotificationLink = (notification) => {
+    if (notification.link_url) return notification.link_url;
+    
+    const { template_key, category, data } = notification;
+    const metadata = data || {};
+    
+    // Template-based links
+    if (template_key) {
+      // Messages -> /chat
+      if (template_key.includes('message') || template_key.includes('chat')) {
+        return '/chat';
+      }
+      
+      // Connections -> /connections
+      if (template_key.includes('friend') || template_key.includes('connection')) {
+        if (template_key.includes('accepted') && metadata.user_id) {
+          return `/users/${metadata.user_id}`;
+        }
+        return '/connections';
+      }
+      
+      // Posts -> /posts
+      if (template_key.includes('like') || template_key.includes('comment') || template_key.includes('post')) {
+        return '/posts';
+      }
+      
+      // Ideas -> /ideation
+      if (template_key.includes('idea')) {
+        return '/ideation';
+      }
+      
+      // Startups -> /startup-details/:id
+      if (template_key.includes('startup') || template_key.includes('team')) {
+        if (metadata.startup_id) return `/startup-details/${metadata.startup_id}`;
+        return '/discover-startups';
+      }
+      
+      // Tasks/Projects -> /projects
+      if (template_key.includes('task') || template_key.includes('project')) {
+        return '/projects';
+      }
+      
+      // Applications -> /builder/my-applications
+      if (template_key.includes('application')) {
+        return '/builder/my-applications';
+      }
+      
+      // Contributions -> /contribution
+      if (template_key.includes('contribution') || template_key.includes('poll')) {
+        return '/contribution';
+      }
+    }
+    
+    // Category-based fallback
+    switch (category) {
+      case 'social': return '/connections';
+      case 'message': return '/chat';
+      case 'idea': return '/ideation';
+      case 'team': return '/discover-startups';
+      case 'financial': return '/crowdfunding';
+      case 'account': return '/setting';
+      default: return '/dashboard';
+    }
+  };
+  
+  // Handle notification click
+  const handleNotificationClick = async (notification) => {
+    // Mark as read
+    if (!notification.is_read) {
+      await markAsRead(notification.id);
+      await refresh();
     }
 
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const toggleDropdown = () => {
-    setIsOpen(!isOpen);
+    
+    // Navigate to the link
+    const link = getNotificationLink(notification);
+    setIsOpen(false);
+    navigate(link);
   };
-
+  
+  // Handle view all
+  const handleViewAll = () => {
+    setIsOpen(false);
+    navigate('/notifications');
+  };
+  
+  // Handle mark all read
+  const handleMarkAllRead = async (e) => {
+    e.stopPropagation();
+    await markAllAsRead();
+  };
+  
+  // Format time ago
+  const formatTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffSec = Math.floor((now - date) / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHour = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHour / 24);
+    
+    if (diffSec < 60) return 'now';
+    if (diffMin < 60) return `${diffMin}m`;
+    if (diffHour < 24) return `${diffHour}h`;
+    if (diffDay < 7) return `${diffDay}d`;
+    return date.toLocaleDateString();
+  };
+  
+  // Get type color
+  const getTypeColor = (type) => {
+    switch (type) {
+      case 'success': return 'text-green-400';
+      case 'error': return 'text-red-400';
+      case 'warning': return 'text-yellow-400';
+      default: return 'text-blue-400';
+    }
+  };
+  
   return (
-    <div className="notification-bell-container" ref={dropdownRef}>
+    <div className="relative" ref={dropdownRef}>
+      {/* Bell Button */}
       <button
-        className={`notification-bell-button ${isOpen ? 'active' : ''}`}
-        onClick={toggleDropdown}
+        onClick={() => {
+          setIsOpen((prev) => {
+            const next = !prev;
+            if (!prev && next) {
+              refresh();
+            }
+            return next;
+          });
+        }}
+        className="relative p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
         aria-label="Notifications"
       >
-        <Bell size={24} />
+        <Bell className="w-6 h-6" />
+        
+        {/* Unread badge */}
         {unreadCount > 0 && (
-          <span className="notification-badge">
+          <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
       </button>
-
-      {isOpen && <NotificationDropdown onClose={() => setIsOpen(false)} />}
+      
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-slate-800 border border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-slate-700">
+            <h3 className="font-semibold">Notifications</h3>
+            <div className="flex items-center gap-2">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  <CheckCheck className="w-3 h-3" />
+                  Mark all read
+                </button>
+              )}
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1 text-slate-400 hover:text-white rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          
+          {/* Notifications List */}
+          <div className="max-h-80 overflow-y-auto">
+            {Loading && recentNotifications.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+              </div>
+            ) : recentNotifications.length === 0 ? (
+              <div className="py-8 text-center text-slate-400">
+                <Bell className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                <p>No notifications yet</p>
+              </div>
+            ) : (
+              recentNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  onClick={() => handleNotificationClick(notification)}
+                  className={`
+                    p-4 border-b border-slate-700/50 cursor-pointer transition-colors
+                    hover:bg-slate-700/50
+                    ${!notification.is_read ? 'bg-slate-700/30' : ''}
+                  `}
+                >
+                  <div className="flex items-start gap-3">
+                    {/* Unread indicator */}
+                    {!notification.is_read && (
+                      <div className="w-2 h-2 mt-2 bg-blue-500 rounded-full flex-shrink-0" />
+                    )}
+                    
+                    {/* Content */}
+                    <div className={`flex-1 min-w-0 ${notification.is_read ? 'ml-5' : ''}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className={`font-medium text-sm truncate ${getTypeColor(notification.type)}`}>
+                          {notification.title}
+                        </h4>
+                        <span className="text-xs text-slate-500 whitespace-nowrap">
+                          {formatTimeAgo(notification.created_at)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">
+                        {notification.message}
+                      </p>
+                      
+                      {/* Link indicator */}
+                      <span className="text-xs text-blue-400/70 flex items-center gap-1 mt-1">
+                        <ExternalLink className="w-3 h-3" />
+                        Click to view
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {/* Footer */}
+          <div className="p-3 border-t border-slate-700">
+            <button
+              onClick={handleViewAll}
+              className="w-full py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-slate-700/50 rounded-lg transition-colors"
+            >
+              View all notifications
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
