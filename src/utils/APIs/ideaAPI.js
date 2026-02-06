@@ -141,15 +141,10 @@ export const ideaAPI = {
     return response.data;
   },
 
-  createIdeaBookmark: async (bookmarkData, accessToken) => {
-    const response = await api.post('/idea-bookmarks', bookmarkData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  toggleIdeaBookmark: async (bookmarkData) => {
+    const response = await api.post('/idea-bookmarks/toggle', bookmarkData);
     return response.data;
   },
-
   updateIdeaBookmark: async (bookmarkId, bookmarkData, accessToken) => {
     const response = await api.put(`/idea-bookmarks/${bookmarkId}`, bookmarkData, {
       headers: {
@@ -168,14 +163,7 @@ export const ideaAPI = {
     return response.data;
   },
 
-  removeIdeaBookmark: async (userId, ideaId, accessToken) => {
-    const response = await api.delete(`/idea-bookmarks/user/${userId}/idea/${ideaId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return response.data;
-  },
+
 
   deleteIdeaBookmark: async (bookmarkId, accessToken) => {
     const response = await api.delete(`/idea-bookmarks/${bookmarkId}`, {

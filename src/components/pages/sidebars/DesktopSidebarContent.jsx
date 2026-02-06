@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import BottomLinks from "./BottomLinks";
-import { Crown } from "lucide-react";
+import { Crown, Lock } from "lucide-react";
 import { getAllRoutes } from "./sidebar/links";
 import { useState } from "react";
 
@@ -33,9 +33,7 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
   };
 
   return (
-    <div
-
-      className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
+    <div className="flex flex-col justify-between h-full w-full py-2.5 overflow-y-auto">
       <motion.div
         className="flex flex-col gap-1 items-center px-1"
         variants={containerVariants}
@@ -45,6 +43,32 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
         {links.map((link, index) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
           const showSubs = shouldShowSubItems(link) || hoveredLinkId === link.id;
+
+          if (link.isUpcoming) {
+            return (
+              <motion.div
+                key={link.id} className="w-full" variants={itemVariants}>
+                <div className="relative group w-full flex justify-center">
+                  <div
+                    className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors cursor-not-allowed text-gray-600 bg-gray-800/50`}
+                  >
+                    {link.icon}
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    whileHover={{ opacity: 1 }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 bg-zinc-800 text-white text-xs font-medium rounded-md whitespace-nowrap 
+opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 pointer-events-none shadow-lg z-[99999999999]"
+                  >
+                    {link.label} (Coming Soon)
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full border-[6px] border-transparent border-b-zinc-800" />
+                  </motion.div>
+                </div>
+              </motion.div>
+            );
+          }
+
           return (
             <motion.div
               onMouseEnter={() => setHoveredLinkId(link.id)}
@@ -58,9 +82,9 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                     onClick={() => {
                       if (link.href) {
                         navigate(link.href);
-                        return
+                        return;
                       }
-                      toggleExpand(link.id)
+                      toggleExpand(link.id);
                     }}
                     className={`flex items-center justify-center px-2 py-3 rounded-lg transition-colors ${isActive
                       ? "bg-blue-600/20 text-blue-400"
@@ -119,8 +143,7 @@ export default function DesktopSidebarContent({ links = [], currentContextId, to
                             navigate(subItem.href);
                             return;
                           }
-                        }
-                        }
+                        }}
                         key={subItem.id} className="relative group" whileHover={{ x: 4 }}>
                         <Link
                           to={subItem.onLinkClick ? "#" : subItem.href}

@@ -9,6 +9,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       icon: <BriefcaseBusiness size={22} />,
       href: "/campaigns",
       label: "Campaigns",
+      isUpcoming: true,
       subItems: [
         { id: "active-campaigns", href: "/campaigns", label: "Active Campaigns" },
         { id: "past-campaigns", href: "/campaigns/past", label: "Past Campaigns" },
@@ -19,6 +20,8 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       icon: <TrendingUp size={22} />,
       href: "/statistics",
       label: "Statistics",
+      isUpcoming: true,
+
       subItems: [
         { id: "performance", href: "/statistics", label: "Performance" },
         { id: "analytics", href: "/statistics/analytics", label: "Analytics" },
@@ -29,6 +32,8 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       icon: <Share2 size={22} />,
       href: "/links-assets",
       label: "Links & Assets",
+      isUpcoming: true,
+
       subItems: [
         { id: "my-links", href: "/links-assets", label: "My Links" },
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
@@ -39,6 +44,8 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
       icon: <Wallet size={22} />,
       href: "/payouts",
       label: "Payouts",
+      isUpcoming: true,
+
       subItems: [
         { id: "payout-history", href: "/payouts", label: "Payout History" },
         { id: "bank-details", href: "/payouts/bank-details", label: "Bank Details" },

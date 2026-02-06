@@ -36,11 +36,12 @@ export const usersAPI = {
     return response.data;
   },
 
-  getById: async (userId, accessToken) => {
+  getById: async (userId, params = {}) => {
     const response = await api.get(`/users/${userId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+      params: {
+        include_stats: params.include_stats || false,
+        ...params
+      }
     });
     return response.data;
   },

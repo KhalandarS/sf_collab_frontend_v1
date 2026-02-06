@@ -785,6 +785,7 @@ useEffect(() => {
               <ConversationItem
                 key={idx}
                 conversation={conv}
+                
                 isActive={activeConversation?.id === conv.id}
                 onClick={() => {
                   handleSelectConversation(conv)

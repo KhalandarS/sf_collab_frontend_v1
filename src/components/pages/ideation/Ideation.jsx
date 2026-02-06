@@ -22,10 +22,8 @@ import {
   RefreshCw,
 } from "lucide-react";
 import React, { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
 import IdeationHeader from "./IdeationHeader";
 import ScrollToTop from "../../sections/ScrollToTop";
-import axios from "axios";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { API_BASE_URL } from "@/utils/config";
@@ -41,17 +39,16 @@ const Ideation = ({ activeRole}) => {
   const [selectedStage, setSelectedStage] = useState("All Stages");
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries");
   const [sortBy, setSortBy] = useState("trending");
-  const [bookmarkNotification, setBookmarkNotification] = useState("");
+
   const [showShareMsg, setShowShareMsg] = useState(false);
   const [ideas, setIdeas] = useState([]);
-  const [bookmarks, setBookmarks] = useState(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [networkError, setNetworkError] = useState(false);
   const [showNewIdeaForm, setShowNewIdeaForm] = useState(false);
 
   const { user, access_token } = useSelector((state) => state.auth);
-
+  console.log("Ideas:", ideas.filter(i => i.hasBookmarked));
   useEffect(() => {
     fetchIdeas();
   }, [selectedIndustry, selectedStage, searchQuery]);
@@ -95,7 +92,7 @@ const Ideation = ({ activeRole}) => {
         author: {
           name: `${idea.creator.firstName} ${idea.creator.lastName}`,
           role: activeRole,
-          avatar: getProfilePicture(user),
+          avatar: idea.creator ? getProfilePicture(idea.creator) : '',
         },
         createdAt: new Date(idea.createdAt).toLocaleDateString("en-US", {
           month: "long",
@@ -104,6 +101,8 @@ const Ideation = ({ activeRole}) => {
         }),
         timeAgo: calculateTimeAgo(idea.createdAt),
         likes: idea.likes,
+        hasLiked: idea.hasLiked || false,
+        hasBookmarked: idea.hasBookmarked || false,
         comments: idea.commentsCount,
         collaborators: idea.teamSize,
         tags: idea.tags || [],
@@ -164,7 +163,7 @@ const Ideation = ({ activeRole}) => {
           day: "numeric",
           year: "numeric",
         }),
-        likes: newIdea.likes,
+        likes: newIdea.likesLength,
         comments: newIdea.commentsCount,
         collaborators: newIdea.teamSize,
         tags: newIdea.tags || [],
@@ -185,73 +184,6 @@ const Ideation = ({ activeRole}) => {
 
 
 
-  useEffect(() => {
-    const fetchBookmarks = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-
-        const response = await fetch(`${API_BASE_URL}/bookmarks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch bookmarks");
-
-        const data = await response.json();
-        const bookmarkArray = data.data?.bookmarks || data.bookmarks || [];
-
-        const bookmarkSet = new Set(
-          bookmarkArray.map((b) => String(b.idea_id || b.ideaId))
-        );
-
-        setBookmarks(bookmarkSet);
-      } catch (error) {
-        console.error("Bookmarks fetch error:", error);
-      }
-    };
-
-    fetchBookmarks();
-  }, []);
-
-  const handleBookmark = async (idea) => {
-    const ideaId = idea.id;
-    const token = localStorage.getItem("authToken");
-
-    if (!token) {
-      setBookmarkNotification("Please log in to bookmark ideas");
-      setTimeout(() => setBookmarkNotification(""), 2000);
-      return;
-    }
-
-    setBookmarks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(String(ideaId))) {
-        newSet.delete(String(ideaId));
-        setBookmarkNotification("Bookmark removed");
-      } else {
-        newSet.add(String(ideaId));
-        setBookmarkNotification("Idea bookmarked!");
-      }
-      setTimeout(() => setBookmarkNotification(""), 2000);
-      return newSet;
-    });
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/${ideaId}/bookmark`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) throw new Error("Failed to toggle bookmark");
-    } catch (error) {
-      console.error("Bookmark toggle error:", error);
-      setBookmarkNotification("Failed to update bookmark");
-      setTimeout(() => setBookmarkNotification(""), 2000);
-    }
-  };
 
   const handleShare = async (idea) => {
     try {
@@ -279,7 +211,7 @@ const Ideation = ({ activeRole}) => {
       </div>
     );
   }
-  
+  console.log("Ideas:", ideas);
   if (networkError) {
     return (
       <div className="min-h-screen bg-black">
@@ -455,39 +387,6 @@ const Ideation = ({ activeRole}) => {
                 </div>
               )}
 
-              {canAccess && (
-                <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                  {/* <button
-                    className={`bg-white/20 p-2 rounded-lg transition-colors ${
-                      bookmarks.has(String(content.id))
-                        ? "bg-blue-500/10 text-blue-400 border border-blue-400"
-                        : "hover:bg-white/30"
-                    }`}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleBookmark(content);
-                    }}
-                  >
-                    <Bookmark
-                      className={`h-4 w-4 ${
-                        bookmarks.has(String(content.id))
-                          ? "text-blue-400 fill-current"
-                          : "text-white"
-                      }`}
-                    />
-                  </button> */}
-
-                  <button
-                    className="bg-white/20 p-2 rounded-lg hover:bg-white/30 transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleShare(content);
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 text-white" />
-                  </button>
-                </div>
-              )}
             </div>
           );
         })}
@@ -514,12 +413,6 @@ const Ideation = ({ activeRole}) => {
       )}
 
       <ScrollToTop />
-
-      {bookmarkNotification && (
-        <div className="fixed bottom-4 right-4 bg-[#232323] text-green-400 px-4 py-2 rounded shadow-lg border border-green-700 z-50">
-          {bookmarkNotification}
-        </div>
-      )}
 
       {showShareMsg && (
         <div className="fixed bottom-4 left-4 bg-[#232323] text-green-400 px-4 py-2 rounded shadow-lg border border-green-700 z-50">

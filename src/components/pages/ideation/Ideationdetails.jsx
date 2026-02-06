@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +13,8 @@ import {
   Tag,
   X,
   Trash2,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -26,12 +28,13 @@ const BASE_URL = API_BASE_URL + "/ideas";
 
 const IdeationDetails = () => {
   const [idea, setIdea] = useState(null);
+  const [ideaCreator, setIdeaCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState("");
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
   const [bookmarks, setBookmarks] = useState(new Set());
-  const [bookmarkNotification, setBookmarkNotification] = useState("");
+  const [bookmarked, setBookmarked] = useState(false);
   const [showShareMsg, setShowShareMsg] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
@@ -51,6 +54,7 @@ const IdeationDetails = () => {
   const ideaId = queryParams.get("id")?.toString();
   const { user, access_token } = useSelector((state) => state.auth);
   const [ideaUser, setIdeaUser] = useState(null);
+
   useEffect(() => {
     const fetchIdea = async () => {
       try {
@@ -58,7 +62,8 @@ const IdeationDetails = () => {
         const res = await ideaAPI.getIdeaById(ideaId, access_token);
         setIdea(res.data.idea);
         setLikes(res.data.idea.likes ?? 0);
-
+        setLiked(res.data.idea.hasLiked || false);
+        setBookmarked(res.data.idea.hasBookmarked || false)
         if (user && res.data.idea.likedBy?.length) {
           setLiked(res.data.idea.likedBy.includes(user.id));
         }
@@ -90,46 +95,20 @@ const IdeationDetails = () => {
     }
     fetchIdeaUser();
   }, [idea, access_token]);
-  
-
   useEffect(() => {
-    const fetchBookmarks = async () => {
-      try {
-        const token = localStorage.getItem("authToken");
-        if (!token) return;
-
-        const response = await fetch(`${BASE_URL}/bookmarks`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch bookmarks");
-
-        const data = await response.json();
-
-        let bookmarkArray = [];
-        if (Array.isArray(data.bookmarks)) {
-          bookmarkArray = data.bookmarks;
-        } else if (data.bookmarks?.ideas) {
-          bookmarkArray = data.bookmarks.ideas;
-        } else if (data.ideas) {
-          bookmarkArray = data.ideas;
+    async function getCreator() {
+      if (idea?.creator?.id) {
+        try {
+          const res = await usersAPI.getById(idea.creator.id, { include_stats: true });
+          setIdeaCreator(res.data.user);
+        } catch (err) {
+          console.error("Error fetching idea creator:", err);
         }
-
-        const bookmarkSet = new Set(
-          bookmarkArray.map((b) => (b.ideaId ? b.ideaId.toString() : b.toString()))
-        );
-
-        setBookmarks(bookmarkSet);
-      } catch (error) {
-        console.error("Bookmarks fetch error:", error);
       }
-    };
 
-    fetchBookmarks();
-  }, []);
-
-  const isBookmarked = Boolean(ideaId && bookmarks.has(ideaId));
-
+    }
+    getCreator();
+  }, [idea, access_token]);
   const handleBookmark = async (e) => {
     e?.stopPropagation?.();
 
@@ -138,39 +117,18 @@ const IdeationDetails = () => {
       return;
     }
 
-    const ideaIdStr = ideaId.toString();
-    const wasBookmarked = bookmarks.has(ideaIdStr);
-
-    setBookmarks((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(ideaIdStr)) {
-        newSet.delete(ideaIdStr);
-      } else {
-        newSet.add(ideaIdStr);
-      }
-      return newSet;
-    });
-
     try {
-      if (wasBookmarked) {
-        await ideaAPI.removeIdeaBookmark(user.id, ideaId, access_token);
-      } else {
-        await ideaAPI.createIdeaBookmark(
-          { user_id: user.id, idea_id: ideaId },
-          access_token
-        );
+      const body = {
+        user_id: user.id,
+        idea_id: ideaId,
+        title: idea.title,
+        content_preview: idea.description.substring(0, 100),
+        url: `/ideation-details?id=${ideaId}`,
       }
+      const response = await ideaAPI.toggleIdeaBookmark(body);
+      setBookmarked(response.data.isBookmarked);
     } catch (error) {
       console.error("Bookmark toggle error:", error);
-      setBookmarks((prev) => {
-        const newSet = new Set(prev);
-        if (wasBookmarked) {
-          newSet.add(ideaIdStr);
-        } else {
-          newSet.delete(ideaIdStr);
-        }
-        return newSet;
-      });
       toast.error("Failed to update bookmark");
     }
   };
@@ -298,46 +256,6 @@ const IdeationDetails = () => {
     }
   };
 
-  const handleUpdateIdea = async (updateData) => {
-    try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        throw new Error("Please log in to update this idea");
-      }
-
-      const response = await fetch(`${BASE_URL}/${ideaId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          title: updateData.title,
-          description: updateData.description,
-          project_details: updateData.projectDetails,
-          industry: updateData.industry,
-          stage: updateData.stage,
-          tags: updateData.tags || [],
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update idea");
-      }
-
-      const data = await response.json();
-      
-      if (data.success && data.data?.idea) {
-        setIdea(data.data.idea);
-        setSuccessMsg(data.message || "Idea updated successfully");
-        setTimeout(() => setSuccessMsg(""), 3000);
-      }
-    } catch (err) {
-      console.error("Error updating idea:", err);
-      throw err;
-    }
-  };
-
   const handleDeleteIdea = async () => {
     try {
       const response = await ideaAPI.deleteIdea(ideaId, access_token)
@@ -355,6 +273,7 @@ const IdeationDetails = () => {
       toast.error("Failed to delete idea. Please try again.");
     }
   };
+
   const handleLike = useCallback(
     async (e) => {
       e?.stopPropagation();
@@ -374,17 +293,17 @@ const IdeationDetails = () => {
     },
     [ideaId, access_token, user]
   );
-  const isCreator = user?.id && idea?.creator?.id && user.id === idea.creator.id;
+
+  const isCreator = useMemo(() => user?.id && idea?.creator?.id && user.id === idea.creator.id, [user, idea]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-gray-400">
+      <div className="min-h-screen flex items-center justify-center bg-black text-gray-400">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
           className="w-12 h-12 border-3 border-blue-500/30 border-t-blue-500 rounded-full"
         />
-
       </div>
     );
   }
@@ -392,7 +311,7 @@ const IdeationDetails = () => {
   if (!idea) {
     return (
       <motion.div
-        className="min-h-screen flex items-center justify-center text-red-400"
+        className="min-h-screen flex items-center justify-center text-red-400 bg-black"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
@@ -441,15 +360,18 @@ const IdeationDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white relative">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-950 to-black text-white relative">
+      {/* Animated Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none" />
+
       {/* Header */}
       <motion.div
-        className="border-b border-white/10 bg-[#0A0A0A]"
+        className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-xl"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="w-full mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="w-full mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
           <Link
             to="/ideation"
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
@@ -457,19 +379,20 @@ const IdeationDetails = () => {
             <motion.div whileHover={{ x: -4 }} transition={{ duration: 0.2 }}>
               <ArrowLeft className="h-5 w-5" />
             </motion.div>
-            <span>Back to Ideas</span>
+            <span className="font-medium">Back to Ideas</span>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className={`p-2.5 rounded-xl border border-white/20 ${liked
-                ? "bg-red-500/10 text-red-400 border-red-400"
-                : "hover:bg-white/10"
+              className={`p-2.5 rounded-lg border transition-all ${liked
+                ? "bg-red-500/20 text-red-400 border-red-500/50"
+                : "bg-white/5 border-white/20 hover:bg-white/10"
                 }`}
               onClick={handleLike}
+              title="Like this idea"
             >
               <motion.div
                 animate={liked ? { scale: [1, 1.3, 1] } : {}}
@@ -483,242 +406,269 @@ const IdeationDetails = () => {
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className="p-2.5 rounded-xl border border-white/20 hover:bg-white/10"
+              className="p-2.5 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-all"
               onClick={handleShare}
+              title="Share this idea"
             >
               <Share2 className="h-5 w-5" />
             </motion.button>
-            {/* BOOKMARK NOT WORKING */}
-            {/* <motion.button
+
+            <motion.button
               variants={buttonVariants}
               whileHover="hover"
               whileTap="tap"
-              className={`p-2.5 rounded-xl border border-white/20 ${
-                isBookmarked
-                  ? "bg-blue-500/10 text-blue-400 border-blue-400"
-                  : "hover:bg-white/10"
+              className={`p-2.5 rounded-lg border transition-all ${
+                bookmarked
+                  ? "bg-blue-500/20 text-blue-400 border-blue-500/50"
+                  : "bg-white/5 border-white/20 hover:bg-white/10"
               }`}
               onClick={handleBookmark}
-              aria-pressed={isBookmarked}
+              aria-pressed={bookmarked}
+              title="Bookmark this idea"
             >
               <motion.div
-                animate={isBookmarked ? { scale: [1, 1.2, 1] } : {}}
+                animate={bookmarked ? { scale: [1, 1.2, 1] } : {}}
                 transition={{ duration: 0.3 }}
               >
                 <Bookmark
-                  className={`h-5 w-5 ${isBookmarked ? "fill-current" : ""}`}
+                  className={`h-5 w-5 ${bookmarked ? "fill-current" : ""}`}
                 />
               </motion.div>
-            </motion.button> */}
+            </motion.button>
 
             {isCreator && (
               <motion.button
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
-                className="p-2.5 rounded-xl border border-red-500/20 hover:bg-red-500/10 text-red-400"
+                className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
                 onClick={() => setShowDeleteModal(true)}
-                title="Delete Idea"
+                title="Delete this idea"
               >
                 <Trash2 className="h-5 w-5" />
               </motion.button>
             )}
           </div>
         </div>
-
-        <AnimatePresence>
-          {showShareMsg && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="absolute right-8 top-16 bg-[#232323] text-xs text-green-400 px-4 py-2 rounded shadow-lg border border-green-700 z-50"
-            >
-              Link copied!
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
 
       {/* Main Layout */}
       <motion.div
-        className="w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8"
+        className="w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         {/* Left Column */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Card */}
+          {/* Hero Card */}
           <motion.div
-            className="bg-[#18181A] rounded-2xl p-8"
+            className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
             variants={itemVariants}
             whileHover={{ y: -4 }}
           >
-            <h1 className="text-3xl font-bold mb-2">{idea.title}</h1>
-            <p className="text-gray-300 mb-4">{idea.description}</p>
+            <div className="space-y-4">
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent mb-2">
+                  {idea.title}
+                </h1>
+                <p className="text-gray-400 text-lg leading-relaxed">{idea.description}</p>
+              </div>
 
-            {idea.imageUrl && (
-              <img
-                src={idea.imageUrl.startsWith('http') ? idea.imageUrl : `${API_BASE_URL}${idea.imageUrl}`}
-                alt={idea.title}
-                className="w-full h-40 object-contain rounded-lg border border-white/10 mb-4"
-              />
-            )}
-
-            <motion.div
-              className="flex flex-wrap gap-2 mb-4"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {idea.tags?.map((tag, idx) => (
-                <motion.span
-                  key={idx}
-                  variants={itemVariants}
-                  whileHover={{ scale: 1.1, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
-                  className="bg-white/5 text-gray-300 text-xs px-2 py-1 rounded-md cursor-default"
-                >
-                  #{tag}
-                </motion.span>
-              ))}
-            </motion.div>
-
-            <div className="flex items-center gap-6 text-xs text-gray-400 mb-4">
-              <motion.span
-                className="flex items-center gap-1 cursor-pointer"
-                onClick={handleLike}
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Heart
-                  className={`h-4 w-4 transition-colors ${liked ? "text-red-500 fill-red-500" : "text-gray-400"
-                    }`}
+              {idea.imageUrl && (
+                <motion.img
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  src={idea.imageUrl.startsWith('http') ? idea.imageUrl : `${API_BASE_URL}${idea.imageUrl}`}
+                  alt={idea.title}
+                  className="w-full h-64 object-cover rounded-xl border border-white/10"
                 />
-                {likes} Likes
-              </motion.span>
-              <span className="flex items-center gap-1">
-                <MessageSquare className="h-4 w-4" />
-                {idea.comments?.length ?? 0} Comments
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="h-4 w-4" /> {idea.teamMembers?.length ?? 0} Team
-              </span>
-              <span className="flex items-center gap-1">
-                <Clock className="h-4 w-4" />
-                {new Date(idea.createdAt).toLocaleDateString()}
-              </span>
+              )}
+
+              {/* Tags */}
+              <motion.div
+                className="flex flex-wrap gap-2 pt-2"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {idea.tags?.map((tag, idx) => (
+                  <motion.span
+                    key={idx}
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.1, backgroundColor: "rgba(59, 130, 246, 0.2)" }}
+                    className="bg-blue-500/10 text-blue-300 text-xs px-3 py-1.5 rounded-full border border-blue-500/30 cursor-default transition-all"
+                  >
+                    #{tag}
+                  </motion.span>
+                ))}
+              </motion.div>
             </div>
 
+            {/* Stats Bar */}
+            <div className="grid grid-cols-4 gap-4 mt-8 pt-8 border-t border-white/10">
+              <motion.div
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="flex items-center justify-center gap-1 text-red-400 mb-1">
+                  <Heart className="h-4 w-4" />
+                  <span className="font-bold text-lg">{likes}</span>
+                </div>
+                <span className="text-xs text-gray-500">Likes</span>
+              </motion.div>
+              <motion.div
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="flex items-center justify-center gap-1 text-green-400 mb-1">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="font-bold text-lg">{idea.comments?.length ?? 0}</span>
+                </div>
+                <span className="text-xs text-gray-500">Comments</span>
+              </motion.div>
+              <motion.div
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
+                  <Users className="h-4 w-4" />
+                  <span className="font-bold text-lg">{idea.teamMembers?.length ?? 0}</span>
+                </div>
+                <span className="text-xs text-gray-500">Team</span>
+              </motion.div>
+              <motion.div
+                variants={itemVariants}
+                className="text-center"
+              >
+                <div className="flex items-center justify-center gap-1 text-amber-400 mb-1">
+                  <Clock className="h-4 w-4" />
+                  <span className="font-bold text-sm">{new Date(idea.createdAt).toLocaleDateString()}</span>
+                </div>
+                <span className="text-xs text-gray-500">Posted</span>
+              </motion.div>
+            </div>
+
+            {/* Action Buttons */}
             <motion.div
-              className="flex flex-wrap gap-3 pt-2"
+              className="flex flex-wrap gap-3 pt-6"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
-              {/* <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="bg-blue-600 hover:bg-blue-700 px-5 py-2 rounded-lg"
-                onClick={() => setShowJoinModal(true)}
-              >
-                + Join Project
-              </motion.button> */}
               <motion.button
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
-                className="bg-white/10 hover:bg-white/20 px-5 py-2 rounded-lg"
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-6 py-3 rounded-lg font-medium transition-all"
                 onClick={handleStartDiscussion}
               >
+                <MessageSquare className="h-4 w-4 mr-2 inline" />
                 Start Discussion
               </motion.button>
-              {/* <motion.button
+              <motion.button
                 variants={buttonVariants}
                 whileHover="hover"
                 whileTap="tap"
-                className="bg-white/10 hover:bg-white/20 px-5 py-2 rounded-lg"
-                onClick={() => setShowSuggestModal(true)}
+                className="bg-white/5 hover:bg-white/10 border border-white/20 px-6 py-3 rounded-lg font-medium transition-all"
+                onClick={() => setShowJoinModal(true)}
               >
-                Suggest Improvement
-              </motion.button> */}
+                <Users className="h-4 w-4 mr-2 inline" />
+                Join Project
+              </motion.button>
             </motion.div>
           </motion.div>
 
           {/* Project Details */}
           <motion.div
-            className="bg-[#18181A] rounded-2xl p-8"
+            className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
             variants={itemVariants}
             whileHover={{ y: -4 }}
           >
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-              <Tag className="h-5 w-5 text-blue-400" /> Project Details
+            <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+              <div className="p-2 bg-blue-500/20 rounded-lg">
+                <Tag className="h-5 w-5 text-blue-400" />
+              </div>
+              Project Details
             </h2>
-            <p className="text-gray-300 whitespace-pre-line leading-relaxed">
+            <p className="text-gray-300 whitespace-pre-line leading-relaxed text-base">
               {idea.projectDetails}
             </p>
           </motion.div>
 
-          {/* Discussion */}
+          {/* Discussion Section */}
           <motion.div
-            className="bg-[#18181A] rounded-2xl p-8"
+            className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-white/10 rounded-2xl p-8 backdrop-blur-sm"
             ref={discussionSectionRef}
             variants={itemVariants}
             whileHover={{ y: -4 }}
           >
-            <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-green-400" /> Discussion (
-              {idea.comments?.length ?? 0})
+            <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
+              <div className="p-2 bg-green-500/20 rounded-lg">
+                <MessageSquare className="h-5 w-5 text-green-400" />
+              </div>
+              Discussion
+              <span className="ml-2 px-3 py-1 bg-white/10 text-sm rounded-full">
+                {idea.comments?.length ?? 0}
+              </span>
             </h2>
 
+            {/* Comments */}
             <motion.div
-              className="space-y-6"
+              className="space-y-4 mb-8"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
             >
-              {idea.comments?.map((c, idx) => (
-                <motion.div
-                  key={idx}
-                  className="flex gap-4 p-4 rounded-lg hover:bg-white/5 transition-colors"
-                  variants={itemVariants}
-                  whileHover={{ x: 4 }}
-                >
-                  <div className="flex-1">
-                    <h3 className="font-medium">
-                      {c.author?.firstName} {c.author?.lastName}
-                    </h3>
-                    <p className="text-gray-300">{c.content}</p>
-                    <span className="text-xs text-gray-500">
-                      {new Date(c.createdAt).toLocaleString()}
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
+              {idea.comments && idea.comments.length > 0 ? (
+                idea.comments.map((c, idx) => (
+                  <motion.div
+                    key={idx}
+                    className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+                    variants={itemVariants}
+                    whileHover={{ x: 4 }}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-sm font-bold">
+                      {(c.author?.firstName?.[0] || 'U').toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-white">
+                        {c.author?.firstName} {c.author?.lastName}
+                      </h3>
+                      <p className="text-gray-300 mt-1 break-words">{c.content}</p>
+                      <span className="text-xs text-gray-500 mt-2 block">
+                        {new Date(c.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-center text-gray-500 py-8">No comments yet. Be the first to share your thoughts!</p>
+              )}
             </motion.div>
 
             {/* Comment Input */}
             <motion.form
               onSubmit={handleCommentSubmit}
-              className="mt-8"
+              className="space-y-4 pt-6 border-t border-white/10"
               variants={itemVariants}
             >
               <textarea
                 ref={commentInputRef}
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
-                placeholder="Add your comment..."
-                className="w-full bg-[#232323] rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Share your thoughts..."
+                className="w-full bg-white/5 border border-white/20 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
                 rows={3}
               />
-              <div className="flex justify-end mt-2">
+              <div className="flex justify-end">
                 <motion.button
                   type="submit"
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center gap-2 font-medium"
+                  className="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all disabled:opacity-50"
+                  disabled={!comment.trim()}
                 >
                   <Send className="h-4 w-4" /> Post Comment
                 </motion.button>
@@ -728,68 +678,110 @@ const IdeationDetails = () => {
         </div>
 
         {/* Sidebar */}
-        <Link to={`/user-profile?userId=${idea.creator?.id}`}>
           <div className="space-y-8">
-            <motion.div
-              className="bg-[#18181A] rounded-2xl p-6 text-center"
-              variants={itemVariants}
-              whileHover={{ y: -4 }}
-            >
-              <h2 className="text-lg font-bold mb-4">Idea Creator</h2>
-              <img
-                src={getProfilePicture(ideaUser)}
-                alt={`${ideaUser?.firstName} ${ideaUser?.lastName}`}
-                className="w-16 h-16 rounded-full mx-auto mb-4"
-              />
-              <h3 className="font-semibold">
-                {idea.creator?.firstName} {idea.creator?.lastName}
+            {/* Creator Card */}
+            <Link to={`/user-profile?userId=${idea.creator?.id}`}>
+              <motion.div
+                className="bg-gradient-to-br from-gray-900/50 to-gray-800/30 border border-white/10 rounded-2xl p-6 backdrop-blur-sm hover:border-blue-500/50 transition-all"
+                variants={itemVariants}
+                whileHover={{ y: -4 }}
+              >
+                <h2 className="text-lg font-bold mb-6">Idea Creator</h2>
+                <div className="text-center space-y-4">
+            <motion.img
+              whileHover={{ scale: 1.1 }}
+              src={getProfilePicture(ideaCreator)}
+              alt={`${ideaCreator?.firstName} ${ideaCreator?.lastName}`}
+              className="w-20 h-20 rounded-full mx-auto border-2 border-blue-500/30"
+            />
+            <div>
+              <h3 className="font-semibold text-white text-lg">
+                {ideaCreator?.firstName} {ideaCreator?.lastName}
               </h3>
-              {ideaUser?.profile?.city && (
-                <p className="text-xs text-gray-400 mt-2">
-                  {ideaUser.profile.city}, {ideaUser.profile.country}
+              {ideaCreator?.profile?.company && (
+                <p className="text-xs text-blue-400 font-medium mt-1">
+                  💼 {ideaCreator.profile.company}
                 </p>
               )}
-              {ideaUser?.profile?.bio && (
-                <p className="text-xs text-gray-300 mt-3">{ideaUser.profile.bio}</p>
+              {ideaCreator?.profile?.city && (
+                <p className="text-xs text-gray-400 mt-1">
+                  📍 {ideaCreator.profile.city}, {ideaCreator.profile.country}
+                </p>
               )}
-              <div className="flex justify-center gap-4 mt-4 text-xs text-gray-400">
-                <span>{ideaUser?.active_startups_count ?? 0} Startups</span>
-                <span>XP: {ideaUser?.xp_points ?? 0}</span>
+            </div>
+            {ideaCreator?.profile?.bio && (
+              <p className="text-xs text-gray-300 leading-relaxed italic line-clamp-2">
+                "{ideaCreator.profile.bio}"
+              </p>
+            )}
+            
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-2 pt-4 border-t border-white/10">
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-sm font-bold text-blue-400">{ideaCreator?.active_startups_count ?? 0}</p>
+                <p className="text-xs text-gray-500">Startups</p>
               </div>
-            </motion.div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-sm font-bold text-purple-400 flex items-center justify-center gap-1">
+                  {ideaCreator?.statistics?.total_likes_received ?? 0}
+                </p>
+                <p className="text-xs text-gray-500">Total Likes</p>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <p className="text-sm font-bold text-green-400">{ideaCreator?.streak_days ?? 0}</p>
+                <p className="text-xs text-gray-500">Streak</p>
+              </div>
+            </div>
 
-            {/* <motion.div 
-              className="bg-[#18181A] rounded-2xl p-6"
-              variants={itemVariants}
-              whileHover={{ y: -4 }}
-            >
-              <h2 className="text-lg font-bold mb-4">
-                Team ({idea.teamMembers?.length ?? 0})
-              </h2>
-              <motion.div 
-                className="space-y-3"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {idea.teamMembers?.map((m, i) => (
-            <motion.div 
-              key={i}
-              variants={itemVariants}
-              className="p-3 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-              whileHover={{ x: 4 }}
-            >
-              <h3 className="font-medium">{m.name}</h3>
-              <p className="text-xs text-gray-400">{m.position}</p>
-              {m.skills && (
-                <p className="text-xs text-gray-500 mt-1">{m.skills}</p>
+            {/* Additional Info */}
+            <div className="space-y-2 pt-3 border-t border-white/10 text-left">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Satisfaction</span>
+                <span className="font-semibold text-amber-400">{ideaCreator?.satisfaction_percentage?.toFixed(0) ?? 0}%</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-gray-500">Revenue Generated</span>
+                <span className="font-semibold text-emerald-400">${ideaCreator?.total_revenue?.toLocaleString() ?? 0}</span>
+              </div>
+              {ideaCreator?.pref_language && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-gray-500">Language</span>
+                  <span className="font-semibold text-gray-300">{ideaCreator.pref_language.toUpperCase()}</span>
+                </div>
               )}
-            </motion.div>
+              
+            </div>
+
+            {/* Member Badge */}
+            {ideaCreator?.roles && ideaCreator.roles.length > 0 && (
+              <div className="flex flex-wrap gap-1 justify-center pt-2">
+                {ideaCreator.roles.map((role, idx) => (
+                  <span key={idx} className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-500/30 capitalize">
+              {role}
+                  </span>
                 ))}
+              </div>
+            )}
+                </div>
               </motion.div>
-            </motion.div> */}
-          </div>
-        </Link>
+            </Link>
+
+            {/* Info Card */}
+          <motion.div
+            className="bg-gradient-to-br my-2 from-blue-900/20 to-purple-900/20 border border-blue-500/30 rounded-2xl p-6 backdrop-blur-sm"
+            variants={itemVariants}
+          >
+            <div className="flex items-start gap-3">
+              <TrendingUp className="h-5 w-5 text-blue-400 flex-shrink-0 mt-1" />
+              <div>
+                <h3 className="font-semibold text-white mb-2">Community Engaged</h3>
+                <p className="text-sm text-gray-300">
+                  Join discussions and collaborate with like-minded builders and entrepreneurs.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </motion.div>
 
       {/* Success Message */}
@@ -799,24 +791,24 @@ const IdeationDetails = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-green-600 px-6 py-3 rounded-lg shadow-lg text-white font-medium z-50"
+            className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-lg shadow-lg text-white font-medium z-50"
           >
             {successMsg}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* MODALS - with AnimatePresence */}
+      {/* Modals */}
       <AnimatePresence>
         {showJoinModal && (
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#18181A] w-full max-w-md p-6 rounded-2xl relative"
+              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 w-full max-w-md p-8 rounded-2xl relative"
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -826,50 +818,56 @@ const IdeationDetails = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowJoinModal(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </motion.button>
-              <h2 className="text-xl font-bold mb-4 text-center">
-                Join Project Team
-              </h2>
+              <h2 className="text-2xl font-bold mb-6 text-center">Join Project Team</h2>
               <form onSubmit={handleJoinSubmit} className="space-y-4">
-                <input
-                  type="text"
-                  value={joinName}
-                  onChange={(e) => setJoinName(e.target.value)}
-                  placeholder="Your Name *"
-                  required
-                  className="w-full bg-[#232323] rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={joinPosition}
-                  onChange={(e) => setJoinPosition(e.target.value)}
-                  placeholder="Position/Role *"
-                  required
-                  className="w-full bg-[#232323] rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={joinSkills}
-                  onChange={(e) => setJoinSkills(e.target.value)}
-                  placeholder="Skills (e.g., Python, React, AWS)"
-                  className="w-full bg-[#232323] rounded-xl p-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <textarea
-                  value={joinMessage}
-                  onChange={(e) => setJoinMessage(e.target.value)}
-                  placeholder="Briefly explain your interest... (optional)"
-                  className="w-full bg-[#232323] rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={3}
-                />
+                <div>
+                  <input
+                    type="text"
+                    value={joinName}
+                    onChange={(e) => setJoinName(e.target.value)}
+                    placeholder="Your Name *"
+                    required
+                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    value={joinPosition}
+                    onChange={(e) => setJoinPosition(e.target.value)}
+                    placeholder="Position/Role *"
+                    required
+                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    value={joinSkills}
+                    onChange={(e) => setJoinSkills(e.target.value)}
+                    placeholder="Skills (e.g., Python, React, AWS)"
+                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  />
+                </div>
+                <div>
+                  <textarea
+                    value={joinMessage}
+                    onChange={(e) => setJoinMessage(e.target.value)}
+                    placeholder="Why do you want to join? (optional)"
+                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+                    rows={3}
+                  />
+                </div>
                 <motion.button
                   type="submit"
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
-                  className="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-4 py-3 rounded-lg font-semibold transition-all"
                 >
                   Join Team
                 </motion.button>
@@ -879,17 +877,17 @@ const IdeationDetails = () => {
         )}
       </AnimatePresence>
 
-      {/* DELETE CONFIRMATION MODAL */}
+      {/* Delete Modal */}
       <AnimatePresence>
         {showDeleteModal && (
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#18181A] w-full max-w-md p-6 rounded-2xl relative"
+              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 w-full max-w-md p-8 rounded-2xl relative"
               variants={modalVariants}
               initial="hidden"
               animate="visible"
@@ -899,30 +897,32 @@ const IdeationDetails = () => {
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setShowDeleteModal(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white"
+                className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
               </motion.button>
-              <div className="text-center mb-6">
+              <div className="text-center space-y-6">
                 <motion.div
-                  className="mx-auto w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mb-4"
+                  className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center"
                   animate={{ scale: [1, 1.05, 1] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   <Trash2 className="h-8 w-8 text-red-400" />
                 </motion.div>
-                <h2 className="text-xl font-bold mb-2">Delete Idea</h2>
-                <p className="text-gray-400 text-sm">
-                  Are you sure you want to delete this idea? This action cannot be undone.
-                </p>
+                <div>
+                  <h2 className="text-2xl font-bold mb-2">Delete Idea</h2>
+                  <p className="text-gray-400">
+                    Are you sure? This action cannot be undone.
+                  </p>
+                </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-3 mt-8">
                 <motion.button
                   variants={buttonVariants}
                   whileHover="hover"
                   whileTap="tap"
                   onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-colors"
+                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg font-medium transition-all"
                 >
                   Cancel
                 </motion.button>
@@ -931,61 +931,11 @@ const IdeationDetails = () => {
                   whileHover="hover"
                   whileTap="tap"
                   onClick={handleDeleteIdea}
-                  className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg transition-colors text-white"
+                  className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg font-semibold transition-all"
                 >
                   Delete
                 </motion.button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* SUGGEST MODAL */}
-      <AnimatePresence>
-        {showSuggestModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-[#18181A] w-full max-w-md p-6 rounded-2xl relative"
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowSuggestModal(false)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </motion.button>
-              <h2 className="text-xl font-bold mb-4 text-center">
-                Suggest an Improvement
-              </h2>
-              <form onSubmit={handleSuggestSubmit}>
-                <textarea
-                  value={suggestMessage}
-                  onChange={(e) => setSuggestMessage(e.target.value)}
-                  placeholder="Share your idea..."
-                  className="w-full bg-[#232323] rounded-xl p-4 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows={4}
-                />
-                <motion.button
-                  type="submit"
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg font-medium"
-                >
-                  Submit Suggestion
-                </motion.button>
-              </form>
             </motion.div>
           </motion.div>
         )}

@@ -84,6 +84,7 @@ export default function Avatar({
   size = "md",
   // Backwards compatible: existing callers pass isOnline
   isOnline = false,
+
   // New: "online" | "idle" | "offline"
   presenceStatus = null,
   showStatus = true,
@@ -127,7 +128,6 @@ export default function Avatar({
   const handleImageError = () => {
     setImageError(true);
   };
-
   return (
     <div className={`relative inline-block flex-shrink-0 ${className}`}>
       {showImage ? (
@@ -144,7 +144,7 @@ export default function Avatar({
           {initials}
         </div>
       )}
-
+  {isOnline && <span className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${STATUS_COLORS.online}`} title="Online" />}
       {showStatus && (
         <span
           className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${statusColor}`}

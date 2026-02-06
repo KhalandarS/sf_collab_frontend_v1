@@ -71,7 +71,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
       <div
         className={`lg:hidden fixed inset-0 transition-all duration-300 ease-in-out ${isOpen ? "visible" : "invisible"
           }`}
-        style={{ zIndex: 9999 }}
+        style={{ zIndex: 9999999999999 }}
       >
         <div
           className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"

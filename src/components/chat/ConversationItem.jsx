@@ -97,13 +97,14 @@ const ConversationItem = ({
       }`}
     >
       <Avatar
+        isOnline={connected}
         src={avatarUrl}
         name={conversationName}
         size="md"
         presenceStatus={presenceStatus}
         showStatus={isDirect}
       />
-
+      
       <div className="flex-1 min-w-0 text-left">
         <div className="flex items-center justify-between gap-2">
           <p className="text-sm font-semibold text-white truncate">{conversationName}</p>

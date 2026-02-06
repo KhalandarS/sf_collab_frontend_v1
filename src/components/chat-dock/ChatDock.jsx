@@ -969,10 +969,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                         otherParticipant?.firstName ||
                         "Chat";
                       const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
-                      const lastMsg = conv.last_message || conv.lastMessage;
+                      let lastMsg = conv.last_message || conv.lastMessage;
+
                       let lastMessagePreview = "No messages yet";
                       if (lastMsg) {
-                        const content = lastMsg.content || lastMsg.original_content || "";
+                        let content = lastMsg.content || lastMsg.original_content || "";
+                        if (lastMsg.is_deleted) content = "This message was deleted.";
                         const senderId = lastMsg.sender_id || lastMsg.sender?.id;
                         const senderName = lastMsg.sender?.firstName || lastMsg.senderFirstName || "";
                         const isOwn = String(senderId) === String(currentUser?.id);
@@ -984,7 +986,16 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
                         }
                       }
-
+                      const { presenceStatus, statusText } = isDirect
+                        ? getPresenceForDirect({
+                            conv,
+                            currentUserId: currentUser?.id,
+                            onlineUsers,
+                            lastActiveAt,
+                            lastSeenAt,
+                            nowTs,
+                          })
+                        : { presenceStatus: "offline", statusText: "" };
                       return (
                         <button
                           key={conv.id}
@@ -1002,7 +1013,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               src={isDirect ? getProfilePicture(otherParticipant) : null}
                               name={title}
                               size="sm"
-                              showStatus={false}
+                              presenceStatus={presenceStatus}
                             />
                           </div>
                           
