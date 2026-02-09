@@ -243,7 +243,7 @@ const TeamCompactView = ({ members, isCreator, onRemoveMember }) => (
           <Tooltip>
             <TooltipTrigger>
               <Link to={`/user-profile?userId=${member.userId}`}>
-                <Avatar className="h-10 w-10 border-2 border-blue-500 hover:border-cyan-400 cursor-pointer">
+                <Avatar className="h-10 w-10 border-2 border-blue-500 hover:border-cyan-400 cursor-pointer object-cover">
                   <AvatarImage
                     src={
                       getProfilePicture(member)

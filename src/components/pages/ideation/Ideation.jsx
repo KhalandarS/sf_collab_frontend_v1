@@ -48,7 +48,6 @@ const Ideation = ({ activeRole}) => {
   const [showNewIdeaForm, setShowNewIdeaForm] = useState(false);
 
   const { user, access_token } = useSelector((state) => state.auth);
-  console.log("Ideas:", ideas.filter(i => i.hasBookmarked));
   useEffect(() => {
     fetchIdeas();
   }, [selectedIndustry, selectedStage, searchQuery]);
@@ -211,7 +210,6 @@ const Ideation = ({ activeRole}) => {
       </div>
     );
   }
-  console.log("Ideas:", ideas);
   if (networkError) {
     return (
       <div className="min-h-screen bg-black">

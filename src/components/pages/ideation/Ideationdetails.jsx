@@ -53,7 +53,6 @@ const IdeationDetails = () => {
   const queryParams = new URLSearchParams(location.search);
   const ideaId = queryParams.get("id")?.toString();
   const { user, access_token } = useSelector((state) => state.auth);
-  const [ideaUser, setIdeaUser] = useState(null);
 
   useEffect(() => {
     const fetchIdea = async () => {
@@ -82,19 +81,7 @@ const IdeationDetails = () => {
     if (ideaId) fetchIdea();
   }, [ideaId, access_token, user]);
 
-  useEffect(() => {
-    const fetchIdeaUser = async () => {
-      try {
-        if (idea?.creator?.id) {
-          const res = await usersAPI.getById(idea.creator.id, access_token);
-          setIdeaUser(res.user);
-        }
-      } catch {
-        toast.error("Error fetching idea creator details");
-      }
-    }
-    fetchIdeaUser();
-  }, [idea, access_token]);
+
   useEffect(() => {
     async function getCreator() {
       if (idea?.creator?.id) {
@@ -108,7 +95,7 @@ const IdeationDetails = () => {
 
     }
     getCreator();
-  }, [idea, access_token]);
+  }, [idea]);
   const handleBookmark = async (e) => {
     e?.stopPropagation?.();
 
@@ -692,7 +679,7 @@ const IdeationDetails = () => {
               whileHover={{ scale: 1.1 }}
               src={getProfilePicture(ideaCreator)}
               alt={`${ideaCreator?.firstName} ${ideaCreator?.lastName}`}
-              className="w-20 h-20 rounded-full mx-auto border-2 border-blue-500/30"
+              className="w-20 h-20 rounded-full mx-auto border-2 border-blue-500/30 object-cover"
             />
             <div>
               <h3 className="font-semibold text-white text-lg">

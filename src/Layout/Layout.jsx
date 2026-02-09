@@ -30,7 +30,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { isUserProfileComplete } from "@/utils/getUserComplete";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
-import CompleteEmailPopUp from "./CompleteEmailPopUp";
+import CompleteProfilePopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
@@ -187,8 +187,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   // Profile completion reminder
   useEffect(() => {
     if (!user) return;
-    console.log(location.pathname);
-    console.log(user.isEmailVerified, !isUserProfileComplete(user), !location.pathname.startsWith("/user-profile"));
+
     const checkProfileCompletion = async () => {
       if (!isUserProfileComplete(user) && !location.pathname.startsWith("/user-profile") && user.isEmailVerified) {
         setIsCompletePopupVisible(true);
@@ -197,7 +196,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
     checkProfileCompletion();
   }, [user, location]);
-  console.log("Complete Pop Up:", isCompletePopupVisible);
   // Sidebar resolver
   const SideBar = () => {
     const props = { unreadMessagesCount, setIsOpen, isOpen, isAdmin, userRoles, setActiveRole };
@@ -251,7 +249,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
         {user && !user.isEmailVerified && <EmailVerifyPopUp />}
 
         {/* Profile Completion Modal */}
-        {isCompletePopupVisible && <CompleteEmailPopUp setCompletePopupVisible={setIsCompletePopupVisible} />}
+        {isCompletePopupVisible && <CompleteProfilePopUp setCompletePopupVisible={setIsCompletePopupVisible} />}
 
         {/* Top Nav */}
         {!isRootPath && !disableNavbar && (

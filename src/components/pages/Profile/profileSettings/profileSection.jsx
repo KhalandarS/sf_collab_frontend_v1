@@ -1,21 +1,13 @@
 import { toast } from "react-toastify";
 import { countries } from "./countries";
-import { useEffect, useState } from "react";
-import { usersAPI } from "@/utils/APIs/userAPI";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { getRenderImageUrl } from "./getRenderImageUrl";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { builderFocusOptions } from "./builderFocus";
 import { motion } from "framer-motion";
 import { User, MapPin, Briefcase, Globe, Link as LinkIcon } from "lucide-react";
 
-export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
-  const timezones = Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'];
-  const [loadingCountry, setLoadingCountry] = useState(false);
-  const [roles, setRoles] = useState([]);
-  const { user } = useSelector((state) => state.auth);
-
-  const containerVariants = {
+const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -27,6 +19,13 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
   };
+export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
+  const timezones = useMemo(() => Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'], []);
+  const [loadingCountry, setLoadingCountry] = useState(false);
+  const [roles, setRoles] = useState([]);
+  const { user } = useSelector((state) => state.auth);
+
+  
 
   const handleImage = (e) => {
     const file = e.target.files?.[0];
@@ -52,7 +51,6 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         timezone: timeZone,
       }
     }));
-    toast.success("Timezone detected automatically");
   };
 
   const handleAutoDetectCountry = async () => {
@@ -71,7 +69,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         return;
       }
       handleAutoDetectTimezone();
-      toast.success("Location detected automatically");
+
     } catch {
       toast.error("Failed to detect location");
     } finally {
@@ -89,9 +87,12 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
   useEffect(() => {
     setRoles(['influencer', 'investor', 'builder', 'founder']);
   }, []);
-
+  const isLocationSet = useMemo(() => {
+    return !!formData.profile.country && !!formData.profile.city && !!user?.preferences?.timezone;
+  }, [formData.profile.country, formData.profile.city, user?.preferences?.timezone]);
+  console.log(isLocationSet, formData.profile.country, formData.profile.city, user?.preferences?.timezone);
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       initial="hidden"
       animate="visible"
@@ -139,19 +140,19 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-200 mb-2">First Name</label>
-            <input 
-              type="text" 
-              value={formData.firstName} 
-              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))} 
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => setFormData(prev => ({ ...prev, firstName: e.target.value }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors"
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-200 mb-2">Last Name</label>
-            <input 
-              type="text" 
-              value={formData.lastName} 
-              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))} 
+            <input
+              type="text"
+              value={formData.lastName}
+              onChange={(e) => setFormData(prev => ({ ...prev, lastName: e.target.value }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors"
             />
           </div>
@@ -160,19 +161,19 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-semibold text-gray-200 mb-2">Email (read-only)</label>
-            <input 
-              type="text" 
-              value={formData.email} 
-              readOnly 
+            <input
+              type="text"
+              value={formData.email}
+              readOnly
               className="w-full bg-gray-700/30 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 border border-gray-600"
             />
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-200 mb-2">Account Status</label>
-            <input 
-              type="text" 
-              value={formData.status} 
-              readOnly 
+            <input
+              type="text"
+              value={formData.status}
+              readOnly
               className="w-full bg-gray-700/30 text-gray-400 cursor-not-allowed rounded-lg px-4 py-3 capitalize border border-gray-600"
             />
           </div>
@@ -190,9 +191,9 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <div className="grid grid-cols-2 gap-3">
           {roles.map(role => (
             <motion.label key={role} whileHover={{ x: 2 }} className="flex items-center p-4 bg-gray-700/20 hover:bg-gray-700/30 border border-gray-700/50 rounded-lg cursor-pointer transition-colors">
-              <input 
+              <input
                 type="checkbox"
-                checked={formData.roles?.includes(role)} 
+                checked={formData.roles?.includes(role)}
                 onChange={(e) => {
                   if (e.target.checked) {
                     setFormData(prev => ({ ...prev, roles: [...(prev.roles || []), role] }));
@@ -238,10 +239,10 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
       {/* Bio */}
       <motion.div variants={itemVariants}>
         <label className="block text-sm font-semibold text-gray-200 mb-2">Bio</label>
-        <textarea 
-          value={formData.profile.bio || ''} 
-          onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))} 
-          rows={4} 
+        <textarea
+          value={formData.profile.bio || ''}
+          onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, bio: e.target.value } }))}
+          rows={4}
           className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-blue-500 focus:outline-none transition-colors resize-none"
         />
         <p className="text-xs text-gray-400 mt-2">{(formData.profile.bio || '').length}/300 characters</p>
@@ -253,12 +254,17 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           <MapPin className="w-5 h-5 text-green-400" />
           <label className="text-sm font-semibold text-gray-200">Location</label>
         </div>
+        {!isLocationSet && (
+          <div className="mb-4 p-3 bg-red-600/10 border border-red-600/50 rounded-lg">
+            <p className="text-red-400 text-sm font-medium">You have to set your location to enable all of our features</p>
+          </div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">Country</label>
-            <select 
-              value={formData.profile.country || ''} 
-              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: e.target.value } }))} 
+            <select
+              value={formData.profile.country || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, country: e.target.value } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
             >
               <option value="">Select country</option>
@@ -267,31 +273,31 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-400 mb-2">City</label>
-            <input 
-              type="text" 
-              value={formData.profile.city || ''} 
-              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: e.target.value } }))} 
+            <input
+              type="text"
+              value={formData.profile.city || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, city: e.target.value } }))}
               className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-green-500 focus:outline-none transition-colors"
             />
           </div>
           <div className="bg-linear-to-r md:col-span-2">
-          <div className="flex items-center gap-3 mb-4">
-            <Globe className="w-5 h-5 text-indigo-400" />
-            <label className="text-sm font-semibold text-gray-200">Timezone</label>
+            <div className="flex items-center gap-3 mb-4">
+              <Globe className="w-5 h-5 text-indigo-400" />
+              <label className="text-sm font-semibold text-gray-200">Timezone</label>
+            </div>
+            <select
+              value={formData.preferences.timezone}
+              onChange={(e) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, timezone: e.target.value } }))}
+              className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-indigo-500 focus:outline-none transition-colors"
+            >
+              <option value="">Select timezone</option>
+              {timezones.map(tz => <option key={tz} value={tz}>{tz}</option>)}
+            </select>
           </div>
-          <select 
-            value={formData.preferences.timezone} 
-            onChange={(e) => setFormData(prev => ({ ...prev, preferences: { ...prev.preferences, timezone: e.target.value } }))} 
-            className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-indigo-500 focus:outline-none transition-colors"
-          >
-            <option value="">Select timezone</option>
-            {timezones.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-          </select>
         </div>
-        </div>
-        <button 
-          type="button" 
-          onClick={handleAutoDetectCountry} 
+        <button
+          type="button"
+          onClick={handleAutoDetectCountry}
           disabled={loadingCountry}
           className="w-full px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white rounded-lg transition-colors font-medium"
         >
@@ -306,11 +312,11 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
             <Briefcase className="w-5 h-5 text-orange-400" />
             <label className="text-sm font-semibold text-gray-200">Work Information</label>
           </div>
-          <input 
-            type="text" 
+          <input
+            type="text"
             placeholder="Company name"
-            value={formData.profile.company || ''} 
-            onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, company: e.target.value } }))} 
+            value={formData.profile.company || ''}
+            onChange={(e) => setFormData(prev => ({ ...prev, profile: { ...prev.profile, company: e.target.value } }))}
             className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-orange-500 focus:outline-none transition-colors"
           />
         </div>

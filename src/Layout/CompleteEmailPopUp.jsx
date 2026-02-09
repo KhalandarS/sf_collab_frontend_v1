@@ -5,7 +5,7 @@ export default function CompleteProfilePopUp() {
   const navigate = useNavigate();
   const location = useLocation()
   const handleCompleteProfile = () => {
-    navigate("/user-profile");
+    navigate("/user-profile?page=settings");
   };
   if (location.pathname === "/user-profile") return null;
   return (

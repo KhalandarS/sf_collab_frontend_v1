@@ -1,7 +1,8 @@
 import { X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 export default function NewIdeaForm({
   onClose,
@@ -9,30 +10,81 @@ export default function NewIdeaForm({
   industries,
   stages,
 }) {
-  const titleRef = useRef("");
-  const descriptionRef = useRef("");
-  const industryRef = useRef("");
-  const stageRef = useRef("");
-  const tagsRef = useRef("");
-  const projectDetailsRef = useRef("");
+  const formData = useMemo(() => localStorage.getItem("newIdeaFormData") || {
+    title: "",
+    description: "",
+    projectDetails: "",
+    industry: "",
+    stage: "",
+    tags: [],
+  }, []);
+  const titleRef = useRef(formData.title || "");
+  const descriptionRef = useRef(formData.description || "");
+  const industryRef = useRef(formData.industry || "");
+  const stageRef = useRef(formData.stage || "");
+  const tagInputRef = useRef(formData.tags || []);
+  const projectDetailsRef = useRef(formData.projectDetails || "");
   const fileInputRef = useRef(null);
   const [selectedImage, setSelectedImage] = useState(null);
-
+  const [tags, setTags] = useState([]);
+  const [errors, setErrors] = useState({});
+  useEffect(() => {
+    localStorage.setItem("newIdeaFormData", JSON.stringify({
+      title: titleRef.current,
+      description: descriptionRef.current,
+      industry: industryRef.current,
+      stage: stageRef.current,
+      tags: tagInputRef.current,
+      projectDetails: projectDetailsRef.current,
+    }));
+  }, [titleRef, descriptionRef, industryRef, stageRef, tagInputRef, projectDetailsRef]);
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       setSelectedImage(file);
     }
   };
+
+  const handleAddTag = () => {
+    const tagValue = tagInputRef.current.trim();
+    if (tagValue && tags.length < 5) {
+      setTags([...tags, tagValue]);
+      tagInputRef.current = "";
+    } else if (tags.length >= 5) {
+      toast.error("Maximum 5 tags allowed");
+    }
+  };
+
+  const handleRemoveTag = (index) => {
+    setTags(tags.filter((_, i) => i !== index));
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
   const { user } = useSelector((state) => state.auth);
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!titleRef.current?.trim()) newErrors.title = "Title is required";
+    if (!descriptionRef.current?.trim()) newErrors.description = "Description is required";
+    if (!industryRef.current) newErrors.industry = "Industry is required";
+    if (!stageRef.current) newErrors.stage = "Stage is required";
+    return newErrors;
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    const tagsArray = tagsRef.current
-      ? tagsRef.current
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean)
-      : [];
+    const newErrors = validateForm();
+    
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     const formData = new FormData();
     formData.append("creator_first_name", user?.firstName);
@@ -45,7 +97,7 @@ export default function NewIdeaForm({
     );
     formData.append("industry", industryRef.current || "Technology");
     formData.append("stage", stageRef.current || "Idea Stage");
-    formData.append("tags", JSON.stringify(tagsArray.length > 0 ? tagsArray : ["General"]));
+    formData.append("tags", JSON.stringify(tags.length > 0 ? tags : ["General"]));
     
     if (selectedImage) {
       formData.append("image", selectedImage);
@@ -58,8 +110,10 @@ export default function NewIdeaForm({
     descriptionRef.current = "";
     industryRef.current = "";
     stageRef.current = "";
-    tagsRef.current = "";
+    tagInputRef.current = "";
     setSelectedImage(null);
+    setTags([]);
+    setErrors({});
   };
 
   const containerVariants = {
@@ -143,6 +197,7 @@ export default function NewIdeaForm({
               ref: titleRef,
               required: true,
               autoFocus: true,
+              fieldName: "title",
             },
             {
               label: "Description *",
@@ -152,6 +207,7 @@ export default function NewIdeaForm({
               ref: descriptionRef,
               required: true,
               rows: 4,
+              fieldName: "description",
             },
             {
               label: "Project Details",
@@ -160,6 +216,7 @@ export default function NewIdeaForm({
                 "Add more technical or business details about your idea",
               ref: projectDetailsRef,
               rows: 3,
+              fieldName: "projectDetails",
             },
           ].map((field, i) => (
             <motion.div
@@ -178,9 +235,14 @@ export default function NewIdeaForm({
                   defaultValue=""
                   onChange={(e) => {
                     field.ref.current = e.target.value;
+                    if (errors[field.fieldName]) {
+                      setErrors({ ...errors, [field.fieldName]: "" });
+                    }
                   }}
                   placeholder={field.placeholder}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs transition-all"
+                  className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs transition-all ${
+                    errors[field.fieldName] ? "border-red-500" : "border-white/20"
+                  }`}
                   required={field.required}
                   autoFocus={field.autoFocus}
                   whileFocus={{ scale: 1.01 }}
@@ -190,13 +252,21 @@ export default function NewIdeaForm({
                   defaultValue=""
                   onChange={(e) => {
                     field.ref.current = e.target.value;
+                    if (errors[field.fieldName]) {
+                      setErrors({ ...errors, [field.fieldName]: "" });
+                    }
                   }}
                   placeholder={field.placeholder}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 resize-none placeholder:text-xs transition-all"
+                  className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 resize-none placeholder:text-xs transition-all ${
+                    errors[field.fieldName] ? "border-red-500" : "border-white/20"
+                  }`}
                   rows={field.rows}
                   required={field.required}
                   whileFocus={{ scale: 1.01 }}
                 />
+              )}
+              {errors[field.fieldName] && (
+                <p className="text-red-500 text-sm mt-1">{errors[field.fieldName]}</p>
               )}
             </motion.div>
           ))}
@@ -216,8 +286,13 @@ export default function NewIdeaForm({
                 defaultValue=""
                 onChange={(e) => {
                   industryRef.current = e.target.value;
+                  if (errors.industry) {
+                    setErrors({ ...errors, industry: "" });
+                  }
                 }}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all"
+                className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all ${
+                  errors.industry ? "border-red-500" : "border-white/20"
+                }`}
                 required
                 whileFocus={{ scale: 1.01 }}
               >
@@ -236,6 +311,9 @@ export default function NewIdeaForm({
                     </option>
                   ))}
               </motion.select>
+              {errors.industry && (
+                <p className="text-red-500 text-sm mt-1">{errors.industry}</p>
+              )}
             </div>
 
             <div>
@@ -246,8 +324,13 @@ export default function NewIdeaForm({
                 defaultValue=""
                 onChange={(e) => {
                   stageRef.current = e.target.value;
+                  if (errors.stage) {
+                    setErrors({ ...errors, stage: "" });
+                  }
                 }}
-                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all"
+                className={`w-full px-4 py-3 bg-white/10 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white text-xs transition-all ${
+                  errors.stage ? "border-red-500" : "border-white/20"
+                }`}
                 required
                 whileFocus={{ scale: 1.01 }}
               >
@@ -262,6 +345,9 @@ export default function NewIdeaForm({
                     </option>
                   ))}
               </motion.select>
+              {errors.stage && (
+                <p className="text-red-500 text-sm mt-1">{errors.stage}</p>
+              )}
             </div>
           </motion.div>
 
@@ -272,45 +358,121 @@ export default function NewIdeaForm({
             animate="visible"
           >
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              Tags
+              Tags ({tags.length}/5)
             </label>
-            <motion.input
-              type="text"
-              defaultValue=""
-              onChange={(e) => {
-                tagsRef.current = e.target.value;
-              }}
-              placeholder="e.g., AI, Mobile, Sustainability (comma separated)"
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs transition-all"
-              whileFocus={{ scale: 1.01 }}
-            />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <motion.input
+                  type="text"
+                  defaultValue=""
+                  onChange={(e) => {
+                    tagInputRef.current = e.target.value;
+                  }}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Type a tag and press Enter"
+                  className="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/50 text-white placeholder-gray-400 placeholder:text-xs transition-all"
+                  whileFocus={{ scale: 1.01 }}
+                />
+                <motion.button
+                  type="button"
+                  onClick={handleAddTag}
+                  disabled={tags.length >= 5}
+                  className="px-4 py-3 bg-blue-500/30 hover:bg-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed border border-blue-500/50 rounded-xl transition-colors font-medium"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Add
+                </motion.button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-2 px-3 py-1 bg-blue-500/20 border border-blue-500/50 rounded-lg"
+                  >
+                    <span className="text-sm text-white">{tag}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(index)}
+                      className="text-blue-300 hover:text-red-400 transition-colors"
+                    >
+                      ×
+                    </button>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
           </motion.div>
-
-          <motion.div
-            variants={itemVariants}
-            custom={5.5}
-            initial="hidden"
-            animate="visible"
-          >
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Image
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleImageChange}
-              className="hidden"
-            />
-            <motion.button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
-              whileHover={{ scale: 1.01 }}
-            >
-              {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
-            </motion.button>
-          </motion.div>
+          {
+            !selectedImage ? (
+          
+              <motion.div
+                variants={itemVariants}
+                custom={5.5}
+                initial="hidden"
+                animate="visible"
+              >
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Image
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
+                  whileHover={{ scale: 1.01 }}
+                >
+                  {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
+                </motion.button>
+              </motion.div>) : (
+              <motion.div
+                variants={itemVariants}
+                custom={5.5}
+                initial="hidden"
+                animate="visible"
+              >
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Image
+                </label>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <motion.button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
+                  whileHover={{ scale: 1.01 }}
+                >
+                  {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
+                </motion.button>
+  
+                {selectedImage && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-3 rounded-xl overflow-hidden border border-white/20"
+                  >
+                    <img
+                      src={URL.createObjectURL(selectedImage)}
+                      alt="Preview"
+                      className="w-full h-48 object-cover"
+                    />
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
 
           <motion.div
             className="flex justify-end gap-3 pt-4 max-sm:text-sm"
