@@ -30,20 +30,27 @@
     box-sizing: border-box;
 }
 
+#root {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 html, body{
     color: white;
     background-color: black;
     overflow-x: hidden;
     /* font-family: "Trade Winds", system-ui; */
-    
+    margin: 0;
+    padding: 0;
 }
 
 html {
-  height: 100%;
   overflow: auto;
 }
 body {
-  height: 100%;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 label {
   all: unset;
@@ -94,9 +101,25 @@ backdrop-filter: blur(10);
 
 
 
-::-webkit-scrollbar{
-    display: none;
+/* Styled scrollbar - visible but minimal */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }

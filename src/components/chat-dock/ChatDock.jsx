@@ -1176,7 +1176,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
                       {/* Input */}
                       <div className="bg-zinc-900 border-t border-zinc-800 p-2 flex-shrink-0">
-                        <ChatInput
+                        <ChatInput d
                           value={w.draft || ""}
                           onChange={(val) => {
                             setWindows((prev) =>

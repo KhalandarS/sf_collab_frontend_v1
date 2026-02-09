@@ -53,7 +53,7 @@ export default function DashboardTopNav({
     >
       <div className="mx-auto max-w-6xl px-3 py-3 sm:px-4">
         <nav
-          className="flex items-center gap-2 rounded-full border border-white/10 bg-gradient-to-r from-white/10 to-white/5 px-1 py-1 text-xs sm:text-sm shadow-2xl backdrop-blur"
+          className="flex items-center gap-2 rounded-full border border-white/10 bg-linear-to-r from-white/10 to-white/5 px-1 py-1 text-xs sm:text-sm shadow-2xl backdrop-blur"
           aria-label="dashboard navigation"
         >
           {links.map(({ href, icon: Icon, label }) => {
@@ -65,7 +65,7 @@ export default function DashboardTopNav({
               <Link
                 key={href}
                 to={href}
-                className={`flex items-center gap-2 rounded-full px-3 py-2 font-semibold transition duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400 ${
+                className={`flex items-center gap-2 rounded-full px-3 py-2 font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-400 ${
                   isActive
                     ? "bg-white/20 text-white"
                     : "text-white/70 hover:text-white"

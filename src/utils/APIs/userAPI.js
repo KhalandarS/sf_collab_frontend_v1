@@ -1,6 +1,8 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
+
 import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { userSocialAPI } from './socialAPI';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -77,12 +79,11 @@ export const usersAPI = {
     return response.data;
   },
 
-  // Added missing roles fetch helper
   getAllRoles: async () => {
     const response = await api.get('/users/roles');
     return response.data.data;
-
   },
+
   addRole: async (userId, roles, accessToken) => {
     const response = await api.put(`/user-roles/${userId}`, { roles }, {
       headers: {
@@ -90,6 +91,26 @@ export const usersAPI = {
       },
     });
     return response.data.data;
+  },
+
+  getFollowersCount: async (userId, accessToken) => {
+    try {
+      const response = await userSocialAPI.getFollowers(userId);
+      return { data: { followersCount: response.pagination?.totalCount || 0 } };
+    } catch (error) {
+      console.error('Error fetching followers:', error);
+      return { data: { followersCount: 0 } };
+    }
+  },
+
+  getFollowingCount: async (userId, accessToken) => {
+    try {
+      const response = await userSocialAPI.getFollowing(userId);
+      return { data: { followingCount: response.pagination?.totalCount || 0 } };
+    } catch (error) {
+      console.error('Error fetching following:', error);
+      return { data: { followingCount: 0 } };
+    }
   },
 };
 

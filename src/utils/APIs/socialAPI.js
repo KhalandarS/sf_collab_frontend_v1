@@ -262,6 +262,128 @@ export const userSocialAPI = {
     const response = await api.get(`/api/user-social/${userId}/data`)
     return response.data
   },
+
+  // Follow/Unfollow endpoints
+  followUser: async (userId) => {
+    const response = await api.post(`/api/profile/${userId}/follow`)
+    return response.data
+  },
+
+  unfollowUser: async (userId) => {
+    const response = await api.post(`/api/profile/${userId}/unfollow`)
+    return response.data
+  },
+
+  isFollowing: async (userId) => {
+    const response = await api.get(`/api/profile/${userId}/is-following`)
+    return response.data
+  },
+
+  // Explore and feed endpoints
+  getExplorePosts: async (params = {}) => {
+    const response = await api.get('/api/profile/explore', {
+      params: {
+        page: params.page || 1,
+        per_page: params.limit || 10,
+        ...params,
+      },
+    })
+    return response.data
+  },
+
+  getFeedPosts: async (params = {}) => {
+    const response = await api.get('/api/profile/posts', {
+      params: {
+        page: params.page || 1,
+        per_page: params.limit || 10,
+        ...params,
+      },
+    })
+    return response.data
+  },
+
+  getSuggestions: async (limit = 5) => {
+    const response = await api.get('/api/profile/suggestions', {
+      params: { limit },
+    })
+    return response.data
+  },
+
+  createStory: async (formData) => {
+    const response = await api.post('/api/profile/stories', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
+    return response.data
+  },
+  getStories: async (params = {}) => {
+    const response = await api.get('/api/profile/stories', { params })
+    return response.data
+  },
+
+  // Delete post
+  deletePost: async (postId) => {
+    const response = await api.delete(`/api/profile/posts/${postId}`)
+    return response.data
+  },
+
+  // Edit post
+  editPost: async (postId, { caption }) => {
+    const response = await api.patch(`/api/profile/posts/${postId}`, { caption })
+    return response.data
+  },
+
+  // Save post
+  savePost: async (postId) => {
+    const response = await api.post(`/api/profile/posts/${postId}/save`)
+    return response.data
+  },
+
+  // Unsave post
+  unsavePost: async (postId) => {
+    const response = await api.post(`/api/profile/posts/${postId}/unsave`)
+    return response.data
+  },
+
+  // Get saved posts
+  getSavedPosts: async (params = {}) => {
+    const response = await api.get('/api/profile/saved-posts', { params })
+    return response.data
+  },
+
+  // Comments
+  addComment: async (postId, { text }) => {
+    const response = await api.post(`/api/profile/posts/${postId}/comments`, { text })
+    return response.data
+  },
+
+  getComments: async (postId, params = {}) => {
+    const response = await api.get(`/api/profile/posts/${postId}/comments`, { params })
+    return response.data
+  },
+
+  deleteComment: async (postId, commentId) => {
+    const response = await api.delete(`/api/profile/posts/${postId}/comments/${commentId}`)
+    return response.data
+  },
+
+  // Block/Unblock users
+  blockUser: async (userId) => {
+    const response = await api.post(`/api/profile/${userId}/block`)
+    return response.data
+  },
+
+  unblockUser: async (userId) => {
+    const response = await api.post(`/api/profile/${userId}/unblock`)
+    return response.data
+  },
+
+  // Search users
+  searchUsers: async (q) => {
+    const response = await api.get('/api/profile/search', { params: { q } })
+    return response.data
+  },
 }
 
 export default api

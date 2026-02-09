@@ -9,10 +9,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 import StoryModal from "../../modal/StoryModal";
 import StoryViewerModal from "../../modal/StoryViewerModal";
-import { postAPI } from "@/utils/APIs/postAPI";
+import { userSocialAPI } from "@/utils/APIs/socialAPI";
 
 
-export default function Stories() {
+export default function Stories({ refreshKey }) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -21,27 +21,29 @@ export default function Stories() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // In Stories.jsx - add safety check
-const fetchStories = async () => {
-  try {
-    const token = localStorage.getItem('access_token');
-    // Bypassing postAPI and hitting the story endpoint directly
-    const response = await fetch(`${import.meta.env.VITE_API_URL}/stories`, {
-        headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await response.json();
-    console.log("Fetched stories", data);
-    if (data?.success) {
-      setStories(data.data.stories || []);
-    }
-  } catch (error) {
-    console.warn("Stories API bypassed or failed.");
-    setStories([]); // Set to empty array to stop the crash
-  }
-};
+    const fetchStories = async () => {
+      try {
+        const response = await userSocialAPI.getStories({ page: 1, limit: 20 });
+        // backend returns { stories, pagination }
+        if (response && response.stories) {
+          setStories(response.stories.map((s) => ({
+            id: s._id || s.id,
+            thumbnail: s.mediaUrl,
+            avatar: s.author?.profilePicture || s.author?.avatar || s.author?.picture,
+            name: s.author?.firstName || s.author?.name || "User",
+            ...s,
+          })));
+        } else {
+          setStories([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stories:", error);
+        setStories([]);
+      }
+    };
 
     fetchStories();
-  }, []);
+  }, [refreshKey]);
   return (
     <div className="bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 border border-zinc-800/50 mb-6 mt-10">
       <div className="flex gap-4">

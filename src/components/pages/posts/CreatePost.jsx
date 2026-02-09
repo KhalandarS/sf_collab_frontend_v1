@@ -3,8 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import ShinyText from "@/components/ui/ShinyText";
 import { Textarea } from "@/components/ui/textarea";
-import { AnimatePresence } from "framer-motion";
-import { ImageIcon, Sparkles, Video, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ImageIcon, Sparkles, Video, X, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import MultiImageGrid from "./MultiImageGrid";
 import { Separator } from "@/components/ui/separator";
@@ -14,8 +14,12 @@ import { getProfilePicture } from "@/utils/getProfilePicture";
 // Create Post Component
 export default function CreatePost({ currentUser, onPost }) {
   const [caption, setCaption] = useState("");
+  // files: array of { file: File, url: string }
   const [files, setFiles] = useState([]);
   const [fileType, setFileType] = useState(null);
+  const [destination, setDestination] = useState("feed"); // 'feed' or 'story'
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const imageInputRef = useRef(null);
   const videoInputRef = useRef(null);
 
@@ -23,28 +27,57 @@ export default function CreatePost({ currentUser, onPost }) {
     const selectedFiles = Array.from(e.target.files);
     if (!selectedFiles.length) return;
 
-    const fileUrls = selectedFiles.map((file) => URL.createObjectURL(file));
-    setFiles((prev) => [...prev, ...fileUrls]);
+    const mapped = selectedFiles.map((file) => ({ file, url: URL.createObjectURL(file) }));
+    setFiles((prev) => [...prev, ...mapped]);
     setFileType(type);
   };
 
-  const handlePost = () => {
+  const handlePost = async () => {
     if (!caption.trim() && !files.length) return;
 
     const postType = files.length > 1 ? "image" : fileType || "text";
 
-    onPost({
-      caption,
-      files,
-      type: postType,
-      isMultiImage: files.length > 1,
-    });
+    try {
+      setIsUploading(true);
+      setUploadProgress(0);
 
-    setCaption("");
-    setFiles([]);
-    setFileType(null);
-    if (imageInputRef.current) imageInputRef.current.value = "";
-    if (videoInputRef.current) videoInputRef.current.value = "";
+      // Simulate progress over time
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => Math.min(prev + 30, 90));
+      }, 300);
+
+      // pass destination so parent can decide story vs feed
+      await onPost(
+        {
+          caption,
+          files,
+          type: postType,
+          isMultiImage: files.length > 1,
+          destination,
+        },
+        (progress) => {
+          setUploadProgress(Math.round(progress * 100));
+        }
+      );
+
+      setUploadProgress(100);
+      clearInterval(progressInterval);
+
+      // Reset after success
+      setTimeout(() => {
+        setCaption("");
+        setFiles([]);
+        setFileType(null);
+        setIsUploading(false);
+        setUploadProgress(0);
+        if (imageInputRef.current) imageInputRef.current.value = "";
+        if (videoInputRef.current) videoInputRef.current.value = "";
+      }, 500);
+    } catch (error) {
+      console.error("Failed to post:", error);
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   const removeFile = (index) => {
@@ -107,13 +140,13 @@ if (!currentUser) return null; // or skeleton
                 <div className="relative rounded-xl overflow-hidden">
                   {fileType === "image" ? (
                     <img
-                      src={files[0]}
+                      src={files[0].url}
                       alt="Preview"
                       className="max-h-80 w-full object-contain rounded-xl"
                     />
                   ) : (
                     <video
-                      src={files[0]}
+                      src={files[0].url}
                       controls
                       className="max-h-80 w-full rounded-xl"
                     />
@@ -129,7 +162,7 @@ if (!currentUser) return null; // or skeleton
                 </div>
               ) : (
                 <MultiImageGrid
-                  images={files}
+                  images={files.map((f) => f.url)}
                   onImageClick={(image) => console.log("Preview image:", image)}
                 />
               )}
@@ -138,6 +171,31 @@ if (!currentUser) return null; // or skeleton
         </AnimatePresence>
 
         <Separator className="bg-zinc-800/50" />
+
+        {/* Upload Progress Bar */}
+        <AnimatePresence>
+          {isUploading && uploadProgress > 0 && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-2"
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-zinc-400">Uploading...</p>
+                <p className="text-xs text-zinc-400">{uploadProgress}%</p>
+              </div>
+              <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-blue-500 to-purple-500"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${uploadProgress}%` }}
+                  transition={{ duration: 0.2 }}
+                />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
@@ -174,17 +232,38 @@ if (!currentUser) return null; // or skeleton
             </TooltipProvider>
           </div>
 
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-zinc-400">Post to</div>
+            <select
+              value={destination}
+              onChange={(e) => setDestination(e.target.value)}
+              className="bg-zinc-800 text-white text-sm px-2 py-1 rounded"
+            >
+              <option value="feed">Feed</option>
+              <option value="story">Story</option>
+            </select>
+          </div>
+
           <Button
             onClick={handlePost}
-            disabled={!caption.trim() && !files.length}
+            disabled={(!caption.trim() && !files.length) || isUploading}
             className="bg-gradient-to-br from-gray-600 to-black text-gray-200 hover:from-gray-800 hover:to-gray-400 hover:cursor-pointer disabled:bg-zinc-800 disabled:text-zinc-600 gap-2 group relative overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
-              <Sparkles
-                size={16}
-                className="group-hover:rotate-12 transition-transform"
-              />
-              Post
+              {isUploading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                <>
+                  <Sparkles
+                    size={16}
+                    className="group-hover:rotate-12 transition-transform"
+                  />
+                  Post
+                </>
+              )}
             </span>
             <div className="absolute inset-0 bg-gradient-to-r from-blue-700 via-purple-500 to-blue-500 opacity-0 group-hover:opacity-100 transition-opacity bg-[length:200%_100%] animate-shimmer" />
           </Button>

@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { io } from "socket.io-client";
+import { SOCKET_API_URL } from "@/utils/config";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Share2,
@@ -9,6 +11,7 @@ import {
   Plus,
   User,
   Bell,
+  X,
 } from "lucide-react";
 import { Button } from "../../ui/button";
 import {
@@ -27,25 +30,6 @@ import { useSelector } from "react-redux";
 import { postAPI } from "@/utils/APIs/postAPI";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
 
-// type Post = {
-//   id: number;
-//   author: {
-//     id: number;
-//     name: string;
-//     avatar: string;
-//   };
-//   caption: string | null;
-//   media: {
-//     type: "image" | "video";
-//     urls: string[];
-//   } | null;
-//   likes_count: number;
-//   comments_count: number;
-//   liked_by_me: boolean;
-//   bookmarked_by_me: boolean;
-//   created_at: string;
-// };
-
 // ShinyText Component
 const ShinyText = ({ children, className = "" }) => {
   return (
@@ -57,112 +41,257 @@ const ShinyText = ({ children, className = "" }) => {
   );
 };
 
+// Settings Modal Component
+const SettingsModal = ({ isOpen, onClose }) => {
+  const [settings, setSettings] = useState({
+    emailNotifications: true,
+    pushNotifications: true,
+    theme: "dark",
+    privacy: "public",
+  });
 
+  const handleToggle = (key) => {
+    setSettings({ ...settings, [key]: !settings[key] });
+  };
 
+  if (!isOpen) return null;
 
-
-
-
-
-
-
-// Share Sheet Component
-const ShareSheet = () => {
   return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="gap-2 text-zinc-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all"
-        >
-          <Share2 size={18} />
-          <span className="text-xs font-medium">Share</span>
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="bg-zinc-950 border-zinc-800 text-white">
-        <SheetHeader>
-          <SheetTitle>
-            <ShinyText>Share Post</ShinyText>
-          </SheetTitle>
-        </SheetHeader>
-        <div className="space-y-3 mt-6">
-          {["Copy Link", "Share to Twitter", "Share to LinkedIn", "Email"].map(
-            (option) => (
-              <Button
-                key={option}
-                variant="outline"
-                className="w-full justify-start bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 hover:border-blue-500/50 transition-all"
-              >
-                <ChevronRight size={16} className="mr-2" />
-                {option}
-              </Button>
-            )
-          )}
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 max-w-md w-full mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-xl font-bold text-white">Settings</h2>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-white transition"
+          >
+            <X size={24} />
+          </button>
         </div>
-      </SheetContent>
-    </Sheet>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+            <label className="text-white text-sm">Email Notifications</label>
+            <input
+              type="checkbox"
+              checked={settings.emailNotifications}
+              onChange={() => handleToggle("emailNotifications")}
+              className="w-4 h-4 cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+            <label className="text-white text-sm">Push Notifications</label>
+            <input
+              type="checkbox"
+              checked={settings.pushNotifications}
+              onChange={() => handleToggle("pushNotifications")}
+              className="w-4 h-4 cursor-pointer"
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+            <label className="text-white text-sm">Privacy</label>
+            <select
+              value={settings.privacy}
+              onChange={(e) =>
+                setSettings({ ...settings, privacy: e.target.value })
+              }
+              className="bg-zinc-700 text-white text-sm px-2 py-1 rounded"
+            >
+              <option value="public">Public</option>
+              <option value="private">Private</option>
+            </select>
+          </div>
+
+          <div className="flex items-center justify-between p-3 bg-zinc-800/50 rounded-lg">
+            <label className="text-white text-sm">Theme</label>
+            <select
+              value={settings.theme}
+              onChange={(e) =>
+                setSettings({ ...settings, theme: e.target.value })
+              }
+              className="bg-zinc-700 text-white text-sm px-2 py-1 rounded"
+            >
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex gap-2 mt-6">
+          <Button
+            onClick={onClose}
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            Save Settings
+          </Button>
+          <Button
+            onClick={onClose}
+            variant="outline"
+            className="flex-1 border-zinc-600 text-white hover:bg-zinc-800"
+          >
+            Close
+          </Button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
-
-
-
-
-
-// Main Posts Component - UPDATED WITH 3-CELL GRID
+// Main Posts Component
 const Posts = () => {
   const { user: currentUser, access_token } = useSelector((state) => state.auth);
   const [socialProfile, setSocialProfile] = useState(null);
+  const [activeTab, setActiveTab] = useState("feed");
+  const [posts, setPosts] = useState([]);
+  const [storiesRefreshKey, setStoriesRefreshKey] = useState(0);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Socket.IO: listen for new posts/stories and prepend to feed
+    let socket;
+    if (access_token) {
+      socket = io(SOCKET_API_URL, { auth: { token: access_token } });
+
+      socket.on("connect", () => {
+        console.log("Socket connected", socket.id);
+      });
+
+      socket.on("new_post", (payload) => {
+        // only add to feed when on feed tab
+        if (payload && payload.content) {
+          setPosts((prev) => [
+            {
+              _id: payload.id,
+              author: payload.author,
+              content: payload.content,
+              type: payload.type,
+              createdAt: payload.createdAt,
+            },
+            ...prev,
+          ]);
+        }
+      });
+
+      socket.on("new_content", (payload) => {
+        // stories or mixed content
+        if (payload && payload.contentType === "story") {
+          // trigger stories component to refresh
+          setStoriesRefreshKey((k) => k + 1);
+        }
+      });
+    }
+
+    return () => {
+      if (socket) {
+        socket.disconnect();
+      }
+    };
+  }, [access_token]);
 
   useEffect(() => {
     const fetchSocialProfile = async () => {
       try {
         const response = await userSocialAPI.getSocialProfile(currentUser.id);
         setSocialProfile(response.social);
-      }
-      catch (error) {
+      } catch (error) {
         console.error("Failed to fetch social profile:", error);
       }
-    }
+    };
     if (currentUser) {
       fetchSocialProfile();
     }
   }, [currentUser]);
 
-
-
-  const [posts, setPosts] = useState([]);
   useEffect(() => {
-    // In Posts.jsx - add safety check
-const fetchPosts = async () => {
-  try {
-    // Ensure you pass an object with a page property
-    const response = await postAPI.getAll({ page: 1, limit: 10 }); 
-    setPosts(response.data.posts);
-  } catch (error) {
-    console.error("Failed to fetch posts:", error);
-  }
-};
+    const fetchPosts = async () => {
+      setLoading(true);
+      try {
+        let response;
+        if (activeTab === "feed") {
+          response = await userSocialAPI.getFeedPosts({
+            page: 1,
+            limit: 10,
+          });
+        } else if (activeTab === "explore") {
+          response = await userSocialAPI.getExplorePosts({
+            page: 1,
+            limit: 10,
+          });
+        }
+        setPosts(response.posts || []);
+      } catch (error) {
+        console.error("Failed to fetch posts:", error);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchPosts();
-  }, [access_token]);
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  }, [activeTab, access_token]);
 
-  const handleCreatePost = (postData) => {
-    const response = postAPI.create(postData, access_token);
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 300);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
-      // setPosts([response.data.post, ...posts]);
+  const handleCreatePost = async (postData) => {
+    try {
+      if (postData.destination === "story") {
+        // create story endpoint expects FormData with file upload
+        const formData = new FormData();
+        if (postData.caption) formData.append("caption", postData.caption);
+        formData.append("type", postData.type || "image");
+        // attach first file as 'media' (backend expects single file)
+        if (postData.files && postData.files.length > 0) {
+          const fileObj = postData.files[0];
+          if (fileObj.file) formData.append("media", fileObj.file);
+        }
+        await userSocialAPI.createStory(formData);
+        // stories are ephemeral; reload stories if needed
+      } else {
+        // destination === feed
+        // build FormData to send file(s) as multipart/form-data
+        const formData = new FormData();
+        if (postData.caption) formData.append("content", postData.caption);
+        formData.append("type", postData.type || "text");
+        // attach first file as 'media' (backend expects single file)
+        if (postData.files && postData.files.length > 0) {
+          const fileObj = postData.files[0];
+          if (fileObj.file) formData.append("media", fileObj.file);
+        }
+        const response = await postAPI.create(formData, access_token);
+        // postAPI.create returns response.data.data shape; normalize
+        const created = response?.post || response?.data?.post || response;
+        setPosts((prev) => [created, ...prev]);
+      }
+    } catch (error) {
+      console.error("Failed to create post:", error);
+    }
   };
 
   return (
     <div className="min-h-screen text-white w-full">
-      {/* Title Section */}
-      <div className="text-center py-6">
-        <h1 className="text-3xl font-bold">This Feature is Coming Soon!</h1>
-      </div>
-
       {/* Animated Background */}
-      <div className="fixed inset-0">
+      <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
         <div
@@ -171,39 +300,88 @@ const fetchPosts = async () => {
         />
       </div>
 
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+
       {/* Main 3-Cell Grid Layout */}
-      <div className="relative w-full mx-auto px-3">
+      <div className="relative w-full mx-auto px-3 py-6">
         <div className="grid grid-cols-12 gap-4">
           {/* ---- LEFT SIDEBAR (hidden on mobile, sticky on lg) ---- */}
           <div className="hidden lg:block lg:col-span-3">
             <div className="sticky top-0 space-y-2">
-              <LeftSidebar socialProfile={socialProfile} />
+              <LeftSidebar
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                onSettingsClick={() => setIsSettingsOpen(true)}
+              />
             </div>
           </div>
 
           {/* ---- CENTER FEED (full width on mobile, 6 cols on lg) ---- */}
           <div className="col-span-12 lg:col-span-6">
             <div className="space-y-6">
+              {/* Tab Headers */}
+              <div className="flex gap-4 border-b border-zinc-800">
+                <button
+                  onClick={() => setActiveTab("feed")}
+                  className={`py-2 px-4 font-semibold transition-all ${
+                    activeTab === "feed"
+                      ? "text-blue-400 border-b-2 border-blue-400"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Feed
+                </button>
+                <button
+                  onClick={() => setActiveTab("explore")}
+                  className={`py-2 px-4 font-semibold transition-all ${
+                    activeTab === "explore"
+                      ? "text-blue-400 border-b-2 border-blue-400"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  Explore
+                </button>
+              </div>
+
               {/* Stories */}
-              <Stories />
+              {activeTab === "feed" && <Stories refreshKey={storiesRefreshKey} />}
 
               {/* Create Post */}
-              {currentUser && (
+              {currentUser && activeTab === "feed" && (
                 <CreatePost currentUser={currentUser} onPost={handleCreatePost} />
               )}
 
               {/* Posts Feed */}
               <div className="space-y-6">
-                {posts.map((post, index) => (
-                  <motion.div
-                    key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <PostCard post={post} />
-                  </motion.div>
-                ))}
+                {loading ? (
+                  <div className="text-center py-8 text-zinc-400">
+                    Loading posts...
+                  </div>
+                ) : posts.length > 0 ? (
+                  posts.map((post, index) => (
+                    <motion.div
+                      key={post._id || index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <PostCard 
+                        post={post} 
+                        onPostDeleted={(postId) => {
+                          setPosts(posts.filter(p => (p._id || p.id) !== postId))
+                        }}
+                      />
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-zinc-400 text-lg">
+                      {activeTab === "feed"
+                        ? "No posts from people you follow yet. Follow more users!"
+                        : "No posts available. Be the first to post!"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -220,10 +398,20 @@ const fetchPosts = async () => {
       {/* Bottom Navigation for Mobile */}
       <div className="fixed bottom-0 left-0 right-0 bg-zinc-900/95 backdrop-blur-xl border-t border-zinc-800/50 md:hidden">
         <div className="flex justify-around items-center p-3">
-          <Button variant="ghost" size="icon" className="text-blue-400">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={activeTab === "feed" ? "text-blue-400" : "text-zinc-400"}
+            onClick={() => setActiveTab("feed")}
+          >
             <Home size={24} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-zinc-400">
+          <Button
+            variant="ghost"
+            size="icon"
+            className={activeTab === "explore" ? "text-blue-400" : "text-zinc-400"}
+            onClick={() => setActiveTab("explore")}
+          >
             <Search size={24} />
           </Button>
           <Button variant="ghost" size="icon" className="text-zinc-400">
@@ -232,7 +420,12 @@ const fetchPosts = async () => {
           <Button variant="ghost" size="icon" className="text-zinc-400">
             <Bell size={24} />
           </Button>
-          <Button variant="ghost" size="icon" className="text-zinc-400">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-zinc-400"
+            onClick={() => setIsSettingsOpen(true)}
+          >
             <User size={24} />
           </Button>
         </div>
@@ -260,6 +453,5 @@ const fetchPosts = async () => {
     </div>
   );
 };
-
 
 export default Posts;

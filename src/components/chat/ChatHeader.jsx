@@ -70,7 +70,7 @@ const ChatHeader = ({
   return (
     <div className="h-16 px-4 border-b border-zinc-800 bg-zinc-900 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        <div className="relative" ref={menuRef}>
+        <div className="relative flex items-center" ref={menuRef}>
           {isMobile && (
             <button
               type="button"

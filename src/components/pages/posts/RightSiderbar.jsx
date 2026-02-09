@@ -83,10 +83,28 @@ export default function RightSidebar({ socialProfile }) {
         </CardHeader>
         <CardContent className="p-4">
           <div className="text-center mb-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-purple-600 to-black rounded-full flex items-center justify-center mx-auto mb-3">
-              <span className="text-2xl font-bold text-white">{socialProfile?.followersCount || 0}</span>
+            <div className="flex flex-col items-center">
+              <div className="relative">
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-zinc-800 mx-auto mb-2">
+                  <img
+                    src={socialProfile?.profile?.picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(socialProfile?.firstName || 'U')}`}
+                    alt="profile"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                {/* Active indicator */}
+                { (socialProfile?.isOnline || (socialProfile?.lastActive && (new Date() - new Date(socialProfile.lastActive) < 1000 * 60 * 5))) ? (
+                  <div className="absolute -bottom-0 -right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-zinc-900"></div>
+                ) : (
+                  <div className="absolute -bottom-0 -right-0 w-3 h-3 bg-zinc-600 rounded-full border-2 border-zinc-900"></div>
+                )}
+              </div>
+
+              <div className="text-center">
+                <p className="text-2xl font-bold text-white">{socialProfile?.followersCount || 0}</p>
+                <p className="text-sm text-zinc-400">{socialProfile && socialProfile.followersCount !== 1 ? "Followers" : "Follower"}</p>
+              </div>
             </div>
-            <p className="text-sm text-zinc-400">{socialProfile && socialProfile.followersCount !== 1 ? "Followers" : "Follower"}</p>
           </div>
 
           <div className="bg-zinc-800/30 rounded-lg p-4">

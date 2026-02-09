@@ -1,11 +1,13 @@
 import React, { useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Upload } from "lucide-react";
+import { Upload, Loader2 } from "lucide-react";
+import { userSocialAPI } from "@/utils/APIs/socialAPI";
 
 const StoryModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
@@ -21,6 +23,28 @@ const StoryModal = ({ isOpen, onClose }) => {
     setSelectedFile(null);
     setPreviewUrl(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handlePostStory = async () => {
+    if (!selectedFile) return;
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("media", selectedFile);
+      formData.append("type", selectedFile.type.startsWith("video/") ? "video" : "image");
+
+      await userSocialAPI.createStory(formData);
+
+      // Reset and close
+      handleRemoveFile();
+      onClose();
+    } catch (error) {
+      console.error("Failed to post story:", error);
+      alert("Failed to post story. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -81,18 +105,27 @@ const StoryModal = ({ isOpen, onClose }) => {
               {selectedFile.name}
             </p>
             <div className="flex gap-4">
-            <button
-              className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 hover:cursor-pointer"
-              onClick={handleRemoveFile}
-            >
-              Remove
-            </button>
-            <button
-              className="px-4 py-2 bg-gradient-to-br from-gray-600 to-blue-800 text-white rounded hover:from-blue-800 hover:to-gray-600 hover:cursor-pointer"
-              
-            >
-              Post
-            </button>
+              <button
+                disabled={isUploading}
+                className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 disabled:bg-gray-800 disabled:cursor-not-allowed"
+                onClick={handleRemoveFile}
+              >
+                Remove
+              </button>
+              <button
+                disabled={isUploading}
+                className="px-4 py-2 bg-gradient-to-br from-gray-600 to-blue-800 text-white rounded hover:from-blue-800 hover:to-gray-600 disabled:bg-gray-700 disabled:cursor-not-allowed flex items-center gap-2"
+                onClick={handlePostStory}
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Posting...
+                  </>
+                ) : (
+                  "Post"
+                )}
+              </button>
             </div>
           </div>
         )}
