@@ -1,6 +1,11 @@
 /**
  * SF Collab Notification Context - FIXED VERSION
- * Provides notification state management and real-time updates
+ * 
+ * FIXES:
+ * 1. Added clearAllNotifications function
+ * 2. Normalizes notification fields (handles both isRead/is_read)
+ * 3. Proper delete functionality
+ * 4. Better error handling
  */
 
 import React, { 
@@ -17,6 +22,31 @@ import { getSocketInstance } from "@/utils/getSocketInstance";
 
 // Create context
 const NotificationContext = createContext(null);
+
+/**
+ * Normalize notification object to have consistent field names
+ * Backend sends camelCase (isRead), frontend expects snake_case (is_read)
+ */
+const normalizeNotification = (notif) => {
+  if (!notif) return notif;
+  
+  return {
+    ...notif,
+    // Normalize read status - support both conventions
+    is_read: notif.is_read ?? notif.isRead ?? false,
+    isRead: notif.isRead ?? notif.is_read ?? false,
+    // Normalize type
+    type: notif.type || notif.notification_type || 'info',
+    notification_type: notif.notification_type || notif.type || 'info',
+    // Normalize timestamps
+    created_at: notif.created_at || notif.createdAt,
+    createdAt: notif.createdAt || notif.created_at,
+    // Normalize other fields
+    user_id: notif.user_id || notif.userId,
+    actor_id: notif.actor_id || notif.actorId,
+    link_url: notif.link_url || notif.linkUrl,
+  };
+};
 
 /**
  * Custom hook to use notification context
@@ -75,12 +105,14 @@ export const NotificationProvider = ({ children }) => {
     // Handle new notifications
     socketInstance.on("new_notification", (data) => {
       console.log("📬 New notification received:", data);
-      const notif = data?.notification ?? data;
-      if (!notif) return;
+      const rawNotif = data?.notification ?? data;
+      if (!rawNotif) return;
 
-      // Add to notifications list
+      // Normalize the notification
+      const notif = normalizeNotification(rawNotif);
+
+      // Add to notifications list (avoid duplicates)
       setNotifications((prev) => {
-        // Avoid duplicates
         if (prev.some(n => n.id === notif.id)) {
           return prev;
         }
@@ -88,13 +120,15 @@ export const NotificationProvider = ({ children }) => {
       });
       
       // Increment unread count
-      setUnreadCount((prev) => prev + 1);
+      if (!notif.is_read) {
+        setUnreadCount((prev) => prev + 1);
+      }
 
       // Dispatch toast event for ToastNotification component
       window.dispatchEvent(
         new CustomEvent("showToast", {
           detail: {
-            type: notif.type || notif.notification_type || 'info',
+            type: notif.type || 'info',
             title: notif.title,
             message: notif.message,
             data: notif.data,
@@ -108,12 +142,12 @@ export const NotificationProvider = ({ children }) => {
       console.log("User status update:", data);
     });
 
-    // Handle notification read sync (when marked from another device/tab)
+    // Handle notification read sync
     socketInstance.on("notification_read", (data) => {
       const { notificationId } = data;
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
+          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
         )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
@@ -151,13 +185,14 @@ export const NotificationProvider = ({ children }) => {
           ...newFilters,
         });
 
-        const list = data?.notifications ?? [];
+        // Normalize all notifications
+        const rawList = data?.notifications ?? [];
+        const list = rawList.map(normalizeNotification);
 
         if (pageNum === 1) {
           setNotifications(list);
         } else {
           setNotifications((prev) => {
-            // Avoid duplicates when loading more
             const existingIds = new Set(prev.map(n => n.id));
             const newItems = list.filter(n => !existingIds.has(n.id));
             return [...prev, ...newItems];
@@ -210,31 +245,32 @@ export const NotificationProvider = ({ children }) => {
   /**
    * Mark a notification as read
    */
-
   const markAsRead = useCallback(async (notificationId) => {
     try {
       await notificationAPI.markAsRead(notificationId);
 
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true } : n
+          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
         )
       );
 
-      // only decrement if it was unread before
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (err) {
       console.error("Error marking notification as read:", err);
     }
   }, []);
 
+  /**
+   * Mark a notification as unread
+   */
   const markAsUnread = useCallback(async (notificationId) => {
     try {
       await notificationAPI.markAsUnread(notificationId);
 
       setNotifications((prev) =>
         prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: false } : n
+          n.id === notificationId ? { ...n, is_read: false, isRead: false } : n
         )
       );
 
@@ -243,8 +279,6 @@ export const NotificationProvider = ({ children }) => {
       console.error("Error marking notification as unread:", err);
     }
   }, []);
-  
-
 
   /**
    * Mark all notifications as read
@@ -256,7 +290,7 @@ export const NotificationProvider = ({ children }) => {
       setNotifications((prev) =>
         prev.map((n) => {
           if (category && n.category !== category) return n;
-          return { ...n, is_read: true };
+          return { ...n, is_read: true, isRead: true };
         })
       );
       setUnreadCount(0);
@@ -266,20 +300,27 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   /**
-   * Delete a notification
+   * Delete a notification - FIXED
    */
   const deleteNotification = useCallback(async (notificationId) => {
     try {
       await notificationAPI.delete(notificationId);
       
+      // Find the notification to check if it was unread
       const notification = notifications.find(n => n.id === notificationId);
+      
+      // Remove from list
       setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
       
-      if (notification && !notification.is_read) {
+      // Update unread count if it was unread
+      if (notification && !notification.is_read && !notification.isRead) {
         setUnreadCount((prev) => Math.max(0, prev - 1));
       }
+      
+      return true;
     } catch (err) {
       console.error("Error deleting notification:", err);
+      throw err;
     }
   }, [notifications]);
 
@@ -289,15 +330,32 @@ export const NotificationProvider = ({ children }) => {
   const deleteAllRead = useCallback(async () => {
     try {
       await notificationAPI.deleteAllRead();
-      setNotifications((prev) => prev.filter((n) => !n.is_read));
+      setNotifications((prev) => prev.filter((n) => !n.is_read && !n.isRead));
     } catch (err) {
       console.error("Error deleting read notifications:", err);
+      throw err;
     }
   }, []);
 
+  /**
+   * Clear ALL notifications - ADDED
+   */
+  const clearAllNotifications = useCallback(async () => {
+    try {
+      await notificationAPI.clearAll();
+      setNotifications([]);
+      setUnreadCount(0);
+    } catch (err) {
+      console.error("Error clearing all notifications:", err);
+      throw err;
+    }
+  }, []);
+
+  /**
+   * Copy notification to notes
+   */
   const copyToNotes = useCallback(async (notification) => {
     try {
-      // adjust payload shape to whatever your /notes endpoint expects
       const payload = {
         title: notification?.title || "Notification",
         content: notification?.message || "",
@@ -305,7 +363,7 @@ export const NotificationProvider = ({ children }) => {
           notification_id: notification?.id,
           category: notification?.category,
           type: notification?.type,
-          created_at: notification?.created_at,
+          created_at: notification?.created_at || notification?.createdAt,
           data: notification?.data,
         },
       };
@@ -317,13 +375,12 @@ export const NotificationProvider = ({ children }) => {
     }
   }, []);
 
-
   // Initial load when authenticated
   useEffect(() => {
     if (!access_token) return;
     loadNotifications(1);
     loadUnreadCount();
-  }, [access_token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [access_token]);
 
   /**
    * Load more notifications (pagination)
@@ -357,12 +414,11 @@ export const NotificationProvider = ({ children }) => {
   const value = useMemo(
     () => ({
       // State
-      markAsUnread,
-      copyToNotes,
       notifications,
       unreadCount,
       stats,
       isLoading: loading,
+      loading,
       hasMore,
       filters,
       socket,
@@ -373,9 +429,12 @@ export const NotificationProvider = ({ children }) => {
       applyFilters,
       refresh,
       markAsRead,
+      markAsUnread,
       markAllAsRead,
       deleteNotification,
       deleteAllRead,
+      clearAllNotifications,
+      copyToNotes,
       loadStats,
     }),
     [
@@ -391,9 +450,12 @@ export const NotificationProvider = ({ children }) => {
       applyFilters,
       refresh,
       markAsRead,
+      markAsUnread,
       markAllAsRead,
       deleteNotification,
       deleteAllRead,
+      clearAllNotifications,
+      copyToNotes,
       loadStats,
     ]
   );

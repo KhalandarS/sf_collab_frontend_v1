@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Bell,
@@ -32,6 +31,7 @@ export default function NotificationPage() {
   const applyFilters = ctx.applyFilters || (() => {});
   const markAllAsRead = ctx.markAllAsRead || (async () => {});
   const deleteAllRead = ctx.deleteAllRead || (async () => {});
+  const deleteNotification = ctx.deleteNotification || (async () => {});
 
   // Optional actions (may not exist in your context)
   const clearAllNotifications = ctx.clearAllNotifications; // optional
@@ -146,9 +146,13 @@ export default function NotificationPage() {
   }, []);
 
   // Handle notification delete
-  const handleNotificationDelete = useCallback(() => {
-    refresh();
-  }, [refresh]);
+  const handleNotificationDelete = useCallback(async (notificationId) => {
+    try {
+      await deleteNotification(notificationId);
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  }, [deleteNotification]);
 
   // Default filter on mount (to match first file behavior)
   useEffect(() => {
@@ -349,7 +353,7 @@ export default function NotificationPage() {
             whileTap={{ scale: 0.95 }}
             className="px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white hover:border-indigo-500/40 transition disabled:opacity-50"
           >
-            {loading ? "Loading…" : "Load more notifications"}
+            {loading ? "Loading..." : "Load more notifications"}
           </motion.button>
         </div>
       )}
@@ -394,7 +398,7 @@ function LoadingState() {
   return (
     <div className="flex flex-col items-center justify-center min-h-[200px] text-white/40">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400 mb-4" />
-      <p className="text-sm">Loading notifications…</p>
+      <p className="text-sm">Loading notifications...</p>
     </div>
   );
 }
