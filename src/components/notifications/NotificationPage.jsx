@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import {
   Bell,
   CheckCheck,
@@ -11,6 +11,7 @@ import {
   AlertCircle,
   Newspaper,
   Inbox,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import NotificationItem from "./NotificationItem";
@@ -32,21 +33,22 @@ export default function NotificationPage() {
   const markAllAsRead = ctx.markAllAsRead || (async () => {});
   const deleteAllRead = ctx.deleteAllRead || (async () => {});
   const deleteNotification = ctx.deleteNotification || (async () => {});
+  const markAsRead = ctx.markAsRead || (async () => {});
 
-  // Optional actions (may not exist in your context)
-  const clearAllNotifications = ctx.clearAllNotifications; // optional
-  const error = ctx.error; // optional
+  const clearAllNotifications = ctx.clearAllNotifications;
+  const error = ctx.error;
 
   const [activeFilter, setActiveFilter] = useState("general");
   const [isClearing, setIsClearing] = useState(false);
+  const [confirmModal, setConfirmModal] = useState(null);
+  const observerRef = useRef(null);
+  const notificationRefsRef = useRef({});
 
-  // Filter definitions (includes General + Newsletter)
+  // Filter definitions
   const filters = useMemo(
     () => [
       { id: "general", label: "General", icon: null, filter: { category: "general" } },
       { id: "newsletter", label: "Newsletter", icon: null, filter: { category: "newsletter" } },
-
-      // Existing filters preserved
       { id: "all", label: "All", icon: null, filter: {} },
       { id: "unread", label: "Unread", icon: null, filter: { is_read: "false" } },
       { id: "success", label: "Success", icon: null, filter: { type: "success" } },
@@ -57,13 +59,12 @@ export default function NotificationPage() {
     []
   );
 
-  // Local filtering (so UI works even if applyFilters is a no-op / backend not filtering)
+  // Local filtering
   const filteredNotifications = useMemo(() => {
     let filtered = [...notifications];
 
     switch (activeFilter) {
       case "general":
-        // General = everything except newsletter category
         filtered = notifications.filter((n) => n.category !== "newsletter");
         break;
       case "newsletter":
@@ -92,17 +93,57 @@ export default function NotificationPage() {
     return filtered;
   }, [notifications, activeFilter]);
 
+  // Intersection Observer for marking notifications as read
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleUnread = entries
+          .filter((entry) => entry.isIntersecting)
+          .map((entry) => entry.target.getAttribute("data-notification-id"))
+          .filter((id) => {
+            const notif = notifications.find((n) => n.id === id);
+            return notif && !notif.is_read;
+          })
+          .slice(0, 5); // Mark max 5 at a time
+
+        visibleUnread.forEach((id) => {
+          markAsRead(id).catch((err) =>
+            console.error(`Failed to mark ${id} as read:`, err)
+          );
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    observerRef.current = observer;
+
+    return () => observer.disconnect();
+  }, [notifications, markAsRead]);
+
+  // Observe notification elements
+  useEffect(() => {
+    filteredNotifications.forEach((n) => {
+      const element = notificationRefsRef.current[n.id];
+      if (element && observerRef.current) {
+        observerRef.current.observe(element);
+      }
+    });
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [filteredNotifications]);
+
   // Handle filter change
   const handleFilterChange = useCallback(
     (f) => {
       setActiveFilter(f.id);
 
-      // Keep calling applyFilters (if your context uses server-side filtering)
-      // But our UI list is still driven by filteredNotifications above, so UI remains consistent.
       if (typeof applyFilters === "function") {
         if (f.id === "general") {
-          // no direct backend equivalent usually; still pass something harmless
-           applyFilters({});
+          applyFilters({});
         } else if (f.id === "newsletter") {
           applyFilters({ category: "newsletter" });
         } else {
@@ -125,25 +166,25 @@ export default function NotificationPage() {
     refresh();
   }, [deleteAllRead, refresh]);
 
-  // Optional: clear all
+  // Handle clear all with custom modal
   const handleClearAll = useCallback(async () => {
     if (!clearAllNotifications) return;
 
-    if (window.confirm("Clear ALL notifications? This will permanently delete all your notifications and cannot be undone.")) {
-      setIsClearing(true);
-      try {
-        await clearAllNotifications();
-        refresh();
-      } finally {
-        setIsClearing(false);
-      }
-    }
+    setConfirmModal({
+      title: "Clear all notifications?",
+      message: "This will permanently delete all your notifications and cannot be undone.",
+      onConfirm: async () => {
+        setIsClearing(true);
+        try {
+          await clearAllNotifications();
+          refresh();
+        } finally {
+          setIsClearing(false);
+          setConfirmModal(null);
+        }
+      },
+    });
   }, [clearAllNotifications, refresh]);
-
-  // Handle notification read (called when notification becomes visible)
-  const handleNotificationRead = useCallback((notification) => {
-    // marking is handled in NotificationItem (unchanged)
-  }, []);
 
   // Handle notification delete
   const handleNotificationDelete = useCallback(async (notificationId) => {
@@ -154,7 +195,7 @@ export default function NotificationPage() {
     }
   }, [deleteNotification]);
 
-  // Default filter on mount (to match first file behavior)
+  // Default filter on mount
   useEffect(() => {
     const f = filters.find((x) => x.id === "general") || filters[0];
     handleFilterChange(f);
@@ -177,7 +218,6 @@ export default function NotificationPage() {
                 Notifications
               </h1>
 
-              {/* Connection status indicator */}
               <div className="flex items-center gap-1 ml-2">
                 {isConnected ? (
                   <>
@@ -226,7 +266,6 @@ export default function NotificationPage() {
                   Delete all read
                 </HeaderButton>
 
-                {/* Clear all (only if your context supports it) */}
                 {typeof clearAllNotifications === "function" && (
                   <HeaderButton
                     danger
@@ -243,7 +282,6 @@ export default function NotificationPage() {
         </div>
       </motion.header>
 
-      {/* Optional error message (UI kept simple and consistent) */}
       {error && (
         <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4 text-red-300 text-sm">
           {error}
@@ -287,7 +325,6 @@ export default function NotificationPage() {
       {/* ================= CONTENT ================= */}
       <section className="space-y-3">
         <AnimatePresence mode="popLayout">
-          {/* Loading state */}
           {loading && notifications.length === 0 && (
             <motion.div
               key="loading"
@@ -299,7 +336,6 @@ export default function NotificationPage() {
             </motion.div>
           )}
 
-          {/* Empty state */}
           {!loading && filteredNotifications.length === 0 && (
             <motion.div
               key="empty"
@@ -319,10 +355,13 @@ export default function NotificationPage() {
             </motion.div>
           )}
 
-          {/* Notification items */}
           {filteredNotifications.map((n) => (
             <motion.div
               key={n.id}
+              ref={(el) => {
+                if (el) notificationRefsRef.current[n.id] = el;
+              }}
+              data-notification-id={n.id}
               layout
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -335,7 +374,7 @@ export default function NotificationPage() {
             >
               <NotificationItem
                 notification={n}
-                onMarkAsRead={handleNotificationRead}
+                onMarkAsRead={() => {}}
                 onDelete={handleNotificationDelete}
               />
             </motion.div>
@@ -343,7 +382,6 @@ export default function NotificationPage() {
         </AnimatePresence>
       </section>
 
-      {/* ================= LOAD MORE ================= */}
       {hasMore && activeFilter === "all" && (
         <div className="flex justify-center pt-6">
           <motion.button
@@ -357,6 +395,9 @@ export default function NotificationPage() {
           </motion.button>
         </div>
       )}
+
+      {/* ================= CONFIRMATION MODAL ================= */}
+      <ConfirmationModal modal={confirmModal} onClose={() => setConfirmModal(null)} />
     </div>
   );
 }
@@ -400,5 +441,56 @@ function LoadingState() {
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-400 mb-4" />
       <p className="text-sm">Loading notifications...</p>
     </div>
+  );
+}
+
+function ConfirmationModal({ modal, onClose }) {
+  if (!modal) return null;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          onClick={(e) => e.stopPropagation()}
+          className="rounded-xl bg-gray-800 border border-gray-700 p-6 w-96 shadow-2xl"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <h2 className="text-lg font-bold text-white">{modal.title}</h2>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-white transition"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
+          <p className="text-gray-300 mb-6">{modal.message}</p>
+
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg bg-white/5 text-white hover:bg-white/10 transition"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={modal.onConfirm}
+              className="px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
+            >
+              Confirm
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
   );
 }

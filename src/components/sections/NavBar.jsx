@@ -107,7 +107,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
     try {
       // apiClient handles the BaseURL and the Bearer token automatically
       const response = await notificationAPI.getAll();
-      const notificationsData = response.data?.notifications || [];
+      const notificationsData = response?.notifications || [];
       
       const formattedNotifications = notificationsData
         .map(notif => ({

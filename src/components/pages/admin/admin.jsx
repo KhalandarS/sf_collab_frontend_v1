@@ -1,6 +1,5 @@
 // src/components/pages/admin/AdminDashboard.jsx
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Bar, Pie } from 'react-chartjs-2';
 import {
@@ -13,13 +12,11 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { API_BASE_URL } from '@/utils/config';
 import { usersAPI } from '@/utils/APIs/userApi';
 import { waitlistAPI } from '@/utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '@/utils/APIs/applicationAPI';
 import AdminIdeasReviewSection from '../contribution/AdminIdeasReviewSection';
-import { useNavigate } from 'react-router-dom';
 import UserPopUp from './userPopUp';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
@@ -33,11 +30,10 @@ import { paymentAPI } from '@/utils/APIs/paymentAPI';
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
-  const { access_token, user } = useSelector((state) => state.auth);
+  const { access_token } = useSelector((state) => state.auth);
   const [usersFilter, setUsersFilter] = useState('');
   const {
     items: users,
-    setItems: setUsers,
     total: totalUsers,
     loading: loadingUsers,
     targetRef: usersRef,
