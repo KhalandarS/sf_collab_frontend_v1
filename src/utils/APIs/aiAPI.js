@@ -19,7 +19,6 @@ api.interceptors.response.use(
   responseErrorInterceptor
 );
 
-
 // AI API
 export const aiAPI = {
   // Health check
@@ -48,6 +47,19 @@ export const aiAPI = {
     return response.data;
   },
 
+  // Business ideas & plans (requires JWT)
+  generateBusinessIdeas: async ({ prompt, contentType = 'business_ideas', model, temperature = 0.7, maxTokens = 4096, metadata = {} }) => {
+    const response = await api.post('/ai/business-ideas', {
+      prompt,
+      content_type: contentType,
+      model,
+      temperature,
+      max_tokens: maxTokens,
+      metadata,
+    });
+    return response.data;
+  },
+
   // Chat endpoint
   chat: async (messages, model, temperature = 0.7, maxTokens = 2048) => {
     const response = await api.post('/ai/chat', {
@@ -67,7 +79,7 @@ export const aiAPI = {
     return response.data;
   },
 
-  // Generate logo
+  // Generate logo (requires JWT)
   generateLogo: async ({ brandName, imagesAmount, industry = 'technology', style = 'minimal', colors = [], additionalNotes = '', subtitle = '' }) => {
     const response = await api.post('/ai/logo/generate', {
       brandName,
@@ -77,6 +89,32 @@ export const aiAPI = {
       additionalNotes,
       subtitle,
       imagesAmount
+    });
+    return response.data;
+  },
+
+  // Upload document for assistant (requires JWT, admin only)
+  uploadDocument: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await api.post('/ai/assistant/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
+
+  // Query assistant (requires JWT)
+  queryAssistant: async (question) => {
+    const response = await api.post('/ai/assistant/query', {
+      question,
+    });
+    return response.data;
+  },
+
+  // Text to image (requires JWT)
+  textToImage: async (prompt) => {
+    const response = await api.post('/ai/image/text-to-image', {
+      prompt,
     });
     return response.data;
   },

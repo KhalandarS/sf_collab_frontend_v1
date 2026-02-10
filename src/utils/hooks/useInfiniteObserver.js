@@ -5,7 +5,7 @@ export default function useInfiniteObserver({
   onIntersect,
   enabled = true,
   root = null,
-  rootMargin = "200px",
+  rootMargin = "400px",
   threshold = 0.1,
 }) {
   const observerRef = useRef(null);

@@ -33,9 +33,7 @@ const IdeationDetails = () => {
   const [comment, setComment] = useState("");
   const [liked, setLiked] = useState(false);
   const [likes, setLikes] = useState(0);
-  const [bookmarks, setBookmarks] = useState(new Set());
   const [bookmarked, setBookmarked] = useState(false);
-  const [showShareMsg, setShowShareMsg] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -62,7 +60,7 @@ const IdeationDetails = () => {
         setIdea(res.data.idea);
         setLikes(res.data.idea.likes ?? 0);
         setLiked(res.data.idea.hasLiked || false);
-        setBookmarked(res.data.idea.hasBookmarked || false)
+        setBookmarked(res.data.idea.hasBookmarked || false);
         if (user && res.data.idea.likedBy?.length) {
           setLiked(res.data.idea.likedBy.includes(user.id));
         }
@@ -133,7 +131,7 @@ const IdeationDetails = () => {
         toast.success("Link copied!");
       }
     } catch {
-      toast.error("Failed to share");
+      // Ignore share errors
     }
   };
 
@@ -441,7 +439,7 @@ const IdeationDetails = () => {
 
       {/* Main Layout */}
       <motion.div
-        className="w-full mx-auto px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl relative z-10"
+        className="w-full mx-auto px-2 md:px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

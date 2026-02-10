@@ -128,12 +128,12 @@ export default function BusinessIdeaGenerator() {
       
 
   };
-
+  const isMobile = window.matchMedia("(max-width: 640px)").matches;
 
 
   return (
     <>
-    <div className="min-h-screen  p-8">
+    <div className="min-h-screen  p-2 md:p-8">
       <div className="w-full mx-auto">
         {/* Animated Background */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -241,13 +241,7 @@ export default function BusinessIdeaGenerator() {
         <div className="relative">
           <div className="absolute inset-0 -top-4 -bottom-4 bg-linear-to-r from-blue-500/5 via-purple-500/5 to-amber-500/5 blur-xl rounded-3xl" />
           
-          <div className="relative flex gap-2 p-2 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-md mx-auto my-12">
-            {/* Animated Background Slider */}
-            <div 
-              className={`absolute top-2 bottom-2 bg-linear-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl shadow-lg shadow-blue-500/20 transition-all duration-500 ease-out ${
-                mode === 'ideas' ? 'left-2 w-[calc(50%-8px)]' : 'left-[calc(50%+1px)] w-[calc(50%-8px)]'
-              }`}
-            />
+          <div className="relative flex flex-wrap gap-2 p-2 bg-slate-900/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl max-w-md mx-auto my-12">
             
             {/* Ideas Button */}
             <button

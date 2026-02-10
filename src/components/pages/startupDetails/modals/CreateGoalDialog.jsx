@@ -177,7 +177,7 @@ export default function CreateGoalDialog({
   }, [editMode, goal]);
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-lg overflow-y-auto max-h-[80vh]">
+      <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-lg overflow-y-auto max-h-screen">
         <DialogHeader>
           <DialogTitle>{editMode ? "Edit Goal" : "Create New Goal"}</DialogTitle>
         </DialogHeader>

@@ -104,7 +104,7 @@ const Dashboard = ({
 
 
   return (
-    <div className="relative min-h-screen  text-white w-full overflow-x-hidden p-4 text-center">
+    <div className="relative min-h-screen  text-white w-full overflow-x-hidden md:p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
       

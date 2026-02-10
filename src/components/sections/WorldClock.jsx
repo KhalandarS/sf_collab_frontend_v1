@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { Sun, Moon, Globe, Clock, ChevronDown, Search } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { Button } from '../ui/button'
@@ -18,6 +18,7 @@ import countries from '../../utils/countries'
 import ShinyText from '../ui/ShinyText'
 import { getUserCountry } from '@/utils/getUserCountry'
 import { toast } from 'react-toastify'
+import { useSelector } from 'react-redux'
 
 const TIME_ZONES = [
   { city: "New York", country: "USA", flag: <US className="w-6 h-4" />, offset: -4, utc: "UTC-4", gradient: "from-blue-500/30 via-white/30 to-red-500/30", color: "rgba(59, 130, 246, 0.15)" },
@@ -74,6 +75,7 @@ const TIME_ZONES = [
 ]
 
 export default function WorldClock() {
+  const { user } = useSelector((state) => state.auth)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [country, setCountry] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
@@ -87,7 +89,6 @@ export default function WorldClock() {
     return () => clearInterval(timer)
   }, [])
   
-  useEffect(() => {
     const detectCountry = async () => {
       try {
             const response = await fetch('https://ipapi.co/json/');
@@ -109,8 +110,6 @@ export default function WorldClock() {
             toast.error("Failed to detect location");
           }
     }
-    detectCountry()
-  }, [])
 
   const getTimeForTimezone = (offset) => {
     const utc = currentTime.getTime() + (currentTime.getTimezoneOffset() * 60000)
@@ -135,19 +134,19 @@ export default function WorldClock() {
   }
 
   // Filter timezones based on search and region
-  const filteredTimezones = TIME_ZONES.filter(zone => {
+  const filteredTimezones = useMemo(() => TIME_ZONES.filter(zone => {
     const matchesSearch = zone.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         zone.country.toLowerCase().includes(searchQuery.toLowerCase())
+                          zone.country.toLowerCase().includes(searchQuery.toLowerCase())
     
     const matchesRegion = selectedRegion === 'all' || 
-                         (selectedRegion === 'americas' && (zone.offset <= 0 || zone.country === 'Brazil' || zone.country === 'Argentina')) ||
-                         (selectedRegion === 'europe' && zone.offset >= 0 && zone.offset <= 3 && 
+                          (selectedRegion === 'americas' && (zone.offset <= 0 || zone.country === 'Brazil' || zone.country === 'Argentina')) ||
+                          (selectedRegion === 'europe' && zone.offset >= 0 && zone.offset <= 3 && 
                           ['UK', 'France', 'Germany', 'Italy', 'Spain', 'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Switzerland', 'Austria', 'Belgium', 'Portugal', 'Ireland', 'Poland', 'Czech Republic', 'Hungary', 'Romania', 'Bulgaria', 'Greece'].includes(zone.country)) ||
-                         (selectedRegion === 'asia' && zone.offset >= 5 && zone.offset <= 12) ||
-                         (selectedRegion === 'africa' && ['Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Morocco'].includes(zone.country))
+                          (selectedRegion === 'asia' && zone.offset >= 5 && zone.offset <= 12) ||
+                          (selectedRegion === 'africa' && ['Egypt', 'South Africa', 'Nigeria', 'Kenya', 'Morocco'].includes(zone.country))
     
     return matchesSearch && matchesRegion
-  })
+  }), [searchQuery, selectedRegion])
 
   // Show only 2 initially, or all when "See More" is clicked
   const displayedTimezones = showAll ? filteredTimezones : filteredTimezones.slice(0, 4)
@@ -189,7 +188,18 @@ export default function WorldClock() {
                 <span className="text-lg text-white text-center sm:text-left flex flex-col">
                   Currently in: <br />
                   <span className="flex items-center gap-2 mt-1">
-                    {country?.flag} {country?.label}
+                    {
+                      (country || user?.timezone) ? (
+                        <span className="flex items-center gap-2">
+                          <Globe className="h-4 w-4 text-blue-300" />
+                          {user.timezone}
+                        </span>
+                      ) : (
+                        <Button variant="outline" size="sm" onClick={detectCountry}>
+                          Detect Location
+                        </Button>
+                      )
+                    }
                   </span>
                   <svg aria-hidden="true" viewBox="0 0 418 42" className=" h-[0.78em] w-full fill-blue-300/70" preserveAspectRatio="none"><path d="M203.371.916c-26.013-2.078-76.686 1.963-124.73 9.946L67.3 12.749C35.421 18.062 18.2 21.766 6.004 25.934 1.244 27.561.828 27.778.874 28.61c.07 1.214.828 1.121 9.595-1.176 9.072-2.377 17.15-3.92 39.246-7.496C123.565 7.986 157.869 4.492 195.942 5.046c7.461.108 19.25 1.696 19.17 2.582-.107 1.183-7.874 4.31-25.75 10.366-21.992 7.45-35.43 12.534-36.701 13.884-2.173 2.308-.202 4.407 4.442 4.734 2.654.187 3.263.157 15.593-.78 35.401-2.686 57.944-3.488 88.365-3.143 46.327.526 75.721 2.23 130.788 7.584 19.787 1.924 20.814 1.98 24.557 1.332l.066-.011c1.201-.203 1.53-1.825.399-2.335-2.911-1.31-4.893-1.604-22.048-3.261-57.509-5.556-87.871-7.36-132.059-7.842-23.239-.254-33.617-.116-50.627.674-11.629.54-42.371 2.494-46.696 2.967-2.359.259 8.133-3.625 26.504-9.81 23.239-7.825 27.934-10.149 28.304-14.005.417-4.348-3.529-6-16.878-7.066Z"></path></svg>
                 </span>

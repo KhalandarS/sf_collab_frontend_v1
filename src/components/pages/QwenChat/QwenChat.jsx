@@ -9,12 +9,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../
 import { useSelector } from 'react-redux';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Slider } from '../../ui/slider';
-import { Switch } from '../../ui/switch';
-import { AIAPI } from '@/services/auth/AIAPI';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import InputArea from './InputArea';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { aiAPI } from '@/utils/APIs/aiAPI';
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const QwenChat = () => {
@@ -55,9 +54,9 @@ const QwenChat = () => {
 
   const checkModelStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/ai/health`);
-      const data = await response.json();
-      setModelStatus(data.model_loaded ? 'ready' : 'loading');
+      const response = await aiAPI.getHealth();
+      console.log(response);
+      setModelStatus(response.data.status === 'ready' ? 'ready' : 'loading');
     } catch (err) {
       setModelStatus('error');
     }
@@ -117,7 +116,7 @@ const QwenChat = () => {
       });
       let data
       if (modelResponseType === 'page_context') {
-        const response = await AIAPI.queryAssistant(input.trim(), token );
+        const response = await aiAPI.queryAssistant(input.trim());
         if (!response.success) {
           throw new Error(response.error || 'Unknown error');
         }
@@ -127,14 +126,14 @@ const QwenChat = () => {
         }
       }
       else if (modelResponseType === 'general_knowledge') {
-        const response = await AIAPI.generate({
+        const response = await aiAPI.generateContent({
           prompt: apiMessages,
           model: 'openai/gpt-oss-20b', // openai/gpt-oss-20b | wen/qwen3-32b
           temperature: temperature,
           maxTokens: maxTokens,
           contentType: 'chat',
           outputFormat: 'text'
-        }, token);
+        });
         if (!response.success) {
           throw new Error(response.error || 'Unknown error');
         }

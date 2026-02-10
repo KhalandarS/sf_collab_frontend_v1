@@ -149,8 +149,8 @@ const IdeationHeader = ({
     <div className="w-full p-4 px-2 space-y-4">
 
             <div className="w-full flex justify-center items-center flex-col mb-2">
-              <h1 className="text-5xl  sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up">
-                <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent">
+              <h1 className="text-5xl  sm:text-6xl lg:text-7xl font-bold mb-8 animate-slide-up text-center w-full">
+                <span className="bg-linear-to-r from-white via-blue-100 to-purple-200 bg-clip-text text-transparent text-center w-full">
                   SF Idea Incubator
                 </span>
                 <br />

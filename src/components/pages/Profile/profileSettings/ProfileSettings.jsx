@@ -398,7 +398,7 @@ useEffect(() => {
           </div>
 
           <div className="lg:col-span-3">
-            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-8">
+            <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-2 md:p-8">
               {/* Render sections */}
               {activeSection === 'profile' && (
                 <ProfileSection

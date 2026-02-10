@@ -108,7 +108,7 @@ const SavedStartups = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white p-2 md:p-6">
       <div className="w-full mx-auto space-y-8">
 
         {/* Header */}

@@ -126,7 +126,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
       const data = response;
   
       if (data.success) {
-        const startups = myStartupsOnly ? data.data.startups : data.data.startups.filter(s => s.creator.id !== user.id);
+        const startups = data.data.startups
         setStartups(startups);
         setTotalPages(data.data.pagination.pages);
         setCurrentPage(data.data.pagination.page);
@@ -349,7 +349,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     />
                   ))}
                                       {/* !user?.plan_id && (*/}
-
+{/*
                       {mode === "myStartups" &&
                         
                     startups.length > 0 && (
@@ -376,12 +376,10 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           group
         "
                         >
-                          {/* Icon */}
                           <div className="flex items-center justify-center w-14 h-14 rounded-full bg-gray-800/60 group-hover:bg-blue-500/10 transition">
                             <Plus className="w-7 h-7 text-gray-400 group-hover:text-blue-400 transition-colors" />
                           </div>
 
-                          {/* Text */}
                           <div className="text-center">
                             <p className="text-sm font-semibold text-gray-300 group-hover:text-blue-400 transition-colors">
                               Upgrade your plan
@@ -391,13 +389,12 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                             </p>
                           </div>
 
-                          {/* CTA hint */}
                           <span className="mt-2 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
                             View plans →
                           </span>
                         </div>
                       </motion.div>
-                    )}
+                    )} */}
 
                 </motion.div>
               )}

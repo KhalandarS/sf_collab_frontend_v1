@@ -126,7 +126,7 @@ export default function StartupCard({
           </div>
 
           {/* Content */}
-          <div className="p-5 space-y-4 z-1000">
+          <div className="p-5 space-y-4 z-10">
             {/* Image */}
             <div className="-mt-12 ">
               {startup.logo_url ? (

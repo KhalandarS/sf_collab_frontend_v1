@@ -365,7 +365,7 @@ export default function ConnectionsPage() {
         )}
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-700 mb-6">
+        <div className="flex flex-wrap border-b border-slate-700 mb-6">
           {[
             { key: TABS.CONNECTIONS, label: 'Connections', icon: Users, count: counts.connections },
             { key: TABS.INCOMING, label: 'Incoming', icon: UserPlus, count: counts.incoming, highlight: true },

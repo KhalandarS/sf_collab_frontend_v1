@@ -151,7 +151,7 @@ export default function DocumentsSection({ documents, isCreator, id, fetchStartu
               <motion.div key={index} variants={itemVariants}>
                 <Card className="bg-gradient-to-br from-gray-800 to-gray-900 border-gray-700 hover:border-blue-500/50 transition-all hover:shadow-lg hover:shadow-blue-500/10">
                   <CardHeader>
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="flex items-start gap-4 flex-1">
                         {!isMobile && (
                           <div className="w-12 h-12 bg-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">

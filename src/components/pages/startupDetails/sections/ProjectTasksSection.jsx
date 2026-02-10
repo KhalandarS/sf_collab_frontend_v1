@@ -16,6 +16,7 @@ const priorityColors = {
   low: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
   medium: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
   high: "bg-red-500/20 text-red-400 border border-red-500/30",
+  urgent: "bg-red-600/20 text-red-500 border border-red-600/30",
 };
 
 const statusIcons = {
@@ -23,6 +24,7 @@ const statusIcons = {
   in_progress: <AlertCircle className="w-4 h-4 text-yellow-400" />,
   completed: <CheckCircle className="w-4 h-4 text-green-400" />,
   overdue: <AlertCircle className="w-4 h-4 text-red-400" />,
+
 };
 
 const visibilityIcons = {
@@ -238,9 +240,12 @@ const TaskCard = ({ task, isCreator, isVisible, user, handleStatusChange, handle
         ? "border-green-500/50 hover:border-green-500/70"
         : task.is_overdue
         ? "border-red-500/50 hover:border-red-500/70"
+        : task.urgent
+        ? "border-red-600/50 hover:border-red-600/70"
         : "border-gray-700 hover:border-gray-600"
     }`}
   >
+    
     <CardHeader>
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1">
@@ -250,7 +255,7 @@ const TaskCard = ({ task, isCreator, isVisible, user, handleStatusChange, handle
               animate={{ scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              {statusIcons[task.status]}
+              {statusIcons[task.status]}{task.urgent && <AlertCircle className="w-4 h-4 text-red-500" />}
             </motion.div>
             <CardTitle
               className={`text-white transition-all ${
@@ -265,8 +270,12 @@ const TaskCard = ({ task, isCreator, isVisible, user, handleStatusChange, handle
           </CardDescription>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-end">
-          <Badge className={`${priorityColors[task.priority]} font-semibold`}>
-            {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority
+          <Badge className={`${priorityColors[task.urgent ? 'urgent' : task.priority]} font-semibold`}>
+            {
+              !task?.urgent ?
+                `${task.priority.charAt(0).toUpperCase() + task.priority.slice(1)} Priority` :
+                'URGENT'
+            }
           </Badge>
           <Badge
             variant="outline"

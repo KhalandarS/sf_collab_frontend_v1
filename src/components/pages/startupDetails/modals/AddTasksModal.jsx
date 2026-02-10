@@ -37,6 +37,7 @@ const emptyTaskForm = {
   visible_by: "team",
   tags: [],
   labels: [],
+  urgent: false
 };
 
 export default function AddTaskModal({
@@ -78,6 +79,7 @@ export default function AddTaskModal({
         visible_by: task.visible_by || "team",
         tags: task.tags || [],
         labels: task.labels || [],
+        urgent: task.urgent || false
       });
     }
   }, [editMode, task]);
@@ -145,6 +147,7 @@ export default function AddTaskModal({
         visible_by: form.visible_by,
         tags: form.tags,
         labels: form.labels,
+        urgent: form.urgent,
         startup_id: startupId,
       };
       let response;
@@ -166,7 +169,7 @@ export default function AddTaskModal({
       onClose();
       setForm(emptyTaskForm);
     } catch (err) {
-      toast.error(editMode ? "Failed to update task" : "Failed to create task");
+      toast.error(err?.error || "An error occurred while saving the task");
       console.error("Error:", err);
     } finally {
       setLoading(false);
@@ -174,7 +177,7 @@ export default function AddTaskModal({
   }
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl max-h-[70vh] overflow-y-auto">
+      <DialogContent className="bg-gray-900 border-gray-800 text-white max-w-2xl max-h-screen overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
             {editMode ? "Edit Task" : "Create New Task"}
@@ -228,7 +231,7 @@ export default function AddTaskModal({
                 </SelectTrigger>
                 <SelectContent className="bg-gray-800 border-gray-700">
                   <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="to_do">To Do</SelectItem>s
+                  <SelectItem value="to_do">To Do</SelectItem>
                   <SelectItem value="completed">Completed</SelectItem>
                   <SelectItem value="overdue">Overdue</SelectItem>
                 </SelectContent>
@@ -262,12 +265,24 @@ export default function AddTaskModal({
           </div>
 
           {/* Assign To */}
-
+          <div className="grid grid-cols-2 gap-4">
           <div>
+            <Label className="text-sm font-semibold mb-2">Urgent</Label>
+            <Select value={form.urgent ? "true" : "false"} onValueChange={(value) => updateField("urgent", value === "true")}>
+              <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                <SelectItem value="false">No</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div  className="col-span-1 w-full">
             <Label className="text-sm font-semibold mb-2">Assign To</Label>
             <Select value={form.assigned_to?.toString() || ""} onValueChange={(value) => updateField("assigned_to", value ? parseInt(value) : null)}>
               <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                <SelectValue placeholder="Select team member" />
+                <SelectValue placeholder="Unassigned" />
               </SelectTrigger>
               <SelectContent className="bg-gray-800 border-gray-700 text-white overflow-hidden">
                 <SelectItem value="unassigned">Unassigned</SelectItem>
@@ -280,8 +295,9 @@ export default function AddTaskModal({
                 ))}
               </SelectContent>
             </Select>
+            </div>
+            
           </div>
-
           {/* Visibility */}
           <div>
             <Label className="text-sm font-semibold mb-2">Visibility</Label>

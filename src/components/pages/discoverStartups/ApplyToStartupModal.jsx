@@ -69,6 +69,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
         className="
           !w-[96vw]
           !max-w-[1100px]
+          z-999
           h-[96vh] lg:h-auto
           bg-[#0E0F13]
           border border-white/10
@@ -76,7 +77,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
           overflow-hidden
         "
       >
-        <div className="grid grid-cols-1 lg:grid-cols-5 h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-5 h-full z-999">
 
           {/* LEFT / HEADER PANEL */}
           <div className="

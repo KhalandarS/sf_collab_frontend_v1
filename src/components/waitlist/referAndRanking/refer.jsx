@@ -217,7 +217,7 @@ const ReferPage = () => {
   // Not on waitlist - show redirect prompt
   if (!isOnWaitlist) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white px-4">
+      <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white md:px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -261,7 +261,7 @@ const currentTier = RANK_REWARDS.find(
 );
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-6 md:p-10">
+    <div className="min-h-screen bg-linear-to-br from-neutral-950 via-neutral-900 to-neutral-950 text-white p-2 md:p-6">
       <div className="w-full mx-auto">
 
         {/* HEADER SECTION */}

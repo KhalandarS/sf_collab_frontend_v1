@@ -169,8 +169,7 @@ export default function ContributionPage() {
   return (
     <>
     <FeedbackPopup open={isFeedbackOpen} onOpenChange={setIsFeedbackOpen} trigger="none" />
-    {console.log(isFeedbackOpen)}
-    <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-purple-950/20 to-neutral-950 px-6 py-10 text-white">
+    <div className="min-h-screen bg-gradient-to-b from-neutral-950 via-purple-950/20 to-neutral-950 px-2 md:px-6 py-10 text-white">
       <div className="max-w-7xl mx-auto space-y-12">
 
         {/* ================= HEADER ================= */}

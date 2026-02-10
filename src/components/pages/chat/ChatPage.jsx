@@ -842,7 +842,7 @@ useEffect(() => {
 
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto py-2 md:py-4 px-2 md:px-4">
+            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-200px)] py-2 md:py-4 px-2 md:px-4">
               {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-zinc-500">
                   <Avatar

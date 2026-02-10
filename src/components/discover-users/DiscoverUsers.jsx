@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '../ui/button';
@@ -14,17 +14,15 @@ import FilterSidebar from './FilterSidebar';
 import UserCard from './UserCard';
 import { chatAPI } from '@/utils/APIs/chatApi';
 import { useNavigate, Link } from "react-router-dom";
-
-
-// NEW: Import ConnectionButton
 import { ConnectionButton } from '@/components/connection/ConnectionButton';
 import { getProfilePicture } from '@/utils/getProfilePicture';
+import usePaginatedFetch from '@/utils/hooks/usePaginated';
+import InfiniteList from '@/components/InfiniteList';
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const getAvatarUrl = (u) => {
   if (!u) return null;
-
   const pic =
     u.profilePicture ||
     u.profile_picture ||
@@ -34,20 +32,14 @@ const getAvatarUrl = (u) => {
     u.picture ||
     u.avatar ||
     null;
-
   if (!pic) return null;
   return String(pic).startsWith("http") ? pic : `${API_URL}${pic}`;
 };
 
-
 const DiscoverUsers = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -56,49 +48,36 @@ const DiscoverUsers = () => {
 
   const { user, access_token } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-  const goToProfile = (userId) => {
-    if (!userId) return;
-    navigate(`/user-profile?userId=${userId}`);
-  };
 
-  const ITEMS_PER_PAGE = 20;
-
-  // ✅ FIXED FETCH (pagination + filters)
-  const fetchUsers = async (page = 1) => {
-    try {
-      setLoading(true);
-
-      const params = {
-        page,
-        per_page: ITEMS_PER_PAGE,
-      };
-
-      if (searchQuery) params.search = searchQuery;
-      if (selectedRole) params.role = selectedRole;
-      if (selectedStatus) params.status = selectedStatus;
-
-      const response = await usersAPI.getAll(params);
-
-      if (response?.success) {
-        setUsers(
-          response.data.users?.filter(u => u.id !== user?.id) || []
-        );
-        setTotalPages(response.data.pagination.total ? Math.ceil(response.data.pagination.total / ITEMS_PER_PAGE) : 1);
-        console.log("Total: ", response.data.pagination.total );
-        setCurrentPage(page);
-      }
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to load users");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsers(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Build search filter string
+  const searchFilter = useMemo(() => {
+    const filters = [];
+    if (searchQuery) filters.push(searchQuery);
+    if (selectedRole) filters.push(`role:${selectedRole}`);
+    if (selectedStatus) filters.push(`status:${selectedStatus}`);
+    return filters.join(' ');
   }, [searchQuery, selectedRole, selectedStatus]);
+
+  // Use paginated hook with infinite scroll
+  const {
+    items: users,
+    total: totalUsers,
+    loading,
+    targetRef,
+  } = usePaginatedFetch({
+    fetchFn: ({ page, search }) =>
+      usersAPI.getAll({
+        page,
+        per_page: 20,
+        search,
+      }),
+    search: searchFilter,
+    objectKey: 'users',
+    enabled: !!access_token,
+  });
+
+  // Filter out current user
+  const filteredUsers = users.filter(u => u.id !== user?.id);
 
   const clearFilters = () => {
     setSearchQuery("");
@@ -111,6 +90,11 @@ const DiscoverUsers = () => {
     selectedStatus !== "",
     searchQuery !== ""
   ].filter(Boolean).length;
+
+  const goToProfile = (userId) => {
+    if (!userId) return;
+    navigate(`/user-profile?userId=${userId}`);
+  };
 
   const sendMessage = async () => {
     if (!messageText.trim()) {
@@ -152,19 +136,12 @@ const DiscoverUsers = () => {
     }
   };
 
-  const getVisiblePages = () => {
-    const delta = 2;
-    const start = Math.max(1, currentPage - delta);
-    const end = Math.min(totalPages, currentPage + delta);
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  };
-
   const roleOptions = ['admin', 'moderator', 'member', 'founder', 'investor'];
   const statusOptions = ['active', 'inactive', 'suspended'];
 
   return (
     <div className="min-h-screen">
-      <div className="w-full mx-auto px-4 sm:px-6 py-8">
+      <div className="w-full mx-auto px-2 md:px-4 sm:px-6 py-8">
         {/* Header */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -198,7 +175,7 @@ const DiscoverUsers = () => {
               className="absolute -top-10 -right-10 w-32 h-32 bg-linear-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
             />
           </div>
-        
+
           <motion.h1
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -225,7 +202,7 @@ const DiscoverUsers = () => {
               />
             </motion.span>
           </motion.h1>
-        
+
           <motion.p
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -235,30 +212,6 @@ const DiscoverUsers = () => {
             Connect with <span className="font-semibold text-white">innovators, founders, and creators</span>.
             Build your network and discover new opportunities.
           </motion.p>
-        
-          {/* <motion.div
-            initial={{ y: 30, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8 max-w-2xl mx-auto"
-          >
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">1.5K+</div>
-              <div className="text-sm text-gray-400">Active Users</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">$2.1B</div>
-              <div className="text-sm text-gray-400">Total Revenue</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">240</div>
-              <div className="text-sm text-gray-400">Startup Founders</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-white mb-1">98%</div>
-              <div className="text-sm text-gray-400">Satisfaction Rate</div>
-            </div>
-          </motion.div> */}
         </motion.div>
 
         {/* Filters Section */}
@@ -339,7 +292,7 @@ const DiscoverUsers = () => {
               </div>
             </SheetContent>
           </Sheet>
-          
+
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -358,17 +311,17 @@ const DiscoverUsers = () => {
               roleOptions={roleOptions}
               statusOptions={statusOptions}
             />
-          </motion.div>
+          </motion.div> 
         </motion.div>
 
-        {/* Card Stack Container */}
+        {/* User Grid with Infinite Scroll */}
         <AnimatePresence mode="wait">
-          {loading ? (
+          {loading && filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
               <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-gray-400">Loading users...</p>
             </div>
-          ) : users.length === 0 ? (
+          ) : filteredUsers.length === 0 ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -387,88 +340,34 @@ const DiscoverUsers = () => {
               </Button>
             </motion.div>
           ) : (
-            <motion.div
-              layout
-              className="flex flex-col w-full items-center justify-center"
-            >
+            <motion.div layout className="flex flex-col w-full items-center justify-center">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 w-full">
-                {users.map((userItem) => {
-                  const avatarUrl = getAvatarUrl(userItem);
-
-                  return (
-                    <UserCard
-                      key={userItem.id}
-                      user={{ ...userItem, profilePicture: avatarUrl }}
-                      onOpen={(user) => {
-                        setSelectedUser(user);
-                        setShowModal(true);
-                      }}
-                    />
-                  );
-                })}
-
+                <InfiniteList
+                  items={filteredUsers}
+                  renderItem={(userItem) => {
+                    const avatarUrl = getAvatarUrl(userItem);
+                    return (
+                      <UserCard
+                        key={userItem.id}
+                        user={{ ...userItem, profilePicture: avatarUrl }}
+                        onOpen={(user) => {
+                          setSelectedUser(user);
+                          setShowModal(true);
+                        }}
+                      />
+                    );
+                  }}
+                  sentinelRef={targetRef}
+                  loading={loading}
+                  emptyText="No users found"
+                  containerClassName="w-full"
+                />
               </div>
-
-              {/* PAGINATION */}
-              {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-10">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-black"
-                    disabled={currentPage === 1}
-                    onClick={() => fetchUsers(currentPage - 1)}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-
-                  {currentPage > 3 && (
-                    <>
-                      <Button variant="outline" size="sm" onClick={() => fetchUsers(1)}>1</Button>
-                      <span className="text-gray-500">…</span>
-                    </>
-                  )}
-
-                  {getVisiblePages().map(page => (
-                    <Button
-                      key={page}
-                      size="sm"
-                      onClick={() => fetchUsers(page)}
-                      className={
-                        page === currentPage
-                          ? "bg-blue-600 hover:bg-blue-700"
-                          : "border border-gray-600"
-                      }
-                    >
-                      {page}
-                    </Button>
-                  ))}
-
-                  {currentPage < (totalPages - 2) && (
-                    <>
-                      <span className="text-gray-500">…</span>
-                      <Button variant="outline" size="sm" onClick={() => fetchUsers(totalPages)}>
-                        {totalPages}
-                      </Button>
-                    </>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-black"
-                    disabled={currentPage === totalPages}
-                    onClick={() => fetchUsers(currentPage + 1)}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-              )}
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* User Detail Modal - UPDATED with ConnectionButton */}
+        {/* User Detail Modal */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
           <DialogContent className="max-w-md bg-gray-900 border-gray-800 text-white">
             <DialogHeader>
@@ -479,7 +378,6 @@ const DiscoverUsers = () => {
 
             {selectedUser && (
               <div className="space-y-4 flex flex-col items-center justify-center">
-                {/* Profile Picture */}
                 <Link to={`/users/${selectedUser.id}`} className="w-full">
                   <div className="flex justify-center">
                     <img
@@ -490,19 +388,15 @@ const DiscoverUsers = () => {
                   </div>
                 </Link>
 
-                {/* User Info */}
                 <div className="space-y-2 text-sm w-full text-center">
                   <p><span className="font-semibold">Role:</span> {selectedUser.role}</p>
                   <p><span className="font-semibold">Status:</span> {selectedUser.status}</p>
-
                   {selectedUser.profile?.company && (
                     <p><span className="font-semibold">Company:</span> {selectedUser.profile.company}</p>
                   )}
-
                   {selectedUser.profile?.bio && (
                     <p><span className="font-semibold">Bio:</span> {selectedUser.profile.bio}</p>
                   )}
-
                   {selectedUser.active_startups_count !== 0 && (
                     <p>
                       <span className="font-semibold">Startups:</span>{" "}
@@ -511,7 +405,6 @@ const DiscoverUsers = () => {
                   )}
                 </div>
 
-                {/* Stats */}
                 <div className="grid w-full grid-cols-2 gap-2 pt-2 border-t border-gray-700">
                   <div className="text-center">
                     <p className="font-bold text-blue-400">{selectedUser.xp_points || 0}</p>
@@ -531,7 +424,6 @@ const DiscoverUsers = () => {
                   View Profile
                 </Button>
 
-                {/* Connection Button */}
                 <div className="pt-2 border-t border-gray-700 w-full">
                   <ConnectionButton
                     userId={selectedUser.id}
@@ -540,7 +432,6 @@ const DiscoverUsers = () => {
                   />
                 </div>
 
-                {/* Message Input */}
                 <div className="space-y-2 pt-2 border-t w-full border-gray-700">
                   <label className="text-sm font-medium text-gray-300">Send a Message</label>
                   <textarea
@@ -552,7 +443,6 @@ const DiscoverUsers = () => {
                   />
                 </div>
 
-                {/* Send Message Button */}
                 <Button
                   onClick={sendMessage}
                   disabled={sendingMessage || !messageText.trim()}
@@ -562,7 +452,6 @@ const DiscoverUsers = () => {
                 </Button>
               </div>
             )}
-
           </DialogContent>
         </Dialog>
       </div>

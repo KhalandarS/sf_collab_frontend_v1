@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import MessageBubble from "@/components/chat/MessageBubble";
 import ChatInput from "@/components/chat/ChatInput";
-import { AIAPI } from "@/services/auth/AIAPI";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { aiAPI } from "@/utils/APIs/aiAPI";
 
 function normalizeMessage(m) {
   if (!m) return m;
@@ -55,7 +55,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
       setIsLoading(true);
 
       try {
-        const res = await AIAPI.queryAssistant(content.trim(), token);
+        const res = await aiAPI.queryAssistant(content.trim(), token);
 
         if (!res?.success) throw new Error(res?.message);
 
@@ -67,7 +67,6 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
         setMessages((prev) => [...prev, aiMessage]);
       } catch (e) {
         console.error(e);
-        toast.error("AI Assistant failed to respond.");
         setMessages((prev) => [
           ...prev,
           normalizeMessage({
@@ -85,7 +84,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
   const handleAdminFileUpload = async (file) => {
     if (!token) return null;
     try {
-      const res = await AIAPI.uploadDocument(file, token);
+      const res = await aiAPI.uploadDocument(file, token);
       if (res?.success) {
         toast.success("File uploaded");
         return res.data.filename;

@@ -1,6 +1,6 @@
 // Checkout.jsx
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { loadStripe } from "@stripe/stripe-js";
 import {useCheckout, PaymentElement, CheckoutProvider} from '@stripe/react-stripe-js/checkout';
 
@@ -47,6 +47,8 @@ function CheckoutForm({ clientSecret }) {
 }
 
 export default function Checkout() {
+  const navigate = useNavigate();
+
   const { tierId } = useParams();
   const { user, access_token } = useSelector((state) => state.auth);
 
@@ -112,9 +114,12 @@ export default function Checkout() {
 
   // if (loading) return <div className="text-center mt-20">Loading...</div>;
   if (!tier) return <div className="text-center mt-20">Tier not found</div>;
-  if (!tierId.includes("crowdfunding") && !tierId.includes("donations")) return (
-    <div className="text-center mt-20">At the moment, we are only accepting crowdfunding and donations</div>
-  )
+  if (!tierId.includes("crowdfunding") && !tierId.includes("donations")) {
+    navigate("/crowdfunding");
+    return (
+      <div className="text-center mt-20">At the moment, we are only accepting crowdfunding and donations</div>
+    )
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-8 flex flex-col items-center">
       {/* Tier Info */}

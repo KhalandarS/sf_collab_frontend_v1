@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   Upload, Download, Trash2, MousePointer, Save, 
-  FileText, Check, X, Loader, Sparkles, Camera, RefreshCw,
+  FileText, Check, X, RefreshCw,
   Move, Maximize2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { FaFilePdf } from "react-icons/fa6";
@@ -10,12 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { Alert, AlertDescription } from '../../ui/alert';
 import { Label } from '../../ui/label';
 import { Progress } from '../../ui/progress';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../ui/select';
 import { Switch } from '../../ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs';
 import { toolsAPI } from '@/utils/APIs/toolsAPI';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 const PDFSigningApp = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -30,12 +27,11 @@ const PDFSigningApp = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [outputFormat, setOutputFormat] = useState('pdf');
   const [autoPosition, setAutoPosition] = useState(false);
   const [pdfUrl, setPdfUrl] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
   const [scale, setScale] = useState(1);
-  const [pdfDimensions, setPdfDimensions] = useState({ width: 800, height: 1131 }); // Default A4 dimensions
+  const [pdfDimensions, setPdfDimensions] = useState({ width: 800, height: 1131 });
   const [totalPages, setTotalPages] = useState(1);
 
   const canvasRef = useRef(null);
@@ -46,12 +42,8 @@ const PDFSigningApp = () => {
   const dragStartPos = useRef({ x: 0, y: 0 });
   const sigStartPos = useRef({ x: 0, y: 0 });
 
-  // Load signed documents on mount
-  useEffect(() => {
-    loadSignedDocuments();
-  }, []);
 
-  // Initialize signature canvas
+
   useEffect(() => {
     if (showSignaturePad && canvasRef.current) {
       const canvas = canvasRef.current;
@@ -64,32 +56,28 @@ const PDFSigningApp = () => {
     }
   }, [showSignaturePad]);
 
-  // Handle dragging - OPTIMIZED VERSION
   useEffect(() => {
     if (!isDragging) return;
   
     let animationFrameId = null;
     let lastTimestamp = 0;
-    const FRAME_RATE = 60; // 60 FPS
+    const FRAME_RATE = 60;
   
     const handleMouseMove = (e) => {
       if (!signaturePosition || !pdfContainerRef.current) return;
   
       const now = Date.now();
-      if (now - lastTimestamp < 1000 / FRAME_RATE) return; // Throttle updates
+      if (now - lastTimestamp < 1000 / FRAME_RATE) return;
       
       lastTimestamp = now;
   
-      // Use requestAnimationFrame for smoother animation
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
       }
   
       animationFrameId = requestAnimationFrame(() => {
         const container = pdfContainerRef.current;
-        const rect = container.getBoundingClientRect();
         
-        // Get mouse/touch position
         let clientX, clientY;
         if (e.type === 'touchmove') {
           clientX = e.touches[0].clientX;
@@ -99,19 +87,15 @@ const PDFSigningApp = () => {
           clientY = e.clientY;
         }
         
-        // Calculate movement from drag start with smoothing
         const deltaX = (clientX - dragStartPos.current.x) / scale;
         const deltaY = (clientY - dragStartPos.current.y) / scale;
         
-        // Apply easing for smoother movement
         const easedDeltaX = deltaX * 0.3 + (signaturePosition.x - sigStartPos.current.x) * 0.7;
         const easedDeltaY = deltaY * 0.3 + (signaturePosition.y - sigStartPos.current.y) * 0.7;
         
-        // Calculate new position
         const newX = sigStartPos.current.x + easedDeltaX;
         const newY = sigStartPos.current.y + easedDeltaY;
         
-        // Keep signature within bounds with buffer
         const buffer = 5;
         const maxX = pdfDimensions.width - signaturePosition.width - buffer;
         const maxY = pdfDimensions.height - signaturePosition.height - buffer;
@@ -130,7 +114,6 @@ const PDFSigningApp = () => {
         cancelAnimationFrame(animationFrameId);
       }
       setIsDragging(false);
-      // Small snap effect when dropping
       if (signatureRef.current) {
         signatureRef.current.style.transition = 'transform 0.1s ease-out';
         setTimeout(() => {
@@ -146,7 +129,6 @@ const PDFSigningApp = () => {
       handleMouseMove(e);
     };
   
-    // Add passive: false for better touch performance
     const options = { passive: false };
     
     document.addEventListener('mousemove', handleMouseMove);
@@ -165,12 +147,9 @@ const PDFSigningApp = () => {
     };
   }, [isDragging, signaturePosition, pdfDimensions, currentPage, scale]);
 
-
   const loadSignedDocuments = async () => {
     try {
       const data = await toolsAPI.listSignedDocuments();
-
-      console.log("Data:", data);
       const formattedDocs = data.documents.map(doc => ({
         id: doc.id,
         name: doc.name,
@@ -185,13 +164,16 @@ const PDFSigningApp = () => {
         downloadUrl: doc.download_url
       }));
       setSignedDocuments(formattedDocs);
-
     } catch (error) {
       console.error('Error loading documents:', error);
       showAlert('Failed to load documents', 'error');
     }
   };
+  const loadSignedDocumentsCallback = useCallback(loadSignedDocuments, []);
 
+  useEffect(() => {
+    loadSignedDocumentsCallback();
+  }, [loadSignedDocumentsCallback]);
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
@@ -261,7 +243,6 @@ const PDFSigningApp = () => {
     setSignatureData(dataUrl);
     setShowSignaturePad(false);
     
-    // Auto-position signature if enabled
     if (autoPosition && pdfUrl) {
       const position = {
         x: pdfDimensions.width * 0.7,
@@ -273,7 +254,6 @@ const PDFSigningApp = () => {
       setSignaturePosition(position);
       showAlert('Signature saved and positioned!', 'success');
     } else if (pdfUrl) {
-      // Default position
       const position = {
         x: pdfDimensions.width * 0.1,
         y: pdfDimensions.height * 0.8,
@@ -307,8 +287,6 @@ const PDFSigningApp = () => {
     setSelectedFile(file);
 
     try {
-
-
       const progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev >= 90) {
@@ -320,21 +298,17 @@ const PDFSigningApp = () => {
       }, 200);
 
       const data = await toolsAPI.uploadPDF(file);
-      console.log("Document", data);
       clearInterval(progressInterval);
       setProgress(100);
-
 
       setUploadedFileData(data);
       showAlert('PDF uploaded successfully!', 'success');
       
-      // Generate URL for iframe
       const blob = new Blob([file], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
 
-      // Set default dimensions (A4 at 96 DPI)
-      setPdfDimensions({ width: 794, height: 1123 }); // A4 dimensions
+      setPdfDimensions({ width: 794, height: 1123 });
       setTotalPages(data.num_pages || 1);
 
       setTimeout(() => setProgress(0), 1000);
@@ -356,10 +330,6 @@ const PDFSigningApp = () => {
     
     setIsDragging(true);
     
-    const container = pdfContainerRef.current;
-    const rect = container.getBoundingClientRect();
-    
-    // Get mouse/touch position
     let clientX, clientY;
     if (e.type === 'touchstart') {
       clientX = e.touches[0].clientX;
@@ -369,11 +339,9 @@ const PDFSigningApp = () => {
       clientY = e.clientY;
     }
     
-    // Store starting positions
     dragStartPos.current = { x: clientX, y: clientY };
     sigStartPos.current = { x: signaturePosition.x, y: signaturePosition.y };
     
-    // Remove transition during drag for immediate response
     if (signatureRef.current) {
       signatureRef.current.style.transition = 'none';
     }
@@ -399,9 +367,7 @@ const PDFSigningApp = () => {
         });
       }, 200);
   
-      // Convert screen coordinates to PDF coordinates (72 DPI)
-      // PDF uses points (1 point = 1/72 inch), screen uses pixels (96 DPI)
-      const dpiRatio = 72 / 96; // PDF DPI / Screen DPI
+      const dpiRatio = 72 / 96;
       
       const pdfPosition = {
         x: signaturePosition.x * dpiRatio,
@@ -421,13 +387,10 @@ const PDFSigningApp = () => {
       clearInterval(progressInterval);
       setProgress(100);
 
-  
-
       showAlert('Document signed successfully!', 'success');
       await loadSignedDocuments();
       resetState();
 
-  
       setTimeout(() => setProgress(0), 1000);
   
     } catch (error) {
@@ -460,7 +423,6 @@ const PDFSigningApp = () => {
     try {
       const blob = await toolsAPI.downloadSignedPDF(doc.name);
       
-
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -478,12 +440,8 @@ const PDFSigningApp = () => {
   const deleteSignedDoc = async (doc) => {
     try {
       await toolsAPI.deleteDocument(doc.name);
-
-
-
       showAlert('Document deleted successfully!', 'success');
       await loadSignedDocuments();
-
     } catch (error) {
       showAlert('Error deleting document: ' + error.message, 'error');
     }
@@ -492,7 +450,6 @@ const PDFSigningApp = () => {
   const goToPrevPage = () => {
     if (currentPage > 1) {
       setCurrentPage(prev => prev - 1);
-      // Update signature position for new page if needed
       if (signaturePosition) {
         setSignaturePosition(prev => ({
           ...prev,
@@ -505,7 +462,6 @@ const PDFSigningApp = () => {
   const goToNextPage = () => {
     if (currentPage < totalPages) {
       setCurrentPage(prev => prev + 1);
-      // Update signature position for new page if needed
       if (signaturePosition) {
         setSignaturePosition(prev => ({
           ...prev,
@@ -531,52 +487,66 @@ const PDFSigningApp = () => {
     }
   };
 
-  // Handle iframe load
   const handleIframeLoad = () => {
-    // Set iframe dimensions based on scale
     if (iframeRef.current) {
       iframeRef.current.style.transform = `scale(${scale})`;
       iframeRef.current.style.transformOrigin = 'top left';
     }
   };
-
+  const previewText = (text, maxLength) => {
+    if (text.length <= maxLength) return text;
+    const extIndex = text.lastIndexOf('.');
+    const extension = extIndex !== -1 ? text.substring(extIndex) : '';
+    const namePart = text.substring(0, extIndex);
+    const truncatedName = namePart.length > maxLength - extension.length
+      ? namePart.substring(0, maxLength - extension.length - 3) + '...'
+      : namePart;
+    return truncatedName + extension;
+  }
+  const isMobile = window.matchMedia("(max-width: 768px)").matches;
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+    <div className="min-h-screen w-full bg-linear-to-br from-slate-950 via-slate-900 to-slate-950 py-4 px-3 sm:py-8 sm:px-6">
+      {/* Animated Background */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" />
+      </div>
+
+      <div className="w-full mx-auto max-w-7xl">
         {/* Header */}
-        <div className="text-center mb-12">
-          <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="p-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl shadow-2xl">
-              <FaFilePdf className="h-10 w-10 text-white" />
+        <div className="text-center mb-6 sm:mb-12">
+          <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-6">
+            <div className="p-2.5 sm:p-4 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-2xl shadow-2xl">
+              <FaFilePdf className="h-6 w-6 sm:h-10 sm:w-10 text-white" />
             </div>
-            <div>
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+            <div className="text-center">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold bg-linear-to-r from-blue-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent px-2">
                 PDF Signing Tool
               </h1>
-              <p className="text-gray-300 mt-2 text-lg">
-                Professional document signing solution
+              <p className="text-gray-400 mt-1 sm:mt-2 text-xs sm:text-lg">
+                Professional document signing
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:gap-8 w-full lg:grid-cols-3 auto-rows-max lg:auto-rows-min">
           {/* Left Panel - Controls */}
-          <div className="lg:col-span-1">
-            <Card className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl h-fit sticky top-8">
-              <CardHeader className="pb-4 border-b border-slate-700/30">
-                <CardTitle className="flex items-center gap-3 text-xl text-white">
-                  <FaFilePdf className="h-6 w-6 text-blue-400" />
-                  Document Signing
+          <div className="w-full lg:col-span-1">
+            <Card className="bg-linear-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl lg:sticky lg:top-6">
+              <CardHeader className="pb-3 sm:pb-4 border-b border-slate-700/30 px-3 sm:px-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-xl text-white">
+                  <FaFilePdf className="h-5 w-5 sm:h-6 sm:w-6 text-blue-400 shrink-0" />
+                  <span className="truncate text-sm sm:text-base">Signing</span>
                 </CardTitle>
-                <CardDescription className="text-gray-400 mt-1">
-                  Upload PDF and add signature
+                <CardDescription className="text-gray-400 mt-1 text-xs">
+                  Upload PDF and sign
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6 pt-6">
+              <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 px-3 sm:px-6">
                 {/* File Upload */}
-                <div className="space-y-3">
-                  <Label className="text-sm font-semibold text-white">
+                <div className="space-y-2">
+                  <Label className="text-xs sm:text-sm font-semibold text-white">
                     Upload PDF
                   </Label>
                   <input
@@ -590,24 +560,24 @@ const PDFSigningApp = () => {
                   <Button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={isUploading}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all"
+                    className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all text-xs sm:text-base py-2 h-auto"
                   >
                     {isUploading ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                        Uploading...
+                        <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-2 animate-spin shrink-0" />
+                        <span className="text-xs">Uploading...</span>
                       </>
                     ) : (
                       <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Upload PDF
+                        <Upload className="h-3 w-3 sm:h-4 sm:w-4 mr-2 shrink-0" />
+                        <span className="text-xs">Upload PDF</span>
                       </>
                     )}
                   </Button>
                   
                   {selectedFile && (
-                    <div className="mt-2 p-3 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/30">
-                      <p className="text-sm text-white font-medium truncate">{selectedFile.name}</p>
+                    <div className="mt-2 p-2 sm:p-3 bg-linear-to-r from-blue-500/10 to-cyan-500/10 rounded-lg border border-blue-500/30">
+                      <p className="text-xs text-white font-medium truncate">{previewText(selectedFile.name, 20)}</p>
                       <p className="text-xs text-gray-400 mt-1">
                         {formatFileSize(selectedFile.size)}
                         {uploadedFileData && ` • ${uploadedFileData.num_pages || 1} pages`}
@@ -619,37 +589,37 @@ const PDFSigningApp = () => {
                 {/* Progress Bar */}
                 {(isUploading || isProcessing) && (
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs">
                       <span className="text-gray-300">
                         {isUploading ? 'Uploading...' : 'Processing...'}
                       </span>
-                      <span className="text-blue-400 font-semibold">{progress}%</span>
+                      <span className="text-blue-400 font-semibold text-xs">{progress}%</span>
                     </div>
                     <Progress value={progress} className="h-2 bg-slate-700" />
                   </div>
                 )}
 
                 {/* Signature Creation */}
-                <div className="space-y-3 border-t border-slate-700/30 pt-6">
-                  <Label className="text-sm font-semibold text-white">
+                <div className="space-y-2 border-t border-slate-700/30 pt-4">
+                  <Label className="text-xs sm:text-sm font-semibold text-white">
                     Create Signature
                   </Label>
                   <Button
                     onClick={() => setShowSignaturePad(!showSignaturePad)}
                     variant="outline"
-                    className="w-full border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50 transition-all"
+                    className="w-full border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50 transition-all text-xs py-2 h-auto"
                   >
-                    <MousePointer className="h-4 w-4 mr-2" />
-                    {showSignaturePad ? 'Hide Pad' : 'Draw Signature'}
+                    <MousePointer className="h-3 w-3 sm:h-4 sm:w-4 mr-2 shrink-0" />
+                    {showSignaturePad ? 'Hide' : 'Draw Sign'}
                   </Button>
 
                   {showSignaturePad && (
                     <div className="mt-3 space-y-3">
-                      <div className="border-2 border-slate-600 rounded-xl bg-white/95 overflow-hidden shadow-lg">
+                      <div className="border-2 border-slate-600 rounded-lg bg-white/95 overflow-hidden shadow-lg">
                         <canvas
                           ref={canvasRef}
                           width={280}
-                          height={150}
+                          height={120}
                           onMouseDown={startDrawing}
                           onMouseMove={draw}
                           onMouseUp={stopDrawing}
@@ -657,23 +627,23 @@ const PDFSigningApp = () => {
                           onTouchStart={startDrawing}
                           onTouchMove={draw}
                           onTouchEnd={stopDrawing}
-                          className="w-full h-37.5 cursor-crosshair touch-none"
+                          className="w-full h-auto cursor-crosshair touch-none"
                         />
                       </div>
                       <div className="flex gap-2">
                         <Button
                           onClick={clearSignature}
                           variant="outline"
-                          className="flex-1 border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50"
+                          className="flex-1 border-slate-600 bg-slate-700/30 text-white hover:bg-slate-600/50 text-xs py-1.5 h-auto"
                         >
-                          <Trash2 className="h-4 w-4 mr-2" />
+                          <Trash2 className="h-3 w-3 mr-1" />
                           Clear
                         </Button>
                         <Button
                           onClick={saveSignature}
-                          className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-emerald-500/50"
+                          className="flex-1 bg-linear-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white border-0 shadow-lg hover:shadow-emerald-500/50 text-xs py-1.5 h-auto"
                         >
-                          <Save className="h-4 w-4 mr-2" />
+                          <Save className="h-3 w-3 mr-1" />
                           Save
                         </Button>
                       </div>
@@ -681,26 +651,26 @@ const PDFSigningApp = () => {
                   )}
 
                   {signatureData && !showSignaturePad && (
-                    <div className="mt-3 p-3 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-400/50">
-                      <div className="bg-white/95 rounded-lg overflow-hidden">
+                    <div className="mt-3 p-2 bg-linear-to-r from-emerald-500/10 to-teal-500/10 rounded-lg border border-emerald-400/50">
+                      <div className="bg-white/95 rounded p-1.5">
                         <img 
                           src={signatureData} 
                           alt="Signature" 
-                          className="w-full h-auto border border-slate-300 rounded-lg" 
+                          className="w-full h-auto border border-slate-300 rounded" 
                         />
                       </div>
-                      <p className="text-xs text-emerald-400 mt-2 text-center font-medium">
-                        ✓ Signature ready - Drag to position on PDF
+                      <p className="text-xs text-emerald-400 mt-1.5 text-center font-medium">
+                        ✓ Ready - Drag to position
                       </p>
                     </div>
                   )}
                 </div>
 
                 {/* Auto-position Toggle */}
-                <div className="space-y-3 border-t border-slate-700/30 pt-6">
+                <div className="space-y-2 border-t border-slate-700/30 pt-4">
                   <div className="flex items-center justify-between">
-                    <Label htmlFor="auto-position" className="text-sm font-semibold text-white">
-                      Auto-position Signature
+                    <Label htmlFor="auto-position" className="text-xs font-semibold text-white">
+                      Auto-position
                     </Label>
                     <Switch
                       id="auto-position"
@@ -709,7 +679,7 @@ const PDFSigningApp = () => {
                     />
                   </div>
                   <p className="text-xs text-gray-400">
-                    Automatically position signature on last page
+                    Auto-position on last page
                   </p>
                 </div>
 
@@ -718,16 +688,16 @@ const PDFSigningApp = () => {
                   <Button
                     onClick={signDocument}
                     disabled={isProcessing}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all mt-6"
+                    className="w-full bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 transition-all mt-4 py-2 h-auto text-xs"
                   >
                     {isProcessing ? (
                       <>
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                        <RefreshCw className="h-3 w-3 mr-2 animate-spin shrink-0" />
                         Processing...
                       </>
                     ) : (
                       <>
-                        <Check className="h-4 w-4 mr-2" />
+                        <Check className="h-3 w-3 mr-2 shrink-0" />
                         Sign Document
                       </>
                     )}
@@ -738,231 +708,238 @@ const PDFSigningApp = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="preview" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/30 p-1 rounded-lg">
-                <TabsTrigger value="preview" className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
-                  Document Preview
+          <div className="w-full lg:col-span-2">
+            <Tabs defaultValue={isMobile ? "documents" : "preview"} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-slate-800/50 border border-slate-700/30 p-1 rounded-lg mb-4 sm:mb-6">
+                <TabsTrigger value="preview" className="text-xs sm:text-sm text-white data-[state=active]:bg-linear-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
+                  Preview
                 </TabsTrigger>
-                <TabsTrigger value="documents" className="text-white data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
-                  Signed Documents ({signedDocuments.length})
+                <TabsTrigger value="documents" className="text-xs sm:text-sm text-white data-[state=active]:bg-linear-to-r data-[state=active]:from-blue-500 data-[state=active]:to-blue-600">
+                  Docs ({signedDocuments.length})
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="preview">
-                <Card className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl min-h-150">
-                  <CardContent className="pt-6">
+              <TabsContent value="preview" className="space-y-3 sm:space-y-4">
+                <Card className="bg-linear-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
+                  <CardContent className="pt-3 sm:pt-6 px-3 sm:px-6">
                     {alert.message && (
-                      <Alert className={`mb-4 border-l-4 ${
+                      <Alert className={`mb-3 border-l-4 text-xs sm:text-sm ${
                         alert.type === 'success' 
                           ? 'bg-emerald-500/10 border-emerald-400/50 text-emerald-300'
                           : 'bg-red-500/10 border-red-400/50 text-red-300'
                       }`}>
                         <AlertDescription className="flex items-center gap-2">
                           {alert.type === 'success' ? 
-                            <Check className="h-5 w-5 flex-shrink-0" /> : 
-                            <X className="h-5 w-5 flex-shrink-0" />
+                            <Check className="h-4 w-4 shrink-0" /> : 
+                            <X className="h-4 w-4 shrink-0" />
                           }
-                          {alert.message}
+                          <span className="text-xs">{alert.message}</span>
                         </AlertDescription>
                       </Alert>
                     )}
 
-                    {/* PDF Viewer Controls */}
-                    {uploadedFileData && (
-                      <div className="flex flex-col sm:flex-row items-center justify-between mb-4 bg-slate-700/30 rounded-xl p-3 gap-4 border border-slate-700/50">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={goToPrevPage}
-                            disabled={currentPage === 1}
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600"
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </Button>
-                          <span className="text-sm text-white font-medium">
-                            Page {currentPage} of {totalPages}
-                          </span>
-                          <Button
-                            onClick={goToNextPage}
-                            disabled={currentPage === totalPages}
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600"
-                          >
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                    {!isMobile ? (
+                      <>
+                        {uploadedFileData && (
+                          <div className="flex flex-col sm:flex-row items-center justify-between mb-3 sm:mb-4 bg-slate-700/30 rounded-lg p-2 sm:p-3 gap-2 border border-slate-700/50 overflow-x-auto">
+                            <div className="flex items-center gap-1 whitespace-nowrap">
+                              <Button
+                                onClick={goToPrevPage}
+                                disabled={currentPage === 1}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                              >
+                                <ChevronLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                              <span className="text-xs sm:text-sm text-white font-medium">
+                                {currentPage} / {totalPages}
+                              </span>
+                              <Button
+                                onClick={goToNextPage}
+                                disabled={currentPage === totalPages}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                              >
+                                <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <Button
+                                onClick={zoomOut}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2 text-xs"
+                              >
+                                −
+                              </Button>
+                              <span className="text-xs sm:text-sm text-white font-medium min-w-8 text-center">{Math.round(scale * 100)}%</span>
+                              <Button
+                                onClick={zoomIn}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2 text-xs"
+                              >
+                                +
+                              </Button>
+                              <Button
+                                onClick={fitToWidth}
+                                variant="outline"
+                                size="sm"
+                                className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600 h-7 sm:h-9 px-1.5 sm:px-2"
+                              >
+                                <Maximize2 className="h-3 w-3 sm:h-4 sm:w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        <div className="bg-linear-to-b from-slate-700/20 to-slate-800/20 rounded-lg sm:rounded-xl shadow-inner min-h-64 sm:min-h-96 flex items-center justify-center relative overflow-auto border border-slate-700/50">
+                          {uploadedFileData && pdfUrl ? (
+                            <div className="relative w-full h-full p-2 sm:p-4 overflow-hidden">
+                              <div 
+                                ref={pdfContainerRef}
+                                className="w-full h-full min-h-60 sm:min-h-96 border-2 border-slate-600/50 rounded-lg bg-white/5 flex items-center justify-center overflow-auto relative shadow-inner"
+                                style={{ position: 'relative', overflow: 'auto' }}
+                              >
+                                <iframe
+                                  ref={iframeRef}
+                                  src={pdfUrl}
+                                  title="PDF Preview"
+                                  className="border-none rounded-lg"
+                                  style={{
+                                    transform: `scale(${scale})`,
+                                    transformOrigin: 'top left',
+                                    width: `${pdfDimensions.width}px`,
+                                    height: `${pdfDimensions.height}px`,
+                                    minWidth: `${pdfDimensions.width}px`,
+                                    minHeight: `${pdfDimensions.height}px`,
+                                  }}
+                                  onLoad={handleIframeLoad}
+                                />
+                                
+                                {signatureData && signaturePosition && signaturePosition.page === currentPage && (
+                                  <div
+                                    ref={signatureRef}
+                                    className="absolute border-2 border-dashed border-blue-400/60 bg-blue-500/5 cursor-move transition-all duration-150 ease-out hover:border-blue-300 hover:bg-blue-500/15 active:border-blue-400 active:bg-blue-500/25 shadow-lg shrink-0 rounded-lg"
+                                    style={{
+                                      left: `${signaturePosition.x}px`,
+                                      top: `${signaturePosition.y}px`,
+                                      width: `${signaturePosition.width}px`,
+                                      height: `${signaturePosition.height}px`,
+                                      transform: `scale(${scale})`,
+                                      transformOrigin: 'top left',
+                                      willChange: 'transform, left, top',
+                                    }}
+                                    onMouseDown={startDragging}
+                                    onTouchStart={startDragging}
+                                  >
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                      <img 
+                                        src={signatureData} 
+                                        alt="Signature" 
+                                        className="w-full h-full object-contain pointer-events-none shrink-0"
+                                        draggable="false"
+                                      />
+                                      <div className="absolute -top-2 -right-2 bg-linear-to-br from-blue-500 to-blue-600 text-white rounded-full p-0.5 shadow-lg">
+                                        <Move className="h-2.5 w-2.5" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs sm:text-sm text-gray-400 mt-2 sm:mt-3 text-center">
+                                {signatureData && signaturePosition ? 
+                                  "Drag signature to position" : 
+                                  "Draw a signature to place it"}
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="text-center text-gray-400 p-4 sm:p-8">
+                              <div className="w-12 h-12 sm:w-20 sm:h-20 rounded-full bg-linear-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-3 sm:mb-4 mx-auto">
+                                <Upload className="h-6 w-6 sm:h-10 sm:w-10 text-blue-400/80" />
+                              </div>
+                              <h3 className="text-sm sm:text-lg font-semibold text-white mb-2">
+                                No Document
+                              </h3>
+                              <p className="text-gray-400 text-xs sm:text-sm mb-3 sm:mb-4">
+                                Upload a PDF document to add your signature.
+                              </p>
+                              <Button
+                                onClick={() => fileInputRef.current?.click()}
+                                className="bg-linear-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50 text-xs py-1.5 h-auto"
+                              >
+                                <Upload className="h-3 w-3 mr-2" />
+                                Upload PDF
+                              </Button>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            onClick={zoomOut}
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600"
-                          >
-                            −
-                          </Button>
-                          <span className="text-sm text-white font-medium min-w-12 text-center">{Math.round(scale * 100)}%</span>
-                          <Button
-                            onClick={zoomIn}
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600"
-                          >
-                            +
-                          </Button>
-                          <Button
-                            onClick={fitToWidth}
-                            variant="outline"
-                            size="sm"
-                            className="border-slate-600 bg-slate-700/50 text-white hover:bg-slate-600"
-                          >
-                            <Maximize2 className="h-4 w-4" />
-                          </Button>
+                      </>
+                    ) : (
+                      <div className="text-center text-gray-400 p-4 sm:p-8">
+                        <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-3 mx-auto">
+                          <Maximize2 className="h-6 w-6 text-blue-400/80" />
                         </div>
+                        <p className="text-sm font-semibold text-white mb-1">Switch to Desktop</p>
+                        <p className="text-xs text-gray-400">
+                          PDF preview is better on larger screens
+                        </p>
                       </div>
                     )}
-
-                    {/* PDF Preview Area */}
-                    <div className="bg-gradient-to-b from-slate-700/20 to-slate-800/20 rounded-2xl shadow-inner min-h-137.5 flex items-center justify-center relative overflow-auto border border-slate-700/50">
-                      {uploadedFileData && pdfUrl ? (
-                        <div className="relative w-full h-full p-4">
-                          <div 
-                            ref={pdfContainerRef}
-                            className="w-full h-full min-h-125 border-2 border-slate-600/50 rounded-xl bg-white/5 flex items-center justify-center overflow-auto relative shadow-inner"
-                            style={{ position: 'relative', overflow: 'hidden' }}
-                          >
-                            {/* PDF iframe */}
-                            <iframe
-                              ref={iframeRef}
-                              src={pdfUrl}
-                              title="PDF Preview"
-                              className="w-full h-full border-none rounded-lg"
-                              style={{
-                                transform: `scale(${scale})`,
-                                transformOrigin: 'top left',
-                                width: `${pdfDimensions.width}px`,
-                                height: `${pdfDimensions.height}px`,
-                              }}
-                              onLoad={handleIframeLoad}
-                            />
-                            
-                            {/* Signature overlay */}
-                            {signatureData && signaturePosition && signaturePosition.page === currentPage && (
-                              <div
-                                ref={signatureRef}
-                                className="absolute border-2 border-dashed border-blue-400/60 bg-blue-500/5 cursor-move transition-all duration-150 ease-out hover:border-blue-300 hover:bg-blue-500/15 active:border-blue-400 active:bg-blue-500/25 shadow-lg shrink-0"
-                                style={{
-                                  left: `${signaturePosition.x}px`,
-                                  top: `${signaturePosition.y}px`,
-                                  width: `${signaturePosition.width}px`,
-                                  height: `${signaturePosition.height}px`,
-                                  transform: `scale(${scale})`,
-                                  transformOrigin: 'top left',
-                                  willChange: 'transform, left, top',
-                                }}
-                                onMouseDown={startDragging}
-                                onTouchStart={startDragging}
-                              >
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <img 
-                                    src={signatureData} 
-                                    alt="Signature" 
-                                    className="w-full h-full object-contain pointer-events-none shrink-0"
-                                    draggable="false"
-                                  />
-                                  <div className="absolute -top-3 -right-3 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-full p-1.5 shadow-lg">
-                                    <Move className="h-3 w-3" />
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-400 mt-3 text-center">
-                            {signatureData && signaturePosition ? 
-                              "Drag the signature to position it on the page" : 
-                              "Draw a signature above to place it on the document"}
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="text-center text-gray-400 p-12">
-                          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-6 mx-auto">
-                            <Upload className="h-12 w-12 text-blue-400/80" />
-                          </div>
-                          <h3 className="text-lg font-semibold text-white mb-2">
-                            No Document Uploaded
-                          </h3>
-                          <p className="text-gray-400 text-center mb-6 max-w-sm mx-auto">
-                            Upload a PDF document to add your signature. Supports PDF format up to 16MB.
-                          </p>
-                          <Button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-blue-500/50"
-                          >
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload PDF
-                          </Button>
-                        </div>
-                      )}
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
 
               <TabsContent value="documents">
-                <Card className="bg-gradient-to-b from-slate-800/80 to-slate-900/80 backdrop-blur-xl border-slate-700/50 shadow-2xl">
-                  <CardContent className="pt-6">
                     {signedDocuments.length === 0 ? (
-                      <div className="text-center py-16 text-gray-400">
-                        <FileText className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                        <p className="text-lg text-white font-medium">No signed documents yet</p>
-                        <p className="text-sm text-gray-400 mt-2">Sign your first document to see it here</p>
+                      <div className="text-center py-8 sm:py-12 text-gray-400">
+                        <FileText className="w-10 h-10 sm:w-16 sm:h-16 mx-auto mb-2 sm:mb-3 opacity-40" />
+                        <p className="text-sm sm:text-lg text-white font-medium">No signed documents</p>
+                        <p className="text-xs sm:text-sm text-gray-400 mt-1">Sign your first document</p>
                       </div>
                     ) : (
-                      <div className="space-y-3 max-h-150 overflow-y-auto pr-2">
+                      <div className="space-y-2 sm:space-y-3 max-h-96 sm:max-h-150 overflow-y-auto pr-2">
                         {signedDocuments.map((doc) => (
                           <div
                             key={doc.id}
-                            className="bg-gradient-to-r from-slate-700/30 to-slate-800/30 backdrop-blur rounded-xl p-4 flex items-center justify-between hover:from-slate-700/50 hover:to-slate-800/50 transition-all border border-slate-600/30 hover:border-slate-600/60"
+                            className="bg-linear-to-r from-slate-700/30 to-slate-800/30 backdrop-blur rounded-lg p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between hover:from-slate-700/50 hover:to-slate-800/50 transition-all border border-slate-600/30 hover:border-slate-600/60 gap-2 sm:gap-3"
                           >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              <div className="p-2 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-lg shrink-0">
-                                <FileText className="w-6 h-6 text-blue-400" />
+                            <div className="flex items-start sm:items-center gap-2 flex-1 min-w-0 w-full">
+                              <div className="p-2 bg-linear-to-br from-blue-500/20 to-cyan-500/20 rounded shrink-0 mt-0.5 sm:mt-0">
+                                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                               </div>
-                              <div className="min-w-0">
-                                <p className="font-semibold text-white truncate">{doc.name}</p>
-                                <p className="text-xs text-gray-400">
+                              <div className="min-w-0 flex-1">
+                                <p className="font-semibold text-white text-xs sm:text-sm truncate">{previewText(doc.name, 20)}</p>
+                                <p className="text-xs text-gray-400 truncate">
                                   {doc.date} • {doc.size}
                                 </p>
                               </div>
                             </div>
-                            <div className="flex gap-2 shrink-0">
+                            <div className="flex gap-2 shrink-0 w-full sm:w-auto">
                               <Button
                                 onClick={() => downloadSignedDoc(doc)}
                                 variant="outline"
                                 size="sm"
-                                className="border-emerald-500/50 text-white bg-emerald-600 hover:text-emerald-500 hover:bg-white transition-all"
+                                className="flex-1 sm:flex-none border-emerald-500/50 text-white bg-emerald-600 hover:text-emerald-500 hover:bg-white transition-all text-xs py-1.5 h-auto"
                               >
-                                <Download className="h-4 w-4 mr-2" />
-                                Download
+                                <Download className="h-3 w-3 mr-1 shrink-0" />
+                                <span>Download</span>
                               </Button>
                               <Button
                                 onClick={() => deleteSignedDoc(doc)}
                                 variant="outline"
                                 size="sm"
-                                className="border-red-500/50 text-white bg-red-600 hover:text-red-500 hover:bg-white transition-all"
+                                className="flex-1 sm:flex-none border-red-500/50 text-white bg-red-600 hover:text-red-500 hover:bg-white transition-all text-xs py-1.5 h-auto"
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
+                                <Trash2 className="h-3 w-3 mr-1 shrink-0" />
+                                <span>Delete</span>
                               </Button>
                             </div>
                           </div>
                         ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
               </TabsContent>
             </Tabs>
           </div>
