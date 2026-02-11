@@ -3,7 +3,6 @@ import axios from 'axios'
 import { userSocialAPI } from './socialAPI'
 
 import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
-import { userSocialAPI } from './socialAPI';
 
 const api = axios.create({
   baseURL: API_BASE_URL,

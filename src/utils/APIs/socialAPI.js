@@ -263,16 +263,6 @@ export const userSocialAPI = {
     return response.data
   },
 
-  // Follow/Unfollow endpoints
-  followUser: async (userId) => {
-    const response = await api.post(`/api/profile/${userId}/follow`)
-    return response.data
-  },
-
-  unfollowUser: async (userId) => {
-    const response = await api.post(`/api/profile/${userId}/unfollow`)
-    return response.data
-  },
 
   isFollowing: async (userId) => {
     const response = await api.get(`/api/profile/${userId}/is-following`)
@@ -309,7 +299,6 @@ export const userSocialAPI = {
     return response.data
   },
 
-<<<<<<< HEAD
   createStory: async (payload = {}) => {
     const response = await api.post('/api/profile/stories', payload)
     return response.data
@@ -328,18 +317,6 @@ export const userSocialAPI = {
   // Edit post
   editPost: async (postId, { caption }) => {
     const response = await api.patch(`/api/profile/posts/${postId}`, { caption })
-    return response.data
-  },
-
-  // Save post
-  savePost: async (postId) => {
-    const response = await api.post(`/api/profile/posts/${postId}/save`)
-    return response.data
-  },
-
-  // Unsave post
-  unsavePost: async (postId) => {
-    const response = await api.post(`/api/profile/posts/${postId}/unsave`)
     return response.data
   },
 
@@ -362,17 +339,6 @@ export const userSocialAPI = {
 
   deleteComment: async (postId, commentId) => {
     const response = await api.delete(`/api/profile/posts/${postId}/comments/${commentId}`)
-    return response.data
-  },
-
-  // Block/Unblock users
-  blockUser: async (userId) => {
-    const response = await api.post(`/api/profile/${userId}/block`)
-    return response.data
-  },
-
-  unblockUser: async (userId) => {
-    const response = await api.post(`/api/profile/${userId}/unblock`)
     return response.data
   },
 
