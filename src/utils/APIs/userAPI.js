@@ -35,7 +35,6 @@ export const usersAPI = {
         Authorization: `Bearer ${accessToken}`,
       } : {}
     });
-    console.log(response.data);
     return response.data;
   },
 
@@ -112,6 +111,59 @@ export const usersAPI = {
       console.error('Error fetching following:', error);
       return { data: { followingCount: 0 } };
     }
+  },
+  updateActivity: async (userId, accessToken) => {
+    const response = await api.post(`/users/${userId}/activity`, {}, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  addXP: async (userId, points, accessToken) => {
+    const response = await api.post(`/users/${userId}/xp`, { points }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  verifyEmail: async (userId, accessToken) => {
+    const response = await api.post(`/users/${userId}/verify-email`, {}, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  updateStatus: async (userId, status, accessToken) => {
+    const response = await api.put(`/users/${userId}/status`, { status }, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  create: async (userData, accessToken) => {
+    const response = await api.post('/users', userData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  delete: async (userId, accessToken) => {
+    const response = await api.delete(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
   },
 };
 

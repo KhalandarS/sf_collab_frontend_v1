@@ -10,10 +10,10 @@ import AccountandSecurity from "./components/pages/AccountandSecurity.jsx";
 import Login from "./components/auth/Login.jsx";
 import SignUp from "./components/auth/SignUp.jsx";
 import RegisterStartUp from "./components/pages/register-startup/RegisterStartUp.jsx";
-import HomedetailsPage from "./components/detailspage/HomedetailsPage.jsx";
+import HomedetailsPage from "./components/detailspage (previous)/HomedetailsPage.jsx";
 import Ideationdetails from "./components/pages/ideation/Ideationdetails.jsx";
-import Knowledgedetails from "./components/detailspage/Knowledgedetails.jsx";
-import ProjectDetails from "./components/detailspage/ProjectDetails.jsx";
+import Knowledgedetails from "./components/detailspage (previous)/Knowledgedetails.jsx";
+import ProjectDetails from "./components/detailspage (previous)/ProjectDetails.jsx";
 import Posts from "./components/pages/posts/Posts.jsx";
 import Help from "./components/pages/Help.jsx";
 import ProjectManagement from "./components/pages/ProjectManagement.jsx";
@@ -22,7 +22,7 @@ import NotFound from "./components/NotFound.jsx";
 import GettingStarted from "./components/pages/QucikGuides/gettingStarted.jsx";
 import TeamCollaboration from "./components/pages/QucikGuides/teamCollaboration.jsx";
 import { ProtectedRoute, AuthRoute } from "./components/ProtectedRoute.jsx";
-import SavedList from "./components/pages/SavedIdeaList.jsx";
+// import SavedList from "./components/pages/SavedIdeaList.jsx";
 import BusinessIdeaGenerator from "./components/pages/Business_plan_generator/premium-business-generator.jsx";
 import Test from "./components/pages/Test.jsx";
 import ScraperForm from "./components/pages/Data_scraper/ScraperForm.jsx";
@@ -87,7 +87,7 @@ import MyWork from "./components/pages/dashboards/builderDashboard/MyWork.jsx";
 import Rewards from "./components/pages/dashboards/builderDashboard/Rewards.jsx";
 import SkillProfile from "./components/pages/dashboards/builderDashboard/SkillProfile.jsx";
 import UserPage from "./components/pages/usersPage/UsersPage.jsx";
-import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
+// import MultiRoleProfileForm from "./components/pages/MultiRoleProfileForm.jsx";
 import { NotificationProvider } from './contexts/NotificationContext';
 import ToastNotification from './components/notifications/ToastNotification.jsx';
 import NotificationPage from './components/notifications/NotificationPage.jsx';
@@ -273,7 +273,7 @@ export default function App() {
                   <Route path="team-collaboration" element={<TeamCollaboration />} />
                 
                   {/* Saved Ideas */}
-                  <Route path="saved-ideas" element={<SavedList />} />
+                  {/* <Route path="saved-ideas" element={<SavedList />} /> */}
                 
                   {/* Test Page */}
                   <Route path="test" element={<Test />} />

@@ -154,13 +154,13 @@ export const startupsAPI = {
   // Get industries
   getIndustries: async () => {
     const response = await api.get('/startups/industries')
-    return response.data.data
+    return response.data
   },
 
   // Get stages
   getStages: async () => {
     const response = await api.get('/startups/stages')
-    return response.data.data
+    return response.data
   },
 
   // Get join requests

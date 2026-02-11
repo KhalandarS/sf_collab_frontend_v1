@@ -31,7 +31,16 @@ export const chatAPI = {
     const response = await api.get(`/chat/conversations/${conversationId}`);
     return response.data;
   },
-
+  createConversation: async ({ participantIds, name = null, conversationType = "group", description = null, avatarUrl = null }) => {
+    const response = await api.post("/chat/conversations", {
+      participant_ids: participantIds,
+      name,
+      conversation_type: conversationType,
+      description,
+      avatar_url: avatarUrl
+    });
+    return response.data;
+  },
   createDirectConversation: async (otherUserId) => {
     const response = await api.post("/chat/conversations/with-user", {
       other_user_id: otherUserId
@@ -78,6 +87,24 @@ export const chatAPI = {
       recipient_user_id: recipientUserId,
       content
     });
+    return response.data;
+  },
+
+  sendFileMessage: async (conversationId, file, messageContent = null, contentType) => {
+    const formData = new FormData();
+    formData.append('content', messageContent || 'Sent a file');
+    formData.append('message_type', 'file');
+    formData.append('file', file);
+
+    const response = await api.post(
+      `/chat/conversations/${conversationId}/messages`,
+      formData,
+      {
+        headers: {
+          'Content-Type': contentType,
+        },
+      }
+    );
     return response.data;
   },
 

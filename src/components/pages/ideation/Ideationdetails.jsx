@@ -145,39 +145,28 @@ const IdeationDetails = () => {
   const handleJoinSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        toast.error("Please log in to join the team");
-        return;
-      }
+
 
       if (!joinName.trim() || !joinPosition.trim()) {
         toast.error("Please fill in name and position");
         return;
       }
 
-      const response = await fetch(`${BASE_URL}/${ideaId}/team-members`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          name: joinName,
-          position: joinPosition,
-          skills: joinSkills || "",
-        }),
+      const response = await ideaAPI.addTeamMember(ideaId, {
+        name: joinName,
+        position: joinPosition,
+        skills: joinSkills,
+        message: joinMessage,
       });
 
-      const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        const errorMessage = data.error || data.message || "Failed to add team member";
+      if (!response.success) {
+        const errorMessage = response.error || response.message || "Failed to add team member";
         throw new Error(errorMessage);
       }
 
-      if (data.success && data.data?.team_member) {
-        const res = await axios.get(`${BASE_URL}/${ideaId}`);
+      if (response.success && response.data?.team_member) {
+        const res = await ideaAPI.getIdeaById(ideaId, access_token);
         const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
         const ideaData = isLocal
           ? (res.data.data?.idea || res.data.idea)
@@ -187,19 +176,19 @@ const IdeationDetails = () => {
           setIdea(ideaData);
         }
         
-        setSuccessMsg(data.message || "Successfully joined the team!");
+        toast.success(response.message || "Successfully joined the team!");
         setJoinMessage("");
         setJoinName("");
         setJoinPosition("");
         setJoinSkills("");
-        setTimeout(() => {
           setShowJoinModal(false);
+
           setSuccessMsg("");
-        }, 1500);
+
       }
     } catch (err) {
       console.error("Error joining team:", err);
-      const errorMessage = err.message || "Failed to join team. Please try again.";
+      const errorMessage = err.error || "Failed to join team. Please try again.";
       toast.error(errorMessage);
     }
   };

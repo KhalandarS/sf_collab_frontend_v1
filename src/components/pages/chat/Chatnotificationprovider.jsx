@@ -11,7 +11,7 @@ import React, {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { X, MessageCircle, Users, Globe, Shield, ChevronRight } from 'lucide-react';
 import { useAppSocket } from "@/context/SocketProvider";
-import Avatar from "@/components/chat/Avatar";
+import Avatar from "@/components/chat (previous)/Avatar";
 
 // ============================================
 // CONFIGURATION

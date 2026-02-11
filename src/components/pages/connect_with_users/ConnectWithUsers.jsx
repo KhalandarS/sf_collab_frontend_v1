@@ -8,6 +8,7 @@ import { Input } from '../../ui/input';
 import { mockUsers } from './usersMock';
 import UserCardSkeleton from './UserCardSkeleton';
 import UserCard from './UserCard';
+import { usersAPI } from '@/utils/APIs/userAPI';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -34,18 +35,9 @@ const ConnectWithUsers = () => {
   const fetchUsers = useCallback(async (page = 1, query = '') => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        page,
-        limit: itemsPerPage,
-        ...(query && { search: query })
-      });
 
-      const response = await fetch(`${API_URL}/users?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+
+      const response = await usersAPI.getAll({ page, per_page: itemsPerPage, search: query }, access_token);
 
       if (response.ok) {
         const data = await response.json();
@@ -95,7 +87,8 @@ const ConnectWithUsers = () => {
         headers: {
           'Authorization': `Bearer ${access_token}`,
           'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'include'
       });
 
       if (response.ok) {

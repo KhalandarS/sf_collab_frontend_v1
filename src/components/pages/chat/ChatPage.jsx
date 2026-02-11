@@ -3,15 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Edit3, MessageCircle, HamburgerIcon, Menu } from 'lucide-react';
 
 // Import chat components
-import Avatar from '@/components/chat/Avatar';
-import TypingIndicator from '@/components/chat/TypingIndicator';
-import MessageBubble from '@/components/chat/MessageBubble';
-import ConversationItem from '@/components/chat/ConversationItem';
-import OnlineContactsSidebar from '@/components/chat/OnlineContactsSidebar';
-import NewMessageModal from '@/components/chat/NewMessageModal';
-import ChatHeader from '@/components/chat/ChatHeader';
-import ChatInput from '@/components/chat/ChatInput';
-import DateSeparator, { shouldShowDateSeparator } from '@/components/chat/DateSeparator';
+import Avatar from '@/components/chat (previous)/Avatar';
+import TypingIndicator from '@/components/chat (previous)/TypingIndicator';
+import MessageBubble from '@/components/chat (previous)/MessageBubble';
+import ConversationItem from '@/components/chat (previous)/ConversationItem';
+import OnlineContactsSidebar from '@/components/chat (previous)/OnlineContactsSidebar';
+import NewMessageModal from '@/components/chat (previous)/NewMessageModal';
+import ChatHeader from '@/components/chat (previous)/ChatHeader';
+import ChatInput from '@/components/chat (previous)/ChatInput';
+import DateSeparator, { shouldShowDateSeparator } from '@/components/chat (previous)/DateSeparator';
 import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 import { useSearchParams } from "react-router-dom";

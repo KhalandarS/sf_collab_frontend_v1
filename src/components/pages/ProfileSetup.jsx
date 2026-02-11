@@ -7,7 +7,7 @@ import { Mail, User, Building, Globe, Clock, MapPin, Camera } from "lucide-react
 import { Button } from "../ui/button";
 import { toast } from "react-toastify";
 import LoadingSpinner from "../LoadingSpinner";
-import { setupProfileRequest } from "@/utils/APIs/authAPI";
+import { authAPI } from "@/utils/APIs/authAPI";
 
 const COUNTRIES = [
   "United States",
@@ -154,7 +154,7 @@ export default function ProfileSetup() {
         data.append("profileImage", profileImage);
       }
 
-      const response = await setupProfileRequest(data, token);
+      const response = await authAPI.setupProfileRequest(data, token);
 
       if (response.success) {
         // Update Redux store with new user data

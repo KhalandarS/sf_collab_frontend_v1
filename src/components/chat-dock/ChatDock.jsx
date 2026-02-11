@@ -1,11 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { X, Minus, MessageCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Avatar from "@/components/chat/Avatar";
-import MessageBubble from "@/components/chat/MessageBubble";
-import ChatInput from "@/components/chat/ChatInput";
+import Avatar from "@/components/chat (previous)/Avatar";
+import MessageBubble from "@/components/chat (previous)/MessageBubble";
+import ChatInput from "@/components/chat (previous)/ChatInput";
 import { useAppSocket } from "@/context/SocketProvider";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import ChatNotification from "./ChatNotification";
+import { chatAPI } from "@/utils/APIs/chatApi";
 
 
 // show name only on first message in a run (group/general/startup)
@@ -115,24 +117,10 @@ function safeJsonParse(value, fallback) {
 const handleFileUpload = async ({ file, conversationId, token }) => {
   if (!token || !file || !conversationId) return null;
 
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("content", file.name);
-  formData.append("message_type", file.type.startsWith("image/") ? "image" : "file");
-
   try {
-    const res = await fetch(
-      `${API_BASE_URL}/chat/conversations/${conversationId}/messages`,
-      {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      }
-    );
-
-    const data = await res.json();
-    if (data?.success && data?.data?.message) {
-      return data.data.message.file_url;
+    const response = await chatAPI.uploadFile(conversationId, file, "");
+    if (response?.success && response?.data?.message) {
+      return response.data.message.file_url;
     }
     return null;
   } catch (e) {
@@ -402,12 +390,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     if (!token) return;
     setIsLoadingConvos(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/chat/conversations`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      if (data?.success) {
-        const convos = data.data.conversations || [];
+      const response = await chatAPI.getAllChats();
+      if (response?.success) {
+        const convos = response.data.conversations || [];
         setConversations(convos);
 
         setLastSeenAt((prev) => {
@@ -447,13 +432,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       );
 
       try {
-        const res = await fetch(`${API_BASE_URL}/chat/conversations/${cid}/messages`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
+        const response = await chatAPI.getMessages(cid, 100, 0);
 
-        if (data?.success) {
-          const msgs = (data.data.messages || []).map(normalizeMessage);
+        if (response?.success) {
+          const msgs = (response.data.messages || []).map(normalizeMessage);
 
           setWindows((prev) =>
             prev.map((w) =>
@@ -677,7 +659,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     socket.on("user_typing", onUserTyping);
     return () => socket.off("user_typing", onUserTyping);
   }, [socket, currentUser?.id]);
-
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [userMessageSent, setUserMessageSent] = useState({ title: "", url: "", message: "" });
   useEffect(() => {
     if (!socket) {
       return;
@@ -746,13 +729,17 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
           
           if (currentIsTabVisible && !isOpen) {
-            const conv = (currentConversations || []).find((c) => String(c.id) === String(cid));
-            const title =
-              conv?.name ||
-              conv?.participants?.find((p) => String(p.id) !== String(currentUser?.id))?.firstName ||
-              "Chat";
 
-            openWindow({ conversationId: cid, title });
+            setIsNotificationOpen(true);
+            const message = messageNorm.content || (messageNorm.file_type ? `sent a ${messageNorm.file_type.startsWith("image/") ? "photo" : "file"}` : "sent a message");
+            const title = `${senderInfo.name || "Someone"}: ${message.length > 30 ? message.slice(0, 30) + "..." : message}`;
+
+            const url = getProfilePicture(senderInfo.avatar, senderInfo.id);
+            setTimeout(() => {
+              setIsNotificationOpen(false)
+            }, 4000);
+            setUserMessageSent({ title, url, message});
+
           }
         } else {
           clearUnread(cid);
@@ -873,11 +860,17 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       document.body.style.overflow = "";
     }
   }, [isMobile, isPanelOpen, isWindowsOpen]);
+  
+  const names = useMemo(() => unreadUsersList.map((u) => u.name || "Unknown"), [unreadUsersList]);
+  const visibleNames = useMemo(() => names.slice(0, 2), [names]);
+  const remaining = useMemo(() => names.length - visibleNames.length, [names, visibleNames]);
   if (!currentUser) return null;
-
   return (
     <>
-      {/* Launcher Button - hide on mobile when panel/windows open */}
+      
+      <ChatNotification isOpen={isNotificationOpen} setIsOpen={setIsNotificationOpen} title={userMessageSent.title} url={userMessageSent.url} message={userMessageSent.message} />
+
+      {/* Launcher Button */}
       {(!isPanelOpen && !isWindowsOpen) && (
         <motion.button
           whileHover={{ scale: 1.05 }}
@@ -886,12 +879,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
             setIsPanelOpen((v) => !v);
             if (isMobile) callback();
           }}
-          className="fixed w-12 h-12 bottom-4 right-20 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998]"
+          className="fixed w-12 h-12 bottom-4 right-20 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 shadow-lg flex items-center justify-center z-[9998] hover:shadow-xl transition-shadow"
         >
           <MessageCircle size={20} />
           {totalUnread > 0 && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2">
-              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900">
+              <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900 shadow-md">
                 {totalUnread > 99 ? "99+" : totalUnread}
               </span>
             </motion.div>
@@ -921,7 +914,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                       setIsPanelOpen(false);
                       if (isMobile) callback();
                     }}
-                    className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                    className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400 transition-colors"
                   >
                     <X size={16} />
                   </button>
@@ -933,15 +926,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Search chats..."
-                    className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none"
+                    className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   />
                   <div className="flex gap-2 mt-2">
                     {["all", "online"].map((id) => (
                       <button
                         key={id}
                         onClick={() => setActiveTab(id)}
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium ${
-                          activeTab === id ? "bg-amber-500 text-zinc-900" : "bg-zinc-800 text-zinc-400"
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                          activeTab === id ? "bg-amber-500 text-zinc-900 shadow-md" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
                         }`}
                       >
                         {id.charAt(0).toUpperCase() + id.slice(1)}
@@ -958,16 +951,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                     <div className="p-4 text-zinc-500 text-sm text-center">No conversations</div>
                   ) : (
                     filteredConversations.map((conv) => {
-                      // Get the other participant for direct chats
                       const otherParticipant = conv.participants?.find(
                         (p) => String(p.id) !== String(currentUser?.id)
                       );
                       const isDirect = conv.conversation_type === "direct";
-                      
-                      const title =
-                        conv.name ||
-                        otherParticipant?.firstName ||
-                        "Chat";
+                      const title = conv.name || otherParticipant?.firstName || "Chat";
                       const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
                       let lastMsg = conv.last_message || conv.lastMessage;
 
@@ -986,6 +974,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           lastMessagePreview = content.length > 35 ? content.slice(0, 35) + "..." : content;
                         }
                       }
+
                       const { presenceStatus, statusText } = isDirect
                         ? getPresenceForDirect({
                             conv,
@@ -996,18 +985,19 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             nowTs,
                           })
                         : { presenceStatus: "offline", statusText: "" };
+
                       return (
-                        <button
+                        <motion.button
                           key={conv.id}
+                          whileHover={{ x: 4 }}
                           onClick={() => {
                             openWindow({ conversationId: conv.id, title });
                             if (isMobile) setIsPanelOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl hover:bg-zinc-800 flex items-center gap-3 ${
-                            unreadCount > 0 ? "bg-zinc-800/50" : ""
+                          className={`w-full text-left px-3 py-3 rounded-xl transition-all hover:bg-zinc-800 flex items-center gap-3 ${
+                            unreadCount > 0 ? "bg-zinc-800/70 border-l-2 border-amber-500" : "hover:border-l-2 hover:border-zinc-700"
                           }`}
                         >
-                          {/* Avatar - Added */}
                           <div className="flex-shrink-0">
                             <Avatar
                               src={isDirect ? getProfilePicture(otherParticipant) : null}
@@ -1016,21 +1006,24 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               presenceStatus={presenceStatus}
                             />
                           </div>
-                          
                           <div className="min-w-0 flex-1">
-                            <div className={`text-sm truncate ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
+                            <div className={`text-sm truncate transition-colors ${unreadCount > 0 ? "text-white font-semibold" : "text-white font-medium"}`}>
                               {title}
                             </div>
-                            <div className={`text-xs truncate ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
+                            <div className={`text-xs truncate transition-colors ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
                               {lastMessagePreview}
                             </div>
                           </div>
                           {unreadCount > 0 && (
-                            <div className="min-w-[20px] h-[20px] ml-2 rounded-full bg-amber-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center">
+                            <motion.div 
+                              initial={{ scale: 0.8 }}
+                              animate={{ scale: 1 }}
+                              className="min-w-[20px] h-[20px] ml-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center shadow-md flex-shrink-0"
+                            >
                               {unreadCount > 99 ? "99+" : unreadCount}
-                            </div>
+                            </motion.div>
                           )}
-                        </button>
+                        </motion.button>
                       );
                     })
                   )}
@@ -1071,7 +1064,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                   className={`${isMobile ? "fixed inset-0 rounded-none" : "w-[380px] border border-zinc-800 rounded-2xl"} flex flex-col bg-zinc-900 shadow-2xl overflow-hidden pointer-events-auto`}
                 >
                   {/* Header */}
-                  <div className="flex items-center justify-between px-3 py-2 bg-zinc-950 border-b border-zinc-800 flex-shrink-0">
+                  <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-zinc-950 to-zinc-900 border-b border-zinc-800 flex-shrink-0">
                     <div className="flex items-center gap-2 min-w-0 flex-1">
                       {isDirect && (() => {
                         const other = conv?.participants?.find((p) => String(p.id) !== String(currentUser?.id));
@@ -1079,7 +1072,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           <button
                             type="button"
                             onClick={() => goToProfile(other?.id)}
-                            className="flex-shrink-0"
+                            className="flex-shrink-0 hover:opacity-80 transition-opacity"
                           >
                             <Avatar
                               src={getProfilePicture(other)}
@@ -1094,9 +1087,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <span
-                            className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                            className={`w-2 h-2 rounded-full flex-shrink-0 transition-all ${
                               presenceStatus === "online"
-                                ? "bg-emerald-500"
+                                ? "bg-emerald-500 shadow-lg shadow-emerald-500/50"
                                 : presenceStatus === "idle"
                                   ? "bg-yellow-400"
                                   : "bg-zinc-500"
@@ -1104,7 +1097,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           />
                           <span className="text-sm font-semibold text-white truncate">{w.title}</span>
                           {w.minimized && unreadCount > 0 && (
-                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0">
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-md">
                               {unreadCount > 99 ? "99+" : unreadCount}
                             </span>
                           )}
@@ -1118,7 +1111,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                       {!isMobile && (
                         <button
                           onClick={() => toggleMinimize(cid)}
-                          className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                          className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400 transition-colors"
+                          title="Minimize"
                         >
                           <Minus size={16} />
                         </button>
@@ -1129,9 +1123,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             setIsPanelOpen(false);
                             callback();
                           }
-                          closeWindow(cid)}
-                        }
-                        className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400"
+                          closeWindow(cid);
+                        }}
+                        className="p-2 rounded-xl hover:bg-zinc-800 text-zinc-400 transition-colors"
+                        title="Close"
                       >
                         <X size={16} />
                       </button>
@@ -1162,7 +1157,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           })
                         )}
                         {typingText && (
-                          <div className="flex items-center gap-2 px-2 py-1">
+                          <div className="flex items-center gap-2 px-2 py-1 animate-fade-in">
                             <div className="flex gap-1">
                               <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
                               <span className="w-2 h-2 bg-amber-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
@@ -1176,7 +1171,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
                       {/* Input */}
                       <div className="bg-zinc-900 border-t border-zinc-800 p-2 flex-shrink-0">
-                        <ChatInput d
+                        <ChatInput
                           value={w.draft || ""}
                           onChange={(val) => {
                             setWindows((prev) =>

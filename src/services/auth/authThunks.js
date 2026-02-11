@@ -1,10 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import {
-  loginRequest,
-  registerRequest,
-  refreshTokenRequest,
-  getProfileRequest,
-  loginGoogleRequest
+  authAPI
 } from '../../utils/APIs/authAPI';
 
 // LOGIN
@@ -12,7 +8,7 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      const response = await loginRequest(credentials);
+      const response = await authAPI.loginRequest(credentials);
       localStorage.setItem('access_token', response.data.access_token);
       localStorage.setItem('refreshToken', response.data.refresh_token);
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -27,7 +23,7 @@ export const loginGoogleUser = createAsyncThunk(
   'auth/loginGoogleUser',
   async (credentials, { rejectWithValue }) => {
     try {
-      const data = await loginGoogleRequest(credentials);
+      const data = await authAPI.loginGoogleRequest(credentials);
       localStorage.setItem('access_token', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       return data;
@@ -42,7 +38,7 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async (userData, { rejectWithValue }) => {
     try {
-      return await registerRequest(userData);
+      return await authAPI.registerRequest(userData);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -56,7 +52,7 @@ export const fetchUserProfile = createAsyncThunk(
     try {
       const token = localStorage.getItem('access_token');
       if (!token) throw new Error('No token found');
-      return await getProfileRequest(token);
+      return await authAPI.getProfileRequest(token);
     } catch (err) {
       return rejectWithValue(err.message);
     }
@@ -71,7 +67,7 @@ export const refreshAccessToken = createAsyncThunk(
       const refreshToken = localStorage.getItem('refreshToken');
       if (!refreshToken) throw new Error('No refresh token found');
 
-      const data = await refreshTokenRequest(refreshToken);
+      const data = await authAPI.refreshTokenRequest(refreshToken);
 
       // 🔥 Make sure to match backend response keys (Flask usually returns `access_token`)
       if (data.access_token) {

@@ -308,7 +308,6 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   <>
     <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
 
-    {/* ✅ Always render ChatDock (desktop + mobile) */}
     <ChatDock
       maxWindows={isMobile ? 1 : 2}
       isMobile={isMobile}

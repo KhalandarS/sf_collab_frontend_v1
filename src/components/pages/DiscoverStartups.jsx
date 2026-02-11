@@ -149,23 +149,12 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
       const token = access_token;
       if (!token) return;
   
-      const [industriesRes, stagesRes] = await Promise.all([
-        fetch(`${API_URL}/startups/industries`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_URL}/startups/stages`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-      ]);
-  
-      const industriesData = await industriesRes.json();
-      const stagesData = await stagesRes.json();
+      const [industriesData, stagesData] = await Promise.all([
+        startupAPI.getIndustries(token),
+        startupAPI.getStages(token)
+      ]); 
+
+
   
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);

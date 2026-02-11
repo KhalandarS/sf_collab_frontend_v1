@@ -14,6 +14,7 @@ import StartupCardSkeleton from './StartupCardSkeleton';
 import StartupsHeader from './StartupsHeader';
 import StartupSearchAndFilter from './StartupSearchAndFilter';
 import ApplyToStartupModal from './ApplyToStartupModal';
+import { startupsAPI } from '@/utils/APIs/startupsAPI';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -140,26 +141,12 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
 
   const fetchFilters = async () => {
     try {
-      const token = access_token;
-      if (!token) return;
   
-      const [industriesRes, stagesRes] = await Promise.all([
-        fetch(`${API_URL}/startups/industries`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }),
-        fetch(`${API_URL}/startups/stages`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        })
-      ]);
+      const [industriesData, stagesData] = await Promise.all([
+        startupsAPI.getIndustries(),
+        startupsAPI.getStages()
+      ]); 
   
-      const industriesData = await industriesRes.json();
-      const stagesData = await stagesRes.json();
   
       if (industriesData.success) setIndustries(industriesData.data.industries);
       if (stagesData.success) setStages(stagesData.data.stages);

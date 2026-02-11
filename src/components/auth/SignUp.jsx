@@ -23,7 +23,6 @@ export default function SignUp() {
   const [searchParams] = useSearchParams();
 
   const referralCode = searchParams.get("ref");
-  const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [loaderState, setLoaderState] = useState(false)
   const [errors, setErrors] = useState({})
@@ -74,19 +73,6 @@ export default function SignUp() {
       setIsOptionsVisible(false);
     };
   
-    // Handle options area specifically
-    const handleOptionsEnter = () => {
-      setIsOptionsVisible(true);
-    };
-  
-    const handleOptionsLeave = (e) => {
-      // Check if we're moving back to the nav area
-      if (navContainerRef.current && navContainerRef.current.contains(e.relatedTarget)) {
-        return; // Don't hide if moving back to nav
-      }
-      setIsOptionsVisible(false);
-    };
-    
   // Listen for OAuth popup messages
   useEffect(() => {
     const handleOAuthMessage = (event) => {
@@ -219,86 +205,46 @@ export default function SignUp() {
     
     setIsLoading(true);
     try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          referralCode: referralCode, // This for the waitlist
-          // profile_company: formData.profile_company,
-          // profile_country: formData.profile_country,
-          // profile_city: formData.profile_city,
-          // profile_timezone: formData.profile_timezone,
-          // pref_language: formData.pref_language,
-          // pref_timezone: formData.pref_timezone,
-          // pref_theme: formData.pref_theme,
-        }),
-      });
-
-      let result = await response.json();
-      result = result.data;
-      if (response.ok) {
+      const response = await authAPI.registerRequest({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        referralCode: referralCode
+      })
+      console.log(response);
         // Store tokens and user data
-        localStorage.setItem('access_token', result.access_token);
-        localStorage.setItem('refreshToken', result.refreshToken);
-        localStorage.setItem('user', JSON.stringify(result.user));
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refreshToken', response.data.refreshToken);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
         
-        dispatch(setToken(result.access_token));
-        dispatch(setUser(result.user));
+        dispatch(setToken(response.data.access_token));
+        dispatch(setUser(response.data.user));
         
         setLoaderState(false);
-        console.log(result);
-        if (!result.user.isEmailVerified) {
-          const response = await authAPI.sendVerificationCodeRequest(result.access_token);
-            navigate(`/verify-email?token=${response.data.verification_token}`);
+
+        if (!response.data.user.isEmailVerified) {
+          const verificationResponse = await authAPI.sendVerificationCodeRequest(response.data.access_token);
+            navigate(`/verify-email?token=${verificationResponse.data.verification_token}`);
             toast.info("Verification code sent to your email, continue to verify.");
-        }
       }else {
         setLoaderState(false);
       
         setErrors(prev => ({
           ...prev,
-          submit: result?.data?.error || 'Signup failed'
+          submit: response?.data?.error || 'Signup failed'
         }));
       }
     } catch (error) {
       console.error('Signup unexpected error:', error);
       setErrors(prev => ({
         ...prev,
-        submit: error?.data?.message || 'An unexpected error occurred'
+        submit: error?.error || 'An unexpected error occurred'
       }));
     } finally {
       setIsLoading(false);
     }
   };
-
-  const countries = [
-    'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 
-    'France', 'India', 'Japan', 'Brazil', 'Mexico', 'South Africa', 'Other'
-  ];
-
-  const timezones = [
-    'UTC', 'EST', 'PST', 'CST', 'GMT', 'CET', 'IST', 'JST', 'AEST'
-  ];
-
-  const languages = [
-    { value: 'en', label: 'English' },
-    { value: 'es', label: 'Spanish' },
-    { value: 'fr', label: 'French' },
-    { value: 'de', label: 'German' },
-    { value: 'ja', label: 'Japanese' }
-  ];
-
-  const themes = [
-    { value: 'light', label: 'Light' },
-    { value: 'dark', label: 'Dark' },
-    { value: 'auto', label: 'Auto' }
-  ];
 
   return (
   <div>

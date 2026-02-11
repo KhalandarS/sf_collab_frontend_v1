@@ -76,12 +76,8 @@ export const ideaAPI = {
     return response.data;
     },
 
-    addTeamMember: async (ideaId, memberData, accessToken) => {
-    const response = await api.post(`/ideas/${ideaId}/team-members`, memberData, {
-      headers: {
-      Authorization: `Bearer ${accessToken}`,
-      },
-    });
+    addTeamMember: async (ideaId, memberData) => {
+    const response = await api.post(`/ideas/${ideaId}/team-members`, memberData);
     return response.data;
     },
   // Idea Comments API
