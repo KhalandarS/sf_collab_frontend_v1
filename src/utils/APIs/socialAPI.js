@@ -309,12 +309,9 @@ export const userSocialAPI = {
     return response.data
   },
 
-  createStory: async (formData) => {
-    const response = await api.post('/api/profile/stories', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
+<<<<<<< HEAD
+  createStory: async (payload = {}) => {
+    const response = await api.post('/api/profile/stories', payload)
     return response.data
   },
   getStories: async (params = {}) => {

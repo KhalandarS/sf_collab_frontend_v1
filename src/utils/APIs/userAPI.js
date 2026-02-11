@@ -1,5 +1,6 @@
 import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
+import { userSocialAPI } from './socialAPI'
 
 import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 import { userSocialAPI } from './socialAPI';

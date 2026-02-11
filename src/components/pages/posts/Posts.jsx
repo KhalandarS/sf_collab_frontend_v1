@@ -256,16 +256,14 @@ const Posts = () => {
   const handleCreatePost = async (postData) => {
     try {
       if (postData.destination === "story") {
-        // create story endpoint expects FormData with file upload
-        const formData = new FormData();
-        if (postData.caption) formData.append("caption", postData.caption);
-        formData.append("type", postData.type || "image");
-        // attach first file as 'media' (backend expects single file)
-        if (postData.files && postData.files.length > 0) {
-          const fileObj = postData.files[0];
-          if (fileObj.file) formData.append("media", fileObj.file);
-        }
-        await userSocialAPI.createStory(formData);
+        // create story endpoint expects mediaUrl and caption; use first file preview url if available
+        const mediaUrl = postData.files?.[0]?.url || null;
+        const payload = {
+          mediaUrl,
+          caption: postData.caption,
+          type: postData.type || "image",
+        };
+        await userSocialAPI.createStory(payload);
         // stories are ephemeral; reload stories if needed
       } else {
         // destination === feed
