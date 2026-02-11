@@ -59,6 +59,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const [disableNavbar, setDisableNavbar] = useState(false);
   const [isCompletePopupVisible, setIsCompletePopupVisible] = useState(false);
 
+
   useEffect(() => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
@@ -303,12 +304,19 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       </div>
       {/* Chat docks */}
       {
-        location.pathname !== "/chat" &&
-        <>
-          <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
-          { !isMobile && <ChatDock maxWindows={isMobile ? 1 : 2} isMobile={isMobile} callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} /> }
-        </>
-      }
+  location.pathname !== "/chat" &&
+  <>
+    <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
+
+    {/* ✅ Always render ChatDock (desktop + mobile) */}
+    <ChatDock
+      maxWindows={isMobile ? 1 : 2}
+      isMobile={isMobile}
+      callback={() => (isMobile ? setDisableNavbar(!disableNavbar) : null)}
+    />
+  </>
+}
+
       {/* )} */}
     </>
   );

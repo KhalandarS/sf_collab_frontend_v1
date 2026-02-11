@@ -17,9 +17,37 @@ import Avatar from "@/components/chat/Avatar";
 // CONFIGURATION
 // ============================================
 const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
-const NOTIFICATION_DURATION = 5000;
+const NOTIFICATION_DURATION = 60000; 
 const MAX_NOTIFICATIONS = 2;
 const AUTO_POPUP_ENABLED = true; // Set to false to disable auto-popup
+const FLASH_DURATION = 60000;
+
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+
+// turn "/uploads/..." into "http://localhost:5001/uploads/..."
+const resolveAvatarUrl = (src) => {
+  if (!src) return null;
+  if (typeof src !== "string") return null;
+  if (src.startsWith("http://") || src.startsWith("https://")) return src;
+
+  // API_BASE looks like ".../api" so strip "/api" to get server origin
+  const origin = API_BASE.replace(/\/api\/?$/, "");
+  return `${origin}${src.startsWith("/") ? "" : "/"}${src}`;
+};
+
+const getSenderAvatar = (sender) => {
+  const raw =
+    sender?.profilePicture ||
+    sender?.profile_picture ||
+    sender?.avatar ||
+    sender?.picture ||
+    sender?.profile?.picture ||
+    sender?.profile?.avatar ||
+    null;
+
+  return resolveAvatarUrl(raw);
+};
+
 
 // ============================================
 // CONTEXT
@@ -68,7 +96,7 @@ const NotificationAvatar = ({ src, name, type }) => {
 };
 
 // ============================================
-// SINGLE TOAST NOTIFICATION
+// SINGLE TOAST NOTIFICATION (ENHANCED)
 // ============================================
 const ChatToast = ({ 
   notification, 
@@ -77,16 +105,26 @@ const ChatToast = ({
   index 
 }) => {
   const [isExiting, setIsExiting] = useState(false);
+  const [isPulsing, setIsPulsing] = useState(true);
 
   const { message, conversation, sender } = notification;
 
   useEffect(() => {
-  const timer = setTimeout(() => {
-    handleClose();
-  }, NOTIFICATION_DURATION);
+    // Stop pulsing after 60 seconds
+    const pulseTimer = setTimeout(() => {
+      setIsPulsing(false);
+    }, FLASH_DURATION);
 
-  return () => clearTimeout(timer);
-}, []);
+    // Auto-dismiss after duration
+    const timer = setTimeout(() => {
+      handleClose();
+    }, NOTIFICATION_DURATION);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(pulseTimer);
+    };
+  }, []);
 
   const handleClose = () => {
     setIsExiting(true);
@@ -98,19 +136,14 @@ const ChatToast = ({
     onNavigate(conversation.id);
   };
 
-  
-
   const conversationType = conversation?.conversation_type || 'direct';
   const conversationName = conversation?.name || 
     `${sender?.firstName || ''} ${sender?.lastName || ''}`.trim() || 
     'Unknown';
 
   // Get sender profile picture
-  const senderProfilePic = sender?.profilePicture || 
-    sender?.profile_picture || 
-    sender?.profile?.picture || 
-    sender?.profile?.avatar || 
-    null;
+  const senderProfilePic = getSenderAvatar(sender);
+
 
   return (
     <div
@@ -121,28 +154,41 @@ const ChatToast = ({
         border border-zinc-700/50
         rounded-2xl shadow-2xl shadow-black/50
         transform transition-all duration-300 ease-out
+        cursor-pointer
         ${isExiting 
           ? 'translate-x-[120%] opacity-0 scale-95' 
           : 'translate-x-0 opacity-100 scale-100'
         }
+        ${isPulsing ? 'animate-pulse-border' : ''}
         hover:border-amber-500/30 hover:shadow-amber-500/10
         group
       `}
       style={{
         animation: !isExiting ? `slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${index * 0.1}s both` : undefined
       }}
+      onClick={handleNavigate}
     >
+      {/* Pulsing glow effect */}
+      {isPulsing && (
+        <div className="absolute inset-0 rounded-2xl bg-blue-500/10 blur-md animate-glow" />
+      )}
 
       {/* Close button */}
       <button
-        onClick={handleClose}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();   // prevents the parent onClick (navigate)
+          handleClose();
+        }}
         className="absolute top-3 right-3 p-1.5 rounded-xl bg-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all opacity-0 group-hover:opacity-100 z-10"
       >
         <X size={14} />
       </button>
 
+
       {/* Main content */}
-      <div className="p-4">
+      <div className="p-4 relative z-10">
         {/* Header */}
         <div className="flex items-start gap-3">
           {/* Profile picture - using actual avatar */}
@@ -183,22 +229,26 @@ const ChatToast = ({
             <p className="text-zinc-400 text-sm mt-1 line-clamp-2 leading-relaxed">
               {message?.content || message?.original_content}
             </p>
-          </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 mt-4">
-          <button
-            onClick={handleNavigate}
-            className="w-full px-4 py-2 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-xl text-sm"
-          >
-            Open
-          </button>
+            {/* Click to view indicator */}
+            <div className="flex items-center gap-1 mt-2">
+              <MessageCircle className="w-3 h-3 text-blue-400" />
+              <span className="text-xs text-blue-400">Click to view conversation</span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Ambient glow effect */}
       <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+      
+      {/* Progress bar */}
+      <div 
+        className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-b-2xl"
+        style={{
+          animation: 'progress 5s linear'
+        }}
+      />
     </div>
   );
 };
@@ -207,24 +257,48 @@ const ChatToast = ({
 // NOTIFICATION CONTAINER
 // ============================================
 const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
+  const [expanded, setExpanded] = useState(false);
+
+  const visible = expanded ? notifications : notifications.slice(0, MAX_NOTIFICATIONS);
+  const overflowCount = Math.max(0, notifications.length - MAX_NOTIFICATIONS);
+
   return (
-    <div className="fixed top-6 right-6 z-[9999] flex flex-col gap-3">
-      {notifications.slice(0, MAX_NOTIFICATIONS).map((notification, index) => (
-        <ChatToast
-          key={notification.id}
-          notification={notification}
-          index={index}
-          onClose={onClose}
-          onNavigate={onNavigate}
-        />
-      ))}
+
+    <div className="fixed bottom-24 right-6 z-[9999] flex flex-col gap-3">
+      <div className={expanded ? "max-h-[70vh] overflow-y-auto pr-1 flex flex-col gap-3" : "flex flex-col gap-3"}>
+        {visible.map((notification, index) => (
+          <ChatToast
+            key={notification.id}
+            notification={notification}
+            index={index}
+            onClose={onClose}
+            onNavigate={onNavigate}
+          />
+        ))}
+      </div>
+
       
       {/* Overflow indicator */}
-      {notifications.length > MAX_NOTIFICATIONS && (
-        <div className="text-center text-zinc-500 text-sm py-2">
-          +{notifications.length - MAX_NOTIFICATIONS} more messages
-        </div>
+      {overflowCount > 0 && !expanded && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="text-center text-zinc-200 text-sm py-2 bg-zinc-900/80 backdrop-blur-sm rounded-xl border border-zinc-700/50 hover:border-amber-500/40 transition"
+        >
+          +{overflowCount} more messages (tap to view)
+        </button>
       )}
+
+      {expanded && notifications.length > MAX_NOTIFICATIONS && (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="text-center text-zinc-400 text-xs py-2 bg-zinc-900/60 backdrop-blur-sm rounded-xl border border-zinc-800 hover:text-white transition"
+        >
+          Collapse
+        </button>
+      )}
+
 
       {/* CSS Animations */}
       <style>{`
@@ -239,18 +313,58 @@ const NotificationContainer = ({ notifications, onClose, onNavigate }) => {
           }
         }
         
+        @keyframes pulse-border {
+          0%, 100% {
+            border-color: rgba(113, 113, 122, 0.5);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+          }
+          50% {
+            border-color: rgba(59, 130, 246, 0.7);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.3);
+          }
+        }
+        
+        @keyframes glow {
+          0%, 100% {
+            opacity: 0.3;
+          }
+          50% {
+            opacity: 0.6;
+          }
+        }
+        
+        @keyframes progress {
+          from {
+            width: 100%;
+          }
+          to {
+            width: 0%;
+          }
+        }
+        
+        .animate-pulse-border {
+          animation: pulse-border 1.5s ease-in-out infinite;
+        }
+        
+        .animate-glow {
+          animation: glow 1.5s ease-in-out infinite;
+        }
       `}</style>
     </div>
   );
 };
 
 // ============================================
-// PROVIDER COMPONENT
+// PROVIDER COMPONENT (ENHANCED)
 // ============================================
 export const ChatNotificationProvider = ({ children }) => {
   const { socket, isConnected } = useAppSocket();
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  
+  // NEW: Flashing tabs state for Facebook-style notifications
+  const [flashingTabs, setFlashingTabs] = useState({});
+  const flashingIntervalsRef = useRef({});
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -290,9 +404,54 @@ export const ChatNotificationProvider = ({ children }) => {
     if (location.pathname === "/chat") setUnreadCount(0);
   }, [location.pathname]);
 
+  // NEW: Start flashing a conversation tab
+  const startFlashing = useCallback((conversationId) => {
+    const cid = String(conversationId);
+    
+    setFlashingTabs(prev => ({ ...prev, [cid]: true }));
+
+    // Stop flashing after 60 seconds
+    if (flashingIntervalsRef.current[cid]) {
+      clearTimeout(flashingIntervalsRef.current[cid]);
+    }
+
+    flashingIntervalsRef.current[cid] = setTimeout(() => {
+      stopFlashing(cid);
+    }, FLASH_DURATION);
+  }, []);
+
+  // NEW: Stop flashing a conversation tab
+  const stopFlashing = useCallback((conversationId) => {
+    const cid = String(conversationId);
+    
+    setFlashingTabs(prev => {
+      const updated = { ...prev };
+      delete updated[cid];
+      return updated;
+    });
+
+    if (flashingIntervalsRef.current[cid]) {
+      clearTimeout(flashingIntervalsRef.current[cid]);
+      delete flashingIntervalsRef.current[cid];
+    }
+  }, []);
+
+  // Cleanup flashing intervals on unmount
+  useEffect(() => {
+    return () => {
+      Object.values(flashingIntervalsRef.current).forEach(timeout => {
+        clearTimeout(timeout);
+      });
+    };
+  }, []);
+
   const addNotification = useCallback((notification) => {
     setNotifications((prev) => [notification, ...prev]);
+
+    // 🔔 broadcast so NotificationPage can live-update
+    window.dispatchEvent(new CustomEvent("notifications:new", { detail: notification }));
   }, []);
+
 
   const removeNotification = useCallback((id) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
@@ -304,9 +463,11 @@ export const ChatNotificationProvider = ({ children }) => {
 
   const navigateToConversation = useCallback(
     (conversationId) => {
+      // Stop flashing when navigating to conversation
+      stopFlashing(conversationId);
       navigate(`/chat?conversation=${conversationId}`);
     },
-    [navigate]
+    [navigate, stopFlashing]
   );
 
   const playNotificationSound = useCallback(() => {
@@ -353,7 +514,10 @@ export const ChatNotificationProvider = ({ children }) => {
         message
       }
     }));
-  }, []);
+    
+    // Start flashing the tab if it's minimized
+    startFlashing(conversationId);
+  }, [startFlashing]);
 
   // Socket listeners
   useEffect(() => {
@@ -395,6 +559,8 @@ export const ChatNotificationProvider = ({ children }) => {
         sender: { firstName: "System", lastName: "" },
         timestamp: new Date(),
       });
+      
+      playNotificationSound();
     };
 
     socket.on("new_message", onNewMessage);
@@ -441,6 +607,7 @@ export const ChatNotificationProvider = ({ children }) => {
     isConnected,
     notifications,
     unreadCount,
+    flashingTabs, // NEW: Export flashing tabs state
     addNotification,
     removeNotification,
     clearNotifications,
@@ -449,11 +616,19 @@ export const ChatNotificationProvider = ({ children }) => {
     resetUnreadCount,
     joinConversation,
     leaveConversation,
+    startFlashing, // NEW: Export flashing controls
+    stopFlashing,  // NEW: Export flashing controls
   };
 
   return (
     <ChatNotificationContext.Provider value={value}>
       {children}
+      {/* Render notification toasts */}
+      <NotificationContainer
+        notifications={notifications}
+        onClose={removeNotification}
+        onNavigate={navigateToConversation}
+      />
     </ChatNotificationContext.Provider>
   );
 };
