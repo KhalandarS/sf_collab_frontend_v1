@@ -41,6 +41,8 @@ import HeroSection from './sections/HeroSection';
 import StartupDetailSkeleton from './StartupDetailsSkeleton';
 import ProjectTasksSection from './sections/ProjectTasksSection';
 import AddTaskModal from './modals/AddTasksModal';
+import StartupAnnouncementsSection from './sections/StartupAnnouncementsSection';
+import { plotCount } from '@/utils/plotCount';
 
 /**
  * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
@@ -144,7 +146,7 @@ const StartupDetailPage = () => {
       if (bookmarkData.success) setIsFavorited(bookmarkData.data.bookmarked || false);
     } catch (error) {
       console.error('Error fetching startup data:', error);
-      toast.error('Error loading startup data');
+      // toast.error('Error loading startup data');
 
     } finally {
       setLoading(false);
@@ -251,7 +253,6 @@ const StartupDetailPage = () => {
     e.preventDefault()
     try {
       const response = await startupsAPI.removeMember(id, memberId, access_token);
-      console.log("Response:", response);
       
       if (response.success) {
         toast.success('Member removed successfully');
@@ -455,7 +456,7 @@ const StartupDetailPage = () => {
                     Join Requests
                     {joinRequests.length > 0 && (
                       <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-[10px] font-semibold text-white bg-red-500 rounded-full">
-                        {joinRequests.length}
+                        {plotCount(joinRequests.length)}
                       </span>
                     )}
                   </Button>
@@ -561,6 +562,7 @@ const StartupDetailPage = () => {
 
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
+            <StartupAnnouncementsSection startup={startup} />
             <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} goals={projectGoals} />
             <DescriptionSection startup={startup} formatCurrency={formatCurrency} />
             

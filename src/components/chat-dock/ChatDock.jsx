@@ -8,6 +8,8 @@ import { useAppSocket } from "@/context/SocketProvider";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import ChatNotification from "./ChatNotification";
 import { chatAPI } from "@/utils/APIs/chatApi";
+import { plotCount } from "@/utils/plotCount";
+import { formatFriendlyDate } from "@/utils/formatFriendlyDate";
 
 
 // show name only on first message in a run (group/general/startup)
@@ -23,7 +25,6 @@ function shouldShowSenderName(messages, index) {
   return prevId !== currId;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
 
 const LS_WINDOWS_KEY = "chatDock:windows";
 const LS_UNREAD_KEY = "chatDock:unread";
@@ -734,11 +735,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
             const message = messageNorm.content || (messageNorm.file_type ? `sent a ${messageNorm.file_type.startsWith("image/") ? "photo" : "file"}` : "sent a message");
             const title = `${senderInfo.name || "Someone"}: ${message.length > 30 ? message.slice(0, 30) + "..." : message}`;
 
-            const url = getProfilePicture(senderInfo.avatar, senderInfo.id);
+            const url = `/chat?user=${messageNorm.id}`
             setTimeout(() => {
               setIsNotificationOpen(false)
             }, 4000);
-            setUserMessageSent({ title, url, message});
+            setUserMessageSent({ title, url, message, id: messageNorm.conversation_id });
 
           }
         } else {
@@ -819,7 +820,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return isDirectOnline(c);
       }
       return true;
-    });
+    }).sort((a, b) => {
+      const aLast = a.messages?.[a.messages.length - 1]?.created_at || a.created_at || 0;
+      const bLast = b.messages?.[b.messages.length - 1]?.created_at || b.created_at || 0;
+      return new Date(bLast).getTime() - new Date(aLast).getTime();
+    })
   }, [conversations, searchTerm, activeTab, onlineUsers, currentUser?.id]);
 
   const totalUnread = useMemo(() => {
@@ -868,10 +873,14 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   return (
     <>
       
-      <ChatNotification isOpen={isNotificationOpen} setIsOpen={setIsNotificationOpen} title={userMessageSent.title} url={userMessageSent.url} message={userMessageSent.message} />
+      <ChatNotification
+        onClick={() => {
+          openWindow({ conversationId: userMessageSent?.id, title: userMessageSent?.title});
+        }}
+        isOpen={isNotificationOpen} setIsOpen={setIsNotificationOpen} title={userMessageSent.title} url={userMessageSent.url} message={userMessageSent.message} />
 
       {/* Launcher Button */}
-      {(!isPanelOpen && !isWindowsOpen) && (
+      {(!isPanelOpen && !isWindowsOpen && !isMobile) && (
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -885,7 +894,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           {totalUnread > 0 && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute -top-2 -right-2">
               <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-amber-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center border border-zinc-900 shadow-md">
-                {totalUnread > 99 ? "99+" : totalUnread}
+                {plotCount(totalUnread)}
               </span>
             </motion.div>
           )}
@@ -991,10 +1000,11 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           key={conv.id}
                           whileHover={{ x: 4 }}
                           onClick={() => {
+                            
                             openWindow({ conversationId: conv.id, title });
                             if (isMobile) setIsPanelOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-3 rounded-xl transition-all hover:bg-zinc-800 flex items-center gap-3 ${
+                          className={`w-full text-left my-1 px-3 py-3 rounded-xl transition-all hover:bg-zinc-800 flex items-center gap-3 ${
                             unreadCount > 0 ? "bg-zinc-800/70 border-l-2 border-amber-500" : "hover:border-l-2 hover:border-zinc-700"
                           }`}
                         >
@@ -1014,15 +1024,18 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               {lastMessagePreview}
                             </div>
                           </div>
+                          <div className="flex flex-col gap-2">
+                          <span className="text-[0.6rem] text-gray-600">{formatFriendlyDate(lastMsg?.created_at)}</span>
                           {unreadCount > 0 && (
                             <motion.div 
                               initial={{ scale: 0.8 }}
                               animate={{ scale: 1 }}
                               className="min-w-[20px] h-[20px] ml-2 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 text-[11px] font-bold flex items-center justify-center shadow-md flex-shrink-0"
                             >
-                              {unreadCount > 99 ? "99+" : unreadCount}
+                              {plotCount(unreadCount)}
                             </motion.div>
-                          )}
+                            )}
+                          </div>
                         </motion.button>
                       );
                     })
@@ -1098,7 +1111,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                           <span className="text-sm font-semibold text-white truncate">{w.title}</span>
                           {w.minimized && unreadCount > 0 && (
                             <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-zinc-900 text-[10px] font-bold flex items-center justify-center flex-shrink-0 shadow-md">
-                              {unreadCount > 99 ? "99+" : unreadCount}
+                              {plotCount(unreadCount)}
                             </span>
                           )}
                         </div>
