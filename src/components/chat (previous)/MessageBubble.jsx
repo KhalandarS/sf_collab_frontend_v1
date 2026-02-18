@@ -352,10 +352,16 @@ export default function MessageBubble({
 
       <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
         {/* Avatar column */}
-        <div className="w-8 shrink-0">
+        <div
+          onClick={() => {
+                if (!message?.sender?.id) return;
+                navigate(`/user-profile?id=${message.sender.id}`);
+              }}
+          className="w-8 shrink-0 cursor-pointer">
           {showAvatar && (
             <Avatar
               src={senderAvatar}
+              
               name={senderName || " "}
               size="sm"
               showStatus={false}

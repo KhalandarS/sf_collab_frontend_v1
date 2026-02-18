@@ -1160,6 +1160,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               <MessageBubble
                                 key={m.id || `${cid}-${i}`}
                                 message={m}
+                                
                                 isOwn={isOwn}
                                 showAvatar={showAvatar}
                                 showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}

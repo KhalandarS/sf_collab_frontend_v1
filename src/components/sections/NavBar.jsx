@@ -1,22 +1,16 @@
 import React, { useState, useRef, useEffect } from "react";
-import { DrawLineText } from "../gsap/draw-line-text";
-import { HelpCircle, MapPinIcon, StarIcon, Repeat, Crown, Hammer, Megaphone, Shield } from "lucide-react";
-import { ProfilePeek } from "../gsap/profile-peek";
+import { HelpCircle, Crown, Hammer, Megaphone, Shield } from "lucide-react";
 import Tippy from '@tippyjs/react';
 import 'tippy.js/dist/tippy.css';
 import GlareHover from "../ui/GlareHover";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../services/auth/authThunks";
 import { useDispatch, useSelector } from "react-redux";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../ui/sheet';
-import LoadingSpinner from "../LoadingSpinner";
 import AOS from 'aos';
 import 'aos/dist/aos.css'; 
-import { FaUserPlus } from "react-icons/fa6";
-import { IoChatbubbles, IoLogIn } from "react-icons/io5";
+import { IoChatbubbles } from "react-icons/io5";
 import { TiThMenu } from "react-icons/ti";
 import { ShineButton } from '../lightswind/shine-button';
-
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import getNotificationsWithPreferences from "@/utils/getNotificationsWithPreferences";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
@@ -71,11 +65,12 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
   const handleLogout = async () => {
     setLoaderState(true);
     try {
-      await dispatch(logoutUser());
       setTimeout(() => {
-        navigate("/login", { replace: true });
+        window.location.href = "/login";
         setLoaderState(false);
-      }, 2000);
+      }, 1000);
+      dispatch(logoutUser());
+      
     } catch (err) {
       console.error("Logout error:", err);
       setLoaderState(false);
