@@ -1,6 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
+import { Trash2 } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import { chatAPI } from "@/utils/APIs/chatApi";
 import { plotCount } from "@/utils/plotCount";
 
 const toMs = (ts) => {
@@ -21,7 +23,11 @@ const ConversationItem = ({
   lastActiveAt = {},
   lastSeenAt = {},
   nowTs = Date.now(),
+  onDelete, // NEW: callback when conversation is deleted
 }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const isDirect = conversation.conversation_type === "direct";
 
   const otherParticipant = isDirect
@@ -89,40 +95,122 @@ const ConversationItem = ({
       : "";
   }, [conversation]);
 
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-colors ${
-        isActive ? "bg-zinc-800/70" : "hover:bg-zinc-800/40"
-      }`}
-    >
-      <Avatar
-        isOnline={connected}
-        src={avatarUrl}
-        name={conversationName}
-        size="md"
-        presenceStatus={presenceStatus}
-        showStatus={isDirect}
-      />
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await chatAPI.deleteConversation(conversation.id);
       
-      <div className="flex-1 min-w-0 text-left">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
-          <span className="text-xs text-zinc-500 shrink-0">{lastTime}</span>
+      // Call the onDelete callback if provided
+      if (onDelete) {
+        onDelete(conversation.id);
+      }
+      
+      // Emit event for ChatDock to sync
+      window.dispatchEvent(new CustomEvent("chat:conversationDeleted", { 
+        detail: { conversationId: conversation.id } 
+      }));
+      
+      setShowDeleteModal(false);
+    } catch (error) {
+      console.error("Failed to delete conversation:", error);
+      alert("Failed to delete conversation");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="relative group">
+        <button
+          type="button"
+          onClick={onClick}
+          className={`w-full flex items-center gap-3 p-3 pr-10 rounded-xl transition-colors ${
+            isActive ? "bg-zinc-800/70" : "hover:bg-zinc-800/40"
+          }`}
+        >
+          <Avatar
+            isOnline={connected}
+            src={avatarUrl}
+            name={conversationName}
+            size="md"
+            presenceStatus={presenceStatus}
+            showStatus={isDirect}
+          />
+          
+          <div className="flex-1 min-w-0 text-left">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
+              <span className="text-xs text-zinc-500 shrink-0">{lastTime}</span>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 mt-0.5">
+              <p className="text-xs text-zinc-500 truncate">{lastMessage}</p>
+
+              {conversation.unread_count > 0 && (
+                <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full shrink-0">
+                  {conversation.unread_count > 9 ? "9+" : conversation.unread_count}
+                </span>
+              )}
+            </div>
+          </div>
+        </button>
+
+        {/* Delete button - appears on hover */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteModal(true);
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+          title="Delete conversation"
+        >
+          <Trash2 size={14} />
+        </button>
+
         </div>
 
-        <div className="flex items-center justify-between gap-2 mt-0.5">
-          <p className="text-xs text-zinc-500 truncate">{lastMessage}</p>
-
-          {conversation.unread_count > 0 && (
-            <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full shrink-0">
-              {plotCount(conversation.unread_count)}
-            </span>
-          )}
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div 
+          className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center p-4" 
+          onClick={() => setShowDeleteModal(false)}
+        >
+          <div 
+            className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800" 
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5">
+              <h3 className="text-lg font-semibold text-white mb-2">Delete Conversation</h3>
+              <p className="text-zinc-400 text-sm mb-5">
+                Are you sure you want to delete your conversation with "{conversationName}"? 
+                This will remove it from your chat list.
+              </p>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200 font-medium transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl text-white font-medium transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </button>
+      )}
+    </>
   );
 };
 

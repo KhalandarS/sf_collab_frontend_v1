@@ -241,6 +241,59 @@ const ChatPage = () => {
     }
   }, [token, socket]);
 
+  // Sync with ChatDock events
+useEffect(() => {
+  const handleConversationDeleted = (e) => {
+    const { conversationId } = e.detail || {};
+    if (!conversationId) return;
+    
+    setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
+    
+    // If this was the active conversation, clear it
+    if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+      setActiveConversation(null);
+      setMessages([]);
+    }
+  };
+  
+  const handleConversationLeft = (e) => {
+    const { conversationId } = e.detail || {};
+    if (!conversationId) return;
+    
+    setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
+    
+    if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+      setActiveConversation(null);
+      setMessages([]);
+    }
+  };
+  
+  const handleNewMessage = (e) => {
+    const { conversationId, message } = e.detail || {};
+    if (!conversationId || !message) return;
+    
+    // Update conversations list with new last_message
+    setConversations((prev) => 
+      prev.map((c) => {
+        if (String(c.id) === String(conversationId)) {
+          return { ...c, last_message: message, updated_at: new Date().toISOString() };
+        }
+        return c;
+      })
+    );
+  };
+  
+  window.addEventListener("chat:conversationDeleted", handleConversationDeleted);
+  window.addEventListener("chat:conversationLeft", handleConversationLeft);
+  window.addEventListener("chat:newMessage", handleNewMessage);
+  
+  return () => {
+    window.removeEventListener("chat:conversationDeleted", handleConversationDeleted);
+    window.removeEventListener("chat:conversationLeft", handleConversationLeft);
+    window.removeEventListener("chat:newMessage", handleNewMessage);
+  };
+}, [activeConversation]);
+
   // ============================================
   // FILE UPLOAD HANDLER
   // ============================================
@@ -787,23 +840,30 @@ useEffect(() => {
             </div>
           ) : (
             filteredConversations.map((conv, idx) => (
-              <ConversationItem
-                key={idx}
-                conversation={conv}
-                
-                isActive={activeConversation?.id === conv.id}
-                onClick={() => {
-                  handleSelectConversation(conv)
-                  setSidebarOpen(false);
+            <ConversationItem
+              key={idx}
+              conversation={conv}
+              isActive={activeConversation?.id === conv.id}
+              onClick={() => {
+                handleSelectConversation(conv)
+                setSidebarOpen(false);
+              }}
+              onlineUsers={onlineUsers}
+              currentUserId={currentUser.id}
+              lastActiveAt={lastActiveAt}
+              lastSeenAt={lastSeenAt}
+              nowTs={nowTs}
+              onDelete={(conversationId) => {
+                // Remove from local state
+                setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
+                // Clear if it was active
+                if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+                  setActiveConversation(null);
+                  setMessages([]);
                 }
-                }
-                onlineUsers={onlineUsers}
-                currentUserId={currentUser.id}
-                lastActiveAt={lastActiveAt}
-                lastSeenAt={lastSeenAt}
-                nowTs={nowTs}
-              />
-            ))
+              }}
+            />
+          ))
           )}
         </div>
       </div>

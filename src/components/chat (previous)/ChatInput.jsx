@@ -6,9 +6,11 @@
  * 2. REMOVED Plus button
  * 3. Emoji picker works
  * 4. File/Image upload works
+ * 5. AUTO-EXPANDING TEXTAREA (NEW)
+ * 6. CTRL+V PASTE SUPPORT FOR IMAGES (NEW)
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Send, Smile, Paperclip, Image as ImageIcon, X, Loader2 } from 'lucide-react';
 
 // Simple emoji list
@@ -115,6 +117,13 @@ const ChatInput = ({
     }
   };
 
+  // Auto-resize textarea
+  const handleTextareaResize = useCallback((e) => {
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+  }, []);
+
   // Handle send
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -130,6 +139,10 @@ const ChatInput = ({
     // Handle text message
     if (value?.trim()) {
       onSend(value.trim());
+      // Reset textarea height
+      if (inputRef.current) {
+        inputRef.current.style.height = '40px';
+      }
       inputRef.current?.focus();
     }
   };
@@ -146,6 +159,27 @@ const ChatInput = ({
     }
     e.target.value = '';
   };
+
+  // Handle paste for images (Ctrl+V screenshots) - NEW!
+  const handlePaste = useCallback((e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (file) {
+          if (file.size > 10 * 1024 * 1024) {
+            alert('Image size must be less than 10MB');
+            return;
+          }
+          setSelectedFile(file);
+        }
+        return;
+      }
+    }
+  }, []);
 
   // Send file
   const handleFileSend = async () => {
@@ -194,7 +228,7 @@ const ChatInput = ({
     onSend('👍');
   };
 
-  // Handle Enter key
+  // Handle Enter key (send on Enter, new line on Shift+Enter)
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -216,12 +250,12 @@ const ChatInput = ({
 
       {/* Input Area */}
       <div className="p-2 md:p-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-1.5 md:gap-2">
+        <form onSubmit={handleSubmit} className="flex items-end gap-1.5 md:gap-2">
           {/* Image button */}
           <button 
             type="button"
             onClick={() => imageInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
+            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0 mb-1"
             disabled={disabled || isUploading}
             title="Send image"
           >
@@ -239,7 +273,7 @@ const ChatInput = ({
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
+            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0 mb-1"
             disabled={disabled || isUploading}
             title="Attach file"
           >
@@ -253,21 +287,27 @@ const ChatInput = ({
             className="hidden"
           />
 
-          {/* Text input */}
+          {/* Text input - AUTO-EXPANDING TEXTAREA */}
           <div className="flex-1 relative min-w-0">
-            <input
+            <textarea
               ref={inputRef}
-              type="text"
               value={value || ''}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
+              onPaste={handlePaste}
+              onInput={handleTextareaResize}
               placeholder={placeholder}
               disabled={disabled || isUploading}
-              className="w-full px-3 md:px-4 py-2 md:py-2.5 pr-12 md:pr-14 bg-zinc-800 rounded-full text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all"
+              rows={1}
+              className="w-full px-3 md:px-4 py-2 md:py-2.5 pr-12 md:pr-14 bg-zinc-800 rounded-2xl text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all resize-none overflow-y-auto"
+              style={{
+                minHeight: '40px',
+                maxHeight: '120px',
+              }}
             />
             
             {/* Emoji button */}
-            <div className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 shrink-0">
+            <div className="absolute right-1.5 md:right-2 bottom-1.5 md:bottom-2 shrink-0">
               <button 
                 type="button"
                 onClick={() => setShowEmoji(!showEmoji)}
@@ -287,13 +327,13 @@ const ChatInput = ({
 
           {/* Send or Like button */}
           {isUploading ? (
-            <div className="p-1.5 md:p-2 text-indigo-400 shrink-0">
+            <div className="p-1.5 md:p-2 text-indigo-400 shrink-0 mb-1">
               <Loader2 size={18} className="md:w-5 md:h-5 animate-spin" />
             </div>
           ) : (value?.trim() || selectedFile) ? (
             <button 
               type="submit" 
-              className="p-1.5 md:p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 shrink-0 hover:bg-zinc-700/50 rounded-full"
+              className="p-1.5 md:p-2 text-indigo-400 hover:text-indigo-300 transition-colors disabled:opacity-50 shrink-0 hover:bg-zinc-700/50 rounded-full mb-1"
               disabled={disabled}
             >
               <Send size={18} className="md:w-5 md:h-5" />
@@ -302,7 +342,7 @@ const ChatInput = ({
             <button 
               type="button" 
               onClick={handleLike}
-              className="p-1.5 md:p-2 text-lg md:text-xl hover:bg-zinc-700/50 rounded-full transition-colors shrink-0 disabled:opacity-50"
+              className="p-1.5 md:p-2 text-lg md:text-xl hover:bg-zinc-700/50 rounded-full transition-colors shrink-0 disabled:opacity-50 mb-1"
               disabled={disabled}
             >
               👍

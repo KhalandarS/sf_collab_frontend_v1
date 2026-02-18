@@ -95,6 +95,9 @@ import ToolsDashboard from "./components/pages/dashboards/toolsDashboard/ToolsDa
 import CalculatorPage from "./components/pages/calculatorPage/CalculatorPage.jsx";
 import NotesPage from "./components/pages/notes/NotesPage.jsx";
 import BoardPage from "./components/pages/board/BoardPage.jsx";
+import WalletDashboard from "./components/pages/wallet/WalletDashboard";
+import StorePage from "./components/pages/store/StorePage";
+import LeaderboardPage from './components/pages/leaderboard/LeaderboardPage';
 
 
 
@@ -289,6 +292,12 @@ export default function App() {
                   <Route path="logo-generator" element={<StartupLogoGenerator />} />
                   <Route path="data-scraper" element={<ScraperForm />} />
                   <Route path="qwen-chat" element={<QwenChat />} />
+
+                  {/*points and payments system */}
+                  <Route path="wallet" element={<WalletDashboard />} />
+                  <Route path="store" element={<StorePage />} />
+                  <Route path="/leaderboard" element={<LeaderboardPage />} />
+
                   {/* Tools */}
                   <Route path="pdf-signing" element={<PDFSigningApp />} />
                   <Route path="calculator" element={<CalculatorPage />} />

@@ -16,6 +16,10 @@ import {
   Building2,
   Save,
   Layers,
+  Wallet,
+  ShoppingBag,
+  Coins,
+  Trophy,
 } from "lucide-react";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
 import { createInvestorLinks } from "../investorSidebar/InvestorLinks";
@@ -60,6 +64,13 @@ export const CONTEXT_THEME = {
   6: {
     pillBg: "bg-indigo-600/15",
     pillText: "text-white-100",
+    activeBg: "bg-white",
+    activeText: "text-gray-950",
+  },
+  // NEW: Wallet & Store theme
+  10: {
+    pillBg: "bg-amber-600/15",
+    pillText: "text-amber-100",
     activeBg: "bg-white",
     activeText: "text-gray-950",
   },
@@ -115,6 +126,18 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
       ],
     },
+    // NEW: Wallet & Store section
+    {
+      id: 10,
+      icon: <Wallet size={22} />,
+      href: "/wallet",
+      label: "Wallet & Store",
+      subItems: [
+        { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Coins size={18} /> },
+        { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
+        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
+      ],
+    },
     aiTools(8),
     toolsSection(9)
   ];
@@ -137,6 +160,9 @@ export function getAllRoutes(element) {
 }
 
 export function getCurrentContext(pathname) {
+  // Check wallet/store routes first (custom handling)
+  if (["/wallet", "/store", "/leaderboard"].some((p) => pathname.startsWith(p))) return 10;
+  
   const links = createLinks(0); // Create links without unreadMessagesCount
   for (const link of links) {
     if (pathname.startsWith(link.href)) return link.id;
@@ -174,5 +200,3 @@ export function getTopNavLinks(pathname, unreadMessagesCount = 0, activeMode = '
   const activeLink = links.find((l) => l.id === contextId);
   return activeLink?.subItems || [];
 }
-
-

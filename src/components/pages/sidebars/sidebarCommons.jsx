@@ -1,4 +1,4 @@
-import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, UserPlus, Users, Wand2 } from "lucide-react";
+import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, Wallet, Wand2 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -72,5 +72,24 @@ export function socialSection(id) {
         { id: "connections", href: "/connections", label: "Connections", icon: <UserPlus size={18} /> },
         // { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
       ],
+    }
+}
+
+export function wallet(id) {
+  return {
+      id,
+      icon: <Wallet size={22} />,
+      href: "/wallet",
+      label: "Wallet",
+      // isUpcoming: true,
+
+      // subItems: [
+      //   { id: "payout-history", href: "/wallet/payout-history", label: "Payout History" },
+      //   { id: "bank-details", href: "/wallet/bank-details", label: "Bank Details" },
+      // ]
+      subItems: [
+        { id: "Wallet-Overview", href: "/wallet", label: "Wallet Overview", icon: <Wallet size={18} /> },
+        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <TrendingUp size={18} /> },
+      ]
     }
 }

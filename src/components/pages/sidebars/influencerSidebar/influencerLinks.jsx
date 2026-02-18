@@ -1,5 +1,5 @@
-import { BriefcaseBusiness, Share2, TrendingUp, Wallet } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection } from "../sidebarCommons";
+import { BookOpen, BriefcaseBusiness, LightbulbIcon, Rocket, Save, Share2, TrendingUp, Wallet } from "lucide-react";
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet } from "../sidebarCommons";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -63,18 +63,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
       ]
     },
-    {
-      id: 8,
-      icon: <Wallet size={22} />,
-      href: "/payouts",
-      label: "Payouts",
-      isUpcoming: true,
-
-      subItems: [
-        { id: "payout-history", href: "/payouts", label: "Payout History" },
-        { id: "bank-details", href: "/payouts/bank-details", label: "Bank Details" },
-      ]
-    },
+    wallet(8),
     aiTools(9),
     toolsSection(10)
   ];
@@ -94,7 +83,7 @@ export function getCurrentContext(pathname) {
   if (["/links-assets"].some(path => pathname.startsWith(path))) {
     return 4;
   }
-  if (["/payouts"].some(path => pathname.startsWith(path))) {
+  if (["/wallet"].some(path => pathname.startsWith(path))) {
     return 5;
   }
   if (["/chat"].some(path => pathname.startsWith(path))) {

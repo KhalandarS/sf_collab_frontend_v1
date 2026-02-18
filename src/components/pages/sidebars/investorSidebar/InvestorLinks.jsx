@@ -1,6 +1,6 @@
-import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save } from 'lucide-react';
+import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save, TrendingUp } from 'lucide-react';
 import { FcDocument } from 'react-icons/fc';
-import { aiTools, toolsSection, dashboardLink, socialSection } from '../sidebarCommons';
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet } from '../sidebarCommons';
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -42,9 +42,10 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       isUpcoming: true,
       subItems: []
     },
-    socialSection(6),
+    wallet(6),
+    socialSection(7),
 
-    aiTools(9),
-    toolsSection(10)
+    aiTools(8),
+    toolsSection(9)
   ];
 }

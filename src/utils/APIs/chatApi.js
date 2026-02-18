@@ -115,8 +115,10 @@ export const chatAPI = {
     return response.data;
   },
 
-  deleteMessage: async (conversationId, messageId) => {
-    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}`);
+  deleteMessage: async (conversationId, messageId, deleteType = 'everyone') => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/messages/${messageId}`, {
+      data: { delete_type: deleteType }
+    });
     return response.data;
   },
 
@@ -172,6 +174,31 @@ export const chatAPI = {
     const response = await api.post("/chat/setup-general-chat");
     return response.data;
   },
+
+  // Leave a group conversation
+  leaveConversation: async (conversationId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/leave`);
+    return response.data;
+  },
+
+  // Archive a conversation (hide from list)
+  archiveConversation: async (conversationId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/archive`);
+    return response.data;
+  },
+
+  // Unarchive a conversation
+  unarchiveConversation: async (conversationId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/unarchive`);
+    return response.data;
+  },
+
+  // Get archived conversations
+  getArchivedConversations: async () => {
+    const response = await api.get("/chat/conversations?include_archived=true");
+    return response.data;
+  },
+
 };
 
 export default api;
