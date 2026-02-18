@@ -624,7 +624,7 @@ export default function RegisterStartUp() {
     <div className="min-h-screen">
       <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 mt-10">
 
           <h1 className="text-4xl font-bold text-white mb-4">
             Build Your <span className="bg-linear-to-r from-blue-400 to-blue-600 bg-clip-text text-transparent">Dream Team</span>

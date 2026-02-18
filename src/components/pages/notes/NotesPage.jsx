@@ -245,7 +245,7 @@ const NotesPage = () => {
                 className="w-full px-4 py-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all"
               >
                 {categories.map((cat) => (
-                  <option key={cat} value={cat}>
+                  <option className="text-gray-600" key={cat} value={cat}>
                     {cat.charAt(0).toUpperCase() + cat.slice(1)}
                   </option>
                 ))}
@@ -263,7 +263,7 @@ const NotesPage = () => {
                 className="w-full px-4 py-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all"
               >
                 {visibilityOptions.map((vis) => (
-                  <option key={vis} value={vis}>
+                  <option className="text-gray-600" key={vis} value={vis}>
                     {vis.charAt(0).toUpperCase() + vis.slice(1)}
                   </option>
                 ))}
@@ -280,10 +280,10 @@ const NotesPage = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full px-4 py-2 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all"
               >
-                <option value="recent">Most Recent</option>
-                <option value="oldest">Oldest First</option>
-                <option value="alphabetical">Alphabetical</option>
-                <option value="pinned">Pinned First</option>
+                <option className="text-gray-600" value="recent">Most Recent</option>
+                <option className="text-gray-600" value="oldest">Oldest First</option>
+                <option className="text-gray-600" value="alphabetical">Alphabetical</option>
+                <option className="text-gray-600" value="pinned">Pinned First</option>
               </select>
             </div>
 
@@ -707,11 +707,11 @@ const NoteModal = ({
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all"
               >
-                <option value="general">General</option>
-                <option value="meeting">Meeting</option>
-                <option value="ideas">Ideas</option>
-                <option value="todo">To-Do</option>
-                <option value="decision">Decision</option>
+                <option className="text-gray-600" value="general">General</option>
+                <option className="text-gray-600" value="meeting">Meeting</option>
+                <option className="text-gray-600" value="ideas">Ideas</option>
+                <option className="text-gray-600" value="todo">To-Do</option>
+                <option className="text-gray-600" value="decision">Decision</option>
               </select>
             </div>
 
@@ -725,9 +725,9 @@ const NoteModal = ({
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg text-white focus:outline-none focus:border-blue-500/50 transition-all"
               >
-                <option value="private">Private</option>
-                <option value="team">Team</option>
-                <option value="public">Public</option>
+                <option className="text-gray-600" value="private">Private</option>
+                <option className="text-gray-600" value="team">Team</option>
+                <option className="text-gray-600" value="public">Public</option>
               </select>
             </div>
           </div>

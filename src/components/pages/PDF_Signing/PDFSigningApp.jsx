@@ -514,7 +514,7 @@ const PDFSigningApp = () => {
 
       <div className="w-full mx-auto max-w-7xl">
         {/* Header */}
-        <div className="text-center mb-6 sm:mb-12">
+        <div className="text-center mb-6 sm:mb-12 mt-10">
           <div className="flex flex-col items-center justify-center gap-2 sm:gap-4 mb-3 sm:mb-6">
             <div className="p-2.5 sm:p-4 bg-linear-to-br from-blue-500 to-blue-600 rounded-lg sm:rounded-2xl shadow-2xl">
               <FaFilePdf className="h-6 w-6 sm:h-10 sm:w-10 text-white" />

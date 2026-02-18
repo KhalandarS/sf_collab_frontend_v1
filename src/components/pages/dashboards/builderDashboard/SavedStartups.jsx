@@ -108,14 +108,14 @@ const SavedStartups = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white p-2 md:p-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white p-2 md:px-8 md:py-6">
       <div className="w-full mx-auto space-y-8">
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4"
+          className="space-y-4 mt-10"
         >
           <div className="flex items-center gap-3">
             <Heart className="w-8 h-8 text-rose-500" fill="currentColor" />

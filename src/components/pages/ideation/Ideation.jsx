@@ -255,8 +255,8 @@ const Ideation = ({ activeRole}) => {
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="mb-0">
+    <div className="min-h-screen bg-black pr-4">
+      <div className="mb-0 mt-10">
         <IdeationHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
