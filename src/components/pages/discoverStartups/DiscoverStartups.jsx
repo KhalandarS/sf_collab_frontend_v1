@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Search, Building2,
-  ChevronLeft, ChevronRight, Plus
+  ChevronLeft, ChevronRight, Plus, Flame
 } from 'lucide-react';
 import { Button } from '../../ui/button';
 import { useNavigate } from 'react-router-dom';
@@ -66,6 +66,8 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
   const [customMinFunding, setCustomMinFunding] = useState("");
   const [customMaxFunding, setCustomMaxFunding] = useState("");
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [topStartups, setTopStartups] = useState([]);
+  const [topStartupsLoading, setTopStartupsLoading] = useState(false);
   const navigate = useNavigate();
   
   const { user, access_token } = useSelector((state) => state.auth);
@@ -110,7 +112,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
       const fundingRange = getFundingRangeValues();
       return startupsAPI.getAll({
         page,
-        per_page: 9,
+        per_page: 30,
         search: searchQuery,
         industry: selectedIndustry !== 'All' ? selectedIndustry : undefined,
         stage: selectedStage !== 'All' ? selectedStage : undefined,
@@ -138,9 +140,24 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
     }
   };
 
+  const fetchTopStartups = async () => {
+    try {
+      setTopStartupsLoading(true);
+      const data = await startupsAPI.getTopStartups();
+      if (data.success) {
+        setTopStartups(data.data.startups || []);
+      }
+    } catch (error) {
+      console.error('Error fetching top startups:', error);
+    } finally {
+      setTopStartupsLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (mode === 'discover') {
       fetchFilters();
+      fetchTopStartups();
     }
   }, [mode]);
 
@@ -212,6 +229,53 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
           
           <StartupsHeader mode={mode} modeConfig={modeConfig} />
 
+          {mode === 'discover' && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-12"
+            >
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Flame className="w-5 h-5 text-orange-500" />
+                  <h2 className="text-2xl font-bold text-white">Trending Now</h2>
+                </div>
+                <p className="text-gray-400">Check out the most popular startups this week</p>
+              </div>
+
+              {topStartupsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[...Array(3)].map((_, i) => (
+                    <StartupCardSkeleton key={i} />
+                  ))}
+                </div>
+              ) : topStartups.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {topStartups.map((startup, index) => (
+                    <motion.div
+                      key={startup.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="relative">
+                        <div className="absolute -top-3 -right-3 bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+                          #{index + 1}
+                        </div>
+                        <StartupCard
+                          startup={startup}
+                          index={index}
+                          getStageBadgeVariant={getStageBadgeVariant}
+                          mode={mode}
+                        />
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : null}
+            </motion.div>
+          )}
+
           <StartupSearchAndFilter
             mode={mode}
             industries={industries}
@@ -257,10 +321,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                   ))}
                 </div>
               ) : startups.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
+                <div
                   className="flex flex-col items-center justify-center py-20"
                 >
                   <div className="w-20 h-20 bg-linear-to-br from-blue-500/10 to-blue-600/10 rounded-2xl flex items-center justify-center mb-4">
@@ -289,9 +350,9 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                       {modeConfig.ctaButton}
                     </Button>
                   )}
-                </motion.div>
+                </div>
               ) : (
-                <motion.div
+                <div
                   layout
                   className="md:grid flex flex-col gap-6 w-full"
                   style={{
@@ -312,7 +373,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
                     sentinelRef={targetRef}
                     loading={loading}
                   />
-                </motion.div>
+                </div>
               )}
             </div>
           </div>

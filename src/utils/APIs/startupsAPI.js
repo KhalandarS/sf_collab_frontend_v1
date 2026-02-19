@@ -31,7 +31,16 @@ export const startupsAPI = {
     })
     return response.data
   },
-
+  getTopStartups: async (params = {}) => {
+    const response = await api.get('/startups/top', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 3,
+        ...params,
+      },
+    })
+    return response.data
+  },
   // Get single startup
   getById: async (startupId) => {
     const response = await api.get(`/startups/${startupId}`)

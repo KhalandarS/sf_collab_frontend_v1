@@ -20,6 +20,19 @@ import WorldClock from "@/components/sections/WorldClock";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import SortableSection from "../dashboard/SortableSection";
 
 export default function BuilderDashboard({
   userRoles,
@@ -39,7 +52,6 @@ export default function BuilderDashboard({
       )
       .finally(() => setLoading(false));
   }, []);
-
   const totals = useMemo(() => {
     return startups.reduce(
       (acc, s) => {
@@ -55,6 +67,57 @@ export default function BuilderDashboard({
   const completionRate = totals.totalTasks > 0 
     ? Math.round((totals.completed / totals.totalTasks) * 100) 
     : 0;
+  
+  const initialSections = useMemo(() => [
+    { id: "stats", component: <BuilderStats totals={totals} completionRate={completionRate} user={user} startups={startups} /> },
+
+    { id: "calendar", component: <Calendar /> },
+    { id: "worldclock", component: <WorldClock /> },
+  ], [totals, completionRate, user, startups]);
+
+  const [sections, setSections] = useState(initialSections);
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    setSections((items) => {
+      const oldIndex = items.findIndex(i => i.id === active.id);
+      const newIndex = items.findIndex(i => i.id === over.id);
+      return arrayMove(items, oldIndex, newIndex);
+    });
+  };
+
+  useEffect(() => {
+    localStorage.setItem(
+      "builder-dashboard-layout",
+      JSON.stringify(sections.map(s => s.id))
+    );
+  }, [sections]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("builder-dashboard-layout");
+    if (!saved) return;
+
+    const order = JSON.parse(saved);
+    setSections(prev =>
+      order
+        .map(id => prev.find(s => s.id === id))
+        .filter(Boolean)
+    );
+  }, []);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    })
+  );
+
+  const moveSection = (from, to) => {
+    setSections(items => arrayMove(items, from, to));
+  };
+
+  
 
   if (loading) {
     return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
@@ -78,8 +141,69 @@ export default function BuilderDashboard({
 
       <AnnouncementsSection userRoles={userRoles} />
 
-      <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
-        <div className="flex flex-col lg:flex-row justify-between gap-6">
+      
+
+      <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sections.map(s => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {sections.map(section => (
+              <SortableSection key={section.id}
+                id={section.id}
+                index={sections.findIndex(s => s.id === section.id)}
+                total={sections.length}
+                onMove={moveSection}
+              >
+                {section.component}
+              </SortableSection>
+            ))}
+          </SortableContext>
+        </DndContext>
+      </div>
+
+      <div className="text-sm text-white/50 italic">
+        More builder features coming soon 🚀
+      </div>
+    </div>
+  );
+}
+
+
+function Section({ icon: Icon, title, subtitle, action, children }) {
+  return (
+    <section className="rounded-xl bg-white/[0.03] border border-white/10 p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3 items-center">
+          <Icon className="w-5 h-5 text-emerald-400" />
+          <div>
+            <h3 className="text-lg font-semibold text-white">{title}</h3>
+            <p className="text-xs text-white/50">{subtitle}</p>
+          </div>
+        </div>
+        {action && (
+          <Link
+            to={action.href}
+            className="text-xs text-white/50 hover:text-white flex items-center gap-1"
+          >
+            {action.label}
+            <ChevronRight className="w-3 h-3" />
+          </Link>
+        )}
+      </div>
+      {children}
+    </section>
+  );
+}
+function BuilderStats({ totals, completionRate, user, startups }) {
+  return <>
+  <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
+        <div className="flex flex-col lg:flex-row justify-between gap-6 py-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 rounded-xl bg-emerald-600">
@@ -94,11 +218,13 @@ export default function BuilderDashboard({
             </p>
           </div>
 
-          <div className="flex gap-3 flex-wrap">
+          <Link
+            to="/builder/my-work"
+            className="flex gap-3 flex-wrap">
             <QuickStat label="Completed" value={totals.completed} icon={CheckCircle} />
             <QuickStat label="In Progress" value={totals.pending} icon={Clock} />
             <QuickStat label="Completion Rate" value={`${completionRate}%`} icon={Layers} />
-          </div>
+          </Link>
         </div>
       </header>
 
@@ -126,45 +252,8 @@ export default function BuilderDashboard({
           )}
         </div>
       </Section>
-
-      <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
-        <Calendar />
-        <WorldClock />
-      </div>
-
-      <div className="text-sm text-white/50 italic">
-        More builder features coming soon 🚀
-      </div>
-    </div>
-  );
+  </>
 }
-
-function Section({ icon: Icon, title, subtitle, action, children }) {
-  return (
-    <section className="rounded-xl bg-white/[0.03] border border-white/10 p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-3 items-center">
-          <Icon className="w-5 h-5 text-emerald-400" />
-          <div>
-            <h3 className="text-lg font-semibold text-white">{title}</h3>
-            <p className="text-xs text-white/50">{subtitle}</p>
-          </div>
-        </div>
-        {action && (
-          <Link
-            to={action.href}
-            className="text-xs text-white/50 hover:text-white flex items-center gap-1"
-          >
-            {action.label}
-            <ChevronRight className="w-3 h-3" />
-          </Link>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 function QuickStat({ label, value, icon: Icon }) {
   return (
     <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-white/10">
