@@ -107,6 +107,7 @@ export default function StartupCard({
                 variant="ghost"
                 className="h-8 w-8 bg-black/40 hover:bg-black/60"
                 onClick={(e) => {
+                  e.preventDefault()
                   e.stopPropagation();
                   bookmarkStartup();
                 }}

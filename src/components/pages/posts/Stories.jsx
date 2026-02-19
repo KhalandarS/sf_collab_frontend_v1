@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import StoryModal from "../../modal/StoryModal";
 import StoryViewerModal from "../../modal/StoryViewerModal";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
+import { postAPI } from "@/utils/APIs/postAPI";
 
 
 export default function Stories({ refreshKey }) {
@@ -23,10 +24,11 @@ export default function Stories({ refreshKey }) {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await userSocialAPI.getStories({ page: 1, limit: 20 });
+        const response = await postAPI.getStories({ page: 1, limit: 20 });
         // backend returns { stories, pagination }
-        if (response && response.stories) {
-          setStories(response.stories.map((s) => ({
+        console.log(response);
+        if (response && response.data.stories) {
+          setStories(response.data.stories.map((s) => ({
             id: s._id || s.id,
             thumbnail: s.mediaUrl,
             avatar: s.author?.profilePicture || s.author?.avatar || s.author?.picture,
@@ -48,11 +50,13 @@ export default function Stories({ refreshKey }) {
     <div className="bg-zinc-900/50 backdrop-blur-xl rounded-2xl p-4 border border-zinc-800/50 mb-6 mt-10">
       <div className="flex gap-4">
         {/* Add Story Card */}
-        <div className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-cover bg-center">
+        <div
+          onClick={() => setIsOpen(true)}
+          className="relative min-w-[120px] h-[120px] rounded-xl overflow-hidden border border-dashed border-zinc-700 bg-cover bg-center">
           {/* Overlay */}
           <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-zinc-400 hover:text-blue-400 transition">
             <button
-              onClick={() => setIsOpen(true)}
+              
               className="w-9 h-9 rounded-full bg-zinc-800 flex items-center justify-center mb-2"
             >
               <Plus size={18} />
