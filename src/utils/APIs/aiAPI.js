@@ -118,6 +118,56 @@ export const aiAPI = {
     });
     return response.data;
   },
+  // Generate caption (requires JWT)
+  generateCaption: async ({ prompt, model, platform = 'Instagram', tone = 'casual', contentType = 'text', temperature = 0.7, maxTokens = 200, image = null }) => {
+    const payload = {
+      prompt,
+      model,
+      platform,
+      tone,
+      content_type: contentType,
+      temperature,
+      max_tokens: maxTokens,
+    };
+
+    if (image) {
+      payload.image = image;
+    }
+
+    const response = await api.post('/ai/generate/caption', payload);
+    return response.data;
+  },
+  // Generate video (requires JWT)
+    generateVideo: async ({ mode, prompt, style = 'cinematic', duration = 10, files = null }) => {
+      const formData = new FormData();
+      formData.append('mode', mode);
+      formData.append('prompt', prompt);
+      formData.append('style', style);
+      formData.append('duration', duration);
+      
+      if (files) {
+        if (Array.isArray(files)) {
+          files.forEach((file, index) => {
+            formData.append(`file_${index}`, file);
+          });
+        } else {
+          formData.append('file', files);
+        }
+      }
+      
+      const response = await api.post('/video/generate', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      return response.data;
+    },
+
+    // Download generated video
+    downloadVideo: async (filename) => {
+      const response = await api.get(`/video/download/${filename}`, {
+        responseType: 'blob',
+      });
+      return response.data;
+    },
 };
 
 export default api;

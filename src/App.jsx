@@ -98,6 +98,8 @@ import BoardPage from "./components/pages/board/BoardPage.jsx";
 import WalletDashboard from "./components/pages/wallet/WalletDashboard";
 import StorePage from "./components/pages/store/StorePage";
 import LeaderboardPage from './components/pages/leaderboard/LeaderboardPage';
+import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerator.jsx";
+import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
 
 
 
@@ -292,7 +294,8 @@ export default function App() {
                   <Route path="logo-generator" element={<StartupLogoGenerator />} />
                   <Route path="data-scraper" element={<ScraperForm />} />
                   <Route path="qwen-chat" element={<QwenChat />} />
-
+                  <Route path="caption-generator" element={<CaptionGenerator />} />
+                  <Route path="video-generator" element={<VideoGenerator />} />
                   {/*points and payments system */}
                   <Route path="wallet" element={<WalletDashboard />} />
                   <Route path="store" element={<StorePage />} />
