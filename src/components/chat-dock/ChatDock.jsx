@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { X, Minus, MessageCircle } from "lucide-react";
+import { X, Minus, MessageCircle, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Avatar from "@/components/chat (previous)/Avatar";
 import MessageBubble from "@/components/chat (previous)/MessageBubble";
@@ -119,8 +119,13 @@ const handleFileUpload = async ({ file, conversationId, token }) => {
   if (!token || !file || !conversationId) return null;
 
   try {
-    const response = await chatAPI.uploadFile(conversationId, file, "");
+    // Pass " " (a space) or "Sent a file" as the third argument 
+    // to satisfy the "content" requirement of the API
+    const response = await chatAPI.uploadFile(conversationId, file, " "); 
+    
     if (response?.success && response?.data?.message) {
+      // Once uploaded, the backend should broadcast this via Socket
+      // so the image appears for everyone.
       return response.data.message.file_url;
     }
     return null;
@@ -209,6 +214,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
 
   const [conversations, setConversations] = useState([]);
+  const [conversationToDelete, setConversationToDelete] = useState(null);
+
   const [isLoadingConvos, setIsLoadingConvos] = useState(false);
 
   const [lastActiveAt, setLastActiveAt] = useState({});
@@ -518,6 +525,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return next;
       });
 
+      window.dispatchEvent(
+        new CustomEvent("chat:newMessage", {
+          detail: { conversationId: cid, message: messageNorm },
+        })
+      );
+
+
       clearUnread(cid);
       socket?.emit?.("join_conversation", { conversation_id: cid });
       await fetchMessages(cid);
@@ -558,6 +572,37 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     },
     [persistWindows]
   );
+
+  useEffect(() => {
+    const handleLeaveGroup = async (e) => {
+      const { conversationId } = e.detail || {};
+      if (!conversationId) return;
+
+      try {
+        await chatAPI.leaveConversation(conversationId);
+
+        setConversations((prev) =>
+          prev.filter((c) => String(c.id) !== String(conversationId))
+        );
+
+        closeWindow(conversationId);
+
+        window.dispatchEvent(
+          new CustomEvent("chat:conversationLeft", {
+            detail: { conversationId },
+          })
+        );
+      } catch (error) {
+        console.error("Failed to leave conversation:", error);
+        alert("Failed to leave conversation.");
+      }
+    };
+
+  window.addEventListener("chat:leaveGroup", handleLeaveGroup);
+  return () =>
+    window.removeEventListener("chat:leaveGroup", handleLeaveGroup);
+}, [closeWindow]);
+
 
   useEffect(() => {
     if (!consideredActive) return;
@@ -768,25 +813,42 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   ]);
 
   const sendMessage = useCallback(
-    (conversationId, content) => {
+    (conversationId, payload) => {
       if (!socket) return;
-      const cid = String(conversationId);
 
-      if (typeof content === "object" && content !== null) {
-        const text = content.content?.trim();
-        if (text) {
-          socket.emit("send_message", { conversation_id: cid, content: text });
-        }
-        return;
+      const cid = String(conversationId);
+      if (!cid || !payload) return;
+
+      // TEXT MESSAGE
+      if (typeof payload === "string") {
+        const text = payload.trim();
+        if (!text) return;
+
+        socket.emit("send_message", {
+          conversation_id: cid,
+          content: text || " ",
+        });
       }
 
-      const text = content?.trim();
-      if (!cid || !text) return;
+      // FILE OR MIXED MESSAGE
+      if (typeof payload === "object") {
+        const text = payload.content?.trim() || "";
 
-      socket.emit("send_message", { conversation_id: cid, content: text });
+        socket.emit("send_message", {
+          conversation_id: cid,
+          content: text,
+          file_url: payload.file_url || null,
+          file_name: payload.file_name || null,
+          file_type: payload.file_type || null,
+          is_image: payload.is_image || false,
+        });
+      }
 
+      // clear draft
       setWindows((prev) =>
-        prev.map((w) => (String(w.conversationId) === cid ? { ...w, draft: "" } : w))
+        prev.map((w) =>
+          String(w.conversationId) === cid ? { ...w, draft: "" } : w
+        )
       );
 
       if (consideredActive && !isConvMinimized(cid)) {
@@ -796,6 +858,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     },
     [socket, consideredActive, isConvMinimized, clearUnread]
   );
+
 
   const filteredConversations = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
@@ -996,8 +1059,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                         : { presenceStatus: "offline", statusText: "" };
 
                       return (
+                        <div key={conv.id} className="relative group">
+
                         <motion.button
-                          key={conv.id}
                           whileHover={{ x: 4 }}
                           onClick={() => {
                             
@@ -1008,6 +1072,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             unreadCount > 0 ? "bg-zinc-800/70 border-l-2 border-amber-500" : "hover:border-l-2 hover:border-zinc-700"
                           }`}
                         >
+                        
                           <div className="flex-shrink-0">
                             <Avatar
                               src={isDirect ? getProfilePicture(otherParticipant) : null}
@@ -1037,6 +1102,19 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             )}
                           </div>
                         </motion.button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConversationToDelete({ id: conv.id, title });
+                          }}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                          title="Delete conversation"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+
+                        </div>
                       );
                     })
                   )}
@@ -1160,13 +1238,32 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               <MessageBubble
                                 key={m.id || `${cid}-${i}`}
                                 message={m}
-                                
                                 isOwn={isOwn}
                                 showAvatar={showAvatar}
-                                showSenderName={conv?.conversation_type !== "direct" && shouldShowSenderName(w.messages, i)}
+                                showSenderName={
+                                  conv?.conversation_type !== "direct" &&
+                                  shouldShowSenderName(w.messages, i)
+                                }
                                 conversationType={conv?.conversation_type}
+                                conversationId={cid}
+                                setMessages={(updater) => {
+                                  setWindows((prev) =>
+                                    prev.map((win) => {
+                                      if (String(win.conversationId) === cid) {
+                                        const newMessages =
+                                          typeof updater === "function"
+                                            ? updater(win.messages)
+                                            : updater;
+
+                                        return { ...win, messages: newMessages };
+                                      }
+                                      return win;
+                                    })
+                                  );
+                                }}
                                 variant="dock"
                               />
+
                             );
                           })
                         )}
@@ -1217,6 +1314,62 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           </AnimatePresence>
         </div>
       </div>
+      {conversationToDelete && (
+      <div
+        className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center p-4"
+        onClick={() => setConversationToDelete(null)}
+      >
+        <div
+          className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="p-5">
+            <h3 className="text-lg font-semibold text-white mb-2">
+              Delete Conversation
+            </h3>
+
+            <p className="text-zinc-400 text-sm mb-5">
+              Are you sure you want to delete "{conversationToDelete.title}"?
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConversationToDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-zinc-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={async () => {
+                  try {
+                    await chatAPI.deleteConversation(conversationToDelete.id);
+
+                    setConversations((prev) =>
+                      prev.filter(
+                        (c) =>
+                          String(c.id) !==
+                          String(conversationToDelete.id)
+                      )
+                    );
+
+                    closeWindow(conversationToDelete.id);
+                    setConversationToDelete(null);
+                  } catch (error) {
+                    console.error("Delete failed:", error);
+                    alert("Delete failed.");
+                  }
+                }}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 rounded-xl text-white"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
     </>
   );
 }
