@@ -279,11 +279,13 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           {/* Main content area */}
           <div className="text-white relative flex flex-col items-center w-full overflow-hidden lg:ml-0">
             {/* Options bar: never show on chat or connections */}
-            {!isRootPath && !isChatRoute && !isConnectionsRoute && (
+            {/* {!isRootPath && !isChatRoute && !isConnectionsRoute && (
               <div
                 ref={optionsRef}
-                className={`transition-all pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
+                className={`transition-all mb-4 pointer-events-auto duration-300 px-4 absolute m-auto flex justify-center top-2 ${isOptionsVisible ? "translate-y-0 opacity-100" : "-translate-y-0.5 opacity-25"}`}
                 style={{ zIndex: 10 }}
+                onMouseEnter={() => setIsOptionsVisible(true)}
+                onMouseLeave={() => setIsOptionsVisible(false)}
               >
                 <Options
                   isHidden={isNavHidden}
@@ -291,10 +293,10 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
                   isAdmin={isAdmin}
                 />
               </div>
-            )}
+            )} */}
 
             <div
-              className={`relative w-full h-full ${!isRootPath ? "pt-3.5" : ""} overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
+              className={`relative w-full h-full overflow-y-auto scrollbar-hide scroll-smooth overflow-x-hidden`}
               onScroll={isRootPath ? undefined : onScroll}
             >
               <Outlet />

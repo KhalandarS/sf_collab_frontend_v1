@@ -45,18 +45,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
   return (
     <>
       {/* Desktop Sidebar - BELOW navbar (top-16), lower z-index (30) */}
-      <div
-        className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] w-15 text-white"
-        style={{ zIndex: 30 }}
-      >
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(125% 125% at 50% 10%, #000000 40%, #0d1a36 100%)",
-            zIndex: -1,
-          }}
-        />
+      
         <DesktopSidebarContent
           links={links}
           currentContextId={currentContextId}
@@ -65,7 +54,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
           shouldShowSubItems={shouldShowSubItems}
           isAdmin={isAdmin}
         />
-      </div>
+
 
       {/* Mobile Sidebar */}
       <div

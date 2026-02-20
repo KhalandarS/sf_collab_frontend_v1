@@ -48,7 +48,6 @@ const ProfileSettings = ({ back, activeSection: initialActiveSection }) => {
 
 useEffect(() => {
   if (user) {
-    console.log(user);
     setFormData(prev => ({
       ...prev,
       firstName: user.firstName || '',

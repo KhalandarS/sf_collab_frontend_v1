@@ -695,7 +695,7 @@ export default function Calendar() {
             <p className="text-gray-400 text-sm md:text-lg ml-10 md:ml-14">Plan and organize your schedule</p>
           </div>
 
-          <div style={{ zIndex: 99 }} className="flex mx-8 flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full sm:w-auto">
+          <div style={{ zIndex: 9 }} className="flex mx-8 flex-col sm:flex-row items-stretch sm:items-center gap-2 md:gap-3 w-full sm:w-auto">
             <div className="flex-1 sm:flex-none" data-aos='fade-left' data-aos-delay="100">
               <Button
                 className="rounded-md flex gap-2 w-full sm:w-[110px] items-center justify-center hover:shadow-[0px_0px_10px_white] hover:bg-white transition-all duration-900 cursor-pointer bg-white text-black"

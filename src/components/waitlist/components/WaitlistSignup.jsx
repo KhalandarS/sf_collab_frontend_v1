@@ -58,7 +58,7 @@ export function WaitlistSignup() {
   useEffect(() => {
     async function fetchTotalCount() {
       const result = await waitlistAPI.getTotalCount()
-      console.log(result, "Total");
+
       setTotalCount(result.total)
       setMaxCount(result.max_allowed)
     }
@@ -260,9 +260,6 @@ export function WaitlistSignup() {
                 <Users className="h-5 w-5 text-white transition-transform duration-300 hover:rotate-12" />
                 Join the Waitlist
               </CardTitle>
-              <CardDescription className="animate-fade-in animate-stagger-1">
-                Get early access before Feb 1st. Earn free months based on your position!
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up animate-stagger-1">

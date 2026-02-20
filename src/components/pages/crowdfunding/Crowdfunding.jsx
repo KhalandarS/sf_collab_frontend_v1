@@ -124,7 +124,7 @@ function CheckoutModal({ tier, onClose, selectedOption, setSelectedOption }) {
 
 export default function CrowdfundingSection() {
   const [roles, setRoles] = useState([]);
-  const [aiTools, setAiTools] = useState([]);
+  const [creditPacks, setCreditPacks] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currency, setCurrency] = useState("USD");
@@ -137,11 +137,7 @@ export default function CrowdfundingSection() {
   useEffect(() => {
     const fetchTotalCrowdfunding = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/payments/total-crowdfunding`, {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        });
+        const res = await paymentAPI.getTotalCrowdfunding();
         setTotalCrowdfunding(res?.data?.data?.total_crowdfunding / 100 || 80);
       } catch (err) {
         console.error("❌ Failed to load total crowdfunding amount", err);
@@ -154,19 +150,20 @@ export default function CrowdfundingSection() {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const res = await axios.get(`${API_BASE_URL}/payments/plans?type=crowdfunding`);
-        console.log("Fetched crowdfunding plans:", res.data);
-        if (res.data.length > 0) {
-          const plan = res.data[0];
+        const res = await paymentAPI.getPlans("crowdfunding");
+        
+        if (res.length > 0) {
+          const plan = res[0];
           setRoles(plan.roles || []);
           setCurrency(plan.currency?.toUpperCase() || "USD");
         }
 
-        const aiRes = await paymentAPI.getAITools()
-        console.log("Fetched AI tools:", aiRes.data);
-
-          const aiPlan = aiRes.data;
-          setAiTools(aiPlan.tools || []);
+        const creditsRes = await paymentAPI.getPlans("credits");
+        
+        if (creditsRes.length > 0) {
+          const creditPlan = creditsRes[0];
+          setCreditPacks(creditPlan.data || []);
+        }
       } catch (err) {
         console.error("❌ Failed to load plans", err);
       } finally {
@@ -321,45 +318,45 @@ export default function CrowdfundingSection() {
             ))}
           </div>
 
-          {/* AI TOOLS SECTION */}
+          {/* AI CREDITS SECTION */}
           <div className="mt-24 space-y-8">
             <div className="text-center space-y-4">
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight">
-                Power Up with <span className="text-purple-400">AI Tools</span>
+                Power Up with <span className="text-purple-400">AI Credits</span>
               </h2>
               <p className="text-white/60 max-w-2xl mx-auto">
-                Enhance your workflow with cutting-edge AI capabilities designed to boost productivity.
+                Purchase AI credits to fuel your projects. Use them for text generation, image creation, video production, and more.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {aiTools.map((tool) => (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {creditPacks.map((pack) => (
                 <div
-                  key={tool.id}
+                  key={pack.id}
                   className="flex flex-col justify-between bg-gradient-to-br from-purple-900/30 to-neutral-900 border border-purple-500/30 rounded-2xl p-6 hover:border-purple-500/60 transition"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">{tool.title}</h3>
-                    {tool.description && (
-                      <p className="text-sm text-white/60 mb-4">{tool.description}</p>
-                    )}
-                    <p className="text-3xl font-bold text-purple-400 mb-4">
-                      {formatPrice(tool.price / 100)}
+                    <h3 className="text-lg font-semibold mb-2">{pack.title.split('-')[0]}</h3>
+                    <p className="text-4xl font-bold text-purple-400 mb-4">
+                      {pack.credits.toLocaleString()}
                     </p>
-                    {tool.duration_months > 0 && (
+                    <p className="text-sm text-purple-300 font-semibold mb-4">
+                      {formatPrice(pack.price / 100)}
+                    </p>
+                    {pack.duration_months > 0 && (
                       <p className="text-xs text-white/50 mb-4">
-                        {tool.duration_months} month{tool.duration_months > 1 ? "s" : ""}
+                        Monthly subscription - Renews every {pack.duration_months} month{pack.duration_months > 1 ? "s" : ""}
                       </p>
                     )}
                   </div>
 
                   <button
                     onClick={() => {
-                      setSelectedTier(tool);
+                      setSelectedTier(pack);
                     }}
                     className="w-full py-2 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 font-semibold hover:opacity-90 transition"
                   >
-                    Get Started <ArrowRight className="w-4 h-4 inline-block ml-2" />
+                    Get Credits <ArrowRight className="w-4 h-4 inline-block ml-2" />
                   </button>
                 </div>
               ))}

@@ -46,7 +46,6 @@ export function dashboardLink(userRoles = [], setActiveRole) {
       id: `${role}-dashboard`,
       onLinkClick: () => {
         setActiveRole(role)
-        
       },
       href: `/dashboard`,
       icon: role === 'founder' 
@@ -68,7 +67,7 @@ export function socialSection(id) {
       id,
       icon: <Rss size={22} />,
       href: "/posts",
-      label: "Social",
+      label: "Social Feed",
       subItems: [
         { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
         { id: "connections", href: "/connections", label: "Connections", icon: <UserPlus size={18} /> },
