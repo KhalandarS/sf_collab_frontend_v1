@@ -272,7 +272,7 @@ export const startupsAPI = {
     return response.data
   },
   changeMemberRole: async (startupId, memberId, newRole) => {
-    const response = await api.put(`/startups/${startupId}/members/${memberId}/role`, { role: newRole })
+    const response = await api.post(`/startups/${startupId}/members/${memberId}/change-role`, { role: newRole })
     return response.data
   }
 }

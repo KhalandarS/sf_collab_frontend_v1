@@ -33,20 +33,11 @@ const Dashboard = ({
   const [query, setQuery] = useState("");
   const [userData, setUserData] = useState(null);
   // State for search functionality
-  const [searchValue, setSearchValue] = useState('');
+
+  
+  const { user, loading } = useSelector((state) => state.auth);
   
 
-  const dispatch = useDispatch();
-  const { user, access_token, refreshToken, loading,error } = useSelector((state) => state.auth);
-  
-  
-  // Search handler function
-  const handleSearch = (event) => {
-    setSearchValue(event.target.value);
-    // Add your search logic here
-    console.log('Searching for:', event.target.value);
-  };
-  
   useEffect(() => {
     // Only run this when the user changes
     if (user) {

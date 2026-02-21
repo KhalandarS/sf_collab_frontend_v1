@@ -382,7 +382,7 @@ const DiscoverUsers = () => {
 
             {selectedUser && (
               <div className="space-y-4 flex flex-col items-center justify-center">
-                <Link to={`/users/${selectedUser.id}`} className="w-full">
+                <Link to={`/user-profile?id=${selectedUser.id}`} className="w-full">
                   <div className="flex justify-center">
                     <img
                       src={getProfilePicture(selectedUser)}

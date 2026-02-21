@@ -33,6 +33,7 @@ import { Download, FileJson, FileSpreadsheet, Calendar as CalendarFile } from 'l
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { startupsAPI } from '@/utils/APIs/startupsAPI'
 import { API_URL } from '@/utils/config'
+import DeleteConfirmationModal from '@/utils/confirm'
 
 const colors = [
   "#3B82F6", // Blue
@@ -59,6 +60,7 @@ export default function Calendar() {
   const [showEventModal, setShowEventModal] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [selectedColor, setSelectedColor] = useState(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(null)
   const [showFilters, setShowFilters] = useState(true)
   const [loading, setLoading] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -189,7 +191,6 @@ export default function Calendar() {
 
   const applyFilters = () => {
     let filtered = [...events]
-
     if (filters.category !== 'all') {
       filtered = filtered.filter(event => event.category === filters.category)
     }
@@ -198,7 +199,7 @@ export default function Calendar() {
       filtered = filtered.filter(event => event.startup_id === parseInt(filters.startup_id))
     }
 
-    if (filters.search) {
+    if (filters.search && filters.search.trim() !== '') {
       const searchTerm = filters.search.toLowerCase()
       filtered = filtered.filter(event => 
         event.title.toLowerCase().includes(searchTerm) ||
@@ -332,7 +333,6 @@ export default function Calendar() {
   }
 
   const handleDeleteEvent = async (eventId) => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return
 
     try {
       const response = await fetch(`${API_URL}/calendar-events/${eventId}`, {
@@ -349,6 +349,19 @@ export default function Calendar() {
         fetchEvents()
         if (selectedEvent?.id === eventId) {
           setSelectedEvent(null)
+          setEventForm({
+            title: '',
+            description: '',
+            start_date: '',
+            end_date: '',
+            all_day: false,
+            category: 'event',
+            color: '',
+            location: '',
+            startup_id: null,
+            link: '',
+            reminder_minutes: 30
+          })
           setShowEventModal(false)
         }
       } else {
@@ -676,6 +689,17 @@ export default function Calendar() {
   }
   
   return (
+    <>
+      <DeleteConfirmationModal
+        isOpen={!!isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(null)}
+        onConfirm={() => {
+          handleDeleteEvent(isDeleteConfirmOpen)
+          setIsDeleteConfirmOpen(null)
+        }}
+        title="Delete Event"
+        description="Are you sure you want to delete this event? This action cannot be undone."
+      />
     <div className="overflow-hidden text-white">
       <div className="w-full mx-auto py-4 md:py-8">
         {/* Header */}
@@ -1004,40 +1028,6 @@ export default function Calendar() {
             <div className="flex justify-center items-center h-96">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
             </div>
-          ) : filteredEvents.length === 0 ? (
-            <Card className="border-gray-700 bg-gray-800/30" style={{ zIndex: 1 }}>
-              <CardContent className="p-8 text-center">
-                <CalendarIcon className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-400 mb-2">No events found</h3>
-                <p className="text-gray-500 mb-4">Try adjusting your filters or create a new event</p>
-                <div data-aos='fade-up' data-aos-delay="100">
-                  <ShineButton
-                    className="rounded-md flex gap-2 w-40 items-center justify-center text-white mx-auto"
-                    label="Create Event"
-                    icon={<Plus size={18} className="hover:animate-pulse" />}
-                    size="sm"
-                    bgColor="linear-gradient(325deg, hsl(217 100% 56%) 0%, hsl(194 100% 69%) 55%, hsl(217 100% 56%) 90%)"
-                    onClick={() => {
-                      setSelectedEvent(null)
-                      setEventForm({
-                        title: '',
-                        description: '',
-                        start_date: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
-                        end_date: format(new Date(new Date().getTime() + 60 * 60 * 1000), "yyyy-MM-dd'T'HH:mm"),
-                        all_day: false,
-                        category: 'event',
-                        color: '',
-                        location: '',
-                        startup_id: '',
-                        link: '',
-                        reminder_minutes: 30
-                      })
-                      setShowEventModal(true)
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
           ) : (
             renderView()
           )}
@@ -1106,7 +1096,7 @@ export default function Calendar() {
 
       {/* Event Modal */}
       <Dialog open={showEventModal} onOpenChange={setShowEventModal}>
-        <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl" style={{ zIndex: 9999999 }}>
+        <DialogContent className="bg-gray-900 border-gray-700 max-w-2xl" style={{ zIndex: 999 }}>
           <DialogHeader>
             <DialogTitle className="text-white text-2xl">
               {selectedEvent ? 'Edit Event' : 'Create New Event'}
@@ -1246,7 +1236,11 @@ export default function Calendar() {
             {selectedEvent && (
               <Button
                 variant="destructive"
-                onClick={() => handleDeleteEvent(selectedEvent.id)}
+                  onClick={() => {
+                    setIsDeleteConfirmOpen(selectedEvent.id)
+                    setShowEventModal(false)
+                  }
+                  }
                 className="mr-auto"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -1273,7 +1267,7 @@ export default function Calendar() {
                   reminder_minutes: 30
                 })
               }}
-              className="border-gray-700 text-gray-300 hover:text-white"
+              className="border-gray-700 text-black hover:text-white hover:bg-gray-800"
             >
               Cancel
             </Button>
@@ -1288,6 +1282,7 @@ export default function Calendar() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+      </>
   );
 };

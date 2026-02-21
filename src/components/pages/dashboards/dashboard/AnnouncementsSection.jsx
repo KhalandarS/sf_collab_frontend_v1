@@ -143,7 +143,22 @@ export default function AnnouncementsSection({ userRoles }) {
     if (newsletterFilter === 'all') return newsletter;
     return newsletter.filter(n => n.priority === newsletterFilter);
   }, [newsletter, newsletterFilter]);
-  
+
+  const groupByMonth = (items) => {
+    const grouped = {};
+    items.forEach(item => {
+      const date = new Date(item.createdAt);
+      const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+      if (!grouped[monthKey]) {
+        grouped[monthKey] = [];
+      }
+      grouped[monthKey].push(item);
+    });
+    return grouped;
+  };
+
+  const announcementsByMonth = useMemo(() => groupByMonth(filteredAnnouncements), [filteredAnnouncements]);
+  const newsletterByMonth = useMemo(() => groupByMonth(filteredNewsletter), [filteredNewsletter]);
 
   return (
     <div className="rounded-xl bg-white/[0.03] border border-white/10 shadow-lg overflow-hidden">
@@ -242,37 +257,46 @@ export default function AnnouncementsSection({ userRoles }) {
                           className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
                         />
                       </div>
-                      <div className="space-y-3">
-                        {filteredAnnouncements.length > 0 ? (
-                          filteredAnnouncements.slice(0, 5).map((announcement, idx) => (
-                            <motion.div 
-                              key={announcement.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                              className={`p-4 rounded-lg border transition-all ${
-                                announcement.isRead 
-                                  ? 'bg-white/[0.02] border-white/5' 
-                                  : 'bg-white/[0.05] border-white/10'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3 mb-2">
-                                <h3 className="text-sm font-semibold text-white flex-1">{announcement.title}</h3>
-                                {
-                                  announcement.linkUrl && (
-                                    <Link
-                                      to={announcement.linkUrl}
-                                      className="ml-2 text-xs px-3 py-1 bg-blue-400 rounded-2xl text-white hover:text-blue-300 transition-colors"
-                                    >
-                                      View Details
-                                    </Link>
-                                  )}
+                      <div className="space-y-6">
+                        {Object.keys(announcementsByMonth).length > 0 ? (
+                          Object.entries(announcementsByMonth).map(([month, items]) => (
+                            <div key={month}>
+                              <h3 className="text-sm font-semibold text-white/60 mb-3 pl-2 border-l-2 border-white/20">
+                                {month}
+                              </h3>
+                              <div className="space-y-3">
+                                {items.slice(0, 5).map((announcement, idx) => (
+                                  <motion.div 
+                                    key={announcement.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className={`p-4 rounded-lg border transition-all ${
+                                      announcement.isRead 
+                                        ? 'bg-white/[0.02] border-white/5' 
+                                        : 'bg-white/[0.05] border-white/10'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <h3 className="text-sm font-semibold text-white flex-1">{announcement.title}</h3>
+                                      {
+                                        announcement.linkUrl && (
+                                          <Link
+                                            to={announcement.linkUrl}
+                                            className="ml-2 text-xs px-3 py-1 bg-blue-400 rounded-2xl text-white hover:text-blue-300 transition-colors"
+                                          >
+                                            View Details
+                                          </Link>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-white/60 mt-1 line-clamp-2">{announcement.message}</p>
+                                    <span className="text-xs text-white/40 mt-2 block">
+                                      {formatFriendlyDate(announcement.createdAt)}
+                                    </span>
+                                  </motion.div>
+                                ))}
                               </div>
-                              <p className="text-xs text-white/60 mt-1 line-clamp-2">{announcement.message}</p>
-                              <span className="text-xs text-white/40 mt-2 block">
-                                {formatFriendlyDate(announcement.createdAt)}
-                              </span>
-                            </motion.div>
+                            </div>
                           ))
                         ) : (
                           <p className="text-center text-white/40 py-8">No announcements at this time.</p>
@@ -294,27 +318,35 @@ export default function AnnouncementsSection({ userRoles }) {
                         className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
                       />
 
-                      <div className="space-y-3">
-                        {filteredNewsletter.length > 0 ? (
-                          filteredNewsletter.slice(0, 5).map((item, idx) => (
-                            <motion.div 
-                              key={item.id}
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: idx * 0.05 }}
-                              className={`p-4 rounded-lg border transition-all ${
-                                item.isRead 
-                                  ? 'bg-white/[0.02] border-white/5' 
-                                  : 'bg-white/[0.05] border-white/10'
-                              }`}
-                            >
-                              <div className="flex items-start justify-between gap-3 mb-2">
-                                <h3 className="text-sm font-semibold text-white flex-1">{item.title}</h3>
-
+                      <div className="space-y-6">
+                        {Object.keys(newsletterByMonth).length > 0 ? (
+                          Object.entries(newsletterByMonth).map(([month, items]) => (
+                            <div key={month}>
+                              <h3 className="text-sm font-semibold text-white/60 mb-3 pl-2 border-l-2 border-white/20">
+                                {month}
+                              </h3>
+                              <div className="space-y-3">
+                                {items.slice(0, 5).map((item, idx) => (
+                                  <motion.div 
+                                    key={item.id}
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className={`p-4 rounded-lg border transition-all ${
+                                      item.isRead 
+                                        ? 'bg-white/[0.02] border-white/5' 
+                                        : 'bg-white/[0.05] border-white/10'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <h3 className="text-sm font-semibold text-white flex-1">{item.title}</h3>
+                                    </div>
+                                    <p className="text-xs text-white/60 mt-1 line-clamp-2">{item.message}</p>
+                                    <span className="text-xs text-white/40 mt-2 block">{formatFriendlyDate(item.createdAt)}</span>
+                                  </motion.div>
+                                ))}
                               </div>
-                              <p className="text-xs text-white/60 mt-1 line-clamp-2">{item.message}</p>
-                              <span className="text-xs text-white/40 mt-2 block">{formatFriendlyDate(item.createdAt)}</span>
-                            </motion.div>
+                            </div>
                           ))
                         ) : (
                           <p className="text-center text-white/40 py-8">No newsletter updates at this time.</p>

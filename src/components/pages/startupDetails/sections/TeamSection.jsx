@@ -454,7 +454,7 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
   </motion.div>
 );
 
-const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user, handlePromoteMember, handleRemoveMemberAdmin, roles }) => (
+const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user, handlePromoteMember, handleRemoveMemberAdmin, roles, handleChangeRole }) => (
   <motion.div
     className="flex flex-wrap gap-2"
     variants={containerVariants}
@@ -480,9 +480,9 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                 </Avatar>
               </Link>
             </TooltipTrigger>
-            <TooltipContent className="bg-gray-900 border-gray-700 flex flex-col items-center justify-center">
+            <TooltipContent side="right" className="bg-gray-900 border-gray-700 flex flex-col items-center justify-center">
               <div className="text-sm w-full">
-                <p className="font-semibold text-white">
+                <p className="font-semibold text-center w-full text-white">
                   {member.firstName} {member.lastName}
                 </p>
 

@@ -12,7 +12,6 @@ import StartupCard from './StartupCard';
 import StartupCardSkeleton from './StartupCardSkeleton';
 import StartupsHeader from './StartupsHeader';
 import StartupSearchAndFilter from './StartupSearchAndFilter';
-import ApplyToStartupModal from './ApplyToStartupModal';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
