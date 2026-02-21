@@ -58,12 +58,8 @@ export const startupsAPI = {
   },
 
   // Update startup
-  update: async (startupId, data, accessToken) => {
-    const response = await api.put(`/startups/${startupId}`, data, {
-      headers: {
-        'Authorization': `Bearer ${accessToken}`,
-      },
-    })
+  update: async (startupId, data) => {
+    const response = await api.put(`/startups/${startupId}`, data)
     return response.data
   },
 
@@ -83,15 +79,10 @@ export const startupsAPI = {
   },
 
   // Add member to startup
-  addMember: async (startupId, memberData, accessToken) => {
+  addMember: async (startupId, memberData) => {
     const response = await api.post(
       `/startups/${startupId}/members`,
-      memberData,
-      {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-        },
-      }
+      memberData
     )
     return response.data
   },
@@ -219,7 +210,7 @@ export const startupsAPI = {
     const response = await api.post(
       `/startups/${startupId}/join-requests/${requestId}/reject`
     )
-    return response.data.data
+    return response.data
   },
 
   // Cancel own join request
@@ -278,6 +269,10 @@ export const startupsAPI = {
   },
   demoteMemberAdmin: async (startupId, memberId) => {
     const response = await api.post(`/startups/${startupId}/members/${memberId}/demote`, {})
+    return response.data
+  },
+  changeMemberRole: async (startupId, memberId, newRole) => {
+    const response = await api.put(`/startups/${startupId}/members/${memberId}/role`, { role: newRole })
     return response.data
   }
 }

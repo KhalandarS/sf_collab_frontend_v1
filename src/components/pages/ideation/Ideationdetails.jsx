@@ -23,11 +23,15 @@ import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { usersAPI } from "@/utils/APIs/userAPI";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import DeleteConfirmationModal from "@/utils/confirm";
 
 const BASE_URL = API_BASE_URL + "/ideas";
 
 const IdeationDetails = () => {
   const [idea, setIdea] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeTab, setActiveTab] = useState("comments");
   const [ideaCreator, setIdeaCreator] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState("");
@@ -41,7 +45,6 @@ const IdeationDetails = () => {
   const [joinName, setJoinName] = useState("");
   const [joinPosition, setJoinPosition] = useState("");
   const [joinSkills, setJoinSkills] = useState("");
-  const [suggestMessage, setSuggestMessage] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const commentInputRef = useRef(null);
   const discussionSectionRef = useRef(null);
@@ -65,6 +68,11 @@ const IdeationDetails = () => {
           setLiked(res.data.idea.likedBy.includes(user.id));
         }
         const comments = await ideaAPI.getIdeaComments(access_token, { ideaId });
+        const result = Object.groupBy(comments.data.comments, ({ suggestion }) => suggestion ? 'suggestions' : 'comments');
+      
+        setComments(result.comments || []);
+        setSuggestions(result.suggestions || []);
+
         setIdea((prevIdea) => ({
           ...prevIdea,
           comments: comments.data.comments,
@@ -193,17 +201,8 @@ const IdeationDetails = () => {
     }
   };
 
-  const handleSuggestSubmit = (e) => {
-    e.preventDefault();
-    setSuccessMsg("Thank you for your suggestion!");
-    setSuggestMessage("");
-    setTimeout(() => {
-      setShowSuggestModal(false);
-      setSuccessMsg("");
-    }, 1500);
-  };
 
-  const handleCommentSubmit = async (e) => {
+  const handleCommentSubmit = async (e, isSuggestion = false) => {
     e.preventDefault();
     if (!comment.trim()) return;
     try {
@@ -213,17 +212,20 @@ const IdeationDetails = () => {
         author_id: user?.id,
         author_first_name: user?.firstName || "",
         author_last_name: user?.lastName || "",
+        suggestion: isSuggestion
       }
       const res = await ideaAPI.createIdeaComment(body, access_token);
       if (!res.success) {
         throw new Error("Failed to post comment");
       }
 
-      setIdea((prev) => ({
-        ...prev,
-        comments: [res.data.comment, ...(prev.comments || [])],
-      }));
+      if (isSuggestion) {
+        setSuggestions((prev) => [...prev, res.data.comment]);
+      } else {
+        setComments((prev) => [...prev, res.data.comment]);
+      }
       setComment("");
+
 
     } catch (err) {
       console.error("Comment error:", err);
@@ -587,71 +589,150 @@ const IdeationDetails = () => {
               </span>
             </h2>
 
-            {/* Comments */}
-            <motion.div
-              className="space-y-4 mb-8"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-            >
-              {idea.comments && idea.comments.length > 0 ? (
-                idea.comments.map((c, idx) => (
+            {/* Comments and Suggestions Tabs */}
                   <motion.div
-                    key={idx}
-                    className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
-                    variants={itemVariants}
-                    whileHover={{ x: 4 }}
+                    className="space-y-6 mb-8"
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
                   >
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-sm font-bold">
-                      {(c.author?.firstName?.[0] || 'U').toUpperCase()}
+                    {/* Tabs */}
+                    <div className="flex gap-4 border-b border-white/10">
+                    <motion.button
+                      onClick={() => setActiveTab('comments')}
+                      className={`pb-3 px-4 font-medium transition-all ${activeTab === 'comments' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+                      whileHover={{ y: -2 }}
+                    >
+                      Comments ({comments.length})
+                    </motion.button>
+                    <motion.button
+                      onClick={() => setActiveTab('suggestions')}
+                      className={`pb-3 px-4 font-medium transition-all ${activeTab === 'suggestions' ? 'text-blue-400 border-b-2 border-blue-400' : 'text-gray-400 hover:text-white'}`}
+                      whileHover={{ y: -2 }}
+                    >
+                      Suggestions ({suggestions.length})
+                    </motion.button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-white">
-                        {c.author?.firstName} {c.author?.lastName}
-                      </h3>
-                      <p className="text-gray-300 mt-1 break-words">{c.content}</p>
-                      <span className="text-xs text-gray-500 mt-2 block">
-                        {new Date(c.createdAt).toLocaleString()}
-                      </span>
-                    </div>
+
+                    {/* Comments Section */}
+                    {activeTab === 'comments' && (
+                    <motion.div
+                      className="space-y-4"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {comments && comments.length > 0 ? (
+                      comments.map((c, idx) => (
+                        <motion.div
+                        key={idx}
+                        className="flex gap-4 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/20 transition-all"
+                        variants={itemVariants}
+                        whileHover={{ x: 4 }}
+                        >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center text-sm font-bold">
+                          {(c.author?.firstName?.[0] || 'U').toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white">
+                          {c.author?.firstName} {c.author?.lastName}
+                          </h3>
+                          <p className="text-gray-300 mt-1 break-words">{c.content}</p>
+                          <span className="text-xs text-gray-500 mt-2 block">
+                          {new Date(c.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        </motion.div>
+                      ))
+                      ) : (
+                      <p className="text-center text-gray-500 py-8">No comments yet. Be the first to share your thoughts!</p>
+                      )}
+                    </motion.div>
+                    )}
+
+                    {/* Suggestions Section */}
+                    {activeTab === 'suggestions' && (
+                    <motion.div
+                      className="space-y-4"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                    >
+                      {suggestions && suggestions.length > 0 ? (
+                      suggestions.map((s, idx) => (
+                        <motion.div
+                        key={idx}
+                        className="flex gap-4 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:border-amber-500/40 transition-all"
+                        variants={itemVariants}
+                        whileHover={{ x: 4 }}
+                        >
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex-shrink-0 flex items-center justify-center text-sm font-bold">
+                          <Zap className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-white">
+                          {s.author?.firstName} {s.author?.lastName}
+                          </h3>
+                          <p className="text-gray-300 mt-1 break-words">{s.content}</p>
+                          <span className="text-xs text-gray-500 mt-2 block">
+                          {new Date(s.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        </motion.div>
+                      ))
+                      ) : (
+                      <p className="text-center text-gray-500 py-8">No suggestions yet. Share your ideas!</p>
+                      )}
+                    </motion.div>
+                    )}
                   </motion.div>
-                ))
-              ) : (
-                <p className="text-center text-gray-500 py-8">No comments yet. Be the first to share your thoughts!</p>
-              )}
-            </motion.div>
 
-            {/* Comment Input */}
-            <motion.form
-              onSubmit={handleCommentSubmit}
-              className="space-y-4 pt-6 border-t border-white/10"
-              variants={itemVariants}
-            >
-              <textarea
-                ref={commentInputRef}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Share your thoughts..."
-                className="w-full bg-white/5 border border-white/20 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
-                rows={3}
-              />
-              <div className="flex justify-end">
-                <motion.button
-                  type="submit"
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  className="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all disabled:opacity-50"
-                  disabled={!comment.trim()}
-                >
-                  <Send className="h-4 w-4" /> Post Comment
-                </motion.button>
-              </div>
-            </motion.form>
-          </motion.div>
-        </div>
+                  {/* Comment Input */}
+                  <motion.form
+                    onSubmit={handleCommentSubmit}
+                    className="space-y-4 pt-6 border-t border-white/10"
+                    variants={itemVariants}
+                  >
+                    <textarea
+                    ref={commentInputRef}
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    className="w-full bg-white/5 border border-white/20 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all"
+                    rows={3}
+                    />
+                    <div className="flex justify-end gap-2">
+                    <motion.button
+                      type="submit"
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
+                      className="bg-blue-600 hover:bg-blue-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all disabled:opacity-50"
+                      disabled={!comment.trim()}
+                    >
+                      <Send className="h-4 w-4" /> Post Comment
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      variants={buttonVariants}
+                      whileHover="hover"
+                      whileTap="tap"
+                      className="bg-amber-600 hover:bg-amber-700 px-6 py-2.5 rounded-lg flex items-center gap-2 font-medium transition-all disabled:opacity-50"
+                  onClick={(e) => {
+                    setComment(e.target.value) 
 
-        {/* Sidebar */}
+                    handleCommentSubmit(e, true)
+                  }}
+                      disabled={!comment.trim()}
+                    >
+                      <Zap className="h-4 w-4" /> Suggest Improvement
+                    </motion.button>
+                    </div>
+                  </motion.form>
+                  </motion.div>
+                </div>
+
+                {/* Sidebar */}
           <div className="space-y-8">
             {/* Creator Card */}
             <Link to={`/user-profile?userId=${idea.creator?.id}`}>
@@ -852,68 +933,15 @@ const IdeationDetails = () => {
       </AnimatePresence>
 
       {/* Delete Modal */}
-      <AnimatePresence>
         {showDeleteModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 w-full max-w-md p-8 rounded-2xl relative"
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowDeleteModal(false)}
-                className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
-              >
-                <X className="h-5 w-5" />
-              </motion.button>
-              <div className="text-center space-y-6">
-                <motion.div
-                  className="mx-auto w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center"
-                  animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  <Trash2 className="h-8 w-8 text-red-400" />
-                </motion.div>
-                <div>
-                  <h2 className="text-2xl font-bold mb-2">Delete Idea</h2>
-                  <p className="text-gray-400">
-                    Are you sure? This action cannot be undone.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-8">
-                <motion.button
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={() => setShowDeleteModal(false)}
-                  className="flex-1 bg-white/10 hover:bg-white/20 px-4 py-3 rounded-lg font-medium transition-all"
-                >
-                  Cancel
-                </motion.button>
-                <motion.button
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  onClick={handleDeleteIdea}
-                  className="flex-1 bg-red-600 hover:bg-red-700 px-4 py-3 rounded-lg font-semibold transition-all"
-                >
-                  Delete
-                </motion.button>
-              </div>
-            </motion.div>
-          </motion.div>
+        <DeleteConfirmationModal
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDeleteIdea}
+          title="Delete Idea"
+          message="Are you sure you want to delete this idea? This action cannot be undone."
+        />
         )}
-      </AnimatePresence>
     </div>
   );
 };

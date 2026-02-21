@@ -100,6 +100,9 @@ import StorePage from "./components/pages/store/StorePage";
 import LeaderboardPage from './components/pages/leaderboard/LeaderboardPage';
 import CaptionGenerator from "./components/pages/captionGenerator/CaptionGenerator.jsx";
 import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx";
+import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
+import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
+import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 
 
 
@@ -218,13 +221,17 @@ export default function App() {
                   {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
             
                   {/* ===== BUILDER DASHBOARD ROUTES ===== */}
-                  <Route path="saved-startups" element={<SavedStartups />} />
                   <Route path="builder/my-applications" element={<MyApplications />} />
                   <Route path="builder/my-work" element={<MyWork />} />
                   <Route path="builder/rewards" element={<Rewards />} />
                   <Route path="builder/profile-skills" element={<SkillProfile />} />
                   <Route path="builder/profile" element={<SkillProfile />} />
-                  {/* ===== END BUILDER ROUTES ===== */}
+
+                  {/* ===== FOUNDER ROUTES ===== */}
+                  <Route path="founder/my-applications" element={<FounderManageApplications />} />
+                  <Route path="founder/my-team" element={<FounderManageTeam />} />
+                  <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
+
             
                   <Route path="ai-dashboard" element={<AIDashboard />} />
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
@@ -287,6 +294,7 @@ export default function App() {
                   <Route path="discover-startups" element={<DiscoverStartups />} />
                   <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                   <Route path="startup-details/:id" element={<StartupDetailPage />} />
+                  <Route path="saved-startups" element={<SavedStartups />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
                   {/* AI Tools */}
                   <Route path="business-plan" element={<BusinessIdeaGenerator />} />

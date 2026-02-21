@@ -27,7 +27,6 @@ export const dashboardAPI = {
   // Get founder dashboard
   getFounderDashboard: async () => {
     const response = await api.get('/dashboard/founder')
-    console.log("Response:", response);
     return response.data
   },
 

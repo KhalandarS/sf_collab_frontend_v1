@@ -39,7 +39,7 @@ export default function DesktopSidebarContent({
   return (
     <div
       className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] text-white"
-      style={{ zIndex: 30 }}
+      style={{ zIndex: 9999999999 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -62,7 +62,6 @@ export default function DesktopSidebarContent({
         <div className="flex flex-col gap-1 overflow-y-auto px-2.5">
           {links.map((link) => {
           const isActive = getAllRoutes(link).includes(location.pathname);
-
             const showSubs = expandedId === link.id;
             const isUpcoming = link.isUpcoming;
 

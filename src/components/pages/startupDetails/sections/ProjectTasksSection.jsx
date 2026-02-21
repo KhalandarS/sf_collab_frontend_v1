@@ -11,6 +11,7 @@ import { toast } from "react-toastify";
 import AddTaskModal from "../modals/AddTasksModal";
 import { tasksAPI } from "@/utils/APIs/startupsAPI";
 import { API_URL } from "@/utils/config";
+import DeleteConfirmationModal from "@/utils/confirm";
 
 const priorityColors = {
   low: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
@@ -58,6 +59,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const [editMode, setEditMode] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(null);
   const [view, setView] = useState(localStorage.getItem("tasksView") || "list");
   const { user } = useSelector((state) => state.auth);
 
@@ -195,7 +197,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
           isVisible={isVisible}
           user={user}
           handleStatusChange={handleStatusChange}
-          handleDeleteTask={handleDeleteTask}
+          handleDeleteTask={setIsDeleteConfirmOpen}
           setEditMode={setEditMode}
           setSelectedTask={setSelectedTask}
           setOpenCreate={setOpenCreate}
@@ -209,7 +211,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
           isVisible={isVisible}
           user={user}
           handleStatusChange={handleStatusChange}
-          handleDeleteTask={handleDeleteTask}
+          handleDeleteTask={setIsDeleteConfirmOpen}
           setEditMode={setEditMode}
           setSelectedTask={setSelectedTask}
           setOpenCreate={setOpenCreate}
@@ -228,6 +230,17 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
         startupId={startupId}
         setTasks={setTasks}
         teamMembers={teamMembers}
+      />
+      <DeleteConfirmationModal
+        isOpen={!!isDeleteConfirmOpen}
+        onClose={() => setIsDeleteConfirmOpen(null)}
+        onConfirm={() => {
+          handleDeleteTask(isDeleteConfirmOpen);
+          setIsDeleteConfirmOpen(null);
+        }}
+        title="Confirm Task Deletion"
+        message="Are you sure you want to delete this task?"
+        type="soft"
       />
     </div>
   );

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 
 const DeleteConfirmationModal = ({ 
   onClose, 
+  isOpen,
   onConfirm, 
   title = 'Confirm Action',
   message = 'Are you sure? This is irreversible',
@@ -12,13 +13,13 @@ const DeleteConfirmationModal = ({
   const [inputValue, setInputValue] = useState('');
   const requiresInput = type === 'hard';
   const isConfirmDisabled = requiresInput && inputValue.toLowerCase() !== 'delete';
-
+  if (!isOpen) return null;
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-80"
+      className="fixed inset-0 flex items-center justify-center bg-black/50 z-1000"
     >
       <motion.div
         initial={{ scale: 0.95, opacity: 0 }}
@@ -45,7 +46,7 @@ const DeleteConfirmationModal = ({
           <Button 
             variant="outline" 
             onClick={onClose} 
-            className="text-gray-300 border-gray-700 hover:bg-gray-800"
+            className="text-black border-gray-700 hover:bg-gray-800 hover:text-white transition-colors"
           >
             Cancel
           </Button>

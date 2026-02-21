@@ -152,10 +152,10 @@ export function getAllRoutes(element) {
 
   if (Array.isArray(element.subItems)) {
     for (const item of element.subItems) {
+      if (routes.includes(item.href)) continue; // Avoid duplicates
       routes = routes.concat(getAllRoutes(item));
     }
   }
-
   return routes;
 }
 

@@ -31,7 +31,6 @@ import SendJoinRequestModal from './modals/SendJoinRequestModal';
 import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
 import ProjectGoalsSection from './sections/ProjectGoalsSection';
 import CalendarSection from './sections/CalendarSection';
-import DeleteStartupModal from './modals/DeleteStartup';
 import AddMemberModal from './modals/AddMember';
 import DocumentsSection from './sections/DocumentsSection';
 import TeamSection from './sections/TeamSection';
@@ -43,6 +42,7 @@ import ProjectTasksSection from './sections/ProjectTasksSection';
 import AddTaskModal from './modals/AddTasksModal';
 import StartupAnnouncementsSection from './sections/StartupAnnouncementsSection';
 import { plotCount } from '@/utils/plotCount';
+import DeleteConfirmationModal from '@/utils/confirm';
 
 /**
  * ManageJoinRequestsModal - For FOUNDERS/CREATORS to manage join requests
@@ -91,12 +91,7 @@ const StartupDetailPage = () => {
     github: ''
   });
 
-  const [memberForm, setMemberForm] = useState({
-    user_id: '',
-    first_name: '',
-    last_name: '',
-    role: ''
-  });
+  
 
   const [joinRequests, setJoinRequests] = useState([]);
   const joinRequestCountRef = useRef(0);
@@ -194,15 +189,6 @@ const StartupDetailPage = () => {
 
 
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
-
   const getStageBadgeVariant = (stage) => {
     const variants = {
       idea: 'bg-blue-500/20 text-blue-400 border-blue-400/30',
@@ -213,57 +199,7 @@ const StartupDetailPage = () => {
     };
     return variants[stage] || 'bg-gray-500/20 text-gray-400 border-gray-400/30';
   };
-
-
   
-
-
-  // Member handlers
-  const handleAddMember = async (e) => {
-    e.preventDefault();
-    try {
-      if (!memberForm.role) {
-        toast.error('Please select a role for the member');
-        return
-      }
-      if (!memberForm.user_id) {
-        toast.error('Please select a user to add as a member');
-        return
-      }
-      const response = await startupsAPI.addMember(id, memberForm, access_token);
-
-
-      
-      if (response.success) {
-        toast.success('Member added successfully');
-        setIsAddMemberModalOpen(false);
-        setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
-        fetchStartupData();
-      } else {
-        throw new Error('Failed to add member');
-      }
-    } catch (error) {
-
-      toast.error(error?.error || 'Error adding member');
-    }
-  };
-
-  const handleRemoveMember = async (e, memberId) => {
-    e.stopPropagation();
-    e.preventDefault()
-    try {
-      const response = await startupsAPI.removeMember(id, memberId, access_token);
-      
-      if (response.success) {
-        toast.success('Member removed successfully');
-        setMembers(prevMembers => prevMembers.filter(m => m.id !== memberId));
-      } else {
-        throw new Error('Failed to remove member');
-      }
-    } catch {
-      toast.error('Error removing member');
-    }
-  };
   
   const handleAcceptJoinRequest = async (request) => {
     const requestId = request?.id || request?.request_id;
@@ -569,8 +505,8 @@ const StartupDetailPage = () => {
           {/* Overview Tab */}
           <TabsContent value="overview" className="space-y-8">
             <StartupAnnouncementsSection startup={startup} />
-            <GamifiedStatsOverview startup={startup} stats={stats} formatCurrency={formatCurrency} goals={projectGoals} />
-            <DescriptionSection startup={startup} formatCurrency={formatCurrency} />
+            <GamifiedStatsOverview startup={startup} stats={stats} goals={projectGoals} />
+            <DescriptionSection startup={startup} />
             
             <TechStackSection startup={startup} />
           </TabsContent>
@@ -583,8 +519,8 @@ const StartupDetailPage = () => {
               startupId={id}
               isFounder={isFounder}
               isAdmin={isAdmin}
-              onRemoveMember={handleRemoveMember}
-              onJoinClick={() => setIsAddMemberModalOpen(true)}
+              callback={fetchStartupData}
+              roles={startup.roles}
             />
           </TabsContent>
 
@@ -646,22 +582,18 @@ const StartupDetailPage = () => {
       
       {isAdmin &&
         <>
-          <AddMemberModal
-            isOpen={isAddMemberModalOpen}
-            onClose={() => setIsAddMemberModalOpen(false)}
-            roles={startup?.roles || []}
-            onSubmit={handleAddMember}
-            formData={memberForm}
-            onFormChange={setMemberForm}
-          />
-
-      
-
-          <DeleteStartupModal
+          <DeleteConfirmationModal
             isOpen={isDeleteStartupModalOpen}
             onClose={() => setIsDeleteStartupModalOpen(false)}
-            onConfirm={handleDeleteStartup}
-            startupName={startup.name}
+            onConfirm={() => {
+              handleDeleteStartup();
+              setIsDeleteStartupModalOpen(false);
+              navigate('/discover-startups');
+              toast.success('Startup deleted successfully');
+            }}
+            title="Delete Startup"
+            message="Are you sure you want to delete this startup? This action cannot be undone."
+            type="hard"
           />
           <ManageJoinRequestsModal
             isOpen={isJoinModalOpen}
@@ -710,7 +642,7 @@ const StartupDetailPage = () => {
 
   
 // Gamified Stats Overview
-const GamifiedStatsOverview = ({ goals, startup, stats, formatCurrency }) => {
+const GamifiedStatsOverview = ({ goals, startup, stats }) => {
   const milestoneProgress = useMemo(() => {
     if (goals.length === 0) return 0;
     let progress = 0;

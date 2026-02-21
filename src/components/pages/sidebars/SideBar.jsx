@@ -15,7 +15,6 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
     () => getCurrentContext(location.pathname),
     [location.pathname]
   );
-  const CHAT_CONTEXT_ID = 4;
 
   // Auto-expand active context
   useEffect(() => {
@@ -32,8 +31,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
 
   const hasSubItems = (link) => {
     return Array.isArray(link.subItems) && 
-           link.subItems.length > 0 && 
-           link.id !== CHAT_CONTEXT_ID;
+           link.subItems.length > 0
   };
 
   const shouldShowSubItems = (link) => {
