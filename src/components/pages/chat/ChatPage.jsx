@@ -510,12 +510,16 @@ useEffect(() => {
     if (e.key === "presence:lastActiveAt") {
       try {
         setLastActiveAt(JSON.parse(e.newValue || "{}"));
-      } catch {}
+      } catch {
+
+      }
     }
     if (e.key === "presence:lastSeenAt") {
       try {
         setLastSeenAt(JSON.parse(e.newValue || "{}"));
-      } catch {}
+      } catch {
+
+      }
     }
   };
 
@@ -546,7 +550,9 @@ useEffect(() => {
           } else {
             localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
           }
-        } catch {}
+        } catch {
+
+        }
       }
 
       // Leave previous room
@@ -561,7 +567,9 @@ useEffect(() => {
 
       // Load draft for the new conversation
       let restoredDraft = "";
-      try { restoredDraft = localStorage.getItem("chatPage:draft:" + String(conversation.id)) || ""; } catch {}
+      try { restoredDraft = localStorage.getItem("chatPage:draft:" + String(conversation.id)) || ""; } catch {
+
+      }
       setMessageInput(restoredDraft);
 
       // Immediately mark as read and clear unread count in local state
@@ -681,8 +689,13 @@ useEffect(() => {
         } else {
           localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
         }
-      } catch {}
+      }
+      catch (e) {
+        console.error("Failed to persist draft:", e);
+      }
+    
     }
+    
 
     if (socket && activeConversation) {
       socket.emit('typing_start', { conversation_id: activeConversation.id });
@@ -709,7 +722,9 @@ useEffect(() => {
 
     setMessageInput('');
     // Clear persisted draft for this conversation
-    try { localStorage.removeItem("chatPage:draft:" + String(activeConversation.id)); } catch {}
+    try { localStorage.removeItem("chatPage:draft:" + String(activeConversation.id)); } catch {
+
+    }
   };
 
   const shouldShowAvatar = (message, index) => {

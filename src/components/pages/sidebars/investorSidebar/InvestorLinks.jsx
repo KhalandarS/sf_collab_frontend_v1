@@ -42,7 +42,7 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       isUpcoming: true,
       subItems: []
     },
-    wallet(6),
+    // wallet(6),
     socialSection(7),
 
     aiTools(8),

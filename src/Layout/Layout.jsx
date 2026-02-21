@@ -4,7 +4,6 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import NavBar from "../components/sections/NavBar";
-import Options from "../components/sections/Options";
 import { motion } from "framer-motion";
 import UserSidebar from "@/components/pages/sidebars/sidebar/GeneralSidebar";
 import FounderSidebar from "@/components/pages/sidebars/founderSidebar/FounderSidebar";
@@ -17,7 +16,6 @@ import { hasPermission } from "../utils/permissionCheck";
 import { waitlistAPI } from "@/utils/APIs/waitlistAPI";
 
 import ChatDock from "@/components/chat-dock/ChatDock";
-import { useAppSocket } from "@/context/SocketProvider";
 import { useChatContacts } from "@/context/ChatContactsProvider";
 
 import useSocket from "@/components/pages/chat/useSocket";

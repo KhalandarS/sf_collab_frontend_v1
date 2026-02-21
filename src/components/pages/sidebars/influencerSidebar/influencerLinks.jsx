@@ -63,7 +63,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
         { id: "assets", href: "/links-assets/assets", label: "Assets" },
       ]
     },
-    wallet(8),
+    // wallet(8),
     aiTools(9),
     toolsSection(10)
   ];

@@ -1,4 +1,6 @@
+import axios from "axios";
 import { API_BASE_URL } from "../config";
+import { toast } from "react-toastify";
 
 export const requestInterceptor = (config) => {
   const token = localStorage.getItem('access_token');
@@ -20,11 +22,19 @@ export const responseErrorInterceptor = (error) => {
     console.error('❌ Cannot connect to backend at', API_BASE_URL);
     return Promise.reject(error);
   }
-
+  // Send error to backend logging service
+  console.log("Error", error);
+  console.log("Error response", error.response.status);
+  console.log("Error error", error.error);
+  console.log("Error message", error.message);
+  // Only log errors that are representative of actual issues (exclude 401, 403, 404 to avoid noise from auth issues or missing endpoints)
+  
   const status = error.response?.status;
   const data = error.response?.data;
   const path = window.location.pathname;
-
+  if (![401, 403, 404].includes(status)) {
+    logErrorToBackend(error);
+  }
   const isAuthRoute =
     path.startsWith('/login') ||
     path.startsWith('/signup') ||
@@ -54,3 +64,24 @@ export const responseErrorInterceptor = (error) => {
 
   return Promise.reject(error);
 };
+
+const logErrorToBackend = (error) => {
+  try {
+    console.log("Logging error to backend:", {
+      errorFromBackend: error.response?.data?.error,
+      errorMessage: error.message,
+      stack: error.stack,
+      page: window.location.pathname,
+      component: error.component || "Unknown Component",
+    });
+    axios.post(`${API_BASE_URL}/log-client-error`, {
+      errorFromBackend: error?.response?.data?.error || error?.error || false,
+      errorMessage: error.message,
+      stack: error.stack,
+      page: window.location.pathname,
+      component: error.component || "Unknown Component",
+    });
+  } catch (logError) {
+    console.error('Failed to log error to backend:', logError);
+  }
+}

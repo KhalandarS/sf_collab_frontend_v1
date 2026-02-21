@@ -249,7 +249,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     return Array.isArray(saved)
       ? saved.map((w) => {
           let draft = "";
-          try { draft = localStorage.getItem("chatDock:draft:" + w.conversationId) || ""; } catch {}
+        try { draft = localStorage.getItem("chatDock:draft:" + w.conversationId) || ""; }
+        catch { 
+
+        }
           return {
             conversationId: w.conversationId,
             title: w.title || "Chat",
@@ -266,7 +269,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   useEffect(() => {
     try {
       localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {}));
-    } catch {}
+    } catch {
+
+    }
   }, [lastSeenAt]);
 
   useEffect(() => {
@@ -287,7 +292,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   useEffect(() => {
     try {
       localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(unreadUsers || {}));
-    } catch {}
+    } catch {
+
+    }
   }, [unreadUsers]);
 
   const [typingByConversation, setTypingByConversation] = useState({});
@@ -1389,7 +1396,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               } else {
                                 localStorage.removeItem("chatDock:draft:" + cid);
                               }
-                            } catch {}
+                            } 
+                            catch {}
                             if (socket) {
                               socket.emit("typing_start", { conversation_id: cid });
                               if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);

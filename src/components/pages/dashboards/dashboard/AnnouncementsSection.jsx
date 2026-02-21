@@ -50,14 +50,13 @@ export default function AnnouncementsSection({ userRoles }) {
   }, []);
 
   const hasUnreadAnnouncements = useMemo(() => 
-    announcements.some(a => !a.isRead), 
+    announcements.some(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true'), 
     [announcements]
   );
   const hasUnreadNewsletter = useMemo(() => 
-    newsletter.some(n => !n.isRead), 
+    newsletter.some(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true'), 
     [newsletter]
   );
-  console.log(announcements.some(a => !a.isRead));
   const [isExpanded, setIsExpanded] = useState(() => {
     const stored = localStorage.getItem('preferences:announcementsExpanded');
     return stored === null ? true : stored === 'true';
@@ -99,18 +98,17 @@ export default function AnnouncementsSection({ userRoles }) {
   useEffect(() => {
     const markAsRead = async () => {
       if (activeTab === 'announcements') {
-        for (const ann of announcements.filter(a => !a.isRead)) {
+        for (const ann of announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true')) {
           try {
-            await notificationAPI.markAsRead(ann.id);
-            console.log("Marked as read");
+           localStorage.setItem(`announcement:${ann.id}:read`, 'true');
           } catch (error) {
             console.error('Failed to mark announcement as read', error);
           }
         }
       } else if (activeTab === 'newsletter') {
-        for (const nl of newsletter.filter(n => !n.isRead)) {
+        for (const nl of newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true')) {
           try {
-            await notificationAPI.markAsRead(nl.id);
+            localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
           } catch (error) {
             console.error('Failed to mark newsletter as read', error);
           }
@@ -127,8 +125,8 @@ export default function AnnouncementsSection({ userRoles }) {
   const [hideShowJobApplication, setHideJobApplication] = useState(false);
 
   const tabs = useMemo(() => [
-    { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcements.filter(a => !a.isRead).length },
-    { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletter.filter(n => !n.isRead).length },
+    { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true').length },
+    { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true').length },
     { id: 'waitlist', label: 'Waitlist', icon: Bell },
     { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap },
     { id: 'applications', label: 'Applications', icon: FileText },
@@ -178,7 +176,7 @@ export default function AnnouncementsSection({ userRoles }) {
               className="px-2 py-1 bg-white/10 rounded-full"
             >
               <span className="text-xs font-semibold text-white">
-                {plotCount(announcements.filter(a => !a.isRead).length + newsletter.filter(n => !n.isRead).length)}
+                {plotCount(announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true').length + newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true').length)}
               </span>
             </motion.div>
           )}
@@ -272,7 +270,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                     className={`p-4 rounded-lg border transition-all ${
-                                      announcement.isRead 
+                                      localStorage.getItem(`announcement:${announcement.id}:read`) === 'true'
                                         ? 'bg-white/[0.02] border-white/5' 
                                         : 'bg-white/[0.05] border-white/10'
                                     }`}
@@ -333,7 +331,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
                                     className={`p-4 rounded-lg border transition-all ${
-                                      item.isRead 
+                                      localStorage.getItem(`newsletter:${item.id}:read`) === 'true'
                                         ? 'bg-white/[0.02] border-white/5' 
                                         : 'bg-white/[0.05] border-white/10'
                                     }`}
