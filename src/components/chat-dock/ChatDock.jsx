@@ -176,6 +176,11 @@ function normalizeMessage(m) {
           ? m.isImage
           : null,
     message_type: m.message_type || m.messageType || null,
+    // Preserve read receipt fields so ticks survive page reload
+    status: m.status || m.delivery_status || m.deliveryStatus || null,
+    delivery_status: m.status || m.delivery_status || m.deliveryStatus || null,
+    read_at: m.read_at || m.readAt || null,
+    delivered_at: m.delivered_at || m.deliveredAt || null,
   };
 }
 
@@ -242,14 +247,18 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const [windows, setWindows] = useState(() => {
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
     return Array.isArray(saved)
-      ? saved.map((w) => ({
-          conversationId: w.conversationId,
-          title: w.title || "Chat",
-          minimized: !!w.minimized,
-          messages: [],
-          loading: false,
-          draft: "",
-        }))
+      ? saved.map((w) => {
+          let draft = "";
+          try { draft = localStorage.getItem("chatDock:draft:" + w.conversationId) || ""; } catch {}
+          return {
+            conversationId: w.conversationId,
+            title: w.title || "Chat",
+            minimized: !!w.minimized,
+            messages: [],
+            loading: false,
+            draft,
+          };
+        })
       : [];
   });
   const isWindowsOpen = useMemo(() => windows.length > 0, [windows]);
@@ -515,22 +524,17 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           return next;
         }
 
+        let savedDraft = "";
+        try { savedDraft = localStorage.getItem("chatDock:draft:" + cid) || ""; } catch {}
         const next = [
           ...prev,
-          { conversationId: cid, title: title || "Chat", minimized: false, messages: [], loading: false, draft: "" },
+          { conversationId: cid, title: title || "Chat", minimized: false, messages: [], loading: false, draft: savedDraft },
         ];
         if (next.length > maxWindows) next.shift();
 
         persistWindows(next);
         return next;
       });
-
-      window.dispatchEvent(
-        new CustomEvent("chat:newMessage", {
-          detail: { conversationId: cid, message: messageNorm },
-        })
-      );
-
 
       clearUnread(cid);
       socket?.emit?.("join_conversation", { conversation_id: cid });
@@ -555,6 +559,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         delete next[cid];
         return next;
       });
+      // Clear persisted draft when window is closed
+      try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
     },
     [persistWindows, socket]
   );
@@ -705,8 +711,36 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     socket.on("user_typing", onUserTyping);
     return () => socket.off("user_typing", onUserTyping);
   }, [socket, currentUser?.id]);
+
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [userMessageSent, setUserMessageSent] = useState({ title: "", url: "", message: "" });
+  const notifTimerRef = useRef(null);
+
+  // Helper: show popup notification with auto-dismiss after 20s
+  const showPopupNotification = useCallback((title, url, message, conversationId) => {
+    // Clear any existing timer to reset countdown for new message
+    if (notifTimerRef.current) clearTimeout(notifTimerRef.current);
+    setUserMessageSent({ title, url, message, id: conversationId });
+    setIsNotificationOpen(true);
+    notifTimerRef.current = setTimeout(() => {
+      setIsNotificationOpen(false);
+    }, 20000);
+  }, []);
+
+  // Dismiss popup and cancel timer atomically (used by X button and click-to-open)
+  const dismissPopup = useCallback(() => {
+    if (notifTimerRef.current) {
+      clearTimeout(notifTimerRef.current);
+      notifTimerRef.current = null;
+    }
+    setIsNotificationOpen(false);
+  }, []);
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => { if (notifTimerRef.current) clearTimeout(notifTimerRef.current); };
+  }, []);
+
   useEffect(() => {
     if (!socket) {
       return;
@@ -748,6 +782,16 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         });
       });
 
+      // Bump conversation to top of list by updating last_message_at
+      const msgTime = messageNorm.created_at || new Date().toISOString();
+      setConversations((prev) => {
+        const exists = prev.some((c) => String(c.id) === cid);
+        if (!exists) return prev; // will be added by fetchConversations if hidden
+        return prev.map((c) =>
+          String(c.id) === cid ? { ...c, last_message_at: msgTime, updated_at: msgTime } : c
+        );
+      });
+
       const isOwnMessage = String(messageNorm.sender_id) === String(currentUser?.id);
 
       if (!isOwnMessage) {
@@ -776,15 +820,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           
           if (currentIsTabVisible && !isOpen) {
 
-            setIsNotificationOpen(true);
             const message = messageNorm.content || (messageNorm.file_type ? `sent a ${messageNorm.file_type.startsWith("image/") ? "photo" : "file"}` : "sent a message");
             const title = `${senderInfo.name || "Someone"}: ${message.length > 30 ? message.slice(0, 30) + "..." : message}`;
-
-            const url = `/chat?user=${messageNorm.id}`
-            setTimeout(() => {
-              setIsNotificationOpen(false)
-            }, 4000);
-            setUserMessageSent({ title, url, message, id: messageNorm.conversation_id });
+            const url = `/chat?user=${messageNorm.sender_id}`;
+            showPopupNotification(title, url, message, messageNorm.conversation_id);
 
           }
         } else {
@@ -798,10 +837,43 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
     socket.on("new_message", handleIncomingMessage);
     socket.on("conversation_message", handleIncomingMessage);
+    // Note: showPopupNotification is stable (useCallback with no deps)
+
+    // Read receipt status updates - update message status in the correct window
+    const handleStatusUpdate = (data) => {
+      const { message_id, conversation_id, status } = data || {};
+      if (!message_id || !conversation_id) return;
+      const cid = String(conversation_id);
+
+      setWindows((prev) =>
+        prev.map((w) => {
+          if (String(w.conversationId) !== cid) return w;
+          const updatedMessages = (w.messages || []).map((m) =>
+            String(m.id) === String(message_id)
+              ? {
+                  ...m,
+                  status,
+                  delivery_status: status,
+                  ...(status === "read" ? { read_at: data.read_at || new Date().toISOString() } : {}),
+                  ...(status === "delivered" ? { delivered_at: data.delivered_at || new Date().toISOString() } : {}),
+                }
+              : m
+          );
+          return { ...w, messages: updatedMessages };
+        })
+      );
+    };
+
+    socket.on("message_status_update", handleStatusUpdate);
+    socket.on("message_read", handleStatusUpdate);
+    socket.on("message_delivered", handleStatusUpdate);
 
     return () => {
       socket.off("new_message", handleIncomingMessage);
       socket.off("conversation_message", handleIncomingMessage);
+      socket.off("message_status_update", handleStatusUpdate);
+      socket.off("message_read", handleStatusUpdate);
+      socket.off("message_delivered", handleStatusUpdate);
     };
   }, [
     socket,
@@ -844,12 +916,13 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         });
       }
 
-      // clear draft
+      // clear draft from state and localStorage
       setWindows((prev) =>
         prev.map((w) =>
           String(w.conversationId) === cid ? { ...w, draft: "" } : w
         )
       );
+      try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
 
       if (consideredActive && !isConvMinimized(cid)) {
         clearUnread(cid);
@@ -884,8 +957,8 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       }
       return true;
     }).sort((a, b) => {
-      const aLast = a.messages?.[a.messages.length - 1]?.created_at || a.created_at || 0;
-      const bLast = b.messages?.[b.messages.length - 1]?.created_at || b.created_at || 0;
+      const aLast = a.last_message_at || a.updated_at || a.created_at || 0;
+      const bLast = b.last_message_at || b.updated_at || b.created_at || 0;
       return new Date(bLast).getTime() - new Date(aLast).getTime();
     })
   }, [conversations, searchTerm, activeTab, onlineUsers, currentUser?.id]);
@@ -938,9 +1011,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       
       <ChatNotification
         onClick={() => {
-          openWindow({ conversationId: userMessageSent?.id, title: userMessageSent?.title});
+          openWindow({ conversationId: userMessageSent?.id, title: userMessageSent?.title });
+          dismissPopup();
         }}
-        isOpen={isNotificationOpen} setIsOpen={setIsNotificationOpen} title={userMessageSent.title} url={userMessageSent.url} message={userMessageSent.message} />
+        isOpen={isNotificationOpen}
+        setIsOpen={dismissPopup}
+        title={userMessageSent.title}
+        url={userMessageSent.url}
+        message={userMessageSent.message}
+      />
 
       {/* Launcher Button */}
       {(!isPanelOpen && !isWindowsOpen && !isMobile) && (
@@ -1031,8 +1110,15 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                       const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
                       let lastMsg = conv.last_message || conv.lastMessage;
 
+                      // Check for a saved draft for this conversation
+                      let dockDraftText = "";
+                      try { dockDraftText = localStorage.getItem("chatDock:draft:" + String(conv.id)) || ""; } catch {}
+
                       let lastMessagePreview = "No messages yet";
-                      if (lastMsg) {
+                      if (dockDraftText.trim()) {
+                        // Draft shown with amber prefix in JSX below
+                        lastMessagePreview = dockDraftText.trim();
+                      } else if (lastMsg) {
                         let content = lastMsg.content || lastMsg.original_content || "";
                         if (lastMsg.is_deleted) content = "This message was deleted.";
                         const senderId = lastMsg.sender_id || lastMsg.sender?.id;
@@ -1086,7 +1172,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                               {title}
                             </div>
                             <div className={`text-xs truncate transition-colors ${unreadCount > 0 ? "text-zinc-300" : "text-zinc-500"}`}>
-                              {lastMessagePreview}
+                              {dockDraftText.trim() ? (
+                                <>
+                                  <span className="text-amber-400 font-medium">Draft: </span>
+                                  <span>{lastMessagePreview.length > 25 ? lastMessagePreview.slice(0, 25) + "..." : lastMessagePreview}</span>
+                                </>
+                              ) : lastMessagePreview}
                             </div>
                           </div>
                           <div className="flex flex-col gap-2">
@@ -1102,17 +1193,20 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             )}
                           </div>
                         </motion.button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setConversationToDelete({ id: conv.id, title });
-                          }}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-                          title="Delete conversation"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {/* Only show delete button for direct (1-to-1) chats */}
+                        {isDirect && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setConversationToDelete({ id: conv.id, title });
+                            }}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                            title="Delete conversation"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
 
                         </div>
                       );
@@ -1288,6 +1382,14 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
                             setWindows((prev) =>
                               prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
                             );
+                            // Persist draft to localStorage so it survives refresh/close
+                            try {
+                              if (val && val.trim()) {
+                                localStorage.setItem("chatDock:draft:" + cid, val);
+                              } else {
+                                localStorage.removeItem("chatDock:draft:" + cid);
+                              }
+                            } catch {}
                             if (socket) {
                               socket.emit("typing_start", { conversation_id: cid });
                               if (typingTimeoutsRef.current[cid]) clearTimeout(typingTimeoutsRef.current[cid]);

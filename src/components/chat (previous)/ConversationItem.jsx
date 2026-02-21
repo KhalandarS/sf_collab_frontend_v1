@@ -23,7 +23,8 @@ const ConversationItem = ({
   lastActiveAt = {},
   lastSeenAt = {},
   nowTs = Date.now(),
-  onDelete, // NEW: callback when conversation is deleted
+  onDelete,
+  draftText = "", // NEW: draft preview shown in conversation list
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -80,11 +81,15 @@ const ConversationItem = ({
   }, [isDirect, otherParticipant, conversation]);
 
   const lastMessage = useMemo(() => {
+    // Show draft preview if user has a saved draft for this conversation
+    if (draftText && draftText.trim()) {
+      return null; // handled in JSX to allow styled "Draft:" prefix
+    }
     if (conversation.last_message?.is_deleted) {
       return "This message was deleted";
     }
     return conversation.last_message?.content || "No messages yet";
-  }, [conversation]);
+  }, [conversation, draftText]);
 
   const lastTime = useMemo(() => {
     return conversation.last_message?.created_at
@@ -145,7 +150,14 @@ const ConversationItem = ({
             </div>
 
             <div className="flex items-center justify-between gap-2 mt-0.5">
-              <p className="text-xs text-zinc-500 truncate">{lastMessage}</p>
+              {draftText && draftText.trim() ? (
+                <p className="text-xs truncate">
+                  <span className="text-amber-400 font-medium">Draft: </span>
+                  <span className="text-zinc-500">{draftText.trim().slice(0, 35)}{draftText.trim().length > 35 ? "..." : ""}</span>
+                </p>
+              ) : (
+                <p className="text-xs text-zinc-500 truncate">{lastMessage}</p>
+              )}
 
               {conversation.unread_count > 0 && (
                 <span className="ml-2 w-5 h-5 flex items-center justify-center bg-indigo-500 text-zinc-900 text-[10px] font-bold rounded-full shrink-0">
@@ -156,18 +168,20 @@ const ConversationItem = ({
           </div>
         </button>
 
-        {/* Delete button - appears on hover */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            setShowDeleteModal(true);
-          }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-          title="Delete conversation"
-        >
-          <Trash2 size={14} />
-        </button>
+        {/* Delete button - only for direct (1-to-1) chats */}
+        {isDirect && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowDeleteModal(true);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+            title="Delete conversation"
+          >
+            <Trash2 size={14} />
+          </button>
+        )}
 
         </div>
 

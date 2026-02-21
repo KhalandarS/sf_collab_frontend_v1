@@ -106,12 +106,22 @@ function normalizeMessage(m) {
         }
       : null);
 
+  // Derive status from multiple possible field names
+  const status = m.status || m.delivery_status || m.deliveryStatus || null;
+  const read_at = m.read_at || m.readAt || null;
+  const delivered_at = m.delivered_at || m.deliveredAt || null;
+
   return {
     ...m,
     created_at: created,
     sender,
     sender_id: m.sender_id || sender?.id,
     content: m.content ?? m.original_content ?? m.message ?? "",
+    // Preserve read receipt fields so ticks survive page reload
+    status: status,
+    delivery_status: status,
+    read_at: read_at,
+    delivered_at: delivered_at,
   };
 }
 
@@ -189,11 +199,8 @@ const ChatPage = () => {
     
     try {
       const response = await chatAPI.getAllChats();
-      const data = response.data;
-      console.log("data:", data);
-
-      const convos = data.conversations || [];
-      console.log(response);
+      // chatAPI already returns response.data, so response = { success, data: { conversations } }
+      const convos = response?.data?.conversations || response?.conversations || [];
       setConversations(convos);
 
       // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
@@ -233,8 +240,9 @@ const ChatPage = () => {
     
     try {
       const response = await chatAPI.getMessages(conversationId, 100, 0);
-      const data = response.data;
-      setMessages((data.messages || []).map(normalizeMessage));
+      // chatAPI already returns response.data
+      const messages = response?.data?.messages || response?.messages || [];
+      setMessages(messages.map(normalizeMessage));
       socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -377,12 +385,57 @@ useEffect(() => {
     socket.on("new_message", onNewMessage);
     socket.on("user_typing", onUserTyping);
 
+    // Read receipt status updates
+    const onMessageStatusUpdate = (data) => {
+      // data = { message_id, conversation_id, status, read_at?, delivered_at? }
+      const { message_id, conversation_id, status } = data || {};
+      if (!message_id || String(conversation_id) !== String(activeConversation?.id)) return;
+
+      setMessages((prev) =>
+        prev.map((m) =>
+          String(m.id) === String(message_id)
+            ? {
+                ...m,
+                status,
+                delivery_status: status,
+                ...(status === "read" ? { read_at: data.read_at || new Date().toISOString() } : {}),
+                ...(status === "delivered" ? { delivered_at: data.delivered_at || new Date().toISOString() } : {}),
+              }
+            : m
+        )
+      );
+    };
+
+    socket.on("message_status_update", onMessageStatusUpdate);
+    // Some backends emit this event name instead
+    socket.on("message_read", onMessageStatusUpdate);
+    socket.on("message_delivered", onMessageStatusUpdate);
+
+    // conversation_message fires for ALL conversations the user is part of (including hidden ones)
+    // When a new message arrives for a conversation not in the list (was deleted/hidden),
+    // the backend already unhides it — we just need to refetch so it reappears
+    const onConversationMessage = (data) => {
+      const cid = String(data?.conversation_id || data?.message?.conversation_id);
+      const isCurrentConv = String(activeConversation?.id) === cid;
+
+      if (!isCurrentConv) {
+        // Always refetch to re-show any unhidden conversations
+        fetchConversations();
+      }
+    };
+
+    socket.on("conversation_message", onConversationMessage);
+
     return () => {
       if (activeConversation) {
         socket.emit("leave_conversation", { conversation_id: activeConversation.id });
       }
       socket.off("new_message", onNewMessage);
       socket.off("user_typing", onUserTyping);
+      socket.off("message_status_update", onMessageStatusUpdate);
+      socket.off("message_read", onMessageStatusUpdate);
+      socket.off("message_delivered", onMessageStatusUpdate);
+      socket.off("conversation_message", onConversationMessage);
     };
   }, [socket, activeConversation, fetchConversations]);
 
@@ -483,16 +536,41 @@ useEffect(() => {
 
   // Select a conversation
   const handleSelectConversation = (conversation) => {
+    if (!conversation) return;
     if (activeConversation?.id !== conversation.id) {
+      // Save draft for the conversation we're leaving
+      if (activeConversation && messageInput) {
+        try {
+          if (messageInput.trim()) {
+            localStorage.setItem("chatPage:draft:" + String(activeConversation.id), messageInput);
+          } else {
+            localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
+          }
+        } catch {}
+      }
+
       // Leave previous room
       if (socket && activeConversation) {
         socket.emit('leave_conversation', { conversation_id: activeConversation.id });
       }
-      
+
       setActiveConversation(conversation);
       setMessages([]);
       setTypingUsers([]);
       fetchMessages(conversation.id);
+
+      // Load draft for the new conversation
+      let restoredDraft = "";
+      try { restoredDraft = localStorage.getItem("chatPage:draft:" + String(conversation.id)) || ""; } catch {}
+      setMessageInput(restoredDraft);
+
+      // Immediately mark as read and clear unread count in local state
+      socket?.emit('mark_read', { conversation_id: conversation.id });
+      setConversations((prev) =>
+        prev.map((c) =>
+          String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
+        )
+      );
     }
   };
 
@@ -564,38 +642,55 @@ useEffect(() => {
   // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
+      // chatAPI returns response.data already: { success, data: { conversation } }
       const response = await chatAPI.createGroupConversation(name, userIds);
-      const data = response.data;
-      if (!response.ok || !data?.success) {
+      const conversation = response?.data?.conversation || response?.conversation;
+
+      if (!conversation) {
         return {
           success: false,
-          message: data?.error || data?.message || `Failed to create group chat (HTTP ${response.status})`,
+          message: response?.message || 'Failed to create group chat.',
         };
       }
 
-      await fetchConversations();              
-      handleSelectConversation(data.conversation);
+      // Add the new conversation to list immediately (no full refetch needed)
+      setConversations((prev) => {
+        const exists = prev.some((c) => String(c.id) === String(conversation.id));
+        return exists ? prev : [conversation, ...prev];
+      });
 
-      return { success: true, data };
+      // Navigate into the new group immediately
+      handleSelectConversation(conversation);
+
+      return { success: true };
     } catch (error) {
       console.error('Failed to create group:', error);
-      return { success: false, message: error?.error || error?.message || 'Failed to create group chat.' };
+      return { success: false, message: error?.message || 'Failed to create group chat.' };
     }
   };
 
-  // Handle input change (with typing indicator)
+  // Handle input change (with typing indicator + draft persistence)
   const handleInputChange = (value) => {
     setMessageInput(value);
-    
+
+    // Persist draft to localStorage so it survives conversation switches and refresh
+    if (activeConversation) {
+      try {
+        if (value && value.trim()) {
+          localStorage.setItem("chatPage:draft:" + String(activeConversation.id), value);
+        } else {
+          localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
+        }
+      } catch {}
+    }
+
     if (socket && activeConversation) {
       socket.emit('typing_start', { conversation_id: activeConversation.id });
-      
-      // Clear previous timeout
+
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      
-      // Stop typing after 2 seconds of inactivity
+
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit('typing_stop', { conversation_id: activeConversation.id });
       }, 2000);
@@ -611,8 +706,10 @@ useEffect(() => {
       conversation_id: activeConversation.id,
       content,
     });
-    
+
     setMessageInput('');
+    // Clear persisted draft for this conversation
+    try { localStorage.removeItem("chatPage:draft:" + String(activeConversation.id)); } catch {}
   };
 
   const shouldShowAvatar = (message, index) => {
@@ -839,31 +936,37 @@ useEffect(() => {
               <p>No conversations yet</p>
             </div>
           ) : (
-            filteredConversations.map((conv, idx) => (
-            <ConversationItem
-              key={idx}
-              conversation={conv}
-              isActive={activeConversation?.id === conv.id}
-              onClick={() => {
-                handleSelectConversation(conv)
-                setSidebarOpen(false);
-              }}
-              onlineUsers={onlineUsers}
-              currentUserId={currentUser.id}
-              lastActiveAt={lastActiveAt}
-              lastSeenAt={lastSeenAt}
-              nowTs={nowTs}
-              onDelete={(conversationId) => {
-                // Remove from local state
-                setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
-                // Clear if it was active
-                if (activeConversation && String(activeConversation.id) === String(conversationId)) {
-                  setActiveConversation(null);
-                  setMessages([]);
-                }
-              }}
-            />
-          ))
+            filteredConversations.map((conv, idx) => {
+              // Read draft from localStorage to show preview in sidebar
+              let pageDraftText = "";
+              try { pageDraftText = localStorage.getItem("chatPage:draft:" + String(conv.id)) || ""; } catch {}
+              return (
+                <ConversationItem
+                  key={idx}
+                  conversation={conv}
+                  isActive={activeConversation?.id === conv.id}
+                  onClick={() => {
+                    handleSelectConversation(conv);
+                    setSidebarOpen(false);
+                  }}
+                  onlineUsers={onlineUsers}
+                  currentUserId={currentUser.id}
+                  lastActiveAt={lastActiveAt}
+                  lastSeenAt={lastSeenAt}
+                  nowTs={nowTs}
+                  draftText={pageDraftText}
+                  onDelete={(conversationId) => {
+                    // Remove from local state
+                    setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
+                    // Clear if it was active
+                    if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+                      setActiveConversation(null);
+                      setMessages([]);
+                    }
+                  }}
+                />
+              );
+            })
           )}
         </div>
       </div>

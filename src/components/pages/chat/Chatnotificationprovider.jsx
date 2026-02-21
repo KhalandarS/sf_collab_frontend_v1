@@ -492,12 +492,16 @@ export const ChatNotificationProvider = ({ children }) => {
       const { message, conversation_id } = data || {};
       if (!message) return;
 
-      const isOwnMessage = message.sender_id === currentUserId;
+      // Use String() to avoid type mismatch (sender_id may be int, currentUserId may be string)
+      const isOwnMessage = String(message.sender_id) === String(currentUserId);
       if (isOwnMessage) return;
 
-      // Get conversation type to check if sound should be muted
+      // Get conversation type — now reliably included in socket payload
       const conversationType = data.conversation?.conversation_type || 'direct';
       const isMuted = MUTED_CONVERSATION_TYPES.includes(conversationType);
+
+      // Never show toast or popup for general chat — it's too noisy
+      if (isMuted) return;
 
       // Only show toast when not on chat page
       if (!isOnChatPageRef.current) {
@@ -510,10 +514,7 @@ export const ChatNotificationProvider = ({ children }) => {
           timestamp: new Date(),
         });
 
-        // Play sound ONLY if not muted (not general chat)
-        if (!isMuted) {
-          playNotificationSound();
-        }
+        playNotificationSound();
         
         setUnreadCount((prev) => prev + 1);
 

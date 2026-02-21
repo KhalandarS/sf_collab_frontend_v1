@@ -12,7 +12,7 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, Eye, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2 } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
@@ -104,9 +104,23 @@ function hideAutoFileText({ fileUrl, isImage, content, fileName }) {
 
 function getMsgStatus(msg) {
   const s = String(msg?.status || msg?.delivery_status || "").toLowerCase();
-  if (s === "read" || s === "seen" || msg?.read_at || msg?.seen_at) return "opened";
+  if (s === "read" || s === "seen" || msg?.read_at || msg?.seen_at) return "read";
   if (s === "delivered" || msg?.delivered_at) return "delivered";
   return "sent";
+}
+
+// Read receipt tick icon component
+function ReadReceipt({ status, size = 14 }) {
+  if (status === "read") {
+    // Double green tick = read
+    return <CheckCheck size={size} className="text-emerald-400" />;
+  }
+  if (status === "delivered") {
+    // Double grey tick = delivered
+    return <CheckCheck size={size} className="text-zinc-400 opacity-80" />;
+  }
+  // Single grey tick = sent
+  return <Check size={size} className="text-zinc-400 opacity-80" />;
 }
 
 export default function MessageBubble({ 
@@ -473,17 +487,6 @@ export default function MessageBubble({
                               
                               {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
                             </div>
-                            
-                            <span className="text-[0.6rem] text-gray-300 transition-opacity flex justify-end items-end-safe gap-1">
-
-
-                              {isOwn && (() => {
-                              const st = getMsgStatus(message);
-                              if (st === "opened") return <Eye size={14} className="opacity-80" />;
-                              if (st === "delivered") return <CheckCheck size={14} className="opacity-80" />;
-                              return <Check size={14} className="opacity-80" />;
-                              })()}
-                            </span>
                             </div>
                           </>
                           )}
@@ -534,12 +537,7 @@ export default function MessageBubble({
           <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
             <span>{formatTime(ts)}</span>
 
-            {isOwn && (() => {
-              const st = getMsgStatus(message);
-              if (st === "opened") return <Eye size={12} className="opacity-70" />;
-              if (st === "delivered") return <CheckCheck size={12} className="opacity-70" />;
-              return <Check size={12} className="opacity-70" />;
-            })()}
+            {isOwn && <ReadReceipt status={getMsgStatus(message)} size={12} />}
           </span>
         </div>
       </div>

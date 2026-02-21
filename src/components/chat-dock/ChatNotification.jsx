@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Avatar from "@/components/chat (previous)/Avatar";
 
@@ -11,6 +12,22 @@ export default function ChatNotification({
 }) {
   if (!message) return null;
   const isMobile = window.matchMedia("(max-width: 640px)").matches;
+
+  const handleClose = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
+  };
+
+  const handleClick = () => {
+    if (isMobile) {
+      window.location.href = url;
+    } else {
+      onClick?.();
+      setIsOpen(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -26,42 +43,37 @@ export default function ChatNotification({
             cursor-pointer
             hover:bg-zinc-800 transition-colors
           "
-          onClick={() => {
-            if (isMobile) {
-              window.location.href = url;
-            } else {
-              onClick();
-              setIsOpen(false);
-            }
-          }}
+          onClick={handleClick}
         >
+          {/* Close button - always visible */}
+          <button
+            type="button"
+            onClick={handleClose}
+            className="absolute top-2 right-2 p-1.5 rounded-xl bg-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all z-10"
+            aria-label="Dismiss notification"
+          >
+            <X size={14} />
+          </button>
+
           {/* Header */}
           <div className="flex items-center gap-3 px-4 pt-4">
             <Avatar src={url} name={title} size="sm" />
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 pr-8">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
                 <span className="text-sm font-semibold text-white truncate">
                   {title}
                 </span>
               </div>
-
-              <span className="text-[11px] text-zinc-400">
-                New message
-              </span>
+              <span className="text-[11px] text-zinc-400">New message</span>
             </div>
           </div>
 
           {/* Message preview */}
           <div className="px-4 py-3">
-            <p className="text-sm text-zinc-300 line-clamp-2">
-              {message}
-            </p>
-
-            <p className="mt-2 text-xs text-amber-400 font-medium">
-              Click to reply →
-            </p>
+            <p className="text-sm text-zinc-300 line-clamp-2">{message}</p>
+            <p className="mt-2 text-xs text-amber-400 font-medium">Click to reply →</p>
           </div>
         </motion.div>
       )}
