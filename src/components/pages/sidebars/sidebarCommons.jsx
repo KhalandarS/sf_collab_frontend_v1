@@ -1,4 +1,4 @@
-import { BarChart3, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
+import { BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -91,6 +91,20 @@ export function wallet(id) {
       subItems: [
         { id: "Wallet-Overview", href: "/wallet", label: "Wallet Overview", icon: <Wallet size={18} /> },
         { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <TrendingUp size={18} /> },
+      ]
+    }
+}
+
+export function ideation(id) {
+  return {
+      id,
+      icon: <LightbulbIcon size={22} />,
+      href: "/ideation",
+      label: "Ideation",
+      subItems: [
+        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
+        { id: "saved-ideas", href: "/saved-ideas", label: "Saved Ideas", icon: <Bookmark size={18} /> },
+        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
       ]
     }
 }

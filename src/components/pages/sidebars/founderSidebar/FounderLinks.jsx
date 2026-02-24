@@ -1,7 +1,7 @@
 import { Building2, LightbulbIcon, Save } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
-import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from '../sidebarCommons';
 import { GiChecklist } from 'react-icons/gi';
 
 /**
@@ -26,16 +26,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
 
       ]
     },
-    {
-      id: 3,
-      icon: <LightbulbIcon size={22} />,
-      href: "/ideation",
-      label: "Ideation",
-      subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-      ]
-    },
+    ideation(3),
     {
       id: 4,
       icon: <Users size={22} />,

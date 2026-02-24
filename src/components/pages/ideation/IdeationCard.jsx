@@ -8,61 +8,62 @@ import {
   Share2,
   Users,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
-import { API_BASE_URL } from "@/utils/config";
 import { motion } from "framer-motion";
-import connectionAPI from "@/utils/APIs/connectionAPI";
 import { ConnectionButton } from "@/components/connection/ConnectionButton";
 import { toast } from "react-toastify";
+import { getProfilePicture } from "@/utils/getProfilePicture";
 
 export default function IdeationCard({ content, shouldBlur }) {
   const [likes, setLikes] = useState(content?.likes || 0);
   const [liked, setLiked] = useState(content?.hasLiked || false);
   const [bookmarked, setBookmarked] = useState(content?.hasBookmarked || false);
-  const { user, access_token } = useSelector((state) => state.auth);
+  const { user, access_token } = useSelector((state) => state?.auth);
 
   const handleLike = useCallback(
     async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
+      e?.preventDefault?.();
+      e?.stopPropagation?.();
+      if (!content?.id) {
+        return
+      }
       try {
         setLiked((prev) => {
           setLikes((l) => (prev ? l - 1 : l + 1));
           return !prev;
         });
 
-        const res = await ideaAPI.likeIdea(content.id, access_token);
-        setLikes(res.data.idea.likes);
-        setLiked(res.data.idea.likedBy.includes(user.id));
+        const res = await ideaAPI?.likeIdea?.(content?.id, access_token);
+        setLikes(res?.data?.idea?.likes);
+        setLiked(res?.data?.idea?.likedBy?.includes(user?.id));
       } catch (err) {
         console.error(err);
       }
     },
-    [content.id, access_token, user]
+    [content?.id, access_token, user?.id]
   );
 
   const handleBookmark = async (e) => {
-    e.preventDefault();
+    e?.preventDefault?.();
     e?.stopPropagation?.();
 
-    if (!content.id || !user?.id) {
+    if (!content?.id || !user?.id) {
       toast.error("Unable to bookmark at this time");
       return;
     }
 
     try {
       const body = {
-        user_id: user.id,
-        idea_id: content.id,
-        title: content.title,
-        content_preview: content.description.substring(0, 100),
-        url: `/ideation-details?id=${content.id}`,
+        user_id: user?.id,
+        idea_id: content?.id,
+        title: content?.title,
+        content_preview: content?.description?.substring(0, 100),
+        url: `/ideation-details?id=${content?.id}`,
       };
-      const response = await ideaAPI.toggleIdeaBookmark(body);
-      setBookmarked(response.data.isBookmarked);
+      const response = await ideaAPI?.toggleIdeaBookmark?.(body);
+      setBookmarked(response?.data?.isBookmarked);
 
     } catch (error) {
       console.error("Bookmark toggle error:", error);
@@ -71,8 +72,8 @@ export default function IdeationCard({ content, shouldBlur }) {
   };
 
   // Don't show connection button for own ideas
-  const isOwnIdea = user.id === content.author.id;
-
+  const isOwnIdea = user?.id === content?.author?.id;
+  const author = useMemo(() => content?.author || content?.creator || {}, [content]);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -82,7 +83,7 @@ export default function IdeationCard({ content, shouldBlur }) {
       className="h-full group"
     >
       <Link
-        to={`/ideation-details?id=${content.id}`}
+        to={`/ideation-details?id=${content?.id}`}
         className="relative block h-full rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-emerald-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden"
       >
         {/* Blur overlay for private ideas */}
@@ -105,19 +106,15 @@ export default function IdeationCard({ content, shouldBlur }) {
             }`}
         >
           {/* Image */}
-          {content.imageUrl && (
+          {content?.imageUrl && (
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
               className="overflow-hidden rounded-xl border border-emerald-500/10"
             >
               <img
-                src={
-                  content.imageUrl.startsWith("http")
-                    ? content.imageUrl
-                    : `${API_BASE_URL}${content.imageUrl}`
-                }
-                alt={content.title}
+                src={content?.imageUrl}
+                alt={content?.title}
                 className="h-48 w-full object-cover group-hover:brightness-110 transition-all duration-300"
               />
             </motion.div>
@@ -125,45 +122,45 @@ export default function IdeationCard({ content, shouldBlur }) {
 
           {/* Author + Stage */}
           <Link
-            to={`/user-profile?id=${content.author.id}`}
+            to={`/user-profile?id=${author?.id}`}
             className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <img
-                src={content.author.avatar}
+                src={getProfilePicture(author)}
                 className="h-10 w-10 rounded-full border-2 border-emerald-500/30 object-cover"
-                alt={content.author.name}
+                alt={author?.name}
               />
               <div>
                 <p className="text-sm font-semibold text-white">
-                  {content.author.name}
+                  {author?.name}
                 </p>
-                <p className="text-xs text-gray-400">{content.author.role}</p>
+                <p className="text-xs text-gray-400">{author?.role}</p>
               </div>
             </div>
 
             <span
               className={`${getStageColor(
-                content.stage
+                content?.stage
               )} text-xs px-3 py-1.5 rounded-full font-semibold`}
             >
-              {content.stage}
+              {content?.stage}
             </span>
           </Link>
 
           {/* Title + Description */}
           <div className="flex-1">
             <h2 className="text-lg font-bold text-white leading-tight line-clamp-2 mb-2">
-              {content.title}
+              {content?.title}
             </h2>
             <p className="text-sm text-gray-300 line-clamp-3">
-              {content.description}
+              {content?.description}
             </p>
           </div>
 
           {/* Tags */}
-          {content.tags && content.tags.length > 0 && (
+          {content?.tags && content?.tags?.length > 0 && (
             <div className="flex flex-wrap gap-2">
-              {content.tags?.slice(0, 3).map((tag, i) => (
+              {content?.tags?.slice(0, 3)?.map((tag, i) => (
                 <motion.span
                   key={i}
                   whileHover={{ scale: 1.05 }}
@@ -172,9 +169,9 @@ export default function IdeationCard({ content, shouldBlur }) {
                   #{tag}
                 </motion.span>
               ))}
-              {content.tags?.length > 3 && (
+              {content?.tags?.length > 3 && (
                 <span className="text-xs text-gray-500 px-3 py-1">
-                  +{content.tags.length - 3}
+                  +{content?.tags?.length - 3}
                 </span>
               )}
             </div>
@@ -198,18 +195,18 @@ export default function IdeationCard({ content, shouldBlur }) {
 
                 <span className="flex items-center gap-1.5">
                   <MessageCircle className="h-4 w-4" />
-                  {content.comments}
+                  {content?.comments}
                 </span>
 
                 <span className="flex items-center gap-1.5">
                   <Users className="h-4 w-4" />
-                  {content.collaborators}
+                  {content?.collaborators}
                 </span>
               </div>
 
               <span className="flex items-center gap-1.5 text-gray-500">
                 <Clock className="h-3 w-3" />
-                {content.timeAgo}
+                {content?.timeAgo}
               </span>
             </div>
 
@@ -235,16 +232,16 @@ export default function IdeationCard({ content, shouldBlur }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (navigator.share) {
-                    navigator.share({
-                      title: content.title,
-                      text: content.description,
-                      url: window.location.href,
+                  e?.preventDefault?.();
+                  e?.stopPropagation?.();
+                  if (navigator?.share) {
+                    navigator?.share?.({
+                      title: content?.title,
+                      text: content?.description,
+                      url: window?.location?.href,
                     });
                   } else {
-                    toast.info("Share functionality not available");
+                    toast?.info?.("Share functionality not available");
                   }
                 }}
                 className="flex-1 py-2.5 px-3 rounded-lg bg-white/5 border border-gray-700/50 hover:border-blue-500/30 text-gray-400 hover:text-white font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
@@ -257,12 +254,12 @@ export default function IdeationCard({ content, shouldBlur }) {
             </div>
             <div
               onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
+                e?.preventDefault?.();
+                e?.stopPropagation?.();
               }}
             >
               <ConnectionButton
-                userId={content.author.id}
+                userId={content?.author?.id}
                 size="sm"
                 className="w-full"
               />

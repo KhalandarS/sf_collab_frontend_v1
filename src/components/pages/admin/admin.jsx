@@ -151,13 +151,12 @@ const AdminDashboard = () => {
 
       const response = await waitlistAPI.givePoints(
         selectedUser.id,
-        pointsCategory,
-        access_token
+        pointsCategory
       );
       if (response.points) {
         setShowPointsModal(false);
         // Remove the feedback item from the list after giving points
-        await feedbackAPI.delete(selectedUser.id, access_token);
+        await feedbackAPI.delete(selectedUser.id);
         setFeedback((prevFeedback) =>
           prevFeedback.filter((item) => item.userId !== selectedUser.id)
         );
@@ -396,7 +395,6 @@ const AdminDashboard = () => {
           </div>
           <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mt-8">
             <h2 className="text-xl font-semibold mb-4 text-gray-100">⚠️ Error Logs ({totalErrors})</h2>
-            {console.log("Errors", errors)}
              <InfiniteList
               items={errors}
               renderItem={(error) => (

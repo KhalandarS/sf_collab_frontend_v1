@@ -103,6 +103,7 @@ import VideoGenerator from "./components/pages/videoGenerator/VideoGenerator.jsx
 import FounderManageApplications from "./components/pages/founder/manageApplications/FounderManageApplications.jsx";
 import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
 import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
+import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 
 
 
@@ -253,6 +254,7 @@ export default function App() {
         
                   {/* Ideation */}
                   <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
+                  <Route path="saved-ideas" element={<SavedIdeas />} />
                   <Route path="ideation-details" element={<Ideationdetails />} />
         
                   {/* Knowledge */}

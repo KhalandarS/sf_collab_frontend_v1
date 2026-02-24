@@ -5,17 +5,116 @@ import WaitlistSection from "./WaitlistSection";
 import { useSelector } from "react-redux";
 import JoinSFSection from "./JoinSFSection";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Zap, Users, FileText, ChevronDown, Mail, Megaphone } from "lucide-react";
+import { Bell, Zap, Users, FileText, ChevronDown, Mail, Megaphone, Trash2, Edit2 } from "lucide-react";
 import InfluencerProfileSection from "./InfluencerSection";
 import notificationAPI from "@/utils/APIs/notificationAPI";
 import { Link } from "react-router-dom";
 import { plotCount } from "@/utils/plotCount";
 import { formatFriendlyDate } from "@/utils/formatFriendlyDate";
+import DeleteConfirmationModal from "@/utils/confirm";
+
+// Edit Modal Component
+function EditAnnouncementModal({ isOpen, onClose, announcement, onSave }) {
+  const [formData, setFormData] = useState({ title: '', message: '', linkUrl: '' });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (announcement) {
+      setFormData({
+        title: announcement.title || '',
+        message: announcement.message || '',
+        linkUrl: announcement.linkUrl || '',
+      });
+    }
+  }, [announcement, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await onSave(formData);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        exit={{ scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white/10 border border-white/20 rounded-xl p-6 w-full max-w-md backdrop-blur-xl"
+      >
+        <h2 className="text-xl font-semibold text-white mb-4">Edit Announcement</h2>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Title</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
+              placeholder="Announcement title"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Message</label>
+            <textarea
+              value={formData.message}
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition resize-none h-32"
+              placeholder="Announcement message"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-white/80 mb-2">Link URL (optional)</label>
+            <input
+              type="text"
+              value={formData.linkUrl}
+              onChange={(e) => setFormData({ ...formData, linkUrl: e.target.value })}
+              className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
+              placeholder="https://example.com"
+            />
+          </div>
+          <div className="flex gap-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white border border-white/10 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition disabled:opacity-50"
+            >
+              {loading ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function AnnouncementsSection({ userRoles }) {
   const { user } = useSelector((state) => state.auth);
+  const isAdmin = useMemo(() => user?.role === 'admin', [user]);
   const [announcements, setAnnouncements] = useState([]);
   const [announcementFilter, setAnnouncementFilter] = useState('all');
+  const [deleteModal, setDeleteModal] = useState({ isOpen: false, type: null, id: null });
+  const [editModal, setEditModal] = useState({ isOpen: false, announcement: null });
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -158,8 +257,87 @@ export default function AnnouncementsSection({ userRoles }) {
   const announcementsByMonth = useMemo(() => groupByMonth(filteredAnnouncements), [filteredAnnouncements]);
   const newsletterByMonth = useMemo(() => groupByMonth(filteredNewsletter), [filteredNewsletter]);
 
+  // Delete handlers
+  const handleDeleteAnnouncement = async (id) => {
+    try {
+      await notificationAPI.deleteAnnouncement(id);
+      setAnnouncements(announcements.filter(a => a.id !== id));
+      setDeleteModal({ isOpen: false, type: null, id: null });
+    } catch (error) {
+      console.error('Failed to delete announcement', error);
+    }
+  };
+
+  const handleDeleteNewsletter = async (id) => {
+    try {
+      await notificationAPI.deleteNewsletter(id);
+      setNewsletter(newsletter.filter(n => n.id !== id));
+      setDeleteModal({ isOpen: false, type: null, id: null });
+    } catch (error) {
+      console.error('Failed to delete newsletter', error);
+    }
+  };
+
+  const handleClearAll = async (type) => {
+    try {
+      if (type === 'announcements') {
+        await notificationAPI.clearAllAnnouncements();
+        setAnnouncements([]);
+      } else if (type === 'newsletter') {
+        await notificationAPI.clearAllNewsletters();
+        setNewsletter([]);
+      }
+      setDeleteModal({ isOpen: false, type: null, id: null });
+    } catch (error) {
+      console.error('Failed to clear all', error);
+    }
+  };
+
+  // Edit handler
+  const handleEditAnnouncement = async (formData) => {
+    try {
+      await notificationAPI.updateAnnouncement(editModal.announcement.id, formData);
+      setAnnouncements(announcements.map(a => 
+        a.id === editModal.announcement.id 
+          ? { ...a, ...formData }
+          : a
+      ));
+      setEditModal({ isOpen: false, announcement: null });
+    } catch (error) {
+      console.error('Failed to update announcement', error);
+    }
+  };
+
   return (
     <div className="rounded-xl bg-white/[0.03] border border-white/10 shadow-lg overflow-hidden">
+      {/* Edit Announcement Modal */}
+      <EditAnnouncementModal
+        isOpen={editModal.isOpen}
+        onClose={() => setEditModal({ isOpen: false, announcement: null })}
+        announcement={editModal.announcement}
+        onSave={handleEditAnnouncement}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, type: null, id: null })}
+        onConfirm={() => {
+          if (deleteModal.type === 'announcement' && deleteModal.id) {
+            handleDeleteAnnouncement(deleteModal.id);
+          } else if (deleteModal.type === 'newsletter' && deleteModal.id) {
+            handleDeleteNewsletter(deleteModal.id);
+          } else if (deleteModal.type === 'clearAnnouncements') {
+            handleClearAll('announcements');
+          } else if (deleteModal.type === 'clearNewsletter') {
+            handleClearAll('newsletter');
+          }
+        }}
+        title="Confirm Delete"
+        message="Are you sure? This action cannot be undone."
+        type="soft"
+      />
+
       {/* Header */}
       <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between bg-white/[0.02]">
         <motion.div className="flex items-center gap-3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
@@ -236,7 +414,7 @@ export default function AnnouncementsSection({ userRoles }) {
             </div>
 
             {/* Content */}
-            <div className="p-6 max-h-[600px] overflow-y-auto custom-scrollbar">
+            <div className="p-6 max-h-[800px] overflow-y-auto custom-scrollbar">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={activeTab}
@@ -247,48 +425,80 @@ export default function AnnouncementsSection({ userRoles }) {
                 >
                   {activeTab === 'announcements' && (
                     <div className="space-y-4">
-                      <div className="relative">
+                      <div className="flex gap-2">
                         <input
                           type="text"
                           placeholder="Search announcements..."
                           onChange={(e) => setAnnouncementFilter(e.target.value)}
-                          className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
+                          className="flex-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
                         />
+                        {isAdmin && announcements.length > 0 && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setDeleteModal({ isOpen: true, type: 'clearAnnouncements', id: null })}
+                            className="px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/50 transition flex items-center gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Clear All
+                          </motion.button>
+                        )}
                       </div>
-                      <div className="space-y-6">
+                      <div className="space-y-8">
                         {Object.keys(announcementsByMonth).length > 0 ? (
                           Object.entries(announcementsByMonth).map(([month, items]) => (
                             <div key={month}>
-                              <h3 className="text-sm font-semibold text-white/60 mb-3 pl-2 border-l-2 border-white/20">
+                              <h3 className="text-sm font-semibold text-white/60 mb-4 pl-3 border-l-2 border-white/20 uppercase tracking-wide">
                                 {month}
                               </h3>
-                              <div className="space-y-3">
-                                {items.slice(0, 5).map((announcement, idx) => (
+                              <div className="space-y-4">
+                                {items.map((announcement, idx) => (
                                   <motion.div 
                                     key={announcement.id}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-4 rounded-lg border transition-all ${
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/20 ${
                                       localStorage.getItem(`announcement:${announcement.id}:read`) === 'true'
                                         ? 'bg-white/[0.02] border-white/5' 
-                                        : 'bg-white/[0.05] border-white/10'
+                                        : 'bg-white/[0.05] border-white/10 shadow-md'
                                     }`}
                                   >
-                                    <div className="flex items-start justify-between gap-3 mb-2">
-                                      <h3 className="text-sm font-semibold text-white flex-1">{announcement.title}</h3>
-                                      {
-                                        announcement.linkUrl && (
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                      <h3 className="text-base font-semibold text-white flex-1 leading-relaxed">{announcement.title}</h3>
+                                      <div className="flex gap-2 flex-shrink-0">
+                                        {announcement.linkUrl && (
                                           <Link
                                             to={announcement.linkUrl}
-                                            className="ml-2 text-xs px-3 py-1 bg-blue-400 rounded-2xl text-white hover:text-blue-300 transition-colors"
+                                            className="text-xs px-3 py-1.5 bg-blue-500/80 hover:bg-blue-500 rounded-full text-white transition-colors"
                                           >
-                                            View Details
+                                            View
                                           </Link>
                                         )}
+                                        {isAdmin && (
+                                          <>
+                                            <motion.button
+                                              whileHover={{ scale: 1.1 }}
+                                              whileTap={{ scale: 0.95 }}
+                                              onClick={() => setEditModal({ isOpen: true, announcement })}
+                                              className="p-1.5 rounded-full bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 transition"
+                                            >
+                                              <Edit2 className="h-4 w-4" />
+                                            </motion.button>
+                                            <motion.button
+                                              whileHover={{ scale: 1.1 }}
+                                              whileTap={{ scale: 0.95 }}
+                                              onClick={() => setDeleteModal({ isOpen: true, type: 'announcement', id: announcement.id })}
+                                              className="p-1.5 rounded-full bg-red-600/20 hover:bg-red-600/30 text-red-400 transition"
+                                            >
+                                              <Trash2 className="h-4 w-4" />
+                                            </motion.button>
+                                          </>
+                                        )}
+                                      </div>
                                     </div>
-                                    <p className="text-xs text-white/60 mt-1 line-clamp-2">{announcement.message}</p>
-                                    <span className="text-xs text-white/40 mt-2 block">
+                                    <p className="text-sm text-white/70 mt-3 leading-relaxed whitespace-pre-wrap">{announcement.message}</p>
+                                    <span className="text-xs text-white/50 block">
                                       {formatFriendlyDate(announcement.createdAt)}
                                     </span>
                                   </motion.div>
@@ -297,64 +507,77 @@ export default function AnnouncementsSection({ userRoles }) {
                             </div>
                           ))
                         ) : (
-                          <p className="text-center text-white/40 py-8">No announcements at this time.</p>
+                          <p className="text-center text-white/40 py-12">No announcements at this time.</p>
                         )}
                       </div>
-                      {filteredAnnouncements.length > 5 && (
-                        <button className="w-full py-2 text-white/60 hover:text-white text-sm font-medium transition-colors">
-                          View all announcements
-                        </button>
-                      )}
                     </div>
                   )}
                   {activeTab === 'newsletter' && (
                     <div className="space-y-4">
-                      <input
-                        type="text"
-                        placeholder="Search newsletter..."
-                        onChange={(e) => setNewsletterFilter(e.target.value)}
-                        className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          placeholder="Search newsletter..."
+                          onChange={(e) => setNewsletterFilter(e.target.value)}
+                          className="flex-1 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:border-white/30 transition"
+                        />
+                        {isAdmin && newsletter.length > 0 && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setDeleteModal({ isOpen: true, type: 'clearNewsletter', id: null })}
+                            className="px-4 py-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-600/50 transition flex items-center gap-2"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Clear All
+                          </motion.button>
+                        )}
+                      </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-8">
                         {Object.keys(newsletterByMonth).length > 0 ? (
                           Object.entries(newsletterByMonth).map(([month, items]) => (
                             <div key={month}>
-                              <h3 className="text-sm font-semibold text-white/60 mb-3 pl-2 border-l-2 border-white/20">
+                              <h3 className="text-sm font-semibold text-white/60 mb-4 pl-3 border-l-2 border-white/20 uppercase tracking-wide">
                                 {month}
                               </h3>
-                              <div className="space-y-3">
-                                {items.slice(0, 5).map((item, idx) => (
+                              <div className="space-y-4">
+                                {items.map((item, idx) => (
                                   <motion.div 
                                     key={item.id}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-4 rounded-lg border transition-all ${
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/20 ${
                                       localStorage.getItem(`newsletter:${item.id}:read`) === 'true'
                                         ? 'bg-white/[0.02] border-white/5' 
-                                        : 'bg-white/[0.05] border-white/10'
+                                        : 'bg-white/[0.05] border-white/10 shadow-md'
                                     }`}
                                   >
-                                    <div className="flex items-start justify-between gap-3 mb-2">
-                                      <h3 className="text-sm font-semibold text-white flex-1">{item.title}</h3>
+                                    <div className="flex items-start justify-between gap-4 mb-3">
+                                      <h3 className="text-base font-semibold text-white flex-1 leading-relaxed">{item.title}</h3>
+                                      {isAdmin && (
+                                        <motion.button
+                                          whileHover={{ scale: 1.1 }}
+                                          whileTap={{ scale: 0.95 }}
+                                          onClick={() => setDeleteModal({ isOpen: true, type: 'newsletter', id: item.id })}
+                                          className="p-1.5 rounded-full bg-red-600/20 hover:bg-red-600/30 text-red-400 transition flex-shrink-0"
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </motion.button>
+                                      )}
                                     </div>
-                                    <p className="text-xs text-white/60 mt-1 line-clamp-2">{item.message}</p>
-                                    <span className="text-xs text-white/40 mt-2 block">{formatFriendlyDate(item.createdAt)}</span>
+                                    <p className="text-sm text-white/70 mt-3 leading-relaxed whitespace-pre-wrap line-clamp-4">{item.message}</p>
+                                    <span className="text-xs text-white/50 mt-4 block">{formatFriendlyDate(item.createdAt)}</span>
                                   </motion.div>
                                 ))}
                               </div>
                             </div>
                           ))
                         ) : (
-                          <p className="text-center text-white/40 py-8">No newsletter updates at this time.</p>
+                          <p className="text-center text-white/40 py-12">No newsletter updates at this time.</p>
                         )}
                       </div>
-                      {filteredNewsletter.length > 5 && (
-                        <button className="w-full py-2 text-white/60 hover:text-white text-sm font-medium transition-colors">
-                          View all newsletters
-                        </button>
-                      )}
                     </div>
                   )}
                   {activeTab === 'waitlist' && (

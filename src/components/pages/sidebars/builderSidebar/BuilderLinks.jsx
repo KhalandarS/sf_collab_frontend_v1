@@ -1,6 +1,6 @@
 import { CheckCircle, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList, Calculator, FileTerminal } from 'lucide-react';
 
-import { aiTools, dashboardLink, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from '../sidebarCommons';
 
 export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -16,7 +16,7 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
       ]
 
     },
-
+    ideation(3),
     {
       id: 4,
       icon: <LightbulbIcon size={22} />,

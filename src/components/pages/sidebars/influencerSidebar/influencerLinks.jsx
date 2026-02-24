@@ -1,5 +1,5 @@
 import { BookOpen, BriefcaseBusiness, LightbulbIcon, Rocket, Save, Share2, TrendingUp, Wallet } from "lucide-react";
-import { aiTools, toolsSection, dashboardLink, socialSection, wallet } from "../sidebarCommons";
+import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation } from "../sidebarCommons";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -15,16 +15,7 @@ export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setAc
           ]
     
     },
-    {
-          id: 3,
-          icon: <LightbulbIcon size={22} />,
-          href: "/ideation",
-          label: "Ideation",
-          subItems: [
-            { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-            { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-          ]
-    },
+    ideation(3),
     
     socialSection(4),
     

@@ -1,6 +1,6 @@
 import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save, TrendingUp } from 'lucide-react';
 import { FcDocument } from 'react-icons/fc';
-import { aiTools, toolsSection, dashboardLink, socialSection, wallet } from '../sidebarCommons';
+import { aiTools, toolsSection, dashboardLink, socialSection, ideation } from '../sidebarCommons';
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [
@@ -16,16 +16,7 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       ]
 
     },
-    {
-      id: 3,
-      icon: <LightbulbIcon size={22} />,
-      href: "/ideation",
-      label: "Ideation",
-      subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
-      ]
-    },
+    ideation(3),
     {
       id: 4,
       icon: <BarChart2 size={22} />,

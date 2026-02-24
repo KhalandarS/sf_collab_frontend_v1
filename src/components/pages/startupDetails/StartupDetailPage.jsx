@@ -299,8 +299,7 @@ const StartupDetailPage = () => {
 
       
       if (response.success) {
-        toast.success('Startup deleted successfully');
-        navigate('/discover');
+        navigate('/discover-startups');
       } 
     } catch (error) {
       toast.error('Error deleting startup');

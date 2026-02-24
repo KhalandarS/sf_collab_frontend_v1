@@ -73,7 +73,7 @@ const Ideation = ({ activeRole}) => {
         params.append("search", searchQuery);
       }
 
-      const response = await ideaAPI.getAllIdeas(access_token, params);
+      const response = await ideaAPI.getAllIdeas(params);
       if (!response.success) {
         throw new Error(response.message || "Failed to fetch ideas");
       }

@@ -9,6 +9,7 @@ import useGetPlanId from "@/utils/hooks/useGetPlanId";
 import { loadStripe } from "@stripe/stripe-js";
 import { Elements, useStripe, useElements, PaymentElement } from "@stripe/react-stripe-js";
 import { paymentAPI } from "@/utils/APIs/paymentAPI";
+import { IoChatbubble } from "react-icons/io5";
 
 const stripePromise = STRIPE_PUBLIC_KEY ? loadStripe(STRIPE_PUBLIC_KEY) : null;
 
@@ -198,37 +199,45 @@ export default function CrowdfundingSection() {
       <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
         <div className="w-full px-6 md:px-40 mx-auto space-y-16">
           {/* HEADER */}
-          <header className="text-center space-y-4">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
-              Support SFCollab. <span className="text-indigo-400">Unlock the future.</span>
-            </h1>
-            <p className="text-white/60 max-w-2xl mx-auto">
-              Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
-            </p>
-            <div className="flex gap-4 justify-center mt-6">
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText("support@sfcollab.com");
-                  toast.success("Email copied to clipboard!");
-                }}
-                className="px-6 py-2 flex gap-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white hover:bg-neutral-700 transition"
-              >
-                <Copy size={22} />
-                Email
-              </button>
-              <a
-                href="https://instagram.com/sfcollab_official"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-2 flex gap-3 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 transition"
-              >
-                <Instagram size={22} />
-                Instagram
+                <header className="text-center space-y-4">
+                <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+                  Support SFCollab. <span className="text-indigo-400">Unlock the future.</span>
+                </h1>
+                <p className="text-white/60 max-w-2xl mx-auto">
+                  Early supporters unlock permanent advantages and help shape how collaboration platforms are built.
+                </p>
+                <div className="flex gap-4 justify-center mt-6">
+                  
+                  <a
+                  href="https://instagram.com/sfcollab_official"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-6 py-2 flex gap-3 items-center justify-center rounded-lg bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold hover:opacity-90 transition"
+                  >
+                  <Instagram size={22} />
+                  Instagram
               </a>
-            </div>
-          </header>
+              <button
+                  onClick={() => {
+                    navigator.clipboard.writeText("support@sfcollab.com");
+                    toast.success("Email copied to clipboard!");
+                  }}
+                  className="px-6 py-2 flex gap-3 rounded-lg bg-neutral-800 border border-neutral-700 text-white hover:bg-neutral-700 transition"
+                  >
+                  <Copy size={22} />
+                  Email
+                  </button>
+                  <Link
+                  to="/contact"
+                  className="px-6 py-2 flex gap-3 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-semibold hover:opacity-90 transition"
+              >
+                <IoChatbubble size={22} />
+                  Chat Support
+                  </Link>
+                </div>
+                </header>
 
-          {/* CROWDFUNDING METER */}
+                {/* CROWDFUNDING METER */}
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="flex justify-between text-sm text-white/70">
               <span>

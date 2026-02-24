@@ -27,7 +27,7 @@ import { createBuilderLinks } from "../builderSidebar/BuilderLinks";
 import { createFounderLinks } from "../founderSidebar/FounderLinks";
 import { createInfluencerLinks } from "../influencerSidebar/influencerLinks";
 import { BsPeople } from "react-icons/bs";
-import { aiTools, dashboardLink, socialSection, toolsSection } from "../sidebarCommons";
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from "../sidebarCommons";
 
 // theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
@@ -95,15 +95,7 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         // { id: "startup-details", href: "/startup-details", label: "Details", icon: <Database size={18} /> },
       ],
     },
-    {
-      id: 2,
-      icon: <Lightbulb size={22} />,
-      href: "/ideation",
-      label: "Idea Incubator",
-      subItems: [
-        { id: "ideas-feed", href: "/ideation", label: "Ideas Feed", icon: <Lightbulb size={18} /> },
-      ],
-    },
+    ideation(4),
     
     // {
     //   id: 4,
