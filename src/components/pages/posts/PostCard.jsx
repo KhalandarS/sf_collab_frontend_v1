@@ -12,7 +12,8 @@ import { Card, CardContent, CardHeader } from "../../ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { Button } from "../../ui/button";
 import { Separator } from "../../ui/separator";
-import { userSocialAPI } from "@/utils/APIs/socialAPI";
+import { userSocialAPI, postsAPI } from "@/utils/APIs/socialAPI";
+import { postAPI } from "@/utils/APIs/postAPI";
 import { useSelector } from "react-redux";
 
 const cardVariants = {
@@ -27,9 +28,13 @@ const cardVariants = {
 // Post Card Component
 export default function PostCard({ post, onPostDeleted }) {
   const currentUser = useSelector((state) => state.auth.user);
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(
+    Boolean(post.isLiked || post.liked_by_current_user)
+  );
   const [bookmarked, setBookmarked] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(
+    Boolean(post.isSaved || post.saved_by_current_user)
+  );
   const [isEditing, setIsEditing] = useState(false);
   const [editedCaption, setEditedCaption] = useState(post.caption || "");
   const [showComments, setShowComments] = useState(false);
@@ -58,8 +63,9 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleDeletePost = async () => {
     if (!window.confirm("Delete this post?")) return;
     try {
-      await userSocialAPI.deletePost(post._id || post.id);
-      onPostDeleted?.(post._id || post.id);
+      const postId = post._id || post.id;
+      await postsAPI.delete(postId);
+      onPostDeleted?.(postId);
     } catch (error) {
       console.error("Delete failed:", error);
     }
@@ -68,7 +74,11 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleEditPost = async () => {
     if (!editedCaption.trim()) return;
     try {
-      await userSocialAPI.editPost(post._id || post.id, { caption: editedCaption });
+      const postId = post._id || post.id;
+      await postsAPI.update(postId, {
+        caption: editedCaption,
+        content: editedCaption,
+      });
       post.caption = editedCaption;
       setIsEditing(false);
     } catch (error) {
@@ -78,10 +88,14 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleSavePost = async () => {
     try {
+      const postId = post._id || post.id;
+      const userId = currentUser?.id;
+      if (!userId) return;
+
       if (saved) {
-        await userSocialAPI.unsavePost(post._id || post.id);
+        await userSocialAPI.unsavePost(userId, postId);
       } else {
-        await userSocialAPI.savePost(post._id || post.id);
+        await userSocialAPI.savePost(userId, postId);
       }
       setSaved(!saved);
     } catch (error) {
@@ -96,8 +110,13 @@ export default function PostCard({ post, onPostDeleted }) {
     }
     setLoadingComments(true);
     try {
-      const data = await userSocialAPI.getComments(post._id || post.id);
-      setComments(data.comments || []);
+      const postId = post._id || post.id;
+      const data = await postAPI.getComments(postId, {
+        page: 1,
+        per_page: 50,
+      });
+      const list = data.comments || data.data?.comments || [];
+      setComments(list);
       setShowComments(true);
     } catch (error) {
       console.error("Load comments failed:", error);
@@ -109,8 +128,10 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
     try {
-      const result = await userSocialAPI.addComment(post._id || post.id, { text: newComment });
-      setComments([...comments, result.comment]);
+      const postId = post._id || post.id;
+      const result = await postAPI.addComment(postId, newComment);
+      const created = result.comment || result.data?.comment || result;
+      setComments([...comments, created]);
       setNewComment("");
     } catch (error) {
       console.error("Comment failed:", error);
@@ -119,8 +140,13 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await userSocialAPI.deleteComment(post._id || post.id, commentId);
-      setComments(comments.filter((c) => c._id !== commentId));
+      const postId = post._id || post.id;
+      await postAPI.deleteComment(postId, commentId);
+      setComments(
+        comments.filter(
+          (c) => c._id !== commentId && c.id !== commentId
+        )
+      );
     } catch (error) {
       console.error("Delete comment failed:", error);
     }

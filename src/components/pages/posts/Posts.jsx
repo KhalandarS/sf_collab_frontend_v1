@@ -21,7 +21,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../ui/sheet";
-import Stories from "./stories";
+import Stories from "./Stories";
 import LeftSidebar from "./LeftSidebar";
 import CreatePost from "./CreatePost";
 import PostCard from "./PostCard";
@@ -339,10 +339,14 @@ const Posts = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
                     >
-                      <PostCard 
-                        post={post} 
+                      <PostCard
+                        post={post}
                         onPostDeleted={(postId) => {
-                          setPosts(posts.filter(p => p.id !== postId))
+                          setPosts((prev) =>
+                            prev.filter(
+                              (p) => p.id !== postId && p._id !== postId
+                            )
+                          );
                         }}
                       />
                     </motion.div>

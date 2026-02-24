@@ -1,15 +1,9 @@
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import {
-
-  Plus
-
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 import StoryModal from "../../modal/StoryModal";
 import StoryViewerModal from "../../modal/StoryViewerModal";
-import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import { postAPI } from "@/utils/APIs/postAPI";
 
 
@@ -24,17 +18,35 @@ export default function Stories({ refreshKey }) {
   useEffect(() => {
     const fetchStories = async () => {
       try {
-        const response = await postAPI.getStories({ page: 1, limit: 20 });
+        const response = await postAPI.getStories({ page: 1, per_page: 20 });
         // backend returns { stories, pagination }
-        console.log(response);
-        if (response && response.data.stories) {
-          setStories(response.data.stories.map((s) => ({
-            id: s._id || s.id,
-            thumbnail: s.mediaUrl,
-            avatar: s.author?.profilePicture || s.author?.avatar || s.author?.picture,
-            name: s.author?.firstName || s.author?.name || "User",
-            ...s,
-          })));
+        if (response && response.stories) {
+          setStories(
+            response.stories.map((s) => {
+              const id = s.id || s._id;
+              const thumbnail = s.media_url || s.mediaUrl;
+              const author = s.author || {};
+              const firstName = author.first_name || author.firstName;
+              const lastName = author.last_name || author.lastName;
+              const name =
+                [firstName, lastName].filter(Boolean).join(" ") ||
+                author.name ||
+                "User";
+              const avatar =
+                author.profile?.picture ||
+                author.profilePicture ||
+                author.avatar ||
+                author.picture;
+
+              return {
+                id,
+                thumbnail,
+                avatar,
+                name,
+                ...s,
+              };
+            })
+          );
         } else {
           setStories([]);
         }

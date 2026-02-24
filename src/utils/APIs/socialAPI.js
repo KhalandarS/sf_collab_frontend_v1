@@ -240,6 +240,27 @@ export const userSocialAPI = {
     const response = await api.get(`/user-social/${userId}/engagement-rate`)
     return response.data
   },
+
+  getSuggestions: async (limit = 5) => {
+  const response = await api.get('/user-social/suggestions', {
+      params: {
+        limit,
+      },
+    })
+    return response.data
+  },
+
+  searchUsers: async (query, params = {}) => {
+    const response = await api.get('/users', {
+      params: {
+        search: query,
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        ...params,
+      },
+    })
+    return response.data
+  },
 }
 
 export default api
