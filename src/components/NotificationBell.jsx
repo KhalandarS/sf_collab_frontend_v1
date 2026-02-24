@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
 import { useNotifications } from '../../contexts/useNotifications';
+import { useChatNotifications } from '@/context/ChatNotificationContext';
 
 const NotificationBell = () => {
   const navigate = useNavigate();
@@ -16,6 +17,12 @@ const NotificationBell = () => {
     markAllAsRead,
     refresh
   } = useNotifications();
+
+  // ─── Feature 4: Chat unread count from ChatNotificationProvider ──────────
+  const { chatUnreadCount = 0, resetChatUnreadCount } = useChatNotifications();
+
+  // Combined badge = REST notifications unread + chat messages unread
+  const totalUnread = unreadCount + chatUnreadCount;
   
   // Get only the 5 most recent notifications for dropdown
   const recentNotifications = notifications.slice(0, 5);
@@ -160,6 +167,8 @@ const NotificationBell = () => {
             const next = !prev;
             if (!prev && next) {
               refresh();
+              // ─── Feature 4: reset chat badge on open ──────────────────
+              if (resetChatUnreadCount) resetChatUnreadCount();
             }
             return next;
           });
@@ -169,10 +178,10 @@ const NotificationBell = () => {
       >
         <Bell className="w-6 h-6" />
         
-        {/* Unread badge */}
-        {unreadCount > 0 && (
+        {/* Unread badge — combined REST + chat */}
+        {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full">
-            {unreadCount > 99 ? '99+' : unreadCount}
+            {totalUnread > 99 ? '99+' : totalUnread}
           </span>
         )}
       </button>

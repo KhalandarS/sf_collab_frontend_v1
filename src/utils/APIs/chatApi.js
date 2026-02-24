@@ -199,6 +199,18 @@ export const chatAPI = {
     return response.data;
   },
 
+  // Pin a conversation (persists per-user in DB, like WhatsApp)
+  pinConversation: async (conversationId) => {
+    const response = await api.post(`/chat/conversations/${conversationId}/pin`);
+    return response.data;
+  },
+
+  // Unpin a conversation
+  unpinConversation: async (conversationId) => {
+    const response = await api.delete(`/chat/conversations/${conversationId}/pin`);
+    return response.data;
+  },
+
 };
 
 export default api;

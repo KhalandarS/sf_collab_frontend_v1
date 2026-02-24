@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Edit3, MessageCircle, HamburgerIcon, Menu } from 'lucide-react';
+import { Search, Edit3, MessageCircle, HamburgerIcon, Menu, Archive, ChevronRight, ChevronDown } from 'lucide-react';
 
 // Import chat components
 import Avatar from '@/components/chat (previous)/Avatar';
@@ -21,6 +21,18 @@ import { chatAPI } from '@/utils/APIs/chatApi';
 
 // API Configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+
+// ─── Feature 1: Tab persistence helpers ──────────────────────────────────
+const getTabKey = (userId) => `sfcollab:chat_tab:${userId}`;
+const VALID_TABS = ['all', 'friends', 'groups', 'startups', 'general', 'archived'];
+
+// ─── Feature 2: conversation_type → tab mapping for unread badge counts ──
+const TYPE_TO_TAB = {
+  direct: 'friends',
+  group: 'groups',
+  team: 'startups',
+  general: 'general',
+};
 
 const toMs = (ts) => {
   if (!ts) return null;
@@ -147,6 +159,22 @@ function normalizeMessage(m) {
   }
 
 
+// ─── Feature 2: Per-tab unread badge counts (derived from conversations) ─
+function useTabUnreadCounts(conversations) {
+  return useMemo(() => {
+    const counts = { all: 0, friends: 0, groups: 0, startups: 0, general: 0 };
+    for (const c of conversations) {
+      if (c.is_archived) continue;
+      const unread = Number(c.unread_count) || 0;
+      if (unread <= 0) continue;
+      counts.all += unread;
+      const tab = TYPE_TO_TAB[c.conversation_type];
+      if (tab) counts[tab] += unread;
+    }
+    return counts;
+  }, [conversations]);
+}
+
 const ChatPage = () => {
   
   const navigate = useNavigate();
@@ -179,8 +207,50 @@ const ChatPage = () => {
   const [showNewMessage, setShowNewMessage] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
   const [searchParams] = useSearchParams();
+
+  // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
+  const tabKey = currentUser?.id ? getTabKey(currentUser.id) : null;
+  const [activeTab, setActiveTab] = useState(() => {
+    if (!tabKey) return 'all';
+    try { const s = localStorage.getItem(tabKey); return VALID_TABS.includes(s) ? s : 'all'; }
+    catch { return 'all'; }
+  });
+
+  const handleSetActiveTab = useCallback((tab) => {
+    setActiveTab(tab);
+    if (tabKey) { try { localStorage.setItem(tabKey, tab); } catch {} }
+    // BroadcastChannel: sync to other browser tabs
+    try {
+      const bc = new BroadcastChannel('sfcollab:chat_tab');
+      bc.postMessage({ userId: currentUser?.id, tab });
+      bc.close();
+    } catch {}
+  }, [tabKey, currentUser?.id]);
+
+  // Listen for tab changes from other browser tabs
+  useEffect(() => {
+    let bc;
+    try {
+      bc = new BroadcastChannel('sfcollab:chat_tab');
+      bc.onmessage = (e) => {
+        if (e.data?.userId === currentUser?.id && VALID_TABS.includes(e.data?.tab)) setActiveTab(e.data.tab);
+      };
+    } catch {}
+    return () => { try { bc?.close(); } catch {} };
+  }, [currentUser?.id]);
+
+  // storage event fallback (older browsers)
+  useEffect(() => {
+    if (!tabKey) return;
+    const handler = (e) => { if (e.key === tabKey && VALID_TABS.includes(e.newValue)) setActiveTab(e.newValue); };
+    window.addEventListener('storage', handler);
+    return () => window.removeEventListener('storage', handler);
+  }, [tabKey]);
+
+  // ─── Feature 5: Archive state ───────────────────────────────────────────
+  const [archivedConversations, setArchivedConversations] = useState([]);
+  const [pinnedConversations, setPinnedConversations] = useState(new Set()); // Feature 6: Set of pinned IDs
 
 
   // ============================================
@@ -188,6 +258,9 @@ const ChatPage = () => {
   // ============================================
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+
+  // ─── Feature 2: Per-tab unread badge counts ──────────────────────────────
+  const tabUnreadCounts = useTabUnreadCounts(conversations);
 
   // ============================================
   // API CALLS
@@ -199,9 +272,15 @@ const ChatPage = () => {
     
     try {
       const response = await chatAPI.getAllChats();
-      // chatAPI already returns response.data, so response = { success, data: { conversations } }
-      const convos = response?.data?.conversations || response?.conversations || [];
-      setConversations(convos);
+      const data = response.data;
+      console.log("data:", data);
+
+      const convos = data.conversations || [];
+      console.log(response);
+      // ─── Feature 5: split active vs archived ─────────────────────────────
+      setConversations(convos.filter(c => !c.is_archived));
+      setArchivedConversations(convos.filter(c => c.is_archived));
+      setPinnedConversations(new Set(convos.filter(c => c.is_pinned).map(c => String(c.id))));
 
       // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
       // (works even if you didn't witness the user go offline in this session)
@@ -240,9 +319,8 @@ const ChatPage = () => {
     
     try {
       const response = await chatAPI.getMessages(conversationId, 100, 0);
-      // chatAPI already returns response.data
-      const messages = response?.data?.messages || response?.messages || [];
-      setMessages(messages.map(normalizeMessage));
+      const data = response.data;
+      setMessages((data.messages || []).map(normalizeMessage));
       socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -318,6 +396,53 @@ useEffect(() => {
     }
   }, [token, activeConversation?.id]);
 
+  // ─── Feature 5: Archive / Unarchive ─────────────────────────────────────
+  const handleArchive = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.archiveConversation(conversationId);
+      setConversations(prev => {
+        const conv = prev.find(c => String(c.id) === String(conversationId));
+        if (conv) setArchivedConversations(a => [{ ...conv, is_archived: true }, ...a]);
+        return prev.filter(c => String(c.id) !== String(conversationId));
+      });
+      if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+        setActiveConversation(null); setMessages([]);
+      }
+    } catch (e) { console.error('Archive failed:', e); }
+  }, [activeConversation]);
+
+  const handleUnarchive = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.unarchiveConversation(conversationId);
+      setArchivedConversations(prev => {
+        const conv = prev.find(c => String(c.id) === String(conversationId));
+        if (conv) setConversations(a => [{ ...conv, is_archived: false }, ...a]);
+        return prev.filter(c => String(c.id) !== String(conversationId));
+      });
+    } catch (e) { console.error('Unarchive failed:', e); }
+  }, []);
+
+  // ─── Feature 6: Pin / Unpin ─────────────────────────────────────────────
+  const handlePin = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.pinConversation(conversationId);
+      setPinnedConversations(prev => new Set([...prev, String(conversationId)]));
+      setConversations(prev => prev.map(c =>
+        String(c.id) === String(conversationId) ? { ...c, is_pinned: true } : c
+      ));
+    } catch (e) { console.error('Pin failed:', e); }
+  }, []);
+
+  const handleUnpin = useCallback(async (conversationId) => {
+    try {
+      await chatAPI.unpinConversation(conversationId);
+      setPinnedConversations(prev => { const s = new Set(prev); s.delete(String(conversationId)); return s; });
+      setConversations(prev => prev.map(c =>
+        String(c.id) === String(conversationId) ? { ...c, is_pinned: false } : c
+      ));
+    } catch (e) { console.error('Unpin failed:', e); }
+  }, []);
+
   // ============================================
   // EFFECTS
   // ============================================
@@ -354,11 +479,40 @@ useEffect(() => {
     }
 
     const onNewMessage = (data) => {
-      if (String(data.conversation_id) === String(activeConversation?.id)) {
+      const cid = String(data.conversation_id);
+      const isActive = String(activeConversation?.id) === cid;
+
+      // ── Fix: skip own messages (avoids duplicate when socket echoes back) ──
+      const senderId = String(data.message?.sender_id ?? '');
+      const myId = String(currentUser?.id ?? '');
+      const isOwn = senderId && myId && senderId === myId;
+
+      if (isActive && !isOwn) {
         setMessages((prev) => [...prev, normalizeMessage(data.message)]);
         socket.emit("mark_read", { conversation_id: activeConversation.id });
+      } else if (isActive && isOwn) {
+        // For own file-upload messages: backend emits new_message so the message
+        // appears via socket. We already added it optimistically on send, so just
+        // update conversation timestamp without duplicating.
       }
-      fetchConversations();
+      // ─── Feature 2: update unread_count in conversation list ─────────────
+      setConversations(prev =>
+        prev.map(c => String(c.id) === cid ? {
+          ...c,
+          last_message: data.message,
+          updated_at: new Date().toISOString(),
+          unread_count: isActive ? 0 : (Number(c.unread_count) || 0) + 1,
+        } : c)
+      );
+      // ─── Feature 5: auto-unarchive if message arrives for archived chat ──
+      setArchivedConversations(prev => {
+        const conv = prev.find(c => String(c.id) === cid);
+        if (conv) {
+          setConversations(a => [{ ...conv, is_archived: false, unread_count: (Number(conv.unread_count) || 0) + 1 }, ...a]);
+          return prev.filter(c => String(c.id) !== cid);
+        }
+        return prev;
+      });
     };
 
     const onUserTyping = (data) => {
@@ -426,6 +580,15 @@ useEffect(() => {
 
     socket.on("conversation_message", onConversationMessage);
 
+    // ─── Feature 6: real-time pin sync ───────────────────────────────────
+    const onConvPinned = (data) => {
+      const cid = String(data.conversation_id);
+      const ip = !!data.is_pinned;
+      setPinnedConversations(prev => { const s = new Set(prev); ip ? s.add(cid) : s.delete(cid); return s; });
+      setConversations(prev => prev.map(c => String(c.id) === cid ? { ...c, is_pinned: ip } : c));
+    };
+    socket.on("conversation_pinned", onConvPinned);
+
     return () => {
       if (activeConversation) {
         socket.emit("leave_conversation", { conversation_id: activeConversation.id });
@@ -436,6 +599,7 @@ useEffect(() => {
       socket.off("message_read", onMessageStatusUpdate);
       socket.off("message_delivered", onMessageStatusUpdate);
       socket.off("conversation_message", onConversationMessage);
+      socket.off("conversation_pinned", onConvPinned);
     };
   }, [socket, activeConversation, fetchConversations]);
 
@@ -510,16 +674,12 @@ useEffect(() => {
     if (e.key === "presence:lastActiveAt") {
       try {
         setLastActiveAt(JSON.parse(e.newValue || "{}"));
-      } catch {
-
-      }
+      } catch {}
     }
     if (e.key === "presence:lastSeenAt") {
       try {
         setLastSeenAt(JSON.parse(e.newValue || "{}"));
-      } catch {
-
-      }
+      } catch {}
     }
   };
 
@@ -540,45 +700,32 @@ useEffect(() => {
 
   // Select a conversation
   const handleSelectConversation = (conversation) => {
-    if (!conversation) return;
     if (activeConversation?.id !== conversation.id) {
-      // Save draft for the conversation we're leaving
-      if (activeConversation && messageInput) {
+      // ─── Feature 3: save draft for the conversation we're leaving ────────
+      if (activeConversation) {
         try {
-          if (messageInput.trim()) {
-            localStorage.setItem("chatPage:draft:" + String(activeConversation.id), messageInput);
-          } else {
-            localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
-          }
-        } catch {
-
-        }
+          if (messageInput && messageInput.trim()) localStorage.setItem('chatPage:draft:' + String(activeConversation.id), messageInput);
+          else localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
+        } catch {}
       }
-
       // Leave previous room
       if (socket && activeConversation) {
         socket.emit('leave_conversation', { conversation_id: activeConversation.id });
       }
-
+      
       setActiveConversation(conversation);
       setMessages([]);
       setTypingUsers([]);
       fetchMessages(conversation.id);
 
-      // Load draft for the new conversation
-      let restoredDraft = "";
-      try { restoredDraft = localStorage.getItem("chatPage:draft:" + String(conversation.id)) || ""; } catch {
-
-      }
+      // ─── Feature 3: restore draft for the conversation we're entering ────
+      let restoredDraft = '';
+      try { restoredDraft = localStorage.getItem('chatPage:draft:' + String(conversation.id)) || ''; } catch {}
       setMessageInput(restoredDraft);
 
-      // Immediately mark as read and clear unread count in local state
+      // ─── Feature 2: clear unread count for this conversation ─────────────
       socket?.emit('mark_read', { conversation_id: conversation.id });
-      setConversations((prev) =>
-        prev.map((c) =>
-          String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c
-        )
-      );
+      setConversations(prev => prev.map(c => String(c.id) === String(conversation.id) ? { ...c, unread_count: 0 } : c));
     }
   };
 
@@ -650,60 +797,46 @@ useEffect(() => {
   // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
-      // chatAPI returns response.data already: { success, data: { conversation } }
       const response = await chatAPI.createGroupConversation(name, userIds);
-      const conversation = response?.data?.conversation || response?.conversation;
-
-      if (!conversation) {
+      const data = response.data;
+      if (!response.ok || !data?.success) {
         return {
           success: false,
-          message: response?.message || 'Failed to create group chat.',
+          message: data?.error || data?.message || `Failed to create group chat (HTTP ${response.status})`,
         };
       }
 
-      // Add the new conversation to list immediately (no full refetch needed)
-      setConversations((prev) => {
-        const exists = prev.some((c) => String(c.id) === String(conversation.id));
-        return exists ? prev : [conversation, ...prev];
-      });
+      await fetchConversations();              
+      handleSelectConversation(data.conversation);
 
-      // Navigate into the new group immediately
-      handleSelectConversation(conversation);
-
-      return { success: true };
+      return { success: true, data };
     } catch (error) {
       console.error('Failed to create group:', error);
-      return { success: false, message: error?.message || 'Failed to create group chat.' };
+      return { success: false, message: error?.error || error?.message || 'Failed to create group chat.' };
     }
   };
 
-  // Handle input change (with typing indicator + draft persistence)
+  // Handle input change (with typing indicator)
   const handleInputChange = (value) => {
     setMessageInput(value);
 
-    // Persist draft to localStorage so it survives conversation switches and refresh
+    // ─── Feature 3: persist draft to localStorage ─────────────────────────
     if (activeConversation) {
       try {
-        if (value && value.trim()) {
-          localStorage.setItem("chatPage:draft:" + String(activeConversation.id), value);
-        } else {
-          localStorage.removeItem("chatPage:draft:" + String(activeConversation.id));
-        }
-      }
-      catch (e) {
-        console.error("Failed to persist draft:", e);
-      }
-    
+        if (value && value.trim()) localStorage.setItem('chatPage:draft:' + String(activeConversation.id), value);
+        else localStorage.removeItem('chatPage:draft:' + String(activeConversation.id));
+      } catch {}
     }
     
-
     if (socket && activeConversation) {
       socket.emit('typing_start', { conversation_id: activeConversation.id });
-
+      
+      // Clear previous timeout
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-
+      
+      // Stop typing after 2 seconds of inactivity
       typingTimeoutRef.current = setTimeout(() => {
         socket.emit('typing_stop', { conversation_id: activeConversation.id });
       }, 2000);
@@ -719,12 +852,10 @@ useEffect(() => {
       conversation_id: activeConversation.id,
       content,
     });
-
+    
     setMessageInput('');
-    // Clear persisted draft for this conversation
-    try { localStorage.removeItem("chatPage:draft:" + String(activeConversation.id)); } catch {
-
-    }
+    // ─── Feature 3: clear draft on send ──────────────────────────────────
+    try { localStorage.removeItem('chatPage:draft:' + String(activeConversation.id)); } catch {}
   };
 
   const shouldShowAvatar = (message, index) => {
@@ -755,28 +886,35 @@ useEffect(() => {
 
 
   // Filter conversations by search and tab
-  const filteredConversations = useMemo(() => conversations.filter(c => {
-    // Filter by search
-    if (searchTerm) {
-      const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
-      if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-    }
-    
-    // Filter by tab
-    if (activeTab === 'all') return true;
-    if (activeTab === 'friends') return c.conversation_type === 'direct';
-    if (activeTab === 'groups') return c.conversation_type === 'group';
-    if (activeTab === 'startups') return c.conversation_type === 'team';
-    if (activeTab === 'general') return c.conversation_type === 'general';
-    
-    return true;
-  }).sort(
-    (a, b) => {
-      const aLast = toMs(a.last_message_at || a.updated_at || a.created_at) || 0;
-      const bLast = toMs(b.last_message_at || b.updated_at || b.created_at) || 0;
-      return bLast - aLast;
-    }
-  ), [conversations, searchTerm, activeTab, currentUser?.id]);
+  const filteredConversations = useMemo(() => {
+    // ─── Feature 5: use archived list when on archived tab ───────────────
+    const source = activeTab === 'archived' ? archivedConversations : conversations;
+    return source.filter(c => {
+      // Filter by search
+      if (searchTerm) {
+        const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
+        if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      }
+      
+      // Filter by tab
+      if (activeTab === 'all' || activeTab === 'archived') return true;
+      if (activeTab === 'friends') return c.conversation_type === 'direct';
+      if (activeTab === 'groups') return c.conversation_type === 'group';
+      if (activeTab === 'startups') return c.conversation_type === 'team';
+      if (activeTab === 'general') return c.conversation_type === 'general';
+      
+      return true;
+    }).sort(
+      (a, b) => {
+        // Feature 6: pinned chats float to top; within pinned, most recent first
+        if (a.is_pinned && !b.is_pinned) return -1;
+        if (!a.is_pinned && b.is_pinned) return 1;
+        const aLast = toMs(a.last_message_at || a.updated_at || a.created_at) || 0;
+        const bLast = toMs(b.last_message_at || b.updated_at || b.created_at) || 0;
+        return bLast - aLast;
+      }
+    );
+  }, [conversations, archivedConversations, searchTerm, activeTab, currentUser?.id, pinnedConversations]);
 
   
 
@@ -924,18 +1062,27 @@ useEffect(() => {
               { id: 'groups', label: 'Groups', type: 'group' },
               { id: 'startups', label: 'Startups', type: 'team' },
               { id: 'general', label: 'General', type: 'general' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${activeTab === tab.id
-                    ? 'bg-indigo-500 text-zinc-900'
-                    : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+            ].map((tab) => {
+              // ─── Feature 2: unread badge per tab ──────────────────────
+              const count = tabUnreadCounts[tab.id] || 0;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleSetActiveTab(tab.id)}
+                  className={`relative px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${activeTab === tab.id
+                      ? 'bg-indigo-500 text-zinc-900'
+                      : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                >
+                  {tab.label}
+                  {count > 0 && (
+                    <span className="absolute -top-1.5 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                      {count > 99 ? '99+' : count}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -951,37 +1098,60 @@ useEffect(() => {
               <p>No conversations yet</p>
             </div>
           ) : (
-            filteredConversations.map((conv, idx) => {
-              // Read draft from localStorage to show preview in sidebar
-              let pageDraftText = "";
-              try { pageDraftText = localStorage.getItem("chatPage:draft:" + String(conv.id)) || ""; } catch {}
-              return (
-                <ConversationItem
-                  key={idx}
-                  conversation={conv}
-                  isActive={activeConversation?.id === conv.id}
-                  onClick={() => {
-                    handleSelectConversation(conv);
-                    setSidebarOpen(false);
-                  }}
-                  onlineUsers={onlineUsers}
-                  currentUserId={currentUser.id}
-                  lastActiveAt={lastActiveAt}
-                  lastSeenAt={lastSeenAt}
-                  nowTs={nowTs}
-                  draftText={pageDraftText}
-                  onDelete={(conversationId) => {
-                    // Remove from local state
-                    setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
-                    // Clear if it was active
-                    if (activeConversation && String(activeConversation.id) === String(conversationId)) {
-                      setActiveConversation(null);
-                      setMessages([]);
-                    }
-                  }}
-                />
-              );
-            })
+            filteredConversations.map((conv, idx) => (
+            <ConversationItem
+              key={idx}
+              conversation={conv}
+              isActive={activeConversation?.id === conv.id}
+              onClick={() => {
+                handleSelectConversation(conv)
+                setSidebarOpen(false);
+              }}
+              onlineUsers={onlineUsers}
+              currentUserId={currentUser.id}
+              lastActiveAt={lastActiveAt}
+              lastSeenAt={lastSeenAt}
+              nowTs={nowTs}
+              // ─── Feature 3: draft preview ─────────────────────────────
+              draftText={(() => { try { return localStorage.getItem('chatPage:draft:' + String(conv.id)) || ''; } catch { return ''; } })()}
+              onDelete={(conversationId) => {
+                // Remove from local state
+                setConversations((prev) => prev.filter((c) => String(c.id) !== String(conversationId)));
+                // Clear if it was active
+                if (activeConversation && String(activeConversation.id) === String(conversationId)) {
+                  setActiveConversation(null);
+                  setMessages([]);
+                }
+              }}
+              // ─── Feature 5: archive/unarchive ─────────────────────────
+              onArchive={activeTab !== 'archived' ? handleArchive : undefined}
+              onUnarchive={activeTab === 'archived' ? handleUnarchive : undefined}
+              // ─── Feature 6: pin/unpin ──────────────────────────────────
+              onPin={activeTab !== 'archived' ? handlePin : undefined}
+              onUnpin={activeTab !== 'archived' ? handleUnpin : undefined}
+            />
+          ))
+          )}
+
+          {/* ─── Feature 5: Archived section toggle ──────────────────────── */}
+          {activeTab !== 'archived' && archivedConversations.length > 0 && (
+            <button
+              onClick={() => handleSetActiveTab('archived')}
+              className="w-full flex items-center gap-2 px-3 py-2.5 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 text-xs transition-colors"
+            >
+              <Archive size={14} />
+              <span>Archived ({archivedConversations.length})</span>
+              <ChevronRight size={14} className="ml-auto" />
+            </button>
+          )}
+          {activeTab === 'archived' && (
+            <button
+              onClick={() => handleSetActiveTab('all')}
+              className="w-full flex items-center gap-2 px-3 py-2.5 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 text-xs transition-colors"
+            >
+              <ChevronDown size={14} />
+              <span>Back to Chats</span>
+            </button>
           )}
         </div>
       </div>

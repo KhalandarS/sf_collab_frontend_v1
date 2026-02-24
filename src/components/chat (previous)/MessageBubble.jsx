@@ -12,10 +12,10 @@
 import React, { useMemo, useState, useCallback, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2 } from "lucide-react";
+import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
-import { chatAPI } from "@/utils/APIs/chatApi";
+import { chatAPI } from "@/utils/APIs/chatAPI";
 
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
@@ -123,6 +123,45 @@ function ReadReceipt({ status, size = 14 }) {
   return <Check size={size} className="text-zinc-400 opacity-80" />;
 }
 
+// ─── Feature 3: Task due-date modal ──────────────────────────────────────────
+const TaskModal = ({ isOpen, onClose, onSave }) => {
+  const [dueDate, setDueDate] = useState('');
+  const [note, setNote] = useState('');
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[10001] bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 p-5" onClick={e => e.stopPropagation()}>
+        <h3 className="text-base font-semibold text-white mb-3">Save to Task Box</h3>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-zinc-400 mb-1 block">Due date (optional)</label>
+            <input
+              type="datetime-local"
+              value={dueDate}
+              onChange={e => setDueDate(e.target.value)}
+              className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-zinc-400 mb-1 block">Note (optional)</label>
+            <textarea
+              value={note}
+              onChange={e => setNote(e.target.value)}
+              rows={2}
+              placeholder="Add a note..."
+              className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white resize-none focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={onClose} className="flex-1 py-2 rounded-xl bg-zinc-700 hover:bg-zinc-600 text-sm text-zinc-300 transition-colors">Cancel</button>
+            <button onClick={() => onSave(dueDate || null, note || null)} className="flex-1 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-sm text-white transition-colors">Save Task</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function MessageBubble({ 
   message, 
   isOwn, 
@@ -144,6 +183,21 @@ export default function MessageBubble({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
+
+  // ─── Feature 3: Star / Pin / Task state ──────────────────────────────────
+  const [isStarred, setIsStarred] = useState(!!message?.is_starred);
+  const [isPinned, setIsPinned] = useState(!!message?.is_pinned);
+  const [isTask, setIsTask] = useState(!!message?.is_task);
+  const [taskModalOpen, setTaskModalOpen] = useState(false);
+  const [starLoading, setStarLoading] = useState(false);
+  const [pinLoading, setPinLoading] = useState(false);
+
+  // Keep in sync if message prop changes
+  useEffect(() => {
+    setIsStarred(!!message?.is_starred);
+    setIsPinned(!!message?.is_pinned);
+    setIsTask(!!message?.is_task);
+  }, [message?.is_starred, message?.is_pinned, message?.is_task]);
 
   const { access_token: token } = useSelector((state) => state.auth || {});
 
@@ -285,6 +339,61 @@ export default function MessageBubble({
     }
   }, [conversationId, message.id, setMessages]);
 
+  // ─── Feature 3: Star handler ───────────────────────────────────────────────
+  const handleStar = useCallback(async () => {
+    if (!conversationId || starLoading) return;
+    setMenuOpen(false);
+    setStarLoading(true);
+    try {
+      if (isStarred) {
+        await chatAPI.unstarMessage(conversationId, message.id);
+        setIsStarred(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_starred: false } : m));
+      } else {
+        await chatAPI.starMessage(conversationId, message.id);
+        setIsStarred(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_starred: true } : m));
+      }
+    } catch (e) { console.error('Star failed:', e); }
+    finally { setStarLoading(false); }
+  }, [conversationId, message.id, isStarred, starLoading, setMessages]);
+
+  // ─── Feature 3: Pin handler ────────────────────────────────────────────────
+  const handlePin = useCallback(async () => {
+    if (!conversationId || pinLoading) return;
+    setMenuOpen(false);
+    setPinLoading(true);
+    try {
+      if (isPinned) {
+        await chatAPI.unpinMessage(conversationId, message.id);
+        setIsPinned(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_pinned: false } : m));
+      } else {
+        await chatAPI.pinMessage(conversationId, message.id);
+        setIsPinned(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_pinned: true } : m));
+      }
+    } catch (e) { console.error('Pin failed:', e); }
+    finally { setPinLoading(false); }
+  }, [conversationId, message.id, isPinned, pinLoading, setMessages]);
+
+  // ─── Feature 3: Task handler ───────────────────────────────────────────────
+  const handleSaveTask = useCallback(async (dueDate, note) => {
+    if (!conversationId) return;
+    setTaskModalOpen(false);
+    try {
+      if (isTask) {
+        await chatAPI.removeMessageTask(conversationId, message.id);
+        setIsTask(false);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_task: false } : m));
+      } else {
+        await chatAPI.saveMessageAsTask(conversationId, message.id, dueDate, note);
+        setIsTask(true);
+        if (setMessages) setMessages(prev => prev.map(m => String(m.id) === String(message.id) ? { ...m, is_task: true } : m));
+      }
+    } catch (e) { console.error('Task failed:', e); }
+  }, [conversationId, message.id, isTask, setMessages]);
+
   const onDownload = useCallback(() => {
     if (!fileUrl) return;
     forceDownload(fileUrl, message?.file_name || "download", token);
@@ -389,6 +498,14 @@ export default function MessageBubble({
                   : "bg-zinc-800 text-zinc-100"
               }`}
             >
+              {/* ─── Feature 3: Pinned / Starred / Task indicators ─────── */}
+              {(isPinned || isStarred || isTask) && (
+                <div className="flex gap-1 mb-1">
+                  {isPinned && <Pin size={10} className="text-amber-400" />}
+                  {isStarred && <Star size={10} className="text-yellow-400 fill-yellow-400" />}
+                  {isTask && <ListTodo size={10} className="text-emerald-400" />}
+                </div>
+              )}
               {/* File/Image attachment */}
               {fileUrl && (
                 <div className="mb-2">
@@ -492,8 +609,8 @@ export default function MessageBubble({
                           )}
                         </div>
 
-                        {/* Actions menu */}
-            {isOwn && conversationId && !isEditing && (
+                        {/* Actions menu — star/pin/task for ALL, edit/delete for own only */}
+            {conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
                   type="button"
@@ -505,28 +622,63 @@ export default function MessageBubble({
                 </button>
 
                 {menuOpen && (
-                  <div className="absolute right-0 -top-20 mt-1 w-32 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50">
+                  <div className={`absolute ${isOwn ? 'right-0' : 'left-0'} -top-2 translate-y-[-100%] mt-1 w-44 bg-zinc-800 rounded-lg shadow-lg border border-zinc-700 z-50`}>
+                    {/* Star */}
                     <button
                       type="button"
-                      onClick={handleEditClick}
-                      disabled={deleting}
+                      onClick={handleStar}
+                      disabled={starLoading}
                       className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
                     >
-                      <Edit2 size={14} />
-                      Edit
+                      <Star size={14} className={isStarred ? 'text-yellow-400 fill-yellow-400' : ''} />
+                      {isStarred ? 'Unstar' : 'Star'}
                     </button>
+
+                    {/* Pin */}
                     <button
                       type="button"
-                      onClick={() => {
-                        setDeleteModalOpen(true);
-                        setMenuOpen(false);
-                      }}
-                      disabled={deleting}
-                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                      onClick={handlePin}
+                      disabled={pinLoading}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
                     >
-                      <Trash2 size={14} />
-                      Delete
+                      <Pin size={14} className={isPinned ? 'text-amber-400' : ''} />
+                      {isPinned ? 'Unpin' : 'Pin'}
                     </button>
+
+                    {/* Task */}
+                    <button
+                      type="button"
+                      onClick={() => { setMenuOpen(false); isTask ? handleSaveTask(null, null) : setTaskModalOpen(true); }}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700"
+                    >
+                      {isTask ? <BookmarkCheck size={14} className="text-emerald-400" /> : <ListTodo size={14} />}
+                      {isTask ? 'Remove Task' : 'Add to Tasks'}
+                    </button>
+
+                    {/* Edit / Delete — own messages only */}
+                    {isOwn && (
+                      <>
+                        <div className="border-t border-zinc-700 my-1" />
+                        <button
+                          type="button"
+                          onClick={handleEditClick}
+                          disabled={deleting}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left hover:bg-zinc-700 disabled:opacity-50"
+                        >
+                          <Edit2 size={14} />
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setDeleteModalOpen(true); setMenuOpen(false); }}
+                          disabled={deleting}
+                          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-left text-red-400 hover:bg-red-500/20 disabled:opacity-50"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -606,6 +758,12 @@ export default function MessageBubble({
           </div>
         </div>
       )}
+      {/* ─── Feature 3: Task modal ───────────────────────────────────── */}
+      <TaskModal
+        isOpen={taskModalOpen}
+        onClose={() => setTaskModalOpen(false)}
+        onSave={handleSaveTask}
+      />
     </>
   );
 }

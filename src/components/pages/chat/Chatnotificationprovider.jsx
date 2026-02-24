@@ -347,6 +347,9 @@ export const ChatNotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [flashingTabs, setFlashingTabs] = useState({});
+
+  // ─── Feature 4: Bell sync — chat unread count exposed to NotificationBell ─
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   
   const flashingIntervalsRef = useRef({});
   const isOnChatPageRef = useRef(false);
@@ -492,8 +495,10 @@ export const ChatNotificationProvider = ({ children }) => {
       const { message, conversation_id } = data || {};
       if (!message) return;
 
-      // Use String() to avoid type mismatch (sender_id may be int, currentUserId may be string)
-      const isOwnMessage = String(message.sender_id) === String(currentUserId);
+      // Guard: skip own messages (fix for file uploads which also trigger new_message)
+      // sender_id may be int while currentUserId is string — use String() for safe compare
+      const sId = message?.sender_id;
+      const isOwnMessage = sId != null && currentUserId != null && String(sId) === String(currentUserId);
       if (isOwnMessage) return;
 
       // Get conversation type — now reliably included in socket payload
@@ -517,6 +522,8 @@ export const ChatNotificationProvider = ({ children }) => {
         playNotificationSound();
         
         setUnreadCount((prev) => prev + 1);
+        // ─── Feature 4: also increment bell chat badge ─────────────────
+        setChatUnreadCount((prev) => prev + 1);
 
         // Auto-popup ChatDock (like Facebook Messenger)
         autoPopupChatDock(data);
@@ -562,6 +569,11 @@ export const ChatNotificationProvider = ({ children }) => {
     setUnreadCount(0);
   }, []);
 
+  // ─── Feature 4: called by NotificationBell when opened ───────────────────
+  const resetChatUnreadCount = useCallback(() => {
+    setChatUnreadCount(0);
+  }, []);
+
   const joinConversation = useCallback(
     (conversationId) => {
       if (socket) socket.emit("join_conversation", { conversation_id: conversationId });
@@ -581,6 +593,7 @@ export const ChatNotificationProvider = ({ children }) => {
     isConnected,
     notifications,
     unreadCount,
+    chatUnreadCount,          // ─── Feature 4
     flashingTabs, // NEW: Export flashing tabs state
     addNotification,
     removeNotification,
@@ -588,6 +601,7 @@ export const ChatNotificationProvider = ({ children }) => {
     navigateToConversation,
     sendQuickReply,
     resetUnreadCount,
+    resetChatUnreadCount,     // ─── Feature 4
     joinConversation,
     leaveConversation,
     startFlashing, // NEW: Export flashing controls

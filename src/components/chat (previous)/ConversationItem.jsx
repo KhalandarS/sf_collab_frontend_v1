@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { Trash2, Archive, ArchiveRestore, Pin, PinOff } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
@@ -25,6 +25,10 @@ const ConversationItem = ({
   nowTs = Date.now(),
   onDelete,
   draftText = "", // NEW: draft preview shown in conversation list
+  onArchive,    // archive callback (undefined on archived tab)
+  onUnarchive,  // unarchive callback (undefined on non-archived tab)
+  onPin,        // pin callback
+  onUnpin,      // unpin callback
 }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -145,7 +149,12 @@ const ConversationItem = ({
           
           <div className="flex-1 min-w-0 text-left">
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
+              <div className="flex items-center gap-1.5 min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{conversationName}</p>
+                {conversation.is_pinned && (
+                  <Pin size={10} className="text-indigo-400 shrink-0 rotate-45" title="Pinned" />
+                )}
+              </div>
               <span className="text-xs text-zinc-500 shrink-0">{lastTime}</span>
             </div>
 
@@ -168,20 +177,75 @@ const ConversationItem = ({
           </div>
         </button>
 
-        {/* Delete button - only for direct (1-to-1) chats */}
-        {isDirect && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteModal(true);
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
-            title="Delete conversation"
-          >
-            <Trash2 size={14} />
-          </button>
-        )}
+        {/* Action buttons: archive/unarchive + delete (direct only) */}
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+          {/* Unarchive button — shown only on archived tab */}
+          {onUnarchive && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onUnarchive(conversation.id);
+              }}
+              className="p-1.5 rounded-lg hover:bg-indigo-500/20 text-zinc-600 hover:text-indigo-400 transition-all"
+              title="Unarchive conversation"
+            >
+              <ArchiveRestore size={14} />
+            </button>
+          )}
+
+          {/* Pin / Unpin button */}
+          {onPin && !conversation.is_pinned && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onPin(conversation.id); }}
+              className="p-1.5 rounded-lg hover:bg-indigo-500/20 text-zinc-600 hover:text-indigo-400 transition-all"
+              title="Pin conversation"
+            >
+              <Pin size={14} />
+            </button>
+          )}
+          {onUnpin && conversation.is_pinned && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onUnpin(conversation.id); }}
+              className="p-1.5 rounded-lg hover:bg-indigo-500/20 text-indigo-400 hover:text-indigo-300 transition-all"
+              title="Unpin conversation"
+            >
+              <PinOff size={14} />
+            </button>
+          )}
+
+          {/* Archive button — shown on all non-archived tabs */}
+          {onArchive && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onArchive(conversation.id);
+              }}
+              className="p-1.5 rounded-lg hover:bg-amber-500/20 text-zinc-600 hover:text-amber-400 transition-all"
+              title="Archive conversation"
+            >
+              <Archive size={14} />
+            </button>
+          )}
+
+          {/* Delete button — only for direct chats, only when not on archived tab */}
+          {isDirect && !onUnarchive && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              className="p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-600 hover:text-red-400 transition-all"
+              title="Delete conversation"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
+        </div>
 
         </div>
 
