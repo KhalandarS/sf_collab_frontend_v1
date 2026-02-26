@@ -20,18 +20,7 @@ import WorldClock from "@/components/sections/WorldClock";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
-import {
-  DndContext,
-  PointerSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-  arrayMove,
-} from "@dnd-kit/sortable";
+
 import SortableSection from "../dashboard/SortableSection";
 
 export default function BuilderDashboard({
@@ -63,7 +52,7 @@ export default function BuilderDashboard({
       { totalTasks: 0, completed: 0, pending: 0 }
     );
   }, [startups]);
-
+  console.log("Builder dashboard startups:", startups);
   const completionRate = totals.totalTasks > 0 
     ? Math.round((totals.completed / totals.totalTasks) * 100) 
     : 0;
@@ -77,16 +66,6 @@ export default function BuilderDashboard({
 
   const [sections, setSections] = useState(initialSections);
 
-  const handleDragEnd = (event) => {
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    setSections((items) => {
-      const oldIndex = items.findIndex(i => i.id === active.id);
-      const newIndex = items.findIndex(i => i.id === over.id);
-      return arrayMove(items, oldIndex, newIndex);
-    });
-  };
 
   useEffect(() => {
     localStorage.setItem(
@@ -106,18 +85,6 @@ export default function BuilderDashboard({
         .filter(Boolean)
     );
   }, []);
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 },
-    })
-  );
-
-  const moveSection = (from, to) => {
-    setSections(items => arrayMove(items, from, to));
-  };
-
-  
 
   if (loading) {
     return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
@@ -144,27 +111,8 @@ export default function BuilderDashboard({
       
 
       <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={sections.map(s => s.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            {sections.map(section => (
-              <SortableSection key={section.id}
-                id={section.id}
-                index={sections.findIndex(s => s.id === section.id)}
-                total={sections.length}
-                onMove={moveSection}
-              >
-                {section.component}
-              </SortableSection>
-            ))}
-          </SortableContext>
-        </DndContext>
+
+            {sections.map(section => section.component)}
       </div>
 
       <div className="text-sm text-white/50 italic">
@@ -228,7 +176,7 @@ function BuilderStats({ totals, completionRate, user, startups }) {
         </div>
       </header>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
         <QuickAction label="Browse Startups" href="/discover-startups" icon={Briefcase} />
         <QuickAction label="Saved Startups" href="/saved-startups" icon={Users} />
         <QuickAction label="My Applications" href="/builder/my-applications" icon={CheckCircle} />

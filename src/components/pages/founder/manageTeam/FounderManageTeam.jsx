@@ -85,7 +85,7 @@ const FounderManageTeam = () => {
     }
 
     try {
-      const response = await startupsAPI.addMember(
+      const response = await startupsAPI.createInvitation(
         selectedStartupId,
         {
           user_id: formData.user_id,

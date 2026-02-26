@@ -6,6 +6,7 @@ import './background.css';
 import { Link } from 'react-router-dom';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { useSelector } from 'react-redux';
+import InviteToStartup from './InviteToStartup';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 // Helper function to format plan names
@@ -294,6 +295,10 @@ const ProfileHeader = ({
                   <Zap className="w-4 h-4 text-purple-400" />
                   <span className="text-purple-300">{formatPlanName(user?.founder_plan_id)}</span>
                 </motion.div>
+              )}
+              {
+                currentUser.active_startups_count > 0 && currentUser.id !== user?.id && (
+                  <InviteToStartup user={user} />
               )}
 
               {/* Profile Completion Warning */}

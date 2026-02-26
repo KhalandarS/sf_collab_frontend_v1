@@ -104,6 +104,8 @@ import FounderManageApplications from "./components/pages/founder/manageApplicat
 import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
 import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
+import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
+import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 
 
 
@@ -225,6 +227,7 @@ export default function App() {
                   <Route path="builder/my-applications" element={<MyApplications />} />
                   <Route path="builder/my-work" element={<MyWork />} />
                   <Route path="builder/rewards" element={<Rewards />} />
+                  <Route path="builder/my-startups" element={<BuilderStartups myStartupsOnly={true} />} />
                   <Route path="builder/profile-skills" element={<SkillProfile />} />
                   <Route path="builder/profile" element={<SkillProfile />} />
 
@@ -297,6 +300,7 @@ export default function App() {
                   <Route path="my-startups" element={<DiscoverStartups myStartupsOnly={true} />} />
                   <Route path="startup-details/:id" element={<StartupDetailPage />} />
                   <Route path="saved-startups" element={<SavedStartups />} />
+                  <Route path="invitations" element={<InviteToStartup />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
                   {/* AI Tools */}
                   <Route path="business-plan" element={<BusinessIdeaGenerator />} />

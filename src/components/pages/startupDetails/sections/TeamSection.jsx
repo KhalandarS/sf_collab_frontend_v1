@@ -89,7 +89,7 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
           toast.error('Please select a user to add as a member');
           return
         }
-        const response = await startupsAPI.addMember(startupId, memberForm);
+        const response = await startupsAPI.createInvitation(startupId, memberForm);
   
   
         

@@ -430,7 +430,7 @@ const StartupDetailPage = () => {
         startup={startup}
         onJoinClick={() => isAdmin ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         members={members}
-        isAdmin={isAdmin}
+        isCreator={isFounder}
         getStageBadgeVariant={getStageBadgeVariant}
         setAlertDescription={setAlertDescription}
         setShowAlert={setShowAlert}

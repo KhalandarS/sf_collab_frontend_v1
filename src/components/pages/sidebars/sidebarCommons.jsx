@@ -71,7 +71,7 @@ export function socialSection(id) {
       subItems: [
         { id: "posts-feed", href: "/posts", label: "Social Feed", icon: <MessageSquareHeart size={18} /> },
         { id: "connections", href: "/connections", label: "Connections", icon: <UserPlus size={18} /> },
-        // { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
+        { id: "discover-users", href: "/discover-users", label: "Discover Users", icon: <Users size={18} /> },
       ],
     }
 }

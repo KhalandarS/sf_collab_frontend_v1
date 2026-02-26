@@ -22,11 +22,6 @@ export const responseErrorInterceptor = (error) => {
     console.error('❌ Cannot connect to backend at', API_BASE_URL);
     return Promise.reject(error);
   }
-  // Send error to backend logging service
-  console.log("Error", error);
-  console.log("Error response", error.response.status);
-  console.log("Error error", error.error);
-  console.log("Error message", error.message);
   // Only log errors that are representative of actual issues (exclude 401, 403, 404 to avoid noise from auth issues or missing endpoints)
   
   const status = error.response?.status;

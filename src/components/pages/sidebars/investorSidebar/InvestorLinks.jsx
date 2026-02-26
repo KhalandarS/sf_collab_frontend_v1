@@ -13,6 +13,8 @@ export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActi
       subItems: [
         { id: "discover-startups", href: "/discover-startups", label: "Discover Startups", icon: <Rocket size={18} /> },
         { id: "saved-startups", href: "/saved-startups", label: "Saved Startups", icon: <Save size={18} /> },
+        { id: "my-invitations", href: "/invitations", label: "My Invitations", icon: <FcInvite size={18} />, }
+
       ]
 
     },
