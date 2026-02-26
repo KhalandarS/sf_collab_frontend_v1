@@ -491,9 +491,28 @@ useEffect(() => {
         setMessages((prev) => [...prev, normalizeMessage(data.message)]);
         socket.emit("mark_read", { conversation_id: activeConversation.id });
       } else if (isActive && isOwn) {
-        // For own file-upload messages: backend emits new_message so the message
-        // appears via socket. We already added it optimistically on send, so just
-        // update conversation timestamp without duplicating.
+        // FIX #1b: Replace the optimistic message with the real server message
+        // (which has a proper ID, status, etc.). If no optimistic exists, add it
+        // only if not already present (handles file-upload echo from backend).
+        const realMsg = normalizeMessage(data.message);
+        setMessages((prev) => {
+          const hasOptimistic = prev.some((m) => String(m.id).startsWith('optimistic-'));
+          const alreadyPresent = prev.some((m) => String(m.id) === String(realMsg.id));
+          if (alreadyPresent) return prev; // already added, skip
+          if (hasOptimistic) {
+            // Swap the first optimistic with the real message
+            let swapped = false;
+            return prev.map((m) => {
+              if (!swapped && String(m.id).startsWith('optimistic-')) {
+                swapped = true;
+                return realMsg;
+              }
+              return m;
+            });
+          }
+          // No optimistic found (e.g. file-upload) — append real message
+          return [...prev, realMsg];
+        });
       }
       // ─── Feature 2: update unread_count in conversation list ─────────────
       setConversations(prev =>
@@ -843,9 +862,28 @@ useEffect(() => {
     }
   };
 
-  // Send a message
+  // Send a message - FIX #1: Optimistic update so message appears instantly
   const handleSendMessage = (content) => {
     if (!content || !activeConversation || !socket) return;
+
+    // Build an optimistic message shown immediately, before socket echo
+    const optimisticMsg = normalizeMessage({
+      id: `optimistic-${Date.now()}`,
+      content,
+      sender_id: currentUser?.id,
+      sender: {
+        id: currentUser?.id,
+        firstName: currentUser?.first_name || currentUser?.firstName || '',
+        lastName: currentUser?.last_name || currentUser?.lastName || '',
+        profilePicture: currentUser?.profile_picture || currentUser?.profilePicture || null,
+      },
+      created_at: new Date().toISOString(),
+      conversation_id: activeConversation.id,
+      status: 'sending',
+    });
+
+    // Show it immediately
+    setMessages((prev) => [...prev, optimisticMsg]);
 
     socket.emit('typing_stop', { conversation_id: activeConversation.id });
     socket.emit('send_message', {

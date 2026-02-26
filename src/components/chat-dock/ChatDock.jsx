@@ -573,11 +573,22 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         return next;
       });
 
+      // FIX #3: Optimistically zero out unread locally and tell backend to mark as read
+      // Backend will emit unread_count_update back via socket confirming the reset
       clearUnread(cid);
       socket?.emit?.("join_conversation", { conversation_id: cid });
+      socket?.emit?.("mark_read", { conversation_id: cid });
+      // Also call REST endpoint so DB is updated and socket event fires
+      try {
+        if (token) {
+          await chatAPI.markConversationRead(cid);
+        }
+      } catch (e) {
+        // non-critical — local state already cleared above
+      }
       await fetchMessages(cid);
     },
-    [fetchMessages, maxWindows, persistWindows, clearUnread, socket]
+    [fetchMessages, maxWindows, persistWindows, clearUnread, socket, token]
   );
 
   const closeWindow = useCallback(
@@ -953,6 +964,19 @@ useEffect(() => {
     socket.on("message_read", handleStatusUpdate);
     socket.on("message_delivered", handleStatusUpdate);
 
+    // FIX #3b: Listen for backend confirmation that unread count was reset
+    const onUnreadCountUpdate = (data) => {
+      const cid = String(data?.conversation_id);
+      if (!cid) return;
+      // Confirm the zero out from backend
+      setUnread((prev) => {
+        const next = { ...prev, [cid]: 0 };
+        localStorage.setItem(LS_UNREAD_KEY, JSON.stringify(next));
+        return next;
+      });
+    };
+    socket.on("unread_count_update", onUnreadCountUpdate);
+
     return () => {
       socket.off("new_message", handleIncomingMessage);
       socket.off("conversation_message", handleIncomingMessage);
@@ -960,6 +984,7 @@ useEffect(() => {
       socket.off("message_status_update", handleStatusUpdate);
       socket.off("message_read", handleStatusUpdate);
       socket.off("message_delivered", handleStatusUpdate);
+      socket.off("unread_count_update", onUnreadCountUpdate);
     };
   }, [
     socket,

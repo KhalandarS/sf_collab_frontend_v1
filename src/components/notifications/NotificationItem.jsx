@@ -21,7 +21,8 @@ import {
   Copy,
   FileText
 } from 'lucide-react';
-import useNotifications from '../../contexts/useNotifications';
+// ✅ FIX: use shared NotificationContext so markAsRead updates the bell badge instantly
+import { useNotifications } from '../../contexts/NotificationContext';
 
 
 // Get icon based on notification type/category

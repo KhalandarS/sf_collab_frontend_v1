@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
-import { useNotifications } from '../../contexts/useNotifications';
-import { useChatNotifications } from '@/context/ChatNotificationContext';
+// ✅ FIX: import from the shared context so Bell and Notifications page share state
+import { useNotifications } from '../../contexts/NotificationContext';
+// ✅ FIX: corrected import path — ChatNotificationProvider lives in pages/chat, not context/
+import { useChatNotifications } from '@/components/pages/chat/Chatnotificationprovider';
 
 const NotificationBell = () => {
   const navigate = useNavigate();
@@ -166,7 +168,10 @@ const NotificationBell = () => {
           setIsOpen((prev) => {
             const next = !prev;
             if (!prev && next) {
-              refresh();
+              // ✅ FIX: auto mark-all-read the moment the dropdown opens.
+              // markAllAsRead() is optimistic — the badge drops to 0 immediately
+              // without waiting for the network response.
+              markAllAsRead();
               // ─── Feature 4: reset chat badge on open ──────────────────
               if (resetChatUnreadCount) resetChatUnreadCount();
             }

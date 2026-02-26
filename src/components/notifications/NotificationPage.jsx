@@ -195,10 +195,14 @@ export default function NotificationPage() {
     }
   }, [deleteNotification]);
 
-  // Default filter on mount
+  // Default filter on mount + mark all as read so bell badge drops immediately
   useEffect(() => {
     const f = filters.find((x) => x.id === "general") || filters[0];
     handleFilterChange(f);
+    // ✅ FIX: mark all as read the moment the page loads.
+    // markAllAsRead() is optimistic in the context — unreadCount drops to 0
+    // instantly without waiting for the network, so the bell badge clears immediately.
+    markAllAsRead().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
