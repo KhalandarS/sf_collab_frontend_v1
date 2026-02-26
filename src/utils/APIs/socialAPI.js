@@ -35,6 +35,7 @@ export const postsAPI = {
         current_user_id: params.currentUserId,
       },
     })
+    console.log("API Response for getAll posts:", response.data);
     return response.data
   },
 

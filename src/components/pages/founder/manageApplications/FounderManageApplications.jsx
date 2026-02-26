@@ -21,9 +21,11 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
 
 const FounderManageApplications = () => {
-  const { user, access_token } = useSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("pending");
   const [expandedStartup, setExpandedStartup] = useState(null);
@@ -54,7 +56,7 @@ const FounderManageApplications = () => {
                 per_page: 100,
               });
               applicationsMap[startup.id] = appsRes.data.join_requests || [];
-            } catch (err) {
+            } catch {
               applicationsMap[startup.id] = [];
             }
           }
@@ -425,11 +427,14 @@ const FounderManageApplications = () => {
                             {filteredApps.map((app, appIndex) => {
                               const status = statusUI[app.status] || {};
                               const applicantName = `${
-                                app.user?.first_name || ""
-                              } ${app.user?.last_name || ""}`.trim() || "Anonymous";
+                                app.user?.firstName || ""
+                              } ${app.user?.lastName || ""}`.trim() || "Anonymous";
 
                               return (
                                 <motion.div
+                                  onClick={() => {
+                                    navigate(`/user-profile?id=${app.user?.id}`)
+                                  }}
                                   key={app.id}
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
@@ -443,6 +448,7 @@ const FounderManageApplications = () => {
                                   <div className="flex items-center gap-3 flex-1 min-w-0">
                                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                                       {applicantName.charAt(0).toUpperCase()}
+                                      
                                     </div>
                                     <div className="min-w-0 flex-1">
                                       <p className="font-semibold text-white truncate">
@@ -452,11 +458,11 @@ const FounderManageApplications = () => {
                                         <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
                                           {app.role || "Role not specified"}
                                         </Badge>
-                                        {app.created_at && (
+                                        {app.createdAt && (
                                           <p className="text-xs text-gray-400 flex items-center gap-1">
                                             <Calendar className="w-3 h-3" />
                                             {new Date(
-                                              app.created_at
+                                              app.createdAt
                                             ).toLocaleDateString()}
                                           </p>
                                         )}
@@ -477,8 +483,11 @@ const FounderManageApplications = () => {
                                         <motion.button
                                           whileHover={{ scale: 1.05 }}
                                           whileTap={{ scale: 0.95 }}
-                                          onClick={() =>
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
                                             handleReject(startup.id, app.id)
+                                          }
                                           }
                                           className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition font-medium text-sm flex items-center gap-1"
                                         >
@@ -488,8 +497,11 @@ const FounderManageApplications = () => {
                                         <motion.button
                                           whileHover={{ scale: 1.05 }}
                                           whileTap={{ scale: 0.95 }}
-                                          onClick={() =>
+                                          onClick={(e) => {
+                                            e.preventDefault()
+                                            e.stopPropagation()
                                             handleAccept(startup.id, app.id)
+                                          }
                                           }
                                           className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 transition font-medium text-sm flex items-center gap-1"
                                         >

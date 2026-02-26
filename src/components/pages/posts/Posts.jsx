@@ -207,6 +207,7 @@ const Posts = () => {
           per_page: 10,
           currentUserId: currentUser?.id,
         });
+        console.log("Fetched posts:", response.posts);
         setPosts(response.posts || []);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
