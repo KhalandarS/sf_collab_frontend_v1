@@ -14,15 +14,15 @@
  * - Grey = Idle (inactive for 5+ minutes)
  */
 
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { Search, Plus, ChevronDown, ChevronRight, UserCheck, Loader2 } from 'lucide-react';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // Status colors
 const STATUS_COLORS = {
-  online: 'bg-emerald-500',   // Green
-  idle: 'bg-gray-400',        // Grey
-  offline: 'bg-red-500',      // Red
+  online: 'bg-emerald-500',   // Green  — active
+  idle:   'bg-amber-400',     // Amber  — Away (inactive 3+ min)
+  offline:'bg-red-500',       // Red    — disconnected
 };
 
 // Avatar component with status indicator
@@ -157,7 +157,8 @@ const OnlineContactsSidebar = ({
   token,               
   currentUserId,
   isLoading = false,      // Show loading state while fetching friends
-  className = '' 
+  className = '',
+  nowTs: nowTsProp,       // Optional: shared clock tick from parent keeps sidebar in sync
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedSections, setExpandedSections] = useState({ 
@@ -165,6 +166,17 @@ const OnlineContactsSidebar = ({
     idle: true,
     offline: false 
   });
+
+  // ── Clock for idle re-evaluation ──────────────────────────────────────────
+  // If the parent passes nowTs we use that so all components tick together.
+  // Otherwise we maintain our own 30-second interval.
+  const [nowTsLocal, setNowTsLocal] = useState(() => Date.now());
+  const nowTs = nowTsProp != null ? nowTsProp : nowTsLocal;
+  useEffect(() => {
+    if (nowTsProp != null) return; // parent owns the clock
+    const t = setInterval(() => setNowTsLocal(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, [nowTsProp]);
 
   // Normalize onlineUsers to Set of strings for fast lookup
   const onlineSet = useMemo(() => {
@@ -192,13 +204,13 @@ const OnlineContactsSidebar = ({
     // Check for idle (inactive for 5+ minutes)
     const lastActive = lastActiveAt?.[id];
     if (lastActive) {
-      const diffMs = Date.now() - Number(lastActive);
-      const IDLE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+      const diffMs = nowTs - Number(lastActive);
+      const IDLE_THRESHOLD = 3 * 60 * 1000; // 3 min → Away per spec
       if (diffMs > IDLE_THRESHOLD) return 'idle';
     }
     
     return 'online';
-  }, [onlineSet, lastActiveAt]);
+  }, [onlineSet, lastActiveAt, nowTs]);
 
   // Get status text
   const getStatusText = (status) => {

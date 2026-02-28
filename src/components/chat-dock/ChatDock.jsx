@@ -34,6 +34,7 @@ const TYPE_TO_DOCK_TAB = {
   direct: 'friends',
   group: 'groups',
   team: 'startups',
+  startup: 'startups',  // backend may use 'startup' or 'team' — accept both
   general: 'general',
 };
 
@@ -51,7 +52,10 @@ function useDockTabUnreadCounts(unread, conversations) {
     return counts;
   }, [unread, conversations]);
 }
-const LS_PRESENCE_KEY = "chatDock:presence:lastSeen";
+// ✅ FIX: Use same key as ChatPage so last_seen is shared between both components.
+// Previously ChatDock used "chatDock:presence:lastSeen" and ChatPage used
+// "presence:lastSeenAt" — they never shared data, causing different timestamps.
+const LS_PRESENCE_KEY = "presence:lastSeenAt";
 const LS_UNREAD_USERS_KEY = "chatDock:unreadUsers";
 
 const toMs = (ts) => {
@@ -410,6 +414,12 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       localStorage.setItem(LS_UNREAD_USERS_KEY, JSON.stringify(next));
       return next;
     });
+
+    // Also zero out the server-provided unread_count on the conversation object
+    // so the badge doesn't re-appear from stale server data
+    setConversations((prev) =>
+      prev.map((c) => String(c.id) === key ? { ...c, unread_count: 0 } : c)
+    );
   }, []);
 
   useEffect(() => {
@@ -499,7 +509,10 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
           setTimeout(() => scrollToBottom(cid), 30);
 
-          if (consideredActive && !isConvMinimized(cid)) {
+          // Always clear unread when messages load. isConvMinimized() reads stale state
+          // due to React batching — openWindow() already zeroed the badge optimistically,
+          // but we still emit mark_read so the backend DB and other participants sync.
+          if (consideredActive) {
             clearUnread(cid);
             socket?.emit?.("mark_read", { conversation_id: cid });
           }
@@ -515,7 +528,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         );
       }
     },
-    [token, scrollToBottom, socket, consideredActive, isConvMinimized, clearUnread]
+    [token, scrollToBottom, socket, consideredActive, clearUnread]
   );
 
   useEffect(() => {
@@ -737,8 +750,21 @@ useEffect(() => {
       if (data.status === "online") {
         setLastActiveAt((prev) => ({ ...prev, [id]: now() }));
       }
+      if (data.status === "away") {
+        // Server confirms user is Away — backdate lastActiveAt so idle shows immediately
+        const awayTs = now() - (3 * 60 * 1000 + 1000);
+        setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
+      }
       if (data.status === "offline") {
-        setLastSeenAt((prev) => ({ ...prev, [id]: now() }));
+        // Prefer the authoritative timestamp from the backend (added in disconnect handler)
+        // over local Date.now() which can differ by network latency
+        const ts = toMs(data?.last_seen) || now();
+        setLastSeenAt((prev) => {
+          const next = { ...prev, [id]: ts };
+          // Also write to the shared localStorage key so ChatPage picks it up
+          try { localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(next)); } catch {}
+          return next;
+        });
       }
     };
 
@@ -935,6 +961,31 @@ useEffect(() => {
     };
     socket.on("conversation_pinned", onConvPinned);
 
+    // ── Startup membership: added to a conversation ────────────────────────
+    const onConversationAdded = (data) => {
+      const conv = data?.conversation;
+      if (!conv) return;
+      setConversations((prev) => {
+        if (prev.some((c) => String(c.id) === String(conv.id))) return prev;
+        return [conv, ...prev];
+      });
+    };
+    socket.on("conversation_added", onConversationAdded);
+
+    // ── Startup membership: removed from a conversation ────────────────────
+    const onConversationRemoved = (data) => {
+      const cid = String(data?.conversation_id ?? '');
+      if (!cid) return;
+      setConversations((prev) => prev.filter((c) => String(c.id) !== cid));
+      // Close the dock window if it was open
+      setWindows((prev) => {
+        const hadIt = prev.some((w) => String(w.conversationId) === cid);
+        if (!hadIt) return prev;
+        return prev.filter((w) => String(w.conversationId) !== cid);
+      });
+    };
+    socket.on("conversation_removed", onConversationRemoved);
+
     // Read receipt status updates - update message status in the correct window
     const handleStatusUpdate = (data) => {
       const { message_id, conversation_id, status } = data || {};
@@ -981,6 +1032,8 @@ useEffect(() => {
       socket.off("new_message", handleIncomingMessage);
       socket.off("conversation_message", handleIncomingMessage);
       socket.off("conversation_pinned", onConvPinned);
+      socket.off("conversation_added", onConversationAdded);
+      socket.off("conversation_removed", onConversationRemoved);
       socket.off("message_status_update", handleStatusUpdate);
       socket.off("message_read", handleStatusUpdate);
       socket.off("message_delivered", handleStatusUpdate);
@@ -1070,7 +1123,7 @@ useEffect(() => {
         if (activeTab === "online") return isDirectOnline(c);
         if (activeTab === "friends") return c.conversation_type === "direct";
         if (activeTab === "groups") return c.conversation_type === "group";
-        if (activeTab === "startups") return c.conversation_type === "team";
+        if (activeTab === "startups") return c.conversation_type === "team" || c.conversation_type === "startup";
         if (activeTab === "general") return c.conversation_type === "general";
       }
       return true;
@@ -1250,7 +1303,9 @@ useEffect(() => {
                       );
                       const isDirect = conv.conversation_type === "direct";
                       const title = conv.name || otherParticipant?.firstName || "Chat";
-                      const unreadCount = unread?.[String(conv.id)] || conv.unread_count || 0;
+                      // Use local unread state as source of truth; fallback to server count only if not yet tracked
+                      const localUnread = unread?.[String(conv.id)];
+                      const unreadCount = localUnread != null ? Number(localUnread) : (Number(conv.unread_count) || 0);
                       let lastMsg = conv.last_message || conv.lastMessage;
 
                       // ─── Feature 3: draft preview ──────────────────────
@@ -1320,7 +1375,7 @@ useEffect(() => {
                             </div>
                           </div>
                           <div className="flex flex-col gap-2">
-                          <span className="text-[0.6rem] text-gray-600">{formatFriendlyDate(lastMsg?.created_at)}</span>
+                          <span className="text-[0.6rem] text-gray-600 group-hover:opacity-0 transition-opacity">{formatFriendlyDate(lastMsg?.created_at)}</span>
                           {unreadCount > 0 && (
                             <motion.div 
                               initial={{ scale: 0.8 }}
@@ -1333,7 +1388,7 @@ useEffect(() => {
                           </div>
                         </motion.button>
                         {/* ─── Feature 5: Archive/Unarchive + Delete buttons ─── */}
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                        <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
                           {showArchived ? (
                             <button
                               type="button"

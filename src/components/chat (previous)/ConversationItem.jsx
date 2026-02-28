@@ -155,7 +155,7 @@ const ConversationItem = ({
                   <Pin size={10} className="text-indigo-400 shrink-0 rotate-45" title="Pinned" />
                 )}
               </div>
-              <span className="text-xs text-zinc-500 shrink-0">{lastTime}</span>
+              <span className="text-xs text-zinc-500 shrink-0 group-hover:opacity-0 transition-opacity">{lastTime}</span>
             </div>
 
             <div className="flex items-center justify-between gap-2 mt-0.5">
@@ -177,8 +177,8 @@ const ConversationItem = ({
           </div>
         </button>
 
-        {/* Action buttons: archive/unarchive + delete (direct only) */}
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+        {/* Action buttons: appear on hover, sit where the time text is */}
+        <div className="absolute right-2 top-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
           {/* Unarchive button — shown only on archived tab */}
           {onUnarchive && (
             <button

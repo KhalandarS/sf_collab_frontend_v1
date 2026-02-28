@@ -31,6 +31,7 @@ const TYPE_TO_TAB = {
   direct: 'friends',
   group: 'groups',
   team: 'startups',
+  startup: 'startups',  // backend may use 'startup' or 'team' — accept both
   general: 'general',
 };
 
@@ -608,6 +609,28 @@ useEffect(() => {
     };
     socket.on("conversation_pinned", onConvPinned);
 
+    // ── Startup membership: added to a conversation ────────────────────────
+    const onConversationAdded = (data) => {
+      const conv = data?.conversation;
+      if (!conv) return;
+      setConversations((prev) => {
+        if (prev.some((c) => String(c.id) === String(conv.id))) return prev;
+        return [conv, ...prev];
+      });
+    };
+    socket.on("conversation_added", onConversationAdded);
+
+    // ── Startup membership: removed from a conversation ────────────────────
+    const onConversationRemoved = (data) => {
+      const cid = String(data?.conversation_id ?? '');
+      if (!cid) return;
+      setConversations((prev) => prev.filter((c) => String(c.id) !== cid));
+      setActiveConversation((prev) =>
+        prev && String(prev.id) === cid ? null : prev
+      );
+    };
+    socket.on("conversation_removed", onConversationRemoved);
+
     return () => {
       if (activeConversation) {
         socket.emit("leave_conversation", { conversation_id: activeConversation.id });
@@ -619,6 +642,8 @@ useEffect(() => {
       socket.off("message_delivered", onMessageStatusUpdate);
       socket.off("conversation_message", onConversationMessage);
       socket.off("conversation_pinned", onConvPinned);
+      socket.off("conversation_added", onConversationAdded);
+      socket.off("conversation_removed", onConversationRemoved);
     };
   }, [socket, activeConversation, fetchConversations]);
 
@@ -638,8 +663,22 @@ useEffect(() => {
         setLastActiveAt((prev) => ({ ...prev, [id]: now() }));
       }
 
+      if (data.status === "away") {
+        // Server confirmed this user is now Away — backdate their lastActiveAt
+        // by 3+ min so getUserStatus returns 'idle' without waiting for clock tick
+        const awayTs = now() - (3 * 60 * 1000 + 1000);
+        setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
+      }
+
       if (data.status === "offline") {
-        setLastSeenAt((prev) => ({ ...prev, [id]: now() }));
+        // Use backend-provided last_seen if available (more accurate than local clock)
+        const ts = toMs(data?.last_seen) || now();
+        setLastSeenAt((prev) => {
+          const next = { ...prev, [id]: ts };
+          // Write to shared localStorage key so ChatDock stays in sync
+          writePresenceMap(LS_LAST_SEEN_KEY, next);
+          return next;
+        });
       }
     };
 
@@ -938,7 +977,7 @@ useEffect(() => {
       if (activeTab === 'all' || activeTab === 'archived') return true;
       if (activeTab === 'friends') return c.conversation_type === 'direct';
       if (activeTab === 'groups') return c.conversation_type === 'group';
-      if (activeTab === 'startups') return c.conversation_type === 'team';
+      if (activeTab === 'startups') return c.conversation_type === 'team' || c.conversation_type === 'startup';
       if (activeTab === 'general') return c.conversation_type === 'general';
       
       return true;
@@ -1093,28 +1132,28 @@ useEffect(() => {
           </div>
           
           {/* Category Tabs */}
-          <div className="flex gap-1 overflow-x-auto pb-1">
+          <div className="flex gap-1.5 flex-wrap mt-1">
             {[
               { id: 'all', label: 'All' },
-              { id: 'friends', label: 'Friends', type: 'direct' },
-              { id: 'groups', label: 'Groups', type: 'group' },
-              { id: 'startups', label: 'Startups', type: 'team' },
-              { id: 'general', label: 'General', type: 'general' },
+              { id: 'friends', label: 'Friends' },
+              { id: 'groups', label: 'Groups' },
+              { id: 'startups', label: 'Startups' },
+              { id: 'general', label: 'General' },
             ].map((tab) => {
-              // ─── Feature 2: unread badge per tab ──────────────────────
               const count = tabUnreadCounts[tab.id] || 0;
               return (
                 <button
                   key={tab.id}
                   onClick={() => handleSetActiveTab(tab.id)}
-                  className={`relative px-2 md:px-3 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${activeTab === tab.id
-                      ? 'bg-indigo-500 text-zinc-900'
-                      : 'bg-zinc-800 text-zinc-400 hover:text-white'
-                    }`}
+                  className={`relative px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-amber-500 text-zinc-900 shadow-md'
+                      : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'
+                  }`}
                 >
                   {tab.label}
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-1 min-w-[16px] h-4 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                    <span className="absolute -top-1.5 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-red-500 text-white text-[8px] font-bold flex items-center justify-center">
                       {count > 99 ? '99+' : count}
                     </span>
                   )}
@@ -1329,6 +1368,7 @@ useEffect(() => {
           friends={friends}
           onlineUsers={onlineUsers}
           lastActiveAt={lastActiveAt}
+          nowTs={nowTs}
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}

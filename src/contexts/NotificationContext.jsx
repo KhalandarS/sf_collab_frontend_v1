@@ -14,7 +14,7 @@ import React, {
   useEffect, 
   useMemo, 
   useState, 
-  useCallback 
+  useCallback
 } from "react";
 import { useSelector } from "react-redux";
 import { notificationAPI } from "@/utils/APIs/notificationAPI";
@@ -76,21 +76,36 @@ export const NotificationProvider = ({ children }) => {
   const [filters, setFilters] = useState({});
   const [isConnected, setIsConnected] = useState(false);
 
+
+
   // -----------------------------
   // SOCKET.IO CONNECTION
   // -----------------------------
   useEffect(() => {
     if (!access_token || !user?.id) return;
 
-    const socketInstance = getSocketInstance();
+    const socketInstance = getSocketInstance(access_token);
 
-    socketInstance.on("connect", () => {
-      console.log("✅ Socket.IO connected for notifications", socketInstance.id);
+    const onConnect = async () => {
       setIsConnected(true);
-      
-      // Join user room for notifications
       socketInstance.emit("join_notifications", { user_id: user.id });
-    });
+      // Fetch fresh unread count from server now that we are in the notification room
+      // (Call API directly here — avoids stale-closure / ref timing issues)
+      try {
+        const data = await notificationAPI.getUnreadCount();
+        setUnreadCount(Number(data?.unreadCount ?? data?.unread_count ?? 0));
+      } catch (e) {
+        // non-critical — count will be correct from initial load
+      }
+    };
+
+    socketInstance.on("connect", onConnect);
+
+    // If socket is already connected when this effect runs (e.g. hot reload, lazy route),
+    // fire the connect logic immediately so we don't miss the join
+    if (socketInstance.connected) {
+      onConnect();
+    }
 
     socketInstance.on("disconnect", (reason) => {
       console.log("❌ Socket.IO disconnected:", reason);
@@ -111,9 +126,9 @@ export const NotificationProvider = ({ children }) => {
       // Normalize the notification
       const notif = normalizeNotification(rawNotif);
 
-      // Add to notifications list (avoid duplicates)
+      // Add to notifications list (avoid duplicates — use String() for type-safe comparison)
       setNotifications((prev) => {
-        if (prev.some(n => n.id === notif.id)) {
+        if (prev.some(n => String(n.id) === String(notif.id))) {
           return prev;
         }
         return [notif, ...prev];
@@ -142,15 +157,22 @@ export const NotificationProvider = ({ children }) => {
       console.log("User status update:", data);
     });
 
-    // Handle single notification read sync
+    // Handle single notification read sync — use server's authoritative count
     socketInstance.on("notification_read", (data) => {
-      const { notificationId } = data;
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
-        )
-      );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      const notifId = data?.notificationId ?? data?.notification_id;
+      if (notifId !== undefined) {
+        setNotifications((prev) =>
+          prev.map((n) =>
+            String(n.id) === String(notifId) ? { ...n, is_read: true, isRead: true } : n
+          )
+        );
+      }
+      // Prefer the authoritative count from server to avoid drift
+      if (data?.unread_count !== undefined) {
+        setUnreadCount(Math.max(0, Number(data.unread_count)));
+      } else {
+        setUnreadCount((prev) => Math.max(0, prev - 1));
+      }
     });
 
     // ✅ FIX: Handle mark-ALL-read sync across tabs/windows.
@@ -167,15 +189,13 @@ export const NotificationProvider = ({ children }) => {
     setSocket(socketInstance);
 
     return () => {
-      // ✅ FIX: Remove listeners but do NOT close the singleton socket.
-      // Closing it here would destroy the shared instance so the next render
-      // would try to reconnect, causing a "connect → immediately disconnect" loop.
-      // The singleton is kept alive and destroyed only on logout via destroySocketInstance().
+      // Remove listeners but do NOT destroy the singleton socket.
+      // The singleton lives until logout (destroySocketInstance).
+      socketInstance.off("connect", onConnect);
       socketInstance.off("new_notification");
       socketInstance.off("notification_read");
       socketInstance.off("notifications_marked_read");
       socketInstance.off("user_status");
-      socketInstance.off("connect");
       socketInstance.off("disconnect");
       socketInstance.off("connect_error");
       setSocket(null);
@@ -247,6 +267,8 @@ export const NotificationProvider = ({ children }) => {
     }
   }, [access_token]);
 
+
+
   /**
    * Load notification stats
    */
@@ -264,18 +286,26 @@ export const NotificationProvider = ({ children }) => {
    * Mark a notification as read
    */
   const markAsRead = useCallback(async (notificationId) => {
+    // OPTIMISTIC: update local state immediately, revert on failure
+    setNotifications((prev) =>
+      prev.map((n) =>
+        String(n.id) === String(notificationId) ? { ...n, is_read: true, isRead: true } : n
+      )
+    );
+    setUnreadCount((prev) => Math.max(0, prev - 1));
+
     try {
       await notificationAPI.markAsRead(notificationId);
-
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true, isRead: true } : n
-        )
-      );
-
-      setUnreadCount((prev) => Math.max(0, prev - 1));
+      // Backend emits notification_read socket → other tabs sync via onNotificationRead above
     } catch (err) {
       console.error("Error marking notification as read:", err);
+      // Revert optimistic update on failure
+      setNotifications((prev) =>
+        prev.map((n) =>
+          String(n.id) === String(notificationId) ? { ...n, is_read: false, isRead: false } : n
+        )
+      );
+      setUnreadCount((prev) => prev + 1);
     }
   }, []);
 

@@ -14,7 +14,7 @@ const NotificationBell = () => {
   const { 
     notifications, 
     unreadCount, 
-    Loading,
+    loading,
     markAsRead,
     markAllAsRead,
     refresh
@@ -109,14 +109,10 @@ const NotificationBell = () => {
   
   // Handle notification click
   const handleNotificationClick = async (notification) => {
-    // Mark as read
+    // Mark as read — optimistic, no refresh() needed (avoids race with DB write)
     if (!notification.is_read) {
-      await markAsRead(notification.id);
-      await refresh();
+      markAsRead(notification.id); // fire-and-forget; state updates instantly
     }
-
-    
-    // Navigate to the link
     const link = getNotificationLink(notification);
     setIsOpen(false);
     navigate(link);
@@ -168,12 +164,12 @@ const NotificationBell = () => {
           setIsOpen((prev) => {
             const next = !prev;
             if (!prev && next) {
-              // ✅ FIX: auto mark-all-read the moment the dropdown opens.
-              // markAllAsRead() is optimistic — the badge drops to 0 immediately
-              // without waiting for the network response.
-              markAllAsRead();
               // ─── Feature 4: reset chat badge on open ──────────────────
               if (resetChatUnreadCount) resetChatUnreadCount();
+              // NOTE: We do NOT call markAllAsRead() here.
+              // Individual notifications are marked read when clicked.
+              // The notification page marks all read when you navigate away.
+              // This preserves the unread highlights so users can see what's new.
             }
             return next;
           });
@@ -218,7 +214,7 @@ const NotificationBell = () => {
           
           {/* Notifications List */}
           <div className="max-h-80 overflow-y-auto">
-            {Loading && recentNotifications.length === 0 ? (
+            {loading && recentNotifications.length === 0 ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
               </div>
@@ -235,7 +231,10 @@ const NotificationBell = () => {
                   className={`
                     p-4 border-b border-slate-700/50 cursor-pointer transition-colors
                     hover:bg-slate-700/50
-                    ${!notification.is_read ? 'bg-slate-700/30' : ''}
+                    ${!notification.is_read
+                      ? 'bg-blue-900/30 border-l-2 border-l-blue-500'
+                      : 'opacity-75'
+                    }
                   `}
                 >
                   <div className="flex items-start gap-3">
@@ -247,7 +246,10 @@ const NotificationBell = () => {
                     {/* Content */}
                     <div className={`flex-1 min-w-0 ${notification.is_read ? 'ml-5' : ''}`}>
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className={`font-medium text-sm truncate ${getTypeColor(notification.type)}`}>
+                        <h4 className={`text-sm truncate ${getTypeColor(notification.type)} ${!notification.is_read ? 'font-semibold' : 'font-medium opacity-75'}`}>
+                          {!notification.is_read && (
+                            <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 mr-1.5 mb-0.5 align-middle" />
+                          )}
                           {notification.title}
                         </h4>
                         <span className="text-xs text-slate-500 whitespace-nowrap">
