@@ -9,10 +9,11 @@ import {
   ArrowRight
 } from "lucide-react";
 import { tools } from "./AITools";
-
-
+import { isAiToolsLocked, getAiToolsLockRemainingDays } from "../../../../utils/config.js";
 
 export default function AIDashboard() {
+  const locked = isAiToolsLocked();
+  const daysRemaining = getAiToolsLockRemainingDays();
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950 p-4 sm:p-8">
       
@@ -42,6 +43,27 @@ export default function AIDashboard() {
             Access your AI-powered tools to <span className="bg-linear-to-r from-blue-300 to-purple-300 bg-clip-text text-transparent font-semibold">build, design, analyze, and scale</span> — all from one intelligent workspace.
           </p>
 
+          {locked && (
+            <div
+              className="mt-6 max-w-2xl mx-auto px-4 py-3 rounded-xl border border-amber-400/40 bg-amber-500/10 text-amber-100 text-sm sm:text-base animate-fade-in"
+              style={{ animationDelay: "0.3s" }}
+            >
+              <p className="font-medium mb-1">AI tools are temporarily locked</p>
+              <p className="text-amber-100/90">
+                We&apos;re rolling out additional security measures and running tests.
+                {daysRemaining > 0 && (
+                  <>
+                    {" "}
+                    Access will automatically resume in{" "}
+                    <span className="font-semibold">
+                      {daysRemaining} day{daysRemaining !== 1 ? "s" : ""}
+                    </span>.
+                  </>
+                )}
+              </p>
+            </div>
+          )}
+
           {/* Feature Highlights */}
           <div className="flex flex-wrap justify-center gap-6 mt-8 animate-fade-in" style={{ animationDelay: '0.4s' }}>
             {[
@@ -62,7 +84,7 @@ export default function AIDashboard() {
           {tools.map(({ name, available = true, description, icon: Icon, path, gradient }) => (
             <Link
               key={name}
-              to={available ? path : "#"}
+              to={available && !locked ? path : "#"}
               className="group relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.05] h-full"
             >
               {/* Gradient Background */}
@@ -94,18 +116,20 @@ export default function AIDashboard() {
                 </p>
 
                 {/* CTA */}
-                {
-                  available ? (
-                    <div className="flex items-center gap-2 text-sm font-semibold text-white opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:gap-3">
-                      <span>Launch Tool</span>
-                      <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
-                    </div>
-                  ) : (
-                    <div className="text-sm font-semibold text-red-400 opacity-70">
-                      Coming Soon
-                    </div>
-                  )
-                }
+                {locked ? (
+                  <div className="text-sm font-semibold text-amber-300 opacity-80">
+                    Temporarily locked for security updates
+                  </div>
+                ) : available ? (
+                  <div className="flex items-center gap-2 text-sm font-semibold text-white opacity-70 group-hover:opacity-100 transition-all duration-300 group-hover:gap-3">
+                    <span>Launch Tool</span>
+                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-2" />
+                  </div>
+                ) : (
+                  <div className="text-sm font-semibold text-red-400 opacity-70">
+                    Coming Soon
+                  </div>
+                )}
               </div>
 
               {/* Corner Accent */}

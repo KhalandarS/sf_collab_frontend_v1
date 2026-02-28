@@ -104,6 +104,7 @@ import FounderManageApplications from "./components/pages/founder/manageApplicat
 import FounderManageTeam from "./components/pages/founder/manageTeam/FounderManageTeam.jsx";
 import FounderManageTasks from "./components/pages/founder/manageTasks/FounderManageTasks.jsx";
 import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
+import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
 
@@ -237,7 +238,14 @@ export default function App() {
                   <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
 
             
-                  <Route path="ai-dashboard" element={<AIDashboard />} />
+                  <Route
+                    path="ai-dashboard"
+                    element={
+                      <AIToolsGuard>
+                        <AIDashboard />
+                      </AIToolsGuard>
+                    }
+                  />
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
                   <Route path="waitlist" element={<Waitlist />} />
                   <Route path="waitlist-terms" element={<WaitlistTerms />} />
@@ -303,13 +311,62 @@ export default function App() {
                   <Route path="invitations" element={<InviteToStartup />} />
                   {/* <Route path="multi-role-profile-form" element={<MultiRoleProfileForm />} /> */}
                   {/* AI Tools */}
-                  <Route path="business-plan" element={<BusinessIdeaGenerator />} />
-                  <Route path="multimodal-images" element={<ImageGenerator />} />
-                  <Route path="logo-generator" element={<StartupLogoGenerator />} />
-                  <Route path="data-scraper" element={<ScraperForm />} />
-                  <Route path="qwen-chat" element={<QwenChat />} />
-                  <Route path="caption-generator" element={<CaptionGenerator />} />
-                  <Route path="video-generator" element={<VideoGenerator />} />
+                  <Route
+                    path="business-plan"
+                    element={
+                      <AIToolsGuard>
+                        <BusinessIdeaGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="multimodal-images"
+                    element={
+                      <AIToolsGuard>
+                        <ImageGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="logo-generator"
+                    element={
+                      <AIToolsGuard>
+                        <StartupLogoGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="data-scraper"
+                    element={
+                      <AIToolsGuard>
+                        <ScraperForm />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="qwen-chat"
+                    element={
+                      <AIToolsGuard>
+                        <QwenChat />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="caption-generator"
+                    element={
+                      <AIToolsGuard>
+                        <CaptionGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
+                  <Route
+                    path="video-generator"
+                    element={
+                      <AIToolsGuard>
+                        <VideoGenerator />
+                      </AIToolsGuard>
+                    }
+                  />
                   {/*points and payments system */}
                   <Route path="wallet" element={<WalletDashboard />} />
                   <Route path="store" element={<StorePage />} />
