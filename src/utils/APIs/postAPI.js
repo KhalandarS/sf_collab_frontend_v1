@@ -68,22 +68,22 @@ export const postAPI = {
   },
 
   getComments: async (postId, params) => {
-    const response = await api.get(`/posts/${postId}/comments`, {
+    const response = await api.get(`/profile/posts/${postId}/comments`, {
       params: {
-        page: params.page || 1,
-        per_page: params.per_page || 10,
+        page: params?.page || 1,
+        limit: params?.per_page || 10,
       },
     })
     return response.data
   },
 
   addComment: async (postId, content) => {
-    const response = await api.post(`/posts/${postId}/comments`, { text: content })
+    const response = await api.post(`/profile/posts/${postId}/comments`, { content })
     return response.data
   },
 
   deleteComment: async (postId, commentId) => {
-    const response = await api.delete(`/posts/${postId}/comments/${commentId}`)
+    const response = await api.delete(`/profile/posts/${postId}/comments/${commentId}`)
     return response.data
   },
 
@@ -107,62 +107,48 @@ export const postAPI = {
     return response.data
   },
 
-  // Stories API
+  // Stories API (backend uses /api/profile/stories)
   getStories: async (params) => {
-    const response = await api.get('/stories', {
+    const response = await api.get('/profile/stories', {
       params: {
-        page: params.page || 1,
-        per_page: params.per_page || 20,
-        user_id: params.user_id,
-        author_id: params.author_id,
-        type: params.type,
-        active_only: params.active_only ?? true,
-        include_viewers: params.include_viewers ?? false,
-        current_user_id: params.current_user_id,
+        page: params?.page || 1,
+        limit: params?.per_page || 20,
       },
     })
     return response.data
   },
 
   getStoryById: async (storyId, params) => {
-    const response = await api.get(`/stories/${storyId}`, {
-      params: {
-        include_viewers: params?.include_viewers ?? false,
-        current_user_id: params?.current_user_id,
-      },
-    })
+    const response = await api.get(`/profile/stories/${storyId}`)
     return response.data
   },
 
   createStory: async (storyData) => {
-    const response = await api.post('/stories', storyData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+    const response = await api.post('/profile/stories', storyData, {
+      headers: { 'Content-Type': 'application/json' },
     })
     return response.data
   },
 
   updateStory: async (storyId, storyData) => {
-    const response = await api.put(`/stories/${storyId}`, storyData)
+    const response = await api.put(`/profile/stories/${storyId}`, storyData)
     return response.data
   },
 
   viewStory: async (storyId, userId) => {
-    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
+    const response = await api.post(`/profile/stories/${storyId}/view`, { user_id: userId })
     return response.data
   },
 
   getActiveStories: async (userIds, currentUserId) => {
-    const response = await api.get('/stories/active', {
-      params: {
-        user_ids: userIds,
-        current_user_id: currentUserId,
-      },
+    const response = await api.get('/profile/stories', {
+      params: { page: 1, limit: 50 },
     })
     return response.data
   },
 
   deleteStory: async (storyId) => {
-    const response = await api.delete(`/stories/${storyId}`)
+    const response = await api.delete(`/profile/stories/${storyId}`)
     return response.data
   },
 }

@@ -75,13 +75,22 @@ export default function PostActions({
   post,
   liked,
   setLiked,
+  onLikeClick,
   bookmarked,
   setBookmarked,
 }) {
   const likesCount = Number(post.likes || 0) + (liked ? 1 : 0);
   const commentsCount = Array.isArray(post.comments)
     ? post.comments.length
-    : Number(post.comments || 0);
+    : Number(post.commentsCount ?? post.comments ?? 0);
+
+  const handleLike = () => {
+    if (onLikeClick) {
+      onLikeClick();
+    } else {
+      setLiked(!liked);
+    }
+  };
 
   return (
     <div className="flex items-center justify-between">
@@ -97,7 +106,7 @@ export default function PostActions({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setLiked(!liked)}
+                  onClick={handleLike}
                   className={`gap-2 transition-all ${
                     liked
                       ? "text-pink-500 bg-pink-500/10 hover:bg-pink-500/20"

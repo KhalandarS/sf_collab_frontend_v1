@@ -36,13 +36,13 @@ export default function PostCard({ post, onPostDeleted }) {
     Boolean(post.isSaved || post.saved_by_current_user)
   );
   const [isEditing, setIsEditing] = useState(false);
-  const [editedCaption, setEditedCaption] = useState(post.caption || "");
+  const [editedCaption, setEditedCaption] = useState(post.caption || post.content || "");
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [loadingComments, setLoadingComments] = useState(false);
   const commentInputRef = useRef(null);
-  const isOwnPost = currentUser && (post.author?._id === currentUser.id || post.author?.userId === currentUser.id);
+  const isOwnPost = currentUser && (post.author?._id === currentUser.id || post.author?.id === currentUser.id || post.author?.userId === currentUser.id);
 
   // Normalize media URLs - handle both backend media array format and mediaUrl string
   const getMediaUrls = () => {
@@ -100,6 +100,20 @@ export default function PostCard({ post, onPostDeleted }) {
       setSaved(!saved);
     } catch (error) {
       console.error("Save failed:", error);
+    }
+  };
+
+  const handleLikeClick = async () => {
+    try {
+      const postId = post._id || post.id;
+      const res = await postsAPI.like(postId);
+      if (res && typeof res.liked === "boolean") {
+        setLiked(res.liked);
+      } else {
+        setLiked((prev) => !prev);
+      }
+    } catch (error) {
+      console.error("Like failed:", error);
     }
   };
 
@@ -308,6 +322,7 @@ export default function PostCard({ post, onPostDeleted }) {
             post={post}
             liked={liked}
             setLiked={setLiked}
+            onLikeClick={handleLikeClick}
             bookmarked={bookmarked}
             setBookmarked={setBookmarked}
           />
@@ -327,12 +342,12 @@ export default function PostCard({ post, onPostDeleted }) {
             <div className="space-y-3 border-t border-zinc-800/50 pt-3">
               {/* Comments List */}
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {comments.map((comment) => (
-                  <div key={comment._id} className="bg-zinc-800/30 rounded p-2 text-sm">
+                {comments.map((comment, cIdx) => (
+                  <div key={comment._id || comment.id || cIdx} className="bg-zinc-800/30 rounded p-2 text-sm">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-semibold text-blue-400">{comment.author?.firstName || "User"}</p>
-                        <p className="text-zinc-300">{comment.text}</p>
+                        <p className="text-zinc-300">{comment.content ?? comment.text}</p>
                         <p className="text-xs text-zinc-500 mt-1">{new Date(comment.createdAt).toLocaleDateString()}</p>
                       </div>
                       {(currentUser?.id === comment.author?._id || isOwnPost) && (

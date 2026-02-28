@@ -166,8 +166,14 @@ const Posts = () => {
   useEffect(() => {
     if (socket && isConnected) {
       socket.on("new_post", (payload) => {
-        if (payload && payload.content) {
-          setPosts((prev) => [payload, ...prev]);
+        if (payload && (payload.content !== undefined || payload.mediaUrl)) {
+          const normalized = {
+            ...payload,
+            _id: payload._id || payload.id,
+            id: payload.id || payload._id,
+            author: payload.author || {},
+          };
+          setPosts((prev) => [normalized, ...prev]);
         }
       });
 
@@ -190,7 +196,22 @@ const Posts = () => {
         const response = await userSocialAPI.getSocialProfile(currentUser.id);
         setSocialProfile(response.social);
       } catch (error) {
-        console.error("Failed to fetch social profile:", error);
+        const isNotFound =
+          error?.message === "User social profile not found" ||
+          error?.error === "User social profile not found" ||
+          error?.response?.status === 404 ||
+          error?.response?.data?.message === "User social profile not found";
+        if (isNotFound) {
+          try {
+            await userSocialAPI.createSocialProfile();
+            const retry = await userSocialAPI.getSocialProfile(currentUser.id);
+            setSocialProfile(retry.social);
+          } catch (createErr) {
+            console.error("Failed to create/fetch social profile:", createErr);
+          }
+        } else {
+          console.error("Failed to fetch social profile:", error);
+        }
       }
     };
     if (currentUser) {
@@ -236,8 +257,8 @@ const Posts = () => {
         const payload = {
           user_id: currentUser.id,
           author_id: currentUser.id,
-          author_first_name: currentUser.first_name,
-          author_last_name: currentUser.last_name,
+          author_first_name: currentUser.firstName || currentUser.first_name,
+          author_last_name: currentUser.lastName || currentUser.last_name,
           media_url: mediaUrl,
           caption: postData.caption,
           type: postData.type || "image",
@@ -245,18 +266,22 @@ const Posts = () => {
         await storiesAPI.create(payload);
         setStoriesRefreshKey((k) => k + 1);
       } else {
+        const postType = postData.type === "text" ? "professional" : (postData.type || "professional");
         const payload = {
           user_id: currentUser.id,
           author_id: currentUser.id,
-          author_first_name: currentUser.first_name,
-          author_last_name: currentUser.last_name,
+          author_first_name: currentUser.firstName || currentUser.first_name,
+          author_last_name: currentUser.lastName || currentUser.last_name,
           content: postData.caption,
-          type: postData.type || "professional",
+          type: postType,
           tags: postData.tags || [],
         };
         const response = await postsAPI.create(payload);
         const created = response?.post;
-        setPosts((prev) => [created, ...prev]);
+        if (created) {
+          const normalized = { ...created, id: created._id || created.id };
+          setPosts((prev) => [normalized, ...prev]);
+        }
       }
     } catch (error) {
       console.error("Failed to create post:", error);
@@ -335,7 +360,7 @@ const Posts = () => {
                 ) : posts.length > 0 ? (
                   posts.map((post, index) => (
                     <motion.div
-                      key={post.id || index}
+                      key={post._id || post.id || index}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.1 }}
