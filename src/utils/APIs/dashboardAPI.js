@@ -2,7 +2,6 @@ import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
 import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-// filepath: /Users/ivandavidgomezsilva/Documents/Ivan/Trabajos/SFORGER/SForger_data/SFRepos/sf_collab_frontend_v1/src/utils/APIs/dashboardAPI.js
 
 const api = axios.create({
   baseURL: API_BASE_URL,

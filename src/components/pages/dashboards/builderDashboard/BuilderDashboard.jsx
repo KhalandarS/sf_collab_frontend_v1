@@ -33,13 +33,18 @@ export default function BuilderDashboard({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    dashboardAPI
-      .getBuilderDashboard()
-      .then((res) => setStartups(res.data.startups || []))
-      .catch((err) =>
-        console.error("❌ Failed to load builder dashboard", err)
-      )
-      .finally(() => setLoading(false));
+    async function fetchData() {
+      try {
+        const res = await dashboardAPI.getBuilderDashboard();
+        console.log("Builder dashbard:", res);
+        setStartups(res.data.startups || []);
+      } catch (err) {
+        console.error("❌ Failed to load builder dashboard", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
   }, []);
   const totals = useMemo(() => {
     return startups.reduce(
@@ -56,35 +61,7 @@ export default function BuilderDashboard({
   const completionRate = totals.totalTasks > 0 
     ? Math.round((totals.completed / totals.totalTasks) * 100) 
     : 0;
-  
-  const initialSections = useMemo(() => [
-    { id: "stats", component: <BuilderStats totals={totals} completionRate={completionRate} user={user} startups={startups} /> },
 
-    { id: "calendar", component: <Calendar /> },
-    { id: "worldclock", component: <WorldClock /> },
-  ], [totals, completionRate, user, startups]);
-
-  const [sections, setSections] = useState(initialSections);
-
-
-  useEffect(() => {
-    localStorage.setItem(
-      "builder-dashboard-layout",
-      JSON.stringify(sections.map(s => s.id))
-    );
-  }, [sections]);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("builder-dashboard-layout");
-    if (!saved) return;
-
-    const order = JSON.parse(saved);
-    setSections(prev =>
-      order
-        .map(id => prev.find(s => s.id === id))
-        .filter(Boolean)
-    );
-  }, []);
 
   if (loading) {
     return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
@@ -112,7 +89,9 @@ export default function BuilderDashboard({
 
       <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
 
-            {sections.map(section => section.component)}
+            <BuilderStats totals={totals} completionRate={completionRate} user={user} startups={startups} />
+            <Calendar />
+            <WorldClock />
       </div>
 
       <div className="text-sm text-white/50 italic">
@@ -188,8 +167,8 @@ function BuilderStats({ totals, completionRate, user, startups }) {
         subtitle="Active startups & tasks"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {startups.map((s) => (
-            <StartupWorkCard key={s.startup.id} data={s} />
+          {startups.map((s, index) => (
+            <StartupWorkCard key={index} data={s} />
           ))}
 
           {startups.length === 0 && (

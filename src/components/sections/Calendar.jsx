@@ -699,6 +699,7 @@ export default function Calendar() {
         }}
         title="Delete Event"
         description="Are you sure you want to delete this event? This action cannot be undone."
+        type='soft'
       />
     <div className="overflow-hidden text-white">
       <div className="w-full mx-auto py-4 md:py-8">

@@ -1,4 +1,4 @@
-import { Building2, LightbulbIcon, Save } from 'lucide-react';
+import { Building2, LightbulbIcon, Save, UserCog } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
 import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from '../sidebarCommons';
@@ -29,7 +29,7 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
     ideation(3),
     {
       id: 4,
-      icon: <Users size={22} />,
+      icon: <UserCog size={22} />,
       href: "/founder/my-applications",
       label: "Manage",
       subItems: [

@@ -1,5 +1,6 @@
 import { BookOpen, BriefcaseBusiness, LightbulbIcon, Rocket, Save, Share2, TrendingUp, Wallet } from "lucide-react";
 import { aiTools, toolsSection, dashboardLink, socialSection, wallet, ideation } from "../sidebarCommons";
+import { FcInvite } from "react-icons/fc";
 
 export function createInfluencerLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
   return [

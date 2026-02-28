@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Building2, Plus } from 'lucide-react';
+import { Search, Building2, Plus, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { startupsAPI } from '@/utils/APIs/startupsAPI';
@@ -58,17 +58,6 @@ const BuilderStartups = () => {
     fetchFilters();
   }, []);
 
-  const getStageBadgeVariant = (stage) => {
-    const variants = {
-      idea: 'bg-blue-100 text-blue-700 border-blue-200',
-      seed: 'bg-green-100 text-green-700 border-green-200',
-      early: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-      growth: 'bg-orange-100 text-orange-700 border-orange-200',
-      scale: 'bg-purple-100 text-purple-700 border-purple-200'
-    };
-    return variants[stage] || 'bg-gray-100 text-gray-700 border-gray-200';
-  };
-
   const clearFilters = () => {
     setSearchQuery('');
     setSelectedIndustry('All');
@@ -81,35 +70,59 @@ const BuilderStartups = () => {
     searchQuery !== ''
   ].filter(Boolean).length;
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1, delayChildren: 0.1 },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white">
-      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-black text-white">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+      </div>
+
+      <div className="w-full mx-auto px-2 md:px-4 py-8 w-full relative">
         
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-8 space-y-4"
         >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Building2 className="w-8 h-8 text-blue-500" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+                <Building2 className="w-8 h-8 text-white" />
+              </div>
               <div>
-                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                  Builder Startups
+                <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                  My Builder Startups
                 </h1>
-                <p className="text-gray-400 text-lg mt-2">
-                  Discover startups looking for builders and makers
+                <p className="text-gray-400 text-sm md:text-base mt-1">
+                  Here are your startups you are builder of. Click on any startup to view details, manage your role, and track your contributions.
                 </p>
               </div>
             </div>
-            <Button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/register-startup')}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap"
             >
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4" />
               Add Startup
-            </Button>
+            </motion.button>
           </div>
         </motion.div>
 
@@ -117,22 +130,28 @@ const BuilderStartups = () => {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
+          transition={{ delay: 0.1 }}
           className="mb-6 relative"
         >
-          <Search className="absolute left-4 top-3 w-5 h-5 text-gray-500" />
+          <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 z-10" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search builder startups..."
-            className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 focus:ring-2 focus:ring-blue-500 outline-none transition text-white"
+            className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
           />
         </motion.div>
 
         {/* Filters */}
-        <div className="space-y-4 mb-8">
+        <motion.div
+          className="space-y-4 mb-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.15 }}
+        >
           {/* Industry Filter */}
           <div>
-            <p className="text-sm text-gray-400 mb-2">Industry</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-3">Industry</p>
             <div className="flex gap-2 flex-wrap">
               {['All', ...industries].map((ind) => (
                 <motion.button
@@ -140,10 +159,10 @@ const BuilderStartups = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedIndustry(ind)}
-                  className={`px-4 py-2 rounded-lg text-sm border transition ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                     selectedIndustry === ind
-                      ? 'bg-blue-500/30 text-blue-300 border-blue-500/50'
-                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-300'
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/50 shadow-lg shadow-blue-500/10'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:bg-white/10'
                   }`}
                 >
                   {ind === 'All' ? 'All Industries' : ind}
@@ -154,7 +173,7 @@ const BuilderStartups = () => {
 
           {/* Stage Filter */}
           <div>
-            <p className="text-sm text-gray-400 mb-2">Stage</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-medium mb-3">Stage</p>
             <div className="flex gap-2 flex-wrap">
               {['All', ...stages].map((stage) => (
                 <motion.button
@@ -162,10 +181,10 @@ const BuilderStartups = () => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setSelectedStage(stage)}
-                  className={`px-4 py-2 rounded-lg text-sm border transition ${
+                  className={`px-4 py-2 rounded-lg text-sm font-medium border transition-all ${
                     selectedStage === stage
-                      ? 'bg-cyan-500/30 text-cyan-300 border-cyan-500/50'
-                      : 'bg-white/5 border-white/10 text-gray-400 hover:text-gray-300'
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-lg shadow-cyan-500/10'
+                      : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20 hover:bg-white/10'
                   }`}
                 >
                   {stage === 'All' ? 'All Stages' : stage}
@@ -176,21 +195,28 @@ const BuilderStartups = () => {
 
           {/* Clear Filters */}
           {activeFiltersCount > 0 && (
-            <button
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               onClick={clearFilters}
-              className="text-sm text-blue-400 hover:text-blue-300"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Filters
-            </button>
+              ✕ Clear Filters ({activeFiltersCount})
+            </motion.button>
           )}
-        </div>
+        </motion.div>
 
         {/* Results Info */}
-        <div className="mb-6 flex items-center justify-between">
+        <motion.div
+          className="mb-6 flex items-center justify-between"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2 }}
+        >
           <p className="text-sm text-gray-400">
             {total} {total === 1 ? 'startup' : 'startups'} found
           </p>
-        </div>
+        </motion.div>
 
         {/* Startup Grid */}
         {loading && startups.length === 0 ? (
@@ -201,25 +227,33 @@ const BuilderStartups = () => {
           </div>
         ) : startups.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-20"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex flex-col items-center justify-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
           >
-            <Building2 className="w-16 h-16 text-gray-600 mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">
+            <div className="p-4 bg-blue-500/20 rounded-full mb-4">
+              <Building2 className="w-12 h-12 text-blue-400" />
+            </div>
+            <h3 className="text-lg md:text-xl font-semibold text-white mb-2">
               No startups found
             </h3>
-            <p className="text-gray-400 mb-6 text-center max-w-md">
+            <p className="text-gray-400 mb-6 text-center max-w-md text-sm">
               Try adjusting your filters or search query to discover more builder startups
             </p>
-            <Button variant="outline" onClick={clearFilters} className="border-gray-600 text-black">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={clearFilters}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-all"
+            >
               Clear All Filters
-            </Button>
+            </motion.button>
           </motion.div>
         ) : (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
+            transition={{ delay: 0.25 }}
             className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
           >
             <InfiniteList
@@ -232,11 +266,11 @@ const BuilderStartups = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
+                  whileHover={{ y: -2, scale: 1.01 }}
                 >
                   <StartupCard
                     startup={startup}
                     index={index}
-                    getStageBadgeVariant={getStageBadgeVariant}
                   />
                 </motion.div>
               )}

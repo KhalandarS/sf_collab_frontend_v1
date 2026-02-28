@@ -199,7 +199,7 @@ const FounderManageTasks = () => {
 
   if (loading && startups.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white flex items-center justify-center">
+      <div className="min-h-screen bg-black flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity }}
@@ -211,8 +211,8 @@ const FounderManageTasks = () => {
 
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white px-2 md:px-4 py-8">
-      <div className="w-full mx-auto space-y-8">
+    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+      <div className="w-full mx-auto space-y-8 w-full">
         
         {/* Header */}
         <motion.div
@@ -220,18 +220,15 @@ const FounderManageTasks = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-            >
-              <Award className="w-8 h-8 text-blue-400" />
-            </motion.div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+              <Award className="w-8 h-8 text-white" />
+            </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold bg-linear-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 Manage Tasks
               </h1>
-              <p className="text-gray-400 text-lg mt-1">
+              <p className="text-gray-400 text-lg mt-2">
                 Track and manage all your startup tasks
               </p>
             </div>
@@ -247,17 +244,19 @@ const FounderManageTasks = () => {
         >
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-green-500 to-emerald-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-green-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <CheckCircle className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Completed</span>
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">Tasks Completed</p>
-                <p className="text-3xl font-bold text-white mt-1">{taskStats.completedTasks}</p>
+                <p className="text-3xl font-bold text-white mt-2">{taskStats.completedTasks}</p>
                 <p className="text-xs text-gray-400 mt-1">{taskStats.completionRate}% completion rate</p>
               </div>
             </div>
@@ -265,17 +264,19 @@ const FounderManageTasks = () => {
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-blue-500 to-cyan-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-blue-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <Clock className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Active</span>
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">In Progress</p>
-                <p className="text-3xl font-bold text-white mt-1">{taskStats.inProgressTasks}</p>
+                <p className="text-3xl font-bold text-white mt-2">{taskStats.inProgressTasks}</p>
                 <p className="text-xs text-gray-400 mt-1">Active tasks</p>
               </div>
             </div>
@@ -283,17 +284,19 @@ const FounderManageTasks = () => {
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className={`bg-gradient-to-br ${taskStats.overdueTasks > 0 ? 'from-red-600 to-red-500' : 'from-green-500 to-emerald-500'} p-0.5 rounded-xl`}
+            whileHover={{ y: -4, scale: 1.02 }}
+            className={`group relative overflow-hidden rounded-2xl`}
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className={`absolute inset-0 bg-gradient-to-r ${taskStats.overdueTasks > 0 ? 'from-red-500 to-red-600' : 'from-green-500 to-emerald-500'} opacity-0 group-hover:opacity-100 transition-opacity duration-300`} />
+            <div className={`relative bg-slate-900/90 backdrop-blur border border-white/10 ${taskStats.overdueTasks > 0 ? 'group-hover:border-red-500/50' : 'group-hover:border-green-500/50'} rounded-2xl p-6 space-y-3 transition-all`}>
               <div className="flex items-center justify-between">
-                <AlertCircle className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Overdue</span>
+                <div className={`p-2 rounded-lg ${taskStats.overdueTasks > 0 ? 'bg-red-500/20' : 'bg-green-500/20'}`}>
+                  <AlertCircle className={`w-5 h-5 ${taskStats.overdueTasks > 0 ? 'text-red-400' : 'text-green-400'}`} />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">Overdue Tasks</p>
-                <p className="text-3xl font-bold text-white mt-1">{taskStats.overdueTasks}</p>
+                <p className="text-3xl font-bold text-white mt-2">{taskStats.overdueTasks}</p>
                 <p className="text-xs text-gray-400 mt-1">{taskStats.overdueTasks > 0 ? '⚠️ Needs attention' : '✓ All on track'}</p>
               </div>
             </div>
@@ -301,17 +304,19 @@ const FounderManageTasks = () => {
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-purple-500 to-pink-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-pink-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-purple-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <Award className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Total</span>
+                <div className="p-2 bg-purple-500/20 rounded-lg">
+                  <Award className="w-5 h-5 text-purple-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">Total Tasks</p>
-                <p className="text-3xl font-bold text-white mt-1">{taskStats.totalTasks}</p>
+                <p className="text-3xl font-bold text-white mt-2">{taskStats.totalTasks}</p>
                 <p className="text-xs text-gray-400 mt-1">{taskStats.completionRate}% done</p>
               </div>
             </div>
@@ -320,41 +325,41 @@ const FounderManageTasks = () => {
 
         {/* Search and Filters */}
         <motion.div
-          className="space-y-3"
+          className="space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          {/* <div className="relative flex-1">
+          <div className="relative flex-1 w-full">
             <Search className="absolute left-4 top-3.5 w-5 h-5 text-gray-400 z-10" />
             <input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search tasks by title..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
             />
           </div>
 
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="text-sm text-blue-400 hover:text-blue-300 transition"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
               ✕ Clear Search
             </button>
-          )} */}
+          )}
 
           <div className="flex flex-wrap gap-2">
             {statuses.map((status) => (
               <motion.button
                 key={status.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setFilterStatus(status.id)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   filterStatus === status.id
-                    ? 'bg-blue-500 text-white border-blue-400 border'
-                    : 'bg-white/5 border border-white/10 text-gray-300 hover:border-white/20'
+                    ? 'bg-blue-600 text-white border border-blue-400 shadow-lg shadow-blue-500/20'
+                    : 'bg-white/5 border border-white/10 text-gray-300 hover:border-white/20 hover:bg-white/10'
                 }`}
               >
                 {status.label}
@@ -389,9 +394,9 @@ const FounderManageTasks = () => {
         {/* Error Message */}
         {error && (
           <motion.div
-            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
@@ -403,16 +408,21 @@ const FounderManageTasks = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className={`space-y-4 ${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' : ''}`}
+          className="space-y-4"
         >
           {startups.length === 0 ? (
             <motion.div
-              className="text-center py-16 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-xl"
+              className="text-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <Building2 className="w-16 h-16 text-gray-600 mx-auto mb-4 opacity-50" />
-              <p className="text-gray-400 text-lg font-medium">No startups found</p>
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-blue-500/20 rounded-full">
+                  <Building2 className="w-12 h-12 text-blue-400" />
+                </div>
+              </div>
+              <p className="text-gray-300 text-lg font-semibold">No startups found</p>
+              <p className="text-gray-500 text-sm mt-2">Create a startup to manage tasks</p>
             </motion.div>
           ) : (
             startups.map((startup, startupIndex) => {
@@ -427,12 +437,13 @@ const FounderManageTasks = () => {
               return (
                 <motion.div
                   key={startup.id}
-                  variants={itemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  transition={{ delay: startupIndex * 0.1 }}
-                  className="rounded-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/40 to-slate-800/40"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: startupIndex * 0.05 }}
+                  className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur"
                 >
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
+                  
                   {/* Startup Header */}
                   <motion.button
                     whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}
@@ -441,11 +452,11 @@ const FounderManageTasks = () => {
                         expandedStartup === startup.id ? null : startup.id
                       )
                     }
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-blue-500/10 transition"
+                    className="relative w-full px-6 py-4 flex items-center justify-between hover:bg-blue-500/10 transition"
                   >
                     <div className="flex items-center gap-4 flex-1 text-left">
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-white">
+                        <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
                           {startup.name}
                         </h3>
                         <p className="text-sm text-gray-400 mt-1">
@@ -474,13 +485,13 @@ const FounderManageTasks = () => {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden border-t border-white/10"
                   >
-                    <div className="p-6 space-y-4">
+                    <div className="relative p-6 space-y-4">
                       {filteredTasks.length === 0 ? (
                         <p className="text-gray-400 text-center py-8">
                           {startup.tasks.length === 0 ? 'No tasks in this startup' : 'No tasks match your filters'}
                         </p>
                       ) : (
-                        <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-3'}`}>
+                        <div className="space-y-3">
                           {filteredTasks.map((task, taskIndex) => (
                             <motion.div
                               key={task.id}
@@ -496,7 +507,7 @@ const FounderManageTasks = () => {
                               <div>
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <p className="font-semibold text-white truncate">{task.title}</p>
-                                  <Badge className={`whitespace-nowrap flex-shrink-0 ${
+                                  <Badge className={`whitespace-nowrap flex-shrink-0 border ${
                                     task.priority === 'high' ? 'bg-red-500/20 text-red-400 border-red-500/30' : ''
                                   } ${
                                     task.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30' : ''
@@ -512,7 +523,7 @@ const FounderManageTasks = () => {
                               </div>
 
                               <div className="flex flex-wrap gap-2">
-                                <Badge className={`text-xs ${
+                                <Badge className={`text-xs border ${
                                   task.status === 'completed' ? 'bg-green-500/20 text-green-400 border-green-500/30' : ''
                                 } ${
                                   task.status === 'in_progress' || task.status === 'in-progress' ? 'bg-blue-500/20 text-blue-400 border-blue-500/30' : ''
@@ -561,11 +572,7 @@ const FounderManageTasks = () => {
                                 <motion.button
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
-                                  onClick={() => {
-                                    setShowDeleteConfirm(task?.id)
-                                  
-                                  }
-                                  }
+                                  onClick={() => setShowDeleteConfirm(task?.id)}
                                   className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition-all"
                                 >
                                   <Trash2 className="w-4 h-4" />

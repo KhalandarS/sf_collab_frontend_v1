@@ -12,6 +12,8 @@ import {
   Calendar,
   Users,
   ChevronDown,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import {
   Accordion,
@@ -176,26 +178,30 @@ const FounderManageApplications = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 text-white px-2 md:px-4 py-8">
-      <div className="w-full mx-auto space-y-8">
+    <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
+      {/* Animated Background */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
+        <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 -right-10 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl" style={{ animationDelay: '2s' }} />
+      </div>
+
+      <div className="w-full mx-auto space-y-8 relative w-full">
         {/* Header */}
         <motion.div
           className="space-y-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <div className="flex items-center gap-3">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            >
-              <Users className="w-8 h-8 text-blue-400" />
-            </motion.div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+              <Briefcase className="w-8 h-8 text-white" />
+            </div>
             <div>
-              <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-5xl md:text-6xl font-bold bg-linear-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 Manage Applications
               </h1>
-              <p className="text-gray-400 text-lg mt-1">
+              <p className="text-gray-400 text-lg mt-2">
                 Review and manage join requests for your startups
               </p>
             </div>
@@ -211,19 +217,21 @@ const FounderManageApplications = () => {
         >
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-blue-500 to-cyan-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-blue-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <Briefcase className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Total</span>
+                <div className="p-2 bg-blue-500/20 rounded-lg">
+                  <Briefcase className="w-5 h-5 text-blue-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">
                   Total Applications
                 </p>
-                <p className="text-3xl font-bold text-white mt-1">
+                <p className="text-3xl font-bold text-white mt-2">
                   {stats.totalApplications}
                 </p>
               </div>
@@ -232,19 +240,21 @@ const FounderManageApplications = () => {
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-yellow-500 to-amber-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500 to-amber-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-yellow-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <Clock className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Pending</span>
+                <div className="p-2 bg-yellow-500/20 rounded-lg">
+                  <Clock className="w-5 h-5 text-yellow-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">
                   Awaiting Review
                 </p>
-                <p className="text-3xl font-bold text-white mt-1">
+                <p className="text-3xl font-bold text-white mt-2">
                   {stats.pendingApplications}
                 </p>
               </div>
@@ -253,19 +263,21 @@ const FounderManageApplications = () => {
 
           <motion.div
             variants={itemVariants}
-            whileHover={{ y: -4 }}
-            className="bg-gradient-to-br from-green-500 to-emerald-500 p-0.5 rounded-xl"
+            whileHover={{ y: -4, scale: 1.02 }}
+            className="group relative overflow-hidden rounded-2xl"
           >
-            <div className="bg-slate-900 rounded-xl p-6 space-y-3">
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative bg-slate-900/90 backdrop-blur border border-white/10 group-hover:border-green-500/50 rounded-2xl p-6 space-y-3 transition-all">
               <div className="flex items-center justify-between">
-                <CheckCircle className="w-5 h-5 text-white/60" />
-                <span className="text-xs text-gray-400">Accepted</span>
+                <div className="p-2 bg-green-500/20 rounded-lg">
+                  <CheckCircle className="w-5 h-5 text-green-400" />
+                </div>
               </div>
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">
                   Total Accepted
                 </p>
-                <p className="text-3xl font-bold text-white mt-1">
+                <p className="text-3xl font-bold text-white mt-2">
                   {stats.acceptedApplications}
                 </p>
               </div>
@@ -275,7 +287,7 @@ const FounderManageApplications = () => {
 
         {/* Search and Filters */}
         <motion.div
-          className="space-y-3"
+          className="space-y-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
@@ -286,14 +298,14 @@ const FounderManageApplications = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by applicant name..."
-              className="w-full pl-12 pr-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              className="w-full pl-12 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all hover:border-white/20"
             />
           </div>
 
           {searchQuery && (
             <button
               onClick={() => setSearchQuery("")}
-              className="text-sm text-blue-400 hover:text-blue-300 transition"
+              className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
               ✕ Clear Search
             </button>
@@ -308,13 +320,13 @@ const FounderManageApplications = () => {
             ].map((filter) => (
               <motion.button
                 key={filter.value}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
                 onClick={() => setFilterStatus(filter.value)}
                 className={`px-4 py-2 rounded-lg font-medium transition-all ${
                   filterStatus === filter.value
-                    ? "bg-blue-500 text-white border-blue-400 border"
-                    : "bg-white/5 border border-white/10 text-gray-300 hover:border-white/20"
+                    ? "bg-blue-600 text-white border border-blue-400 shadow-lg shadow-blue-500/20"
+                    : "bg-white/5 border border-white/10 text-gray-300 hover:border-white/20 hover:bg-white/10"
                 }`}
               >
                 {filter.label}
@@ -326,9 +338,9 @@ const FounderManageApplications = () => {
         {/* Messages */}
         {success && (
           <motion.div
-            className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-center gap-3 text-green-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 flex items-center gap-3 text-green-300 backdrop-blur"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
           >
             <CheckCircle className="w-5 h-5 flex-shrink-0" />
@@ -338,9 +350,9 @@ const FounderManageApplications = () => {
 
         {error && (
           <motion.div
-            className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 flex items-center gap-3 text-red-300"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3 text-red-300 backdrop-blur"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
           >
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <span>{error}</span>
@@ -358,18 +370,24 @@ const FounderManageApplications = () => {
             <div className="flex justify-center py-12">
               <motion.div
                 animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="rounded-full h-12 w-12 border-3 border-blue-500/20 border-t-blue-500"
               />
             </div>
           ) : startups.length === 0 ? (
             <motion.div
-              className="text-center py-16 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-xl"
+              className="text-center py-20 bg-gradient-to-br from-white/5 to-white/0 border border-white/10 rounded-2xl backdrop-blur"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
             >
-              <Briefcase className="w-16 h-16 text-gray-600 mx-auto mb-4 opacity-50" />
-              <p className="text-gray-400 text-lg font-medium">No startups found</p>
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-blue-500/20 rounded-full">
+                  <Briefcase className="w-12 h-12 text-blue-400" />
+                </div>
+              </div>
+              <p className="text-gray-300 text-lg font-semibold">
+                No startups found
+              </p>
               <p className="text-gray-500 text-sm mt-2">
                 Create a startup to manage applications
               </p>
@@ -381,7 +399,7 @@ const FounderManageApplications = () => {
               onValueChange={(value) =>
                 setExpandedStartup(value ? parseInt(value) : null)
               }
-              className="space-y-4"
+              className="space-y-3"
             >
               {startups.map((startup, startupIndex) => {
                 const applications = startupApplications[startup.id] || [];
@@ -393,131 +411,137 @@ const FounderManageApplications = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: startupIndex * 0.1 }}
-                    className="rounded-xl border border-white/10 overflow-hidden bg-gradient-to-br from-slate-900/40 to-slate-800/40"
+                    className="group relative overflow-hidden rounded-xl"
                   >
-                    <AccordionItem value={startup.id.toString()} className="border-0">
-                      <AccordionTrigger className="px-6 py-4 hover:bg-blue-500/10 transition data-[state=open]:bg-blue-500/10">
-                        <div className="flex items-center justify-between gap-4 flex-1 text-left">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-semibold text-white">
-                              {startup.name}
-                            </h3>
-                            <p className="text-sm text-gray-400 mt-1">
-                              {applications.length} total application
-                              {applications.length !== 1 ? "s" : ""}
-                              {filteredApps.length < applications.length &&
-                                ` • ${filteredApps.length} matching filters`}
-                            </p>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
+                    <div className="relative border border-white/10 group-hover:border-blue-500/30 rounded-xl overflow-hidden bg-slate-900/50 backdrop-blur transition-all">
+                      <AccordionItem value={startup.id.toString()} className="border-0">
+                        <AccordionTrigger className="px-6 py-4 hover:bg-blue-500/10 transition data-[state=open]:bg-blue-500/10">
+                          <div className="flex items-center justify-between gap-4 flex-1 text-left">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-white group-hover:text-blue-300 transition-colors">
+                                {startup.name}
+                              </h3>
+                              <p className="text-sm text-gray-400 mt-1">
+                                {applications.length} total application
+                                {applications.length !== 1 ? "s" : ""}
+                                {filteredApps.length < applications.length &&
+                                  ` • ${filteredApps.length} matching filters`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 flex-shrink-0">
+                              <Badge variant="outline" className="bg-blue-500/20 text-blue-300 border-blue-500/30">
+                                {filteredApps.length}
+                              </Badge>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-3 flex-shrink-0">
-                            <Badge variant="outline" className="text-white">
-                              {filteredApps.length}
-                            </Badge>
-                          </div>
-                        </div>
-                      </AccordionTrigger>
+                        </AccordionTrigger>
 
-                      <AccordionContent className="px-6 py-4 border-t border-white/10">
-                        {filteredApps.length === 0 ? (
-                          <p className="text-gray-400 text-center py-8">
-                            No applications matching filters
-                          </p>
-                        ) : (
-                          <div className="space-y-3">
-                            {filteredApps.map((app, appIndex) => {
-                              const status = statusUI[app.status] || {};
-                              const applicantName = `${
-                                app.user?.firstName || ""
-                              } ${app.user?.lastName || ""}`.trim() || "Anonymous";
+                        <AccordionContent className="px-6 py-4 border-t border-white/10">
+                          {filteredApps.length === 0 ? (
+                            <div className="text-center py-8">
+                              <p className="text-gray-400">
+                                No applications matching filters
+                              </p>
+                            </div>
+                          ) : (
+                            <div className="space-y-3">
+                              {filteredApps.map((app, appIndex) => {
+                                const status = statusUI[app.status] || {};
+                                const applicantName = `${
+                                  app.user?.firstName || ""
+                                } ${app.user?.lastName || ""}`.trim() || "Anonymous";
 
-                              return (
-                                <motion.div
-                                  onClick={() => {
-                                    navigate(`/user-profile?id=${app.user?.id}`)
-                                  }}
-                                  key={app.id}
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ delay: appIndex * 0.05 }}
-                                  whileHover={{
-                                    y: -2,
-                                    borderColor: "rgba(59, 130, 246, 0.5)",
-                                  }}
-                                  className="flex flex-col md:flex-row justify-between gap-4 items-start md:items-center p-4 rounded-lg bg-slate-800/50 border border-white/5 hover:border-blue-500/30 transition-all"
-                                >
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                                      {applicantName.charAt(0).toUpperCase()}
-                                      
-                                    </div>
-                                    <div className="min-w-0 flex-1">
-                                      <p className="font-semibold text-white truncate">
-                                        {applicantName}
-                                      </p>
-                                      <div className="flex items-center gap-2 mt-1 flex-wrap">
-                                        <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
-                                          {app.role || "Role not specified"}
-                                        </Badge>
-                                        {app.createdAt && (
-                                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(
-                                              app.createdAt
-                                            ).toLocaleDateString()}
-                                          </p>
-                                        )}
+                                return (
+                                  <motion.div
+                                    onClick={() => {
+                                      navigate(`/user-profile?id=${app.user?.id}`)
+                                    }}
+                                    key={app.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: appIndex * 0.05 }}
+                                    whileHover={{
+                                      y: -2,
+                                      scale: 1.01
+                                    }}
+                                    className="group/card relative overflow-hidden flex flex-col md:flex-row justify-between gap-4 items-start md:items-center p-4 rounded-lg bg-slate-800/50 border border-white/10 hover:border-blue-500/30 transition-all cursor-pointer"
+                                  >
+                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover/card:from-blue-500/5 group-hover/card:via-blue-500/5 group-hover/card:to-transparent transition-all duration-300" />
+                                    
+                                    <div className="relative flex items-center gap-3 flex-1 min-w-0">
+                                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-cyan-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-lg">
+                                        {applicantName.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="font-semibold text-white truncate group-hover/card:text-blue-300 transition-colors">
+                                          {applicantName}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-xs">
+                                            {app.role || "Role not specified"}
+                                          </Badge>
+                                          {app.createdAt && (
+                                            <p className="text-xs text-gray-400 flex items-center gap-1">
+                                              <Calendar className="w-3 h-3" />
+                                              {new Date(
+                                                app.createdAt
+                                              ).toLocaleDateString()}
+                                            </p>
+                                          )}
+                                        </div>
                                       </div>
                                     </div>
-                                  </div>
 
-                                  <div className="flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
-                                    <Badge
-                                      className={`flex items-center gap-2 whitespace-nowrap ${status.class}`}
-                                    >
-                                      {status.icon}
-                                      {status.label}
-                                    </Badge>
+                                    <div className="relative flex items-center gap-3 flex-shrink-0 w-full md:w-auto">
+                                      <Badge
+                                        className={`flex items-center gap-2 whitespace-nowrap border ${status.class}`}
+                                      >
+                                        {status.icon}
+                                        {status.label}
+                                      </Badge>
 
-                                    {app.status === "pending" && (
-                                      <div className="flex gap-2">
-                                        <motion.button
-                                          whileHover={{ scale: 1.05 }}
-                                          whileTap={{ scale: 0.95 }}
-                                          onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            handleReject(startup.id, app.id)
-                                          }
-                                          }
-                                          className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 transition font-medium text-sm flex items-center gap-1"
-                                        >
-                                          <X className="w-4 h-4" />
-                                          Reject
-                                        </motion.button>
-                                        <motion.button
-                                          whileHover={{ scale: 1.05 }}
-                                          whileTap={{ scale: 0.95 }}
-                                          onClick={(e) => {
-                                            e.preventDefault()
-                                            e.stopPropagation()
-                                            handleAccept(startup.id, app.id)
-                                          }
-                                          }
-                                          className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 transition font-medium text-sm flex items-center gap-1"
-                                        >
-                                          <CheckCircle className="w-4 h-4" />
-                                          Accept
-                                        </motion.button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </motion.div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </AccordionContent>
-                    </AccordionItem>
+                                      {app.status === "pending" && (
+                                        <div className="flex gap-2 ml-auto md:ml-0">
+                                          <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={(e) => {
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              handleReject(startup.id, app.id)
+                                            }
+                                            }
+                                            className="px-3 py-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                          >
+                                            <X className="w-4 h-4" />
+                                            Decline
+                                          </motion.button>
+                                          <motion.button
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={(e) => {
+                                              e.preventDefault()
+                                              e.stopPropagation()
+                                              handleAccept(startup.id, app.id)
+                                            }
+                                            }
+                                            className="px-3 py-2 rounded-lg bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 hover:border-green-500/50 transition-all font-medium text-sm flex items-center gap-1 whitespace-nowrap"
+                                          >
+                                            <CheckCircle className="w-4 h-4" />
+                                            Accept
+                                          </motion.button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </AccordionContent>
+                      </AccordionItem>
+                    </div>
                   </motion.div>
                 );
               })}

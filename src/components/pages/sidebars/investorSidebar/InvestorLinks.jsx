@@ -1,5 +1,5 @@
 import { BarChart2, BookOpen, ChartNoAxesGanttIcon, Eye, LightbulbIcon, Lock, Rocket, Save, TrendingUp } from 'lucide-react';
-import { FcDocument } from 'react-icons/fc';
+import { FcDocument, FcInvite } from 'react-icons/fc';
 import { aiTools, toolsSection, dashboardLink, socialSection, ideation } from '../sidebarCommons';
 
 export function createInvestorLinks(unreadMessagesCount, userRoles = [], setActiveRole) {

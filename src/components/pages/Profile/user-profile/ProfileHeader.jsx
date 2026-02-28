@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { useSelector } from 'react-redux';
 import InviteToStartup from './InviteToStartup';
+import AddFriend from './AddFriend';
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 // Helper function to format plan names
@@ -298,7 +299,10 @@ const ProfileHeader = ({
               )}
               {
                 currentUser.active_startups_count > 0 && currentUser.id !== user?.id && (
-                  <InviteToStartup user={user} />
+                  <>
+                    <InviteToStartup user={user} />
+                    <AddFriend user={user} />
+                  </>
               )}
 
               {/* Profile Completion Warning */}

@@ -177,6 +177,12 @@ export function WaitlistSignup() {
                 Ranking
         </Button>
         <Button
+          onClick={() => navigate('/dashboard')}
+          className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
+        >
+          Go to Dashboard
+        </Button>
+        <Button
           onClick={() => navigate('/contribution')}
           className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
         >
@@ -239,13 +245,19 @@ export function WaitlistSignup() {
                 className="p-4 m-4 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
               >
                 Ranking
-        </Button>
-        <Button
-          onClick={() => navigate('/contribution')}
-          className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
-        >
-          Contribute
-        </Button>
+              </Button>
+              <Button
+                onClick={() => navigate('/dashboard')}
+                className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
+              >
+                Go to Dashboard
+              </Button>
+              <Button
+                onClick={() => navigate('/contribution')}
+                className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
+              >
+                Contribute
+              </Button>
               {/* <p className="text-sm text-slate-400">
                 Redirecting to referral page in <span className="font-bold text-white">{secondsLeft}</span> seconds...
               </p> */}
@@ -295,7 +307,7 @@ export function WaitlistSignup() {
                       wFull={true}
                     />
                   </div>
-                  </div>
+                </div>
                 <div className="space-y-2 text-white">
                   <Label htmlFor="terms">Terms & Conditions</Label>
                   <div className="flex items-center gap-2">
@@ -349,42 +361,42 @@ export function WaitlistSignup() {
                     </div>
                   )
                 }{
-                      !verified && truthyVerificationCode.length === 6 && (
-                      <div className="space-y-2 text-white">
-                        <Label htmlFor="verificationCode">Verification Code</Label>
-                        <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
-                        <div className="flex gap-1 justify-center">
-                          {[...Array(6)].map((_, i) => (
-                            <Input
-                              key={i}
-                              type="text"
-                              maxLength="1"
-                              placeholder="0"
-                              onPaste={(e) => {
-                                const paste = e.clipboardData.getData('text').slice(0, 6)
-                                const newCode = paste.split('')
-                                setVerificationCode(newCode.join(''))
-                              }}
+                  !verified && truthyVerificationCode.length === 6 && (
+                    <div className="space-y-2 text-white">
+                      <Label htmlFor="verificationCode">Verification Code</Label>
+                      <p className="text-sm text-slate-300">Enter the 6-digit code sent to your phone</p>
+                      <div className="flex gap-1 justify-center">
+                        {[...Array(6)].map((_, i) => (
+                          <Input
+                            key={i}
+                            type="text"
+                            maxLength="1"
+                            placeholder="0"
+                            onPaste={(e) => {
+                              const paste = e.clipboardData.getData('text').slice(0, 6)
+                              const newCode = paste.split('')
+                              setVerificationCode(newCode.join(''))
+                            }}
 
-                              value={verificationCode[i] || ''}
-                              onChange={(e) => {
-                                const newCode = verificationCode.split('')
-                                newCode[i] = e.target.value
-                                setVerificationCode(newCode.join(''))
-                                if (e.target.value.length === 0) {
-                                  e.target.previousElementSibling?.focus()
-                                  return
-                                } 
-                                if (e.target.value && i < 5) {
-                                  e.target.nextElementSibling?.focus()
-                                }
-                              }}
-                              className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
-                            />
-                          ))}
-                        </div>
+                            value={verificationCode[i] || ''}
+                            onChange={(e) => {
+                              const newCode = verificationCode.split('')
+                              newCode[i] = e.target.value
+                              setVerificationCode(newCode.join(''))
+                              if (e.target.value.length === 0) {
+                                e.target.previousElementSibling?.focus()
+                                return
+                              }
+                              if (e.target.value && i < 5) {
+                                e.target.nextElementSibling?.focus()
+                              }
+                            }}
+                            className="w-10 h-10 text-center text-lg font-bold border border-primary/30 rounded-lg bg-b/80 focus:ring-2 focus:ring-primary/40"
+                          />
+                        ))}
                       </div>
-                    )}
+                    </div>
+                  )}
                 <Button
                   type="submit"
                   disabled={loading}
@@ -419,7 +431,7 @@ export function WaitlistSignup() {
         </motion.div>
       )}
     </div>
-  )
+  );
 };
 
 

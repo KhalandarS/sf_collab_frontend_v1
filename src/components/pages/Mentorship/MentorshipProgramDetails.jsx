@@ -94,7 +94,7 @@ const MentorshipProgramDetails = () => {
 
   return (
     <div className="min-h-screen bg-black text-white px-4 py-8">
-      <div className="max-w-6xl mx-auto space-y-8">
+      <div className="w-full mx-auto space-y-8">
 
         {/* Back */}
         <Link

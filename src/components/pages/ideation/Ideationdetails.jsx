@@ -374,7 +374,7 @@ const IdeationDetails = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="w-full mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
+        <div className="w-full mx-auto px-4 py-4 flex items-center justify-between w-full">
           <Link
             to="/ideation"
             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group"
@@ -456,7 +456,7 @@ const IdeationDetails = () => {
 
       {/* Main Layout */}
       <motion.div
-        className="w-full mx-auto px-2 md:px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl relative z-10"
+        className="w-full mx-auto px-2 md:px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8 w-full relative z-10"
         variants={containerVariants}
         initial="hidden"
         animate="visible"

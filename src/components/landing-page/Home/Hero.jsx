@@ -319,7 +319,7 @@ const Hero = () => {
         style={{ display: isPopupOpen ? 'flex' : 'none' }}
         className="fixed inset-0 items-center justify-center bg-black/90 backdrop-blur-sm z-50 p-4 hidden"
       >
-        <div className="relative w-full max-w-4xl lg:max-w-6xl aspect-video rounded-lg md:rounded-xl overflow-hidden bg-black shadow-2xl">
+        <div className="relative w-full max-w-4xl lg:w-full aspect-video rounded-lg md:rounded-xl overflow-hidden bg-black shadow-2xl">
           <video
             ref={videoRef}
             src={heroAssest.herovideoOne}

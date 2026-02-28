@@ -20,7 +20,7 @@ export default function OverviewWebsite() {
 
   useEffect(() => {
     const calculateCountdown = () => {
-      const targetDate = new Date("2026-02-27").getTime();
+      const targetDate = new Date("2026-03-02").getTime();
       const now = new Date().getTime();
       const difference = targetDate - now;
 

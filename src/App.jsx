@@ -241,9 +241,7 @@ export default function App() {
                   <Route
                     path="ai-dashboard"
                     element={
-                      <AIToolsGuard>
                         <AIDashboard />
-                      </AIToolsGuard>
                     }
                   />
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
