@@ -72,54 +72,54 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
   }
 
   const [memberForm, setMemberForm] = useState({
-      user_id: '',
-      first_name: '',
-      last_name: '',
-      role: ''
-    });
-    // Member handlers
-    const handleAddMember = async (e) => {
-      e.preventDefault();
-      try {
-        if (!memberForm.role) {
-          toast.error('Please select a role for the member');
-          return
-        }
-        if (!memberForm.user_id) {
-          toast.error('Please select a user to add as a member');
-          return
-        }
-        const response = await startupsAPI.createInvitation(startupId, memberForm);
-  
-  
-        
-        if (response.success) {
-          toast.success('Member added successfully');
-          setIsAddMemberModalOpen(false);
-          setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
-          setMembers((prev) => [...prev, response?.data.member])
-        } else {
-          throw new Error('Failed to add member');
-        }
-      } catch (error) {
-  
-        toast.error(error?.error || 'Error adding member');
+    user_id: '',
+    first_name: '',
+    last_name: '',
+    role: ''
+  });
+  // Member handlers
+  const handleAddMember = async (e) => {
+    e.preventDefault();
+    try {
+      if (!memberForm.role) {
+        toast.error('Please select a role for the member');
+        return
       }
-    };
-  
+      if (!memberForm.user_id) {
+        toast.error('Please select a user to add as a member');
+        return
+      }
+      const response = await startupsAPI.createInvitation(startupId, memberForm);
+
+
+
+      if (response.success) {
+        toast.success('Member added successfully');
+        setIsAddMemberModalOpen(false);
+        setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
+        setMembers((prev) => [...prev, response?.data.member])
+      } else {
+        throw new Error('Failed to add member');
+      }
+    } catch (error) {
+
+      toast.error(error?.error || 'Error adding member');
+    }
+  };
+
   const handleRemoveMember = async (memberId) => {
-      try {
-        const response = await startupsAPI.removeMember(startupId, memberId);
-        
-        if (response.success) {
-          toast.success('Member removed successfully');
-          setMembers(prevMembers => prevMembers.filter(m => m.id !== memberId));
-        } else {
-          throw new Error('Failed to remove member');
-        }
-      } catch {
-        toast.error('Error removing member');
+    try {
+      const response = await startupsAPI.removeMember(startupId, memberId);
+
+      if (response.success) {
+        toast.success('Member removed successfully');
+        setMembers(prevMembers => prevMembers.filter(m => m.id !== memberId));
+      } else {
+        throw new Error('Failed to remove member');
       }
+    } catch {
+      toast.error('Error removing member');
+    }
   };
   const handleChangeRole = async (memberId, newRole) => {
     try {
@@ -161,8 +161,8 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
         }}
         title="Confirm Action"
         message={isDeleteAdminConfirmOpen ? "Are you sure you want to remove admin privileges from this member?" : "Are you sure you want to remove this member from the startup?"}
-        type="soft"/>
-      
+        type="soft" />
+
       <div className="space-y-6">
         {/* Header */}
         <motion.div
@@ -258,7 +258,7 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
   );
 }
 
-const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, handleRemoveMember, handleRemoveMemberAdmin, handleChangeRole, roles }  ) => (
+const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, handleRemoveMember, handleRemoveMemberAdmin, handleChangeRole, roles }) => (
   <motion.div
     className="space-y-3"
     variants={containerVariants}
@@ -314,17 +314,17 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                   </div>
                 </div>
                 {
-                (user?.admin || isAdmin) && (member.role !== "founder" && !member.admin) && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handlePromoteMember(member.id);
-                    }}
-                    className="text-sm text-green-400 hover:bg-green-500/10 hover:text-green-500 ml-2 border border-green-500 rounded-full px-3 py-1 transition-all"
-                  >
-                    Promote to admin
-                  </button>
-                )
+                  (user?.admin || isAdmin) && (member.role !== "founder" && !member.admin) && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handlePromoteMember(member.id);
+                      }}
+                      className="text-sm text-green-400 hover:bg-green-500/10 hover:text-green-500 ml-2 border border-green-500 rounded-full px-3 py-1 transition-all"
+                    >
+                      Promote to admin
+                    </button>
+                  )
                 }
                 {
                   member.admin && member.role !== 'founder' && (
@@ -338,7 +338,7 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                   )
                 }
               </div>
-              {user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
+              {(isAdmin || user?.admin) && user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -350,9 +350,9 @@ const TeamListView = ({ members, isFounder, isAdmin, user, handlePromoteMember, 
                 >
                   <X className="w-4 h-4" />
                 </Button>
-                
+
               )}
-              
+
             </Link>
           </CardContent>
         </Card>
@@ -436,7 +436,7 @@ const TeamGridView = ({ members, isAdmin, isFounder, user, handleRemoveMemberAdm
                 Promote to admin
               </Button>
             )}
-            {user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
+            {(isAdmin || user?.admin) && user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -502,7 +502,7 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                 {!isAdmin && (
                   <p className="text-xs text-gray-400 capitalize mt-1">{member.role}</p>
                 )}
-                
+
                 {
                   member.admin && member.role !== 'founder' && (
                     <Badge
@@ -516,7 +516,7 @@ const TeamCompactView = ({ members, isAdmin, isFounder, handleRemoveMember, user
                     </Badge>
                   )
                 }
-                {user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
+                {(isAdmin || user?.admin) && user?.id !== member.userId && (member.role !== "founder" || user?.admin) && (
                   <Button
                     variant="ghost"
                     size="sm"
