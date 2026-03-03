@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Search, Book, MessageSquare, Phone, Mail, FileText, Video, Users, 
+import {
+  Search, Book, MessageSquare, Phone, Mail, FileText, Video, Users,
   ArrowRight, HelpCircle, ChevronDown, Sparkles, Zap, Shield, Clock,
   Briefcase, CheckCircle, AlertCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../ui/button';
-import { usersAPI } from '@/utils/APIs/userApi';
+import { usersAPI } from '@/utils/APIs/userAPI';
 import { toast } from 'react-toastify';
 import ContactForm from './ContactForm';
 
@@ -136,7 +136,7 @@ const Help = () => {
       </div>
 
       <div className="w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
-        
+
         {/* Header Section */}
         <motion.div
           initial={{ y: 20, opacity: 0 }}
@@ -191,7 +191,7 @@ const Help = () => {
                 <Link to={guide.link} className="block h-full group">
                   <div className="relative h-full p-6 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-white/10 hover:border-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 overflow-hidden">
                     <div className={`absolute inset-0 bg-gradient-to-br ${guide.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                    
+
                     <div className="relative">
                       <div className="flex items-center justify-between mb-4">
                         <div className="p-3 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors">
@@ -227,7 +227,7 @@ const Help = () => {
           className="mb-20"
         >
           <h2 className="text-3xl font-bold text-white mb-8">Frequently Asked Questions</h2>
-          
+
           <div className="space-y-4">
             {faqs.map((faq, index) => (
               <motion.div
@@ -249,7 +249,7 @@ const Help = () => {
                     <ChevronDown className="w-5 h-5 text-gray-400" />
                   </motion.div>
                 </button>
-                
+
                 <AnimatePresence>
                   {expandedFaq === faq.id && (
                     <motion.div
@@ -290,7 +290,7 @@ const Help = () => {
                 className="group relative p-6 bg-slate-900/50 backdrop-blur-sm rounded-xl border border-white/10 hover:border-blue-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 text-center overflow-hidden"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${option.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`} />
-                
+
                 <div className="relative">
                   <div className="inline-flex items-center justify-center p-3 bg-white/5 rounded-lg group-hover:bg-white/10 transition-colors mb-4">
                     {option.icon}

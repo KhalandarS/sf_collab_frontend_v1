@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import AnnouncementsSection from "../dashboard/AnnouncementsSection";
 import OverviewWebsite from "../dashboard/OverviewWebsite";
 import Calendar from "@/components/sections/Calendar";
@@ -56,8 +56,8 @@ export default function BuilderDashboard({
     );
   }, [startups]);
   console.log("Builder dashboard startups:", startups);
-  const completionRate = totals.totalTasks > 0 
-    ? Math.round((totals.completed / totals.totalTasks) * 100) 
+  const completionRate = totals.totalTasks > 0
+    ? Math.round((totals.completed / totals.totalTasks) * 100)
     : 0;
 
 
@@ -85,13 +85,13 @@ export default function BuilderDashboard({
 
       <AnnouncementsSection userRoles={userRoles} />
 
-      
+
 
       <div className="relative w-full mx-auto p-4 overflow-x-hidden space-y-6">
 
-            <BuilderStats totals={totals} completionRate={completionRate} user={user} startups={startups} />
-            <Calendar />
-            <WorldClock />
+        <BuilderStats totals={totals} completionRate={completionRate} user={user} startups={startups} />
+        <Calendar />
+        <WorldClock />
       </div>
 
       <div className="text-sm text-white/50 italic">
@@ -129,56 +129,56 @@ function Section({ icon: Icon, title, subtitle, action, children }) {
 }
 function BuilderStats({ totals, completionRate, user, startups }) {
   return <>
-  <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
-        <div className="flex flex-col lg:flex-row justify-between gap-6 py-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-xl bg-emerald-600">
-                <Layers className="w-5 h-5 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-white">
-                Builder Dashboard
-              </h1>
+    <header className="rounded-2xl bg-gradient-to-br from-emerald-900/40 to-slate-900/40 border border-emerald-500/20 p-6">
+      <div className="flex flex-col lg:flex-row justify-between gap-6 py-4">
+        <div>
+          <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 rounded-xl bg-emerald-600">
+              <Layers className="w-5 h-5 text-white" />
             </div>
-            <p className="text-sm text-white/60">
-              Welcome back, {user?.firstName || "Builder"}
-            </p>
+            <h1 className="text-2xl font-bold text-white">
+              Builder Dashboard
+            </h1>
           </div>
-
-          <Link
-            to="/builder/my-work"
-            className="flex gap-3 flex-wrap">
-            <QuickStat label="Completed" value={totals.completed} icon={CheckCircle} />
-            <QuickStat label="In Progress" value={totals.pending} icon={Clock} />
-            <QuickStat label="Completion Rate" value={`${completionRate}%`} icon={Layers} />
-          </Link>
+          <p className="text-sm text-white/60">
+            Welcome back, {user?.firstName || "Builder"}
+          </p>
         </div>
-      </header>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
-        <QuickAction label="Browse Startups" href="/discover-startups" icon={Briefcase} />
-        <QuickAction label="Saved Startups" href="/saved-startups" icon={Users} />
-        <QuickAction label="My Applications" href="/builder/my-applications" icon={CheckCircle} />
+        <Link
+          to="/builder/my-work"
+          className="flex gap-3 flex-wrap">
+          <QuickStat label="Completed" value={totals.completed} icon={CheckCircle} />
+          <QuickStat label="In Progress" value={totals.pending} icon={Clock} />
+          <QuickStat label="Completion Rate" value={`${completionRate}%`} icon={Layers} />
+        </Link>
       </div>
+    </header>
 
-      <Section
-        icon={Briefcase}
-        title="My Work"
-        subtitle="Active startups & tasks"
-      >
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {startups.map((s, index) => (
-            <StartupWorkCard key={index} data={s} />
-          ))}
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 my-4">
+      <QuickAction label="Browse Startups" href="/discover-startups" icon={Briefcase} />
+      <QuickAction label="Saved Startups" href="/saved-startups" icon={Users} />
+      <QuickAction label="My Applications" href="/builder/my-applications" icon={CheckCircle} />
+    </div>
 
-          {startups.length === 0 && (
-            <div className="col-span-full flex flex-col items-center justify-center min-h-[180px] text-white/50">
-              <Briefcase className="w-8 h-8 mb-2" />
-              <p className="text-sm">You are not part of any startup yet.</p>
-            </div>
-          )}
-        </div>
-      </Section>
+    <Section
+      icon={Briefcase}
+      title="My Work"
+      subtitle="Active startups & tasks"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {startups.map((s, index) => (
+          <StartupWorkCard key={index} data={s} />
+        ))}
+
+        {startups.length === 0 && (
+          <div className="col-span-full flex flex-col items-center justify-center min-h-[180px] text-white/50">
+            <Briefcase className="w-8 h-8 mb-2" />
+            <p className="text-sm">You are not part of any startup yet.</p>
+          </div>
+        )}
+      </div>
+    </Section>
   </>
 }
 function QuickStat({ label, value, icon: Icon }) {
@@ -207,8 +207,8 @@ function QuickAction({ label, href, icon: Icon }) {
 
 function StartupWorkCard({ data }) {
   const { startup, role, tasks } = data;
-  const completionRate = tasks.total > 0 
-    ? Math.round((tasks.completed / tasks.total) * 100) 
+  const completionRate = tasks.total > 0
+    ? Math.round((tasks.completed / tasks.total) * 100)
     : 0;
 
   return (
@@ -258,16 +258,15 @@ function StartupWorkCard({ data }) {
 
 function TaskRow({ task }) {
   const isCompleted = task.status === "completed" || task.status === "completed";
-  
+
   return (
     <div className="flex justify-between text-sm text-white/80">
       <span className="truncate">{task.title}</span>
       <span
-        className={`text-xs flex-shrink-0 font-medium ${
-          isCompleted
+        className={`text-xs flex-shrink-0 font-medium ${isCompleted
             ? "text-emerald-400"
             : "text-amber-400"
-        }`}
+          }`}
       >
         {isCompleted ? "✓" : "•"} {task.status.replace(/_/g, " ")}
       </span>

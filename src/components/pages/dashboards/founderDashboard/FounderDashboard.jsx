@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import OverviewWebsite from "../dashboard/OverviewWebsite";
 import AnnouncementsSection from "../dashboard/AnnouncementsSection";
 import { dashboardAPI } from "@/utils/APIs/dashboardAPI";

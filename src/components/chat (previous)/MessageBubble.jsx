@@ -15,7 +15,7 @@ import { useSelector } from "react-redux";
 import { X, Download, FileText, ExternalLink, Check, CheckCheck, MoreVertical, Edit2, Trash2, Star, Pin, ListTodo, BookmarkCheck } from "lucide-react";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
-import { chatAPI } from "@/utils/APIs/chatAPI";
+import { chatAPI } from "@/utils/APIs/chatApi";
 
 // Helper to reduce text length
 const reduceText = (text, maxLength = 20) => {
@@ -162,10 +162,10 @@ const TaskModal = ({ isOpen, onClose, onSave }) => {
   );
 };
 
-export default function MessageBubble({ 
-  message, 
-  isOwn, 
-  showAvatar, 
+export default function MessageBubble({
+  message,
+  isOwn,
+  showAvatar,
   showSenderName = false,
   setMessages = null,
   onMessageUpdated = null,
@@ -263,7 +263,7 @@ export default function MessageBubble({
     try {
       setIsLoadingEditing(true);
       await chatAPI.editMessage(conversationId, message.id, editContent.trim());
-      
+
       if (setMessages) {
         const updatedMessage = {
           ...message,
@@ -271,7 +271,7 @@ export default function MessageBubble({
           content: editContent.trim(),
           is_edited: true,
         };
-        
+
         setMessages((prev) =>
           prev.map((m) =>
             String(m.id) === String(message.id) ? updatedMessage : m
@@ -305,13 +305,13 @@ export default function MessageBubble({
   // Delete handler - supports delete for everyone or just me
   const handleDelete = useCallback(async (deleteType) => {
     if (!conversationId || !message.id) return;
-    
+
     try {
       setDeleting(true);
       setDeleteError(null);
-      
+
       await chatAPI.deleteMessage(conversationId, message.id, deleteType);
-      
+
       if (setMessages) {
         if (deleteType === 'everyone') {
           // Mark as deleted for everyone - show "This message was deleted"
@@ -327,7 +327,7 @@ export default function MessageBubble({
           setMessages((prev) => prev.filter((m) => String(m.id) !== String(message.id)));
         }
       }
-      
+
       setDeleteModalOpen(false);
       setMenuOpen(false);
     } catch (error) {
@@ -410,9 +410,8 @@ export default function MessageBubble({
       <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
         <div className="w-8 shrink-0" />
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
-          <div className={`px-3 py-2 rounded-2xl text-sm italic ${
-            isOwn ? "bg-zinc-700/50 text-zinc-400" : "bg-zinc-800/50 text-zinc-500"
-          }`}>
+          <div className={`px-3 py-2 rounded-2xl text-sm italic ${isOwn ? "bg-zinc-700/50 text-zinc-400" : "bg-zinc-800/50 text-zinc-500"
+            }`}>
             This message was deleted
           </div>
           <span className="text-[10px] text-zinc-600 mt-1">{formatTime(ts)}</span>
@@ -452,30 +451,30 @@ export default function MessageBubble({
               <X size={18} />
             </button>
 
-          <div className="p-4 max-w-[90vw] max-h-[90vh]">
-            <img
-              src={fileUrl}
-              alt={message?.file_name || "image"}
-              className="max-w-full max-h-full object-contain rounded-xl"
-              onClick={(e) => e.stopPropagation()}
-            />
+            <div className="p-4 max-w-[90vw] max-h-[90vh]">
+              <img
+                src={fileUrl}
+                alt={message?.file_name || "image"}
+                className="max-w-full max-h-full object-contain rounded-xl"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
           </div>
-          </div>
-          </div>
+        </div>
       )}
 
       <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
         {/* Avatar column */}
         <div
           onClick={() => {
-                if (!message?.sender?.id) return;
-                navigate(`/user-profile?id=${message.sender.id}`);
-              }}
+            if (!message?.sender?.id) return;
+            navigate(`/user-profile?id=${message.sender.id}`);
+          }}
           className="w-8 shrink-0 cursor-pointer">
           {showAvatar && (
             <Avatar
               src={senderAvatar}
-              
+
               name={senderName || " "}
               size="sm"
               showStatus={false}
@@ -492,11 +491,10 @@ export default function MessageBubble({
           <div className={`flex items-end gap-2 ${isOwn ? "flex-row-reverse" : ""}`}>
             {/* Message bubble */}
             <div
-              className={`px-3 py-2 rounded-2xl text-sm relative ${
-                isOwn 
-                  ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white" 
+              className={`px-3 py-2 rounded-2xl text-sm relative ${isOwn
+                  ? "bg-gradient-to-r from-indigo-500 to-blue-500 text-white"
                   : "bg-zinc-800 text-zinc-100"
-              }`}
+                }`}
             >
               {/* ─── Feature 3: Pinned / Starred / Task indicators ─────── */}
               {(isPinned || isStarred || isTask) && (
@@ -510,10 +508,10 @@ export default function MessageBubble({
               {fileUrl && (
                 <div className="mb-2">
                   {isImage ? (
-                    <button 
-                      type="button" 
-                      className="block" 
-                      onClick={() => setViewerOpen(true)} 
+                    <button
+                      type="button"
+                      className="block"
+                      onClick={() => setViewerOpen(true)}
                       title="View"
                     >
                       <img
@@ -593,23 +591,23 @@ export default function MessageBubble({
               ) : (
                 <>
                   {/* Message content */}
-                            <div className="flex gap-1 justify-center align-bottom">
-                            <div>
-                              {!hideAutoFileText({
-                              fileUrl,
-                              isImage,
-                              content: message.content || message.original_content,
-                              fileName: message?.file_name,
-                              }) && (message.content || message.original_content)}
-                              
-                              {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
-                            </div>
-                            </div>
-                          </>
-                          )}
-                        </div>
+                  <div className="flex gap-1 justify-center align-bottom">
+                    <div>
+                      {!hideAutoFileText({
+                        fileUrl,
+                        isImage,
+                        content: message.content || message.original_content,
+                        fileName: message?.file_name,
+                      }) && (message.content || message.original_content)}
 
-                        {/* Actions menu — star/pin/task for ALL, edit/delete for own only */}
+                      {message.is_edited && <span className="text-xs opacity-60 ml-1">(edited)</span>}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Actions menu — star/pin/task for ALL, edit/delete for own only */}
             {conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
@@ -696,23 +694,23 @@ export default function MessageBubble({
 
       {/* Delete Confirmation Modal - WhatsApp Style */}
       {deleteModalOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-[10000] bg-black/60 flex items-center justify-center p-4"
           onClick={() => !deleting && setDeleteModalOpen(false)}
         >
-          <div 
+          <div
             className="bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-sm border border-zinc-800 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-5">
               <h3 className="text-lg font-semibold text-white mb-3">Delete message?</h3>
-              
+
               {deleteError && (
                 <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
                   {deleteError}
                 </div>
               )}
-              
+
               <div className="space-y-2">
                 {/* Delete for Everyone - only if within 1 hour */}
                 {canDeleteForEveryone && (
@@ -725,7 +723,7 @@ export default function MessageBubble({
                     {deleting ? "Deleting..." : "Delete for everyone"}
                   </button>
                 )}
-                
+
                 {/* Delete Message - always available */}
                 <button
                   type="button"
@@ -735,7 +733,7 @@ export default function MessageBubble({
                 >
                   {deleting ? "Deleting..." : "Delete Message"}
                 </button>
-                
+
                 {/* Info text if can't delete for everyone */}
                 {!canDeleteForEveryone && (
                   <p className="text-xs text-zinc-500 text-center mt-2">
@@ -743,7 +741,7 @@ export default function MessageBubble({
                 )}
               </div>
             </div>
-            
+
             {/* Cancel button */}
             <div className="border-t border-zinc-800">
               <button

@@ -43,7 +43,7 @@ export function WaitlistSignup() {
   const [verified, setVerified] = useState(false)
 
   useEffect(() => {
-    
+
     if (verificationCode === truthyVerificationCode && verificationCode.length === 6) {
       setVerified(true)
       toast.success('Phone number verified successfully!')
@@ -89,8 +89,8 @@ export function WaitlistSignup() {
     }
     checkWaitlist()
   }, [email]);
-  
-  
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -113,25 +113,25 @@ export function WaitlistSignup() {
           return
         }
         const response = await waitlistAPI.sendPhoneVerificationCode(user.id, email, phone, extension, access_token)
-        if (response?.verified) {  
+        if (response?.verified) {
           setVerified(true)
           toast.success('Phone number verified successfully!')
           setLoading(false)
         }
-        else { 
-           setTruthyVerificationCode(String(response.verification_code))
-        
-        toast.info('Verification code sent to your phone. Please enter the code to verify.')
-        return
+        else {
+          setTruthyVerificationCode(String(response.verification_code))
+
+          toast.info('Verification code sent to your phone. Please enter the code to verify.')
+          return
         }
-        
-       
+
+
       } catch (err) {
         if (err.status === 401) {
           toast.error('Phone number already in use. Please check and try again.')
           return
         }
-        console.log('Response:',err);
+        console.log('Response:', err);
         toast.error('Failed to send verification code. Please check your phone number and try again.')
         return
       } finally {
@@ -141,10 +141,10 @@ export function WaitlistSignup() {
     try {
       const response = await waitlistAPI.register(email, name || undefined, user.id, access_token)
 
-        setResult(response)
-        toast.success('Successfully joined the waitlist!')
+      setResult(response)
+      toast.success('Successfully joined the waitlist!')
       setTotalCount(totalCount + 1)
-      
+
 
     } catch (error) {
       if (error.response && error.response.status === 409) {
@@ -161,7 +161,7 @@ export function WaitlistSignup() {
     }
   }
   if (isOnWaitlist) {
-    
+
     return (
       <div className="p-6 bg-neutral-900 border border-green-600 rounded-2xl text-center">
         <CheckCircle2 className="h-10 w-10 text-green-500 mx-auto mb-4 animate-bounce" />
@@ -171,22 +171,10 @@ export function WaitlistSignup() {
         </p>
         <p className="text-lg font-medium mb-4 text-white mt-4">Your Position: <span className="font-bold text-green-400">#{result.position}</span></p>
         <Button
-                onClick={() => navigate('/refer')}
-                className="p-4 m-4 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
-              >
-                Ranking
-        </Button>
-        <Button
           onClick={() => navigate('/dashboard')}
           className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
         >
           Go to Dashboard
-        </Button>
-        <Button
-          onClick={() => navigate('/contribution')}
-          className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
-        >
-          Contribute
         </Button>
       </div>
     );
@@ -213,14 +201,14 @@ export function WaitlistSignup() {
             ></div>
           </div>
         </div>
-        
+
       </>
     );
   }
 
   return (
     <div className="relative flex flex-col justify-center items-center bg-linear-to-tr min-h-[400px] p-6 rounded-2xl shadow-2xl overflow-hidden">
-      
+
       {result ? (
         <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, type: 'spring' }} className="w-full max-w-xl z-10">
           <Card className="border-primary shadow-2xl bg-slate-800/90 backdrop-blur-md text-center">
@@ -241,22 +229,10 @@ export function WaitlistSignup() {
               <p className="text-lg font-medium text-white">🚀 The competition has started!</p>
 
               <Button
-                onClick={() => navigate('/refer')}
-                className="p-4 m-4 bg-purple-600 hover:bg-purple-700 transition-all duration-300"
-              >
-                Ranking
-              </Button>
-              <Button
                 onClick={() => navigate('/dashboard')}
                 className="p-4 m-4 bg-green-600 hover:bg-green-700 transition-all duration-300"
               >
                 Go to Dashboard
-              </Button>
-              <Button
-                onClick={() => navigate('/contribution')}
-                className="p-4 m-4 bg-blue-600 hover:bg-blue-700 transition-all duration-300"
-              >
-                Contribute
               </Button>
               {/* <p className="text-sm text-slate-400">
                 Redirecting to referral page in <span className="font-bold text-white">{secondsLeft}</span> seconds...
@@ -400,11 +376,11 @@ export function WaitlistSignup() {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="group w-full transition-all duration-300 hover:scale-105 
+                  className="group w-full transition-all duration-300 hover:scale-105
       hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed
       hover:bg-purple-600 cursor-pointer"
                 >
-                    
+
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
                       <LoadingSpinner size="sm" />
@@ -435,6 +411,6 @@ export function WaitlistSignup() {
 };
 
 
-  // ...existing code up to the first return statement...
-  // Only keep the first return block, remove all duplicate/extra returns and JSX after it.
+// ...existing code up to the first return statement...
+// Only keep the first return block, remove all duplicate/extra returns and JSX after it.
 
