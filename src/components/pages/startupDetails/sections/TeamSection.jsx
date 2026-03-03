@@ -78,34 +78,44 @@ export default function TeamSection({ members, setMembers, isFounder, isAdmin, s
       role: ''
     });
     // Member handlers
-    const handleAddMember = async (e) => {
-      e.preventDefault();
-      try {
-        if (!memberForm.role) {
-          toast.error('Please select a role for the member');
-          return
-        }
-        if (!memberForm.user_id) {
-          toast.error('Please select a user to add as a member');
-          return
-        }
-        const response = await startupsAPI.createInvitation(startupId, memberForm);
-  
-  
-        
-        if (response.success) {
-          toast.success('Member added successfully');
-          setIsAddMemberModalOpen(false);
-          setMemberForm({ user_id: '', first_name: '', last_name: '', role: 'member' });
-          setMembers((prev) => [...prev, response?.data.member])
-        } else {
-          throw new Error('Failed to add member');
-        }
-      } catch (error) {
-  
-        toast.error(error?.error || 'Error adding member');
-      }
-    };
+const handleAddMember = async (e) => {
+  e.preventDefault();
+
+  try {
+    if (!memberForm.role) {
+      toast.error('Please select a role for the member');
+      return;
+    }
+
+    if (!memberForm.user_id) {
+      toast.error('Please select a user to invite');
+      return;
+    }
+
+    const response = await startupsAPI.inviteMember(startupId, {
+      user_id: memberForm.user_id,
+      role: memberForm.role,
+    });
+
+    if (response.success) {
+      toast.success('Invitation sent successfully');
+      setIsAddMemberModalOpen(false);
+
+      setMemberForm({
+        user_id: '',
+        first_name: '',
+        last_name: '',
+        role: ''
+      });
+
+    } else {
+      throw new Error('Failed to send invitation');
+    }
+
+  } catch (error) {
+    toast.error(error?.error || 'Error sending invitation');
+  }
+};
   
   const handleRemoveMember = async (memberId) => {
       try {

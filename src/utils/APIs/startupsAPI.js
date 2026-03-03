@@ -95,6 +95,14 @@ export const startupsAPI = {
     return response.data
   },
 
+
+
+
+
+
+
+
+
   // Get startup documents
   getDocuments: async (startupId) => {
     const response = await api.get(`/startups/${startupId}/documents`)
@@ -213,6 +221,45 @@ export const startupsAPI = {
     return response.data
   },
 
+// Startup Invitations (NEW)
+
+
+inviteMember: async (startupId, payload) => {
+  const response = await api.post(
+    `/startups/${startupId}/invitations`,
+    payload
+  )
+  return response.data
+},
+
+getInvitations: async (startupId, params = {}) => {
+  const response = await api.get(
+    `/startups/${startupId}/invitations`,
+    {
+      params: {
+        status: params.status || 'pending',
+        ...params,
+      },
+    }
+  )
+  return response.data
+},
+
+acceptInvitation: async (startupId, invitationId) => {
+  const response = await api.post(
+    `/startups/${startupId}/invitations/${invitationId}/accept`
+  )
+  return response.data
+},
+
+declineInvitation: async (startupId, invitationId) => {
+  const response = await api.post(
+    `/startups/${startupId}/invitations/${invitationId}/decline`
+  )
+  return response.data
+},
+
+
   // Cancel own join request
   cancelJoinRequest: async (requestId) => {
     const response = await api.post(
@@ -274,61 +321,7 @@ export const startupsAPI = {
   changeMemberRole: async (startupId, memberId, newRole) => {
     const response = await api.post(`/startups/${startupId}/members/${memberId}/change-role`, { role: newRole })
     return response.data
-  },
-  // Get startup invitations
-  getInvitations: async (startupId, params = {}) => {
-    const response = await api.get(`/startups/${startupId}/invitations`, {
-      params: {
-        status: params.status || 'pending',
-        ...params,
-      },
-    })
-    return response.data
-  },
-
-  // Create startup invitation
-  createInvitation: async (startupId, invitationData) => {
-    const response = await api.post(
-      `/startups/${startupId}/invitations`,
-      invitationData
-    )
-    return response.data
-  },
-
-  // Accept startup invitation
-  acceptInvitation: async (startupId, invitationId) => {
-    const response = await api.post(
-      `/startups/${startupId}/invitations/${invitationId}/accept`
-    )
-    return response.data
-  },
-
-  // Reject startup invitation
-  rejectInvitation: async (startupId, invitationId) => {
-    const response = await api.post(
-      `/startups/${startupId}/invitations/${invitationId}/reject`
-    )
-    return response.data
-  },
-
-  // Cancel startup invitation
-  cancelInvitation: async (startupId, invitationId) => {
-    const response = await api.delete(
-      `/startups/${startupId}/invitations/${invitationId}`
-    )
-    return response.data
-  },
-
-  // Get my invitations
-  getMyInvitations: async (params = {}) => {
-    const response = await api.get(`/startups/invitations`, {
-      params: {
-        status: params.status || 'pending',
-        ...params,
-      },
-    })
-    return response.data
-  },
+  }
 }
 // Project Goals API
 export const projectGoalsAPI = {

@@ -1,5 +1,6 @@
 /* eslint-disable no-unused-vars */
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -29,6 +30,7 @@ import { calendarEventsAPI, projectGoalsAPI, startupsAPI, tasksAPI } from '@/uti
 import { toast } from 'react-toastify';
 import SendJoinRequestModal from './modals/SendJoinRequestModal';
 import ManageJoinRequestsModal from './modals/ManageJoinRequestsModal';
+import AcceptInvitationModal from './modals/AcceptInvitationModal';
 import ProjectGoalsSection from './sections/ProjectGoalsSection';
 import CalendarSection from './sections/CalendarSection';
 import AddMemberModal from './modals/AddMember';
@@ -92,7 +94,7 @@ const StartupDetailPage = () => {
   });
 
   
-
+const [pendingInvitation, setPendingInvitation] = useState(null);
   const [joinRequests, setJoinRequests] = useState([]);
   const joinRequestCountRef = useRef(0);
 
@@ -148,35 +150,37 @@ const StartupDetailPage = () => {
     }
   };
 
-  const fetchJoinRequests = useCallback(async () => {
+const fetchUserInvitation = useCallback(async () => {
+  if (!user || !id || isAdmin) return;
 
-    
-    if (!isAdmin || !access_token || !id) {
+  try {
+    let response = await startupsAPI.getInvitations(id, {
+      status: 'pending',
+      per_page: 50
+    });
 
-      setJoinRequests([]);
-      return;
+    response = response?.data;
+
+    let invitations = [];
+
+    if (Array.isArray(response)) {
+      invitations = response;
+    } else if (response?.invitations && Array.isArray(response.invitations)) {
+      invitations = response.invitations;
     }
-    try {
-      let response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
-      response = response.data
-      // Handle multiple possible response structures from backend
-      // The API returns response.data.data which should be { join_requests: [...], ... }
-      let pending = [];
-      if (Array.isArray(response)) {
-        pending = response; // Direct array
-      } else if (response?.join_requests && Array.isArray(response.join_requests)) {
-        pending = response.join_requests; // Wrapped in join_requests key
-      } else if (response?.requests && Array.isArray(response.requests)) {
-        pending = response.requests; // Wrapped in requests key
-      } else {
-        console.warn('⚠️ Could not find requests in response. Full response:', JSON.stringify(response, null, 2));
-      }
-      setJoinRequests(pending);
-    } catch (error) {
-      console.error('❌ Failed to load join requests:', error);
-      setJoinRequests([]);
-    }
-  }, [isAdmin, access_token, id]);
+
+   const currentUserId = user?.id || user?.userId || user?.user_id;
+
+const myInvite = invitations.find(inv =>
+  inv.user_id === currentUserId
+);
+
+    setPendingInvitation(myInvite || null);
+
+  } catch (error) {
+    console.error("Error fetching invitations:", error);
+  }
+}, [user, id, isAdmin]);
 
 
   useEffect(() => {
@@ -185,7 +189,11 @@ const StartupDetailPage = () => {
 
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id]); 
+
+  useEffect(() => {
+  fetchUserInvitation();
+}, [fetchUserInvitation]);
 
 
 
@@ -234,20 +242,34 @@ const StartupDetailPage = () => {
       toast.error('Unable to reject the request right now.');
     }
   };
-  const handleBookmarkClick = async () => {
-    try {
-        // Remove bookmark
-        const response = await startupsAPI.toggleBookmarkStartup({ startupId: id, userId: user?.id });
-        if (response.success) {
-          setIsFavorited(response.data.bookmarked);
-          toast.info(`Startup ${response.data.bookmarked ? 'added to' : 'removed from'} favorites`);
-        } else {
-          throw new Error('Failed to remove bookmark');
-        }
-    } catch {
-        toast.error('Error updating favorite status');
-    }
-  };
+ const handleAcceptInvitation = async () => {
+  if (!pendingInvitation) return;
+
+  try {
+    await startupsAPI.acceptInvitation(id, pendingInvitation.id);
+    toast.success("You are now a member!");
+
+    setPendingInvitation(null);
+    fetchStartupData();
+
+  } catch (error) {
+    toast.error("Failed to accept invitation");
+  }
+};
+
+const handleDeclineInvitation = async () => {
+  if (!pendingInvitation) return;
+
+  try {
+    await startupsAPI.declineInvitation(id, pendingInvitation.id);
+    toast.info("Invitation declined");
+
+    setPendingInvitation(null);
+
+  } catch (error) {
+    toast.error("Failed to decline invitation");
+  }
+};
 
   useEffect(() => {
     if (user && startup) {
@@ -430,7 +452,7 @@ const StartupDetailPage = () => {
         startup={startup}
         onJoinClick={() => isAdmin ? setIsJoinModalOpen(true) : setIsSendJoinRequestModalOpen(true)}
         members={members}
-        isCreator={isFounder}
+        isAdmin={isAdmin}
         getStageBadgeVariant={getStageBadgeVariant}
         setAlertDescription={setAlertDescription}
         setShowAlert={setShowAlert}
@@ -578,7 +600,15 @@ const StartupDetailPage = () => {
           }}
         />
       )}
-      
+      {pendingInvitation && !isAdmin && (
+  <AcceptInvitationModal
+    isOpen={true}
+    onClose={() => setPendingInvitation(null)}
+    startupName={startup?.name}
+    onAccept={handleAcceptInvitation}
+    onDecline={handleDeclineInvitation}
+  />
+)}
       {isAdmin &&
         <>
           <DeleteConfirmationModal

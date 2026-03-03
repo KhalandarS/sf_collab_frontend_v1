@@ -8,12 +8,11 @@ import { startupsAPI } from "@/utils/APIs/startupsAPI";
 import { formatCurrency } from "@/lib/utils";
 import { FcLeave } from "react-icons/fc";
 import { toast } from "react-toastify";
-import DeleteConfirmationModal from "@/utils/confirm";
 
 // Hero Section Component
 export default function HeroSection({
   members,
-  isCreator,
+  isAdmin,
   startup,
   onJoinClick,
   getStageBadgeVariant,
@@ -23,7 +22,6 @@ export default function HeroSection({
   setAlertVariant }) {
   const { user } = useSelector((state) => state.auth);
   const [joinRequest, setJoinRequest] = useState(null);
-  const [showLeaveConfirm, setShowLeaveConfirm] = useState(null);
   const isMember = useMemo(() => {
     if (!user || !startup) return false;
     if (startup.creator?.id === user.id) return true;
@@ -56,15 +54,6 @@ export default function HeroSection({
     }
   }
   return (
-    <>
-      <DeleteConfirmationModal
-        title="Leave Startup"
-        message="Are you sure you want to leave this startup? You will lose access to the startup details and updates."
-        isOpen={!!showLeaveConfirm}
-        onClose={() => setShowLeaveConfirm(null)}
-        onConfirm={() => handleLeaveStartup(showLeaveConfirm)}
-        type="soft"
-      />
     <div className="relative ">
       {/* Banner */}
       <div className="h-64 rounded-lg mx-auto w-full object-fit bg-gradient-to-r from-blue-600/40 via-purple-600/40 to-blue-800/40 relative overflow-hidden">
@@ -178,9 +167,9 @@ export default function HeroSection({
               </Button>
             )}
             {
-              (isMember && !isCreator) &&
+              (isMember && !isAdmin) &&
               <Button
-                onClick={() => setShowLeaveConfirm(startup.id)}
+                onClick={() => handleLeaveStartup(startup.id)}
                 variant="outline" className="border-red-600 bg-red-600 text-white hover:bg-red-600/20 hover:text-white">
                 <DoorOpen className="w-4 h-4 mr-2" />
                 Leave Startup
@@ -190,6 +179,5 @@ export default function HeroSection({
         </div>
       </div>
     </div>
-    </>
   );
 }
