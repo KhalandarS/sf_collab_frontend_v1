@@ -67,23 +67,32 @@ export const postAPI = {
     return response.data
   },
 
+  // Comments API (backend uses /api/post-comments)
   getComments: async (postId, params) => {
-    const response = await api.get(`/profile/posts/${postId}/comments`, {
+    const response = await api.get('/post-comments', {
       params: {
+        post_id: postId,
         page: params?.page || 1,
-        limit: params?.per_page || 10,
+        per_page: params?.per_page || 10,
       },
     })
     return response.data
   },
 
-  addComment: async (postId, content) => {
-    const response = await api.post(`/profile/posts/${postId}/comments`, { content })
+  addComment: async (postId, content, author) => {
+    const payload = {
+      post_id: postId,
+      content,
+      author_id: author?.author_id,
+      author_first_name: author?.author_first_name,
+      author_last_name: author?.author_last_name,
+    }
+    const response = await api.post('/post-comments', payload)
     return response.data
   },
 
-  deleteComment: async (postId, commentId) => {
-    const response = await api.delete(`/profile/posts/${postId}/comments/${commentId}`)
+  deleteComment: async (_postId, commentId) => {
+    const response = await api.delete(`/post-comments/${commentId}`)
     return response.data
   },
 
@@ -107,26 +116,26 @@ export const postAPI = {
     return response.data
   },
 
-  // Stories API (backend uses /api/profile/stories)
+  // Stories API (backend uses /api/stories)
   getStories: async (params) => {
     const response = await api.get('/profile/stories', {
       params: {
         page: params?.page || 1,
-        limit: params?.per_page || 20,
+        per_page: params?.per_page || 20,
       },
     })
     return response.data
   },
 
   getStoryById: async (storyId, params) => {
-    const response = await api.get(`/profile/stories/${storyId}`)
+    const response = await api.get(`/stories/${storyId}`)
     return response.data
   },
 
   createStory: async (storyData) => {
-    const response = await api.post('/profile/stories', storyData, {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    // storyData should be FormData with a "media" file and related fields.
+    // Let axios set the correct multipart headers automatically.
+    const response = await api.post('/stories', storyData)
     return response.data
   },
 

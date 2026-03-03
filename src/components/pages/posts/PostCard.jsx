@@ -76,10 +76,9 @@ export default function PostCard({ post, onPostDeleted }) {
     try {
       const postId = post._id || post.id;
       await postsAPI.update(postId, {
-        caption: editedCaption,
         content: editedCaption,
       });
-      post.caption = editedCaption;
+      post.content = editedCaption;
       setIsEditing(false);
     } catch (error) {
       console.error("Edit failed:", error);
@@ -106,12 +105,16 @@ export default function PostCard({ post, onPostDeleted }) {
   const handleLikeClick = async () => {
     try {
       const postId = post._id || post.id;
-      const res = await postsAPI.like(postId);
-      if (res && typeof res.liked === "boolean") {
-        setLiked(res.liked);
+      const userId = currentUser?.id;
+      if (!userId) return;
+
+      const togglingTo = !liked;
+      if (togglingTo) {
+        await postsAPI.like(postId, userId);
       } else {
-        setLiked((prev) => !prev);
+        await postsAPI.unlike(postId, userId);
       }
+      setLiked(togglingTo);
     } catch (error) {
       console.error("Like failed:", error);
     }
@@ -141,9 +144,15 @@ export default function PostCard({ post, onPostDeleted }) {
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return;
+    if (!currentUser) return;
+
     try {
       const postId = post._id || post.id;
-      const result = await postAPI.addComment(postId, newComment);
+      const result = await postAPI.addComment(postId, newComment, {
+        author_id: currentUser.id,
+        author_first_name: currentUser.firstName || currentUser.first_name,
+        author_last_name: currentUser.lastName || currentUser.last_name,
+      });
       const created = result.comment || result.data?.comment || result;
       setComments([...comments, created]);
       setNewComment("");

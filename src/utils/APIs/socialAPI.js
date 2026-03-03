@@ -19,16 +19,18 @@ api.interceptors.response.use(
   responseErrorInterceptor
 );
 
-// Posts API (backend uses /api/profile/posts)
+// Posts API (backend uses /api/posts)
 export const postsAPI = {
   getAll: async (params = {}) => {
     const response = await api.get('/profile/posts', {
       params: {
         page: params.page || 1,
-        limit: params.per_page || 10,
+        per_page: params.per_page || 10,
         type: params.postType,
-        sortBy: params.sortBy || 'createdAt',
-        sortOrder: params.sortOrder || 'desc',
+        search: params.search,
+        include_comments: params.include_comments,
+        include_media: params.include_media,
+        current_user_id: params.current_user_id,
       },
     })
     console.log("API Response for getAll posts:", response.data);
@@ -36,7 +38,13 @@ export const postsAPI = {
   },
 
   getById: async (postId, params = {}) => {
-    const response = await api.get(`/profile/posts/${postId}`)
+    const response = await api.get(`/posts/${postId}`, {
+      params: {
+        include_comments: params.include_comments,
+        include_media: params.include_media,
+        current_user_id: params.current_user_id,
+      },
+    })
     return response.data
   },
 
@@ -71,13 +79,13 @@ export const postsAPI = {
   },
 }
 
-// Stories API (backend uses /api/profile/stories)
+// Stories API (backend uses /api/stories)
 export const storiesAPI = {
   getAll: async (params = {}) => {
     const response = await api.get('/profile/stories', {
       params: {
         page: params.page || 1,
-        limit: params.per_page || 20,
+        per_page: params.per_page || 20,
         active_only: params.activeOnly !== false,
       },
     })
@@ -85,7 +93,7 @@ export const storiesAPI = {
   },
 
   getById: async (storyId, params = {}) => {
-    const response = await api.get(`/profile/stories/${storyId}`)
+    const response = await api.get(`/stories/${storyId}`)
     return response.data
   },
 
@@ -213,8 +221,8 @@ export const userSocialAPI = {
     return response.data
   },
 
-  createSocialProfile: async (userId) => {
-    const response = await api.post(`/user-social/${userId}`)
+  createSocialProfile: async () => {
+    const response = await api.post('/user-social/create')
     return response.data
   },
 

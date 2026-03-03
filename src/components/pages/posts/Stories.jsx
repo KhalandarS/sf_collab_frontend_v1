@@ -6,7 +6,6 @@ import StoryModal from "../../modal/StoryModal";
 import StoryViewerModal from "../../modal/StoryViewerModal";
 import { postAPI } from "@/utils/APIs/postAPI";
 
-
 export default function Stories({ refreshKey }) {
   const [isOpen, setIsOpen] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -19,10 +18,11 @@ export default function Stories({ refreshKey }) {
     const fetchStories = async () => {
       try {
         const response = await postAPI.getStories({ page: 1, per_page: 20 });
-        // backend returns { stories, pagination }
-        if (response && response.stories) {
+        // backend returns { success, message, data: { stories, pagination } }
+        const data = response?.data;
+        if (data && data.stories) {
           setStories(
-            response.stories.map((s) => {
+            data.stories.map((s) => {
               const id = s.id || s._id;
               const thumbnail = s.media_url || s.mediaUrl;
               const author = s.author || {};

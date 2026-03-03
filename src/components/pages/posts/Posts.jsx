@@ -29,7 +29,6 @@ import RightSidebar from "./RightSiderbar";
 import { useSelector } from "react-redux";
 import { postAPI } from "@/utils/APIs/postAPI";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
-import { postsAPI, storiesAPI } from "@/utils/APIs/socialAPI";
 import useSocket from "../chat/useSocket";
 import PostsTutorial from "./PostsTutorial";
 
@@ -204,7 +203,7 @@ const Posts = () => {
           error?.response?.data?.message === "User social profile not found";
         if (isNotFound) {
           try {
-            await userSocialAPI.createSocialProfile(currentUser.id);
+            await userSocialAPI.createSocialProfile();
             const retry = await userSocialAPI.getSocialProfile(currentUser.id);
             setSocialProfile(retry.social);
           } catch (createErr) {
@@ -224,13 +223,14 @@ const Posts = () => {
     const fetchPosts = async () => {
       setLoading(true);
       try {
-        const response = await postsAPI.getAll({
+        const response = await postAPI.getAll({
           page: 1,
           per_page: 10,
-          currentUserId: currentUser?.id,
+          current_user_id: currentUser?.id,
         });
-        console.log("Fetched posts:", response.posts);
-        setPosts(response.posts || []);
+        // Flask backend returns: { success, message, data: { posts, pagination } }
+        const data = response?.data;
+        setPosts(data?.posts || []);
       } catch (error) {
         console.error("Failed to fetch posts:", error);
         setPosts([]);
@@ -254,17 +254,32 @@ const Posts = () => {
   const handleCreatePost = async (postData) => {
     try {
       if (postData.destination === "story") {
-        const mediaUrl = postData.files?.[0]?.url || null;
-        const payload = {
-          user_id: currentUser.id,
-          author_id: currentUser.id,
-          author_first_name: currentUser.firstName || currentUser.first_name,
-          author_last_name: currentUser.lastName || currentUser.last_name,
-          media_url: mediaUrl,
-          caption: postData.caption,
-          type: postData.type || "image",
-        };
-        await storiesAPI.create(payload);
+        const firstFile = postData.files?.[0]?.file;
+        if (!firstFile) {
+          console.error("No media file selected for story.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("media", firstFile);
+        formData.append("type", firstFile.type.startsWith("video/") ? "video" : "image");
+        formData.append("user_id", currentUser.id);
+        formData.append("author_id", currentUser.id);
+        formData.append(
+          "author_first_name",
+          currentUser.firstName || currentUser.first_name
+        );
+        formData.append(
+          "author_last_name",
+          currentUser.lastName || currentUser.last_name
+        );
+        formData.append("caption", postData.caption);
+        formData.append(
+          "expires_at",
+          new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        );
+
+        await postAPI.createStory(formData);
         setStoriesRefreshKey((k) => k + 1);
       } else {
         const postType = postData.type === "text" ? "professional" : (postData.type || "professional");
@@ -277,8 +292,8 @@ const Posts = () => {
           type: postType,
           tags: postData.tags || [],
         };
-        const response = await postsAPI.create(payload);
-        const created = response?.post;
+        const response = await postAPI.create(payload);
+        const created = response?.data?.post;
         if (created) {
           const normalized = { ...created, id: created._id || created.id };
           setPosts((prev) => [normalized, ...prev]);
