@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { usersAPI } from '@/utils/APIs/userApi';
+import { usersAPI } from "@/utils/APIs/userAPI";
 import { waitlistAPI } from '@/utils/APIs/waitlistAPI';
 import { toast } from 'react-toastify';
 import { applicationAPI } from '@/utils/APIs/applicationAPI';
@@ -446,11 +446,11 @@ const AdminDashboard = () => {
                 />
               </div>
               <ul className="max-h-80 overflow-y-auto space-y-2 pr-2">
-                <InfiniteList 
-                  items={users} 
-                  renderItem={(u) => <UserAdminItems user={u} setActiveUser={setActiveUser} />} 
-                  sentinelRef={usersRef} 
-                  loading={loadingUsers} 
+                <InfiniteList
+                  items={users}
+                  renderItem={(u) => <UserAdminItems user={u} setActiveUser={setActiveUser} />}
+                  sentinelRef={usersRef}
+                  loading={loadingUsers}
                 />
               </ul>
             </motion.div>
@@ -476,11 +476,11 @@ const AdminDashboard = () => {
                 />
               </div>
               <ul className="max-h-80 overflow-y-auto space-y-2 pr-2">
-                <InfiniteList 
-                  items={startups} 
-                  renderItem={(s) => <StartupAdminItems startup={s} />} 
-                  loading={loadingStartups} 
-                  sentinelRef={startupsRef} 
+                <InfiniteList
+                  items={startups}
+                  renderItem={(s) => <StartupAdminItems startup={s} />}
+                  loading={loadingStartups}
+                  sentinelRef={startupsRef}
                 />
               </ul>
             </motion.div>

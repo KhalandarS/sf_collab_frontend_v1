@@ -11,7 +11,7 @@ import {
   TrendingDown,
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import DashboardChangeSection from "../DashboardChangeSection";
+import DashboardChangeSection from "../dashboardChangeSection";
 import KnowledgeResources from "@/components/pages/dashboards/influencerDashboard/components/KnowledgeResources";
 import DashboardTopNav from "@/components/common/DashboardTopNav";
 import { useDashboardNavHide } from "@/components/common/DashboardTopNav";
@@ -73,11 +73,11 @@ export default function InfluencerDashboard({
 
           </div>
 
-      
+
 
         </div>
         <div className="relative w-full mx-auto p-4 overflow-x-hidden">
-        
+
           <Calendar />
           <WorldClock />
         </div>

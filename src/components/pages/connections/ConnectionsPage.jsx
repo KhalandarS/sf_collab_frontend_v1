@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { connectionAPI } from '@/utils/APIs/connectionAPI';
+import { connectionAPI } from '@/utils/APIs/ConnectionAPI';
 import { toast } from 'react-toastify';
 import usePaginatedFetch from '@/utils/hooks/usePaginated';
 import InfiniteList from '@/components/InfiniteList';
@@ -152,11 +152,11 @@ export default function ConnectionsPage() {
       const meId = getUserId(currentUser);
       const incomingOnly = meId
         ? raw.filter((r) => {
-            const rid = getReceiverId(r);
-            if (rid != null) return rid === meId;
-            const sid = getSenderId(r);
-            return sid == null ? true : sid !== meId;
-          })
+          const rid = getReceiverId(r);
+          if (rid != null) return rid === meId;
+          const sid = getSenderId(r);
+          return sid == null ? true : sid !== meId;
+        })
         : raw;
       return {
         data: {
@@ -186,11 +186,11 @@ export default function ConnectionsPage() {
       const meId = getUserId(currentUser);
       const outgoingOnly = meId
         ? raw.filter((r) => {
-            const sid = getSenderId(r);
-            if (sid != null) return sid === meId;
-            const rid = getReceiverId(r);
-            return rid == null ? true : rid !== meId;
-          })
+          const sid = getSenderId(r);
+          if (sid != null) return sid === meId;
+          const rid = getReceiverId(r);
+          return rid == null ? true : rid !== meId;
+        })
         : raw;
       return {
         data: {
@@ -281,12 +281,12 @@ export default function ConnectionsPage() {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('en-US', { 
-      month: 'short', day: 'numeric', year: 'numeric' 
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric'
     });
   };
 
-  const isLoading = 
+  const isLoading =
     (activeTab === TABS.CONNECTIONS && loadingConnections) ||
     (activeTab === TABS.INCOMING && loadingIncoming) ||
     (activeTab === TABS.OUTGOING && loadingOutgoing);
@@ -427,17 +427,17 @@ export default function ConnectionsPage() {
             )}
 
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button 
-                onClick={() => navigate('/discover-users')} 
+              <Button
+                onClick={() => navigate('/discover-users')}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
               >
                 <Compass className="w-4 h-4 mr-2" />
                 Discover Users
               </Button>
-              
-              <Button 
-                onClick={fetchCounts} 
-                variant="outline" 
+
+              <Button
+                onClick={fetchCounts}
+                variant="outline"
                 className="border-slate-600 text-black hover:bg-slate-800 hover:text-white transition-all"
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
@@ -473,11 +473,10 @@ export default function ConnectionsPage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.key
+              className={`flex items-center gap-2 px-5 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.key
                   ? 'border-blue-500 text-blue-400'
                   : 'border-transparent text-slate-400 hover:text-slate-200'
-              }`}
+                }`}
             >
               <tab.icon className="w-4 h-4" />
               {tab.label}
@@ -514,7 +513,7 @@ export default function ConnectionsPage() {
                       className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
-                      
+
                       <div className="relative p-4 md:p-6 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                         <div className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer" onClick={() => goToProfile(conn.connected_user?.id)}>
                           <img
@@ -596,7 +595,7 @@ export default function ConnectionsPage() {
                         className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
-                        
+
                         <div className="relative p-4 md:p-6 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                           <div className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer" onClick={() => goToProfile(sender?.id)}>
                             <img
@@ -672,7 +671,7 @@ export default function ConnectionsPage() {
                         className="group relative overflow-hidden rounded-xl bg-slate-900/50 border border-white/10 hover:border-blue-500/30 transition-all backdrop-blur"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/0 via-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:via-blue-500/5 group-hover:to-transparent transition-all duration-300" />
-                        
+
                         <div className="relative p-4 md:p-6 flex flex-col md:flex-row justify-between gap-4 items-start md:items-center">
                           <div className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer" onClick={() => goToProfile(receiver?.id)}>
                             <img
