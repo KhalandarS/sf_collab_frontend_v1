@@ -499,32 +499,38 @@ export default function RegisterStartUp() {
       }
 
       if (response.ok) {
-        setXpPoints(1200); // Complete all XP
-        setCurrentStep(9); // Move to completion step
-        setFormData({
-          name: "",
-          industry: "",
-          location: "",
-          description: "",
-          stage: "",
-          positions: 0,
-          roles: {},
-          creator_first_name: "",
-          creator_last_name: "",
-          creator_email: "",
-          
-          revenue: 0,
-          funding_amount: 0,
-          funding_round: "pre-seed",
-          burn_rate: 0,
-          runway_months: 0,
-          valuation: 0,
-          financial_notes: "",
-          
-          tech_stack: []
-        })
         localStorage.removeItem('formData');
         toast.success(`Startup ${id ? "updated" : "registered"} successfully!`);
+        if (id) {
+          // Edit mode: go directly to the startup detail page
+          navigate(`/startup-details/${id}`);
+        } else {
+          // Add mode: show the celebration / launch complete screen
+          setXpPoints(1200);
+          setCurrentStep(9);
+          setFormData({
+            name: "",
+            industry: "",
+            location: "",
+            description: "",
+            stage: "",
+            positions: 0,
+            roles: {},
+            creator_first_name: "",
+            creator_last_name: "",
+            creator_email: "",
+            
+            revenue: 0,
+            funding_amount: 0,
+            funding_round: "pre-seed",
+            burn_rate: 0,
+            runway_months: 0,
+            valuation: 0,
+            financial_notes: "",
+            
+            tech_stack: []
+          });
+        }
         
       } else {
         throw new Error(data.error || data.message || "Registration failed");
@@ -548,10 +554,11 @@ export default function RegisterStartUp() {
     }
   }, [currentStep, maxStep, id]);
   //! StepIndicator
+  const totalSteps = id ? 8 : 9;
   const StepIndicator = () => (
     <div className="mb-8 overflow-x-auto">
       <div className="flex items-center justify-start sm:justify-center min-w-max px-2">
-        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((step) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, ...(id ? [] : [9])].map((step) => (
           <div key={step} className="flex items-center">
             <div
               onClick={() => maxStep >= step && setCurrentStep(step)}
@@ -601,7 +608,7 @@ export default function RegisterStartUp() {
               </span>
             </div>
 
-            {step < 9 && (
+            {step < totalSteps && (
               <div
                 className={`
                 w-6 sm:w-12 h-1 mx-1 sm:mx-2 rounded-full

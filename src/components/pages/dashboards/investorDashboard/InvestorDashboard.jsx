@@ -18,7 +18,7 @@ export default function InvestorDashboard({
   userRoles, activeRole, setActiveRole
 }) {
   return (
-    <div className="relative my-6 space-y-10">
+    <div className="dashboard relative my-6 space-y-10">
       {/* Background texture */}
       <div className="absolute inset-0 pointer-events-none
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]

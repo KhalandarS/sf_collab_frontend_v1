@@ -8,14 +8,18 @@ import {
   MessageSquare,
   FileSignature,
   ArrowRight,
-  Lock
+  Lock,
+  Zap
 } from "lucide-react";
 import { tools } from "./AITools";
 import { isAiToolsLocked, getAiToolsLockRemainingDays } from "../../../../utils/config.js";
+import useGetCredits from "@/utils/hooks/useGetCredits";
+import AITutorial from "./AITutorial";
 
 export default function AIDashboard() {
   const locked = isAiToolsLocked();
   const daysRemaining = getAiToolsLockRemainingDays();
+  const credits = useGetCredits();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -33,6 +37,7 @@ export default function AIDashboard() {
   return (
     <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
       {/* Animated Background */}
+      <AITutorial />
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
@@ -41,22 +46,21 @@ export default function AIDashboard() {
 
       <div className="relative z-10 w-full mx-auto max-w-7xl space-y-8">
         {/* Header */}
-
         <div className="flex items-center justify-center gap-3 mb-6">
-                    <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
-                      <Brain className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-sm font-semibold text-blue-300 uppercase tracking-widest">
-                      AI Suite
-                    </span>
-                  </div>
+          <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+            <Brain className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-sm font-semibold text-blue-300 uppercase tracking-widest">
+            AI Suite
+          </span>
+        </div>
+
         <motion.div
           className="space-y-4"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-        > 
+        >
           <div className="flex justify-center items-center gap-4">
-            
             <div>
               <h1 className="text-center text-5xl md:text-6xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                 SF AI Tools
@@ -64,6 +68,26 @@ export default function AIDashboard() {
               <p className="text-gray-400 text-lg mt-2">
                 Build, design, analyze, and scale with AI-powered intelligence
               </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Credits Card */}
+        <motion.div
+          className="credits bg-gradient-to-br from-slate-900/50 to-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-md mx-auto"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm text-slate-400 font-medium">Available Credits</p>
+                <p className="text-2xl font-bold text-white">{credits || 0}</p>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -126,6 +150,7 @@ export default function AIDashboard() {
             <motion.div
               key={name}
               variants={itemVariants}
+              className='ai-tool'
               whileHover={available && !locked ? { y: -8, scale: 1.02 } : {}}
             >
               <Link

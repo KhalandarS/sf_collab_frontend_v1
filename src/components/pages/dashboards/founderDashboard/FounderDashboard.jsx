@@ -58,7 +58,9 @@ export default function FounderDashboard({
   }
 
   return (
-    <div className="space-y-6 px-4 py-6">
+    <div
+      
+      className="space-y-6 px-4 py-6">
       <OverviewWebsite />
       <DashboardChangeSection
         sections={userRoles.map((r) => ({
@@ -72,7 +74,8 @@ export default function FounderDashboard({
         }}
       />
       <AnnouncementsSection userRoles={userRoles} />
-
+      <div
+        className=".dashboard" />
       {sections.map((section) => (
         <div key={section.id}>
           {section.component}

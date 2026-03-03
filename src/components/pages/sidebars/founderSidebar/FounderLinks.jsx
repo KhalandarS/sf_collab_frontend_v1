@@ -1,7 +1,7 @@
 import { Building2, LightbulbIcon, Save, UserCog } from 'lucide-react';
 import { Rocket, PlusSquare, BookOpen, MessageSquareHeart, Users } from 'lucide-react';
 import { Lightbulb } from 'lucide-react';
-import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection, wallet } from '../sidebarCommons';
 import { GiChecklist } from 'react-icons/gi';
 
 /**
@@ -39,8 +39,8 @@ export function createFounderLinks(unreadMessagesCount = 0, userRoles = [], setA
       ]
     },
     socialSection(5),
-    
     aiTools(6),
-    toolsSection(7)
+    toolsSection(7),
+    wallet(10)
   ];
 }

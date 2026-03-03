@@ -78,21 +78,16 @@ export function socialSection(id) {
 
 export function wallet(id) {
   return {
-      id,
-      icon: <Wallet size={22} />,
-      href: "/wallet",
-      label: "Wallet",
-      // isUpcoming: true,
-
-      // subItems: [
-      //   { id: "payout-history", href: "/wallet/payout-history", label: "Payout History" },
-      //   { id: "bank-details", href: "/wallet/bank-details", label: "Bank Details" },
-      // ]
-      subItems: [
-        { id: "Wallet-Overview", href: "/wallet", label: "Wallet Overview", icon: <Wallet size={18} /> },
-        { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <TrendingUp size={18} /> },
-      ]
-    }
+    id,
+    icon: <Wallet size={22} />,
+    href: "/wallet",
+    label: "Wallet & Store",
+    subItems: [
+      { id: "wallet", href: "/wallet", label: "My Wallet", icon: <Wallet size={18} /> },
+      { id: "store", href: "/store", label: "SF Store", icon: <TrendingUp size={18} /> },
+      { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <TrendingUp size={18} /> },
+    ]
+  }
 }
 
 export function ideation(id) {

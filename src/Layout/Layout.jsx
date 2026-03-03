@@ -30,6 +30,7 @@ import { isUserProfileComplete } from "@/utils/getUserComplete";
 import EmailVerifyPopUp from "./emailVerifyPopUp";
 import CompleteProfilePopUp from "./CompleteEmailPopUp";
 import AIAssistant from "./AIAssistant";
+import Tutorial from "./DashboardTutorial";
 
 const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   const location = useLocation();
@@ -235,6 +236,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
 
   return (
     <>
+      {location.pathname === "/dashboard" && <Tutorial activeRole={activeRole} />}
       <div className="relative min-h-screen w-screen flex flex-col">
         {/* Background */}
         <div

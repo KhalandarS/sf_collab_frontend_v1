@@ -31,6 +31,7 @@ import { postAPI } from "@/utils/APIs/postAPI";
 import { userSocialAPI } from "@/utils/APIs/socialAPI";
 import { postsAPI, storiesAPI } from "@/utils/APIs/socialAPI";
 import useSocket from "../chat/useSocket";
+import PostsTutorial from "./PostsTutorial";
 
 const ShinyText = ({ children, className = "" }) => {
   return (
@@ -203,7 +204,7 @@ const Posts = () => {
           error?.response?.data?.message === "User social profile not found";
         if (isNotFound) {
           try {
-            await userSocialAPI.createSocialProfile();
+            await userSocialAPI.createSocialProfile(currentUser.id);
             const retry = await userSocialAPI.getSocialProfile(currentUser.id);
             setSocialProfile(retry.social);
           } catch (createErr) {
@@ -291,6 +292,7 @@ const Posts = () => {
   return (
     <div className="min-h-screen text-white w-full">
       {/* Animated Background */}
+      <PostsTutorial />
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-size-[64px_64px] mask-[radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float" />
@@ -320,7 +322,7 @@ const Posts = () => {
           <div className="col-span-12 lg:col-span-6">
             <div className="space-y-6">
               {/* Tab Headers */}
-              <div className="flex gap-4 border-b border-zinc-800">
+              <div className="feed flex gap-4 border-b border-zinc-800">
                 <button
                   onClick={() => setActiveTab("feed")}
                   className={`py-2 px-4 font-semibold transition-all ${

@@ -38,7 +38,7 @@ export default function DesktopSidebarContent({
 
   return (
     <div
-      className="hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] text-white"
+      className="sidebar hidden lg:flex fixed left-0 top-16 h-[calc(100vh-64px)] text-white"
       style={{ zIndex: 9999999999 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -88,6 +88,7 @@ export default function DesktopSidebarContent({
                   `}
                 >
                   {/* ICON — always rendered */}
+                  {console.log(link.id)}
                   <div className="flex items-center justify-center w-6">
                     {link.icon}
                   </div>
