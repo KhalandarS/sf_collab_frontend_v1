@@ -204,7 +204,7 @@ const Posts = () => {
           error?.response?.data?.message === "User social profile not found";
         if (isNotFound) {
           try {
-            await userSocialAPI.createSocialProfile();
+            await userSocialAPI.createSocialProfile(currentUser.id);
             const retry = await userSocialAPI.getSocialProfile(currentUser.id);
             setSocialProfile(retry.social);
           } catch (createErr) {

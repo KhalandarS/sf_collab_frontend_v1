@@ -213,8 +213,8 @@ export const userSocialAPI = {
     return response.data
   },
 
-  createSocialProfile: async () => {
-    const response = await api.post('/user-social/create')
+  createSocialProfile: async (userId) => {
+    const response = await api.post(`/user-social/${userId}`)
     return response.data
   },
 
