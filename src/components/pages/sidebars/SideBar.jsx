@@ -81,7 +81,7 @@ export default function SideBar({ isOpen, setIsOpen, unreadMessagesCount, isAdmi
             </button>
           </div>
 
-          <div className="h-[calc(100vh-65px)] overflow-y-auto">
+          <div className="sidebar h-[calc(100vh-65px)] overflow-y-auto">
             <MobileSidebarContent
               onLinkClick={handleMobileLinkClick}
               links={links}

@@ -80,7 +80,7 @@ export default function IdeationCard({ content, shouldBlur }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       whileHover={{ y: -4 }}
-      className="h-full group"
+      className="h-full group idea"
     >
       <Link
         to={`/ideation-details?id=${content?.id}`}

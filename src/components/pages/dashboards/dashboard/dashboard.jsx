@@ -7,7 +7,7 @@ import DashboardSection from "../../../sections/DashboardSection";
 import TaskProgress from "../../../sections/TaskProgress";
 import { GrOverview } from "react-icons/gr";
 import ShinyText from "../../../ui/ShinyText";
-import { useDispatch ,useSelector} from "react-redux";
+import { useSelector } from "react-redux";
 import {
   DndContext,
   PointerSensor,
@@ -95,7 +95,9 @@ const Dashboard = ({
 
 
   return (
-    <div className="relative min-h-screen  text-white w-full overflow-x-hidden md:p-4 text-center">
+    <div
+      id="dashboard"
+      className="relative min-h-screen  text-white w-full overflow-x-hidden md:p-4 text-center">
       {loading && (<Loader />)}
       <DashboardHeader searchQuery={query} onSearchChange={setQuery} />
       

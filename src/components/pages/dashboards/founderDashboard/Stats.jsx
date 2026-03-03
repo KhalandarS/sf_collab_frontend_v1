@@ -12,9 +12,9 @@ function Stat({ label, value }) {
 }
 
 function FounderStats({ totals, user, startups }) {
-  console.log("Startups:", startups);
   return <>
-    <header className="rounded-2xl bg-gradient-to-br from-purple-900/40 to-slate-900/40 border-purple-500/20 p-6">
+    <header
+      className="rounded-2xl bg-gradient-to-br from-purple-900/40 to-slate-900/40 border-purple-500/20 p-6">
       <div className="flex flex-col lg:flex-row justify-between gap-6 py-4">
         <div>
           <div className="flex items-center gap-3 mb-2">

@@ -21,8 +21,6 @@ import { dashboardAPI } from "@/utils/APIs/dashboardAPI";
 import { useSelector } from "react-redux";
 import { motion } from "framer-motion";
 
-import SortableSection from "../dashboard/SortableSection";
-
 export default function BuilderDashboard({
   userRoles,
   activeRole,
@@ -68,7 +66,9 @@ export default function BuilderDashboard({
   }
 
   return (
-    <div className="space-y-6 px-4 py-6">
+    <div
+      id="dashboard"
+      className="space-y-6 px-4 py-6">
       <OverviewWebsite />
 
       <DashboardChangeSection

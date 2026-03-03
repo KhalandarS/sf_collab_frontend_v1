@@ -221,7 +221,7 @@ const IdeationHeader = ({
           />
           <button
             onClick={() => setShowNewIdeaForm(true)}
-            className="flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
+            className="create-idea flex items-center justify-center gap-2 rounded-lg transition-all duration-200 w-full px-4 py-2.5  sm:w-auto font-medium shadow-lg bg-gray-200 text-black text-sm border border-white/20"
           >
             <Plus className="h-4 w-4" />
             <span>Share Idea</span>

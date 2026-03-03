@@ -31,7 +31,9 @@ export default function DashboardChangeSection({
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
           transition={{ type: "spring", stiffness: 260, damping: 18 }}
+          
           className="
+            roles
             relative flex items-center gap-3 px-5 py-2.5
             rounded-xl
             bg-gradient-to-br from-slate-800/80 via-slate-900/80 to-black/80

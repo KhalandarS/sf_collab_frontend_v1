@@ -30,6 +30,7 @@ import { API_BASE_URL } from "@/utils/config";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import IdeationCard from "./IdeationCard";
 import { getStageColor } from "./getStageColor";
+import IdeationTutorial from "./IdeationTutorial";
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
@@ -256,6 +257,7 @@ const Ideation = ({ activeRole}) => {
 
   return (
     <div className="min-h-screen bg-black pr-4">
+      <IdeationTutorial /> 
       <div className="mb-0 mt-10">
         <IdeationHeader
           searchQuery={searchQuery}
@@ -293,7 +295,7 @@ const Ideation = ({ activeRole}) => {
               {canAccess ? (
                 <IdeationCard content={content} shouldBlur={shouldBlur} /> 
               ) : (
-                <div className="block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed">
+                <div className={`block bg-[#1A1A1A] border border-white/10 rounded-xl h-full relative overflow-hidden cursor-not-allowed`}>
                   {shouldBlur && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
                       <div className="text-center p-4">

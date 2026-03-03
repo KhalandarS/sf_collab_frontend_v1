@@ -70,7 +70,9 @@ export default function MobileSidebarContent({
           const isUpcoming = link.isUpcoming;
 
           return (
-            <motion.div key={link.id} variants={itemVariants}>
+            <motion.div
+              id={link.id}
+              key={link.id} variants={itemVariants}>
               {/* ---------- Main Item ---------- */}
               <motion.button
                 onClick={() => {

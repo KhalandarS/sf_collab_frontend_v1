@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Copy, Trophy, TrendingUp, Users, Zap, Target, Share2, Award, Heart, Sparkles, Mail, AlertCircle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
+import ReferralTutorial from "./referralTutorial";
 
 const card = {
   hidden: { opacity: 0, y: 20 },
@@ -284,6 +285,7 @@ const ReferPage = () => {
   return (
     <div className="min-h-screen bg-black text-white px-2 md:px-4 py-8">
       {/* Animated Background */}
+      <ReferralTutorial />
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
         <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:64px_64px] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_50%,black,transparent)]" />
         <div className="absolute top-1/4 left-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl" />
@@ -311,7 +313,7 @@ const ReferPage = () => {
 
         {/* STATS CARDS */}
         <motion.div
-          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+          className="stats grid grid-cols-1 md:grid-cols-3 gap-4"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
@@ -403,7 +405,7 @@ const ReferPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className="share grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -493,7 +495,7 @@ const ReferPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
+          className="ranking bg-gradient-to-br from-slate-900/90 to-slate-900/50 border border-white/10 backdrop-blur rounded-2xl p-8"
         >
           <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-yellow-400" />
