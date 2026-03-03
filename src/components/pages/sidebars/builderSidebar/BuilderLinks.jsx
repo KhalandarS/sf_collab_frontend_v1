@@ -1,6 +1,6 @@
 import { CheckCircle, Save, LightbulbIcon, BookOpen, MessageSquareHeart, Rocket, Users, ClipboardList, Calculator, FileTerminal, Hammer } from 'lucide-react';
 
-import { aiTools, dashboardLink, ideation, socialSection, toolsSection } from '../sidebarCommons';
+import { aiTools, dashboardLink, ideation, socialSection, toolsSection, wallet } from '../sidebarCommons';
 import { FcInvite } from 'react-icons/fc';
 
 export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiveRole) {
@@ -32,6 +32,7 @@ export function createBuilderLinks(unreadMessagesCount, userRoles = [], setActiv
     },
     socialSection(7),
     aiTools(8),
-    toolsSection(9)
+    toolsSection(9),
+    wallet(10)
   ];
 };

@@ -118,6 +118,8 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         { id: "knowledge", href: "/knowledge", label: "Knowledge", icon: <BookOpen size={18} /> },
       ],
     },
+    aiTools(8),
+    toolsSection(9),
     // NEW: Wallet & Store section
     {
       id: 10,
@@ -129,9 +131,7 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
         { id: "store", href: "/store", label: "SF Store", icon: <ShoppingBag size={18} /> },
         { id: "leaderboard", href: "/leaderboard", label: "Leaderboard", icon: <Trophy size={18} /> },
       ],
-    },
-    aiTools(8),
-    toolsSection(9)
+    }
   ];
 };
 
