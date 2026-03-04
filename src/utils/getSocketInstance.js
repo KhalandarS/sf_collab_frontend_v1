@@ -2,7 +2,7 @@ import { io } from "socket.io-client";
 import { SOCKET_API_URL } from "./config";
 
 /**
- * Singleton socket — one connection shared across all components.
+ * Singleton socket  one connection shared across all components.
  *
  * FIXES:
  * 1. Accepts a live `token` arg so callers (NotificationContext etc.) can pass

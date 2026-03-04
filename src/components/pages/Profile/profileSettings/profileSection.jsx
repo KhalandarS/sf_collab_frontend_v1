@@ -8,24 +8,24 @@ import { motion } from "framer-motion";
 import { User, MapPin, Briefcase, Globe, Link as LinkIcon } from "lucide-react";
 
 const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  };
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1, delayChildren: 0.2 }
+  }
+};
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
-  };
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
 export default function ProfileSection({ formData, setFormData, uploadProfilePicture }) {
   const timezones = useMemo(() => Intl.supportedValuesOf ? Intl.supportedValuesOf("timeZone") : ['UTC'], []);
   const [loadingCountry, setLoadingCountry] = useState(false);
   const [roles, setRoles] = useState([]);
   const { user } = useSelector((state) => state.auth);
 
-  
+
 
   const handleImage = (e) => {
     const file = e.target.files?.[0];
@@ -115,8 +115,8 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
         <label className="block text-sm font-semibold text-gray-200 mb-4">Profile Picture</label>
         <div className="flex flex-wrap justify-center items-center gap-6">
           <div className="w-24 h-24 rounded-full bg-gray-700 overflow-hidden border-2 border-gray-600">
-            {(user.profile.picture || formData.profile.picture) ? (
-              <img loading="lazy" src={getProfilePicture(user) || formData.profile.picture} className="w-full h-full object-cover" alt="profile" />
+            {(user?.profile?.picture || formData?.profile?.picture) ? (
+              <img loading="lazy" src={getProfilePicture(user) || formData?.profile?.picture} className="w-full h-full object-cover" alt="profile" />
             ) : (
               <div className="flex items-center justify-center text-gray-400 text-sm h-full">No image</div>
             )}
@@ -325,7 +325,7 @@ export default function ProfileSection({ formData, setFormData, uploadProfilePic
           />
         </div>
 
-        
+
       </motion.div>
 
       {/* Social Links */}

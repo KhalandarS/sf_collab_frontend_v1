@@ -38,12 +38,12 @@ const VideoGenerator = () => {
   };
 
   const styleOptions = [
-    { value: 'cinematic', label: '🎬 Cinematic' },
-    { value: 'realistic', label: '📷 Realistic' },
-    { value: 'anime', label: '✨ Anime' },
-    { value: 'cartoon', label: '🎨 Cartoon' },
-    { value: 'abstract', label: '🌀 Abstract' },
-    { value: 'documentary', label: '📹 Documentary' }
+    { value: 'cinematic', label: ' Cinematic' },
+    { value: 'realistic', label: ' Realistic' },
+    { value: 'anime', label: ' Anime' },
+    { value: 'cartoon', label: ' Cartoon' },
+    { value: 'abstract', label: ' Abstract' },
+    { value: 'documentary', label: ' Documentary' }
   ];
 
   function SummaryCard({ label, value, accent = "white", suffix }) {

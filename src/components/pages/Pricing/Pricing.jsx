@@ -39,7 +39,7 @@ const Pricing = () => {
           );
         }
       } catch (err) {
-        console.error("❌ Failed to load pricing plans", err);
+        console.error(" Failed to load pricing plans", err);
       } finally {
         setLoading(false);
       }
@@ -133,7 +133,7 @@ const Pricing = () => {
                       <ul className="space-y-2 text-sm text-neutral-300 mb-6">
                         {tier.features.map((f, i) => (
                           <li key={i} className="flex gap-2">
-                            <span className="text-green-400 flex-shrink-0">✓</span>
+                            <span className="text-green-400 flex-shrink-0"></span>
                             <span>{f}</span>
                           </li>
                         ))}

@@ -7,7 +7,7 @@
         
 //         {/* Header */}
 //         <h2 className="text-4xl font-bold text-center">
-//           Equity Access — $0/month
+//           Equity Access  $0/month
 //         </h2>
 
 //         <p className="mt-4 text-center text-gray-300 max-w-3xl mx-auto">
@@ -20,12 +20,12 @@
 //           <div>
 //             <h3 className="text-xl font-semibold mb-4">What You Get</h3>
 //             <ul className="space-y-2 text-sm text-gray-300">
-//               <li>• Unlimited usage across all tools</li>
-//               <li>• Unlimited SFManagers seats</li>
-//               <li>• Complete AI suite</li>
-//               <li>• Hiring, payments, legal & contracts</li>
-//               <li>• Team execution, dashboards & KPIs</li>
-//               <li>• Investor access & portfolio guidance</li>
+//               <li> Unlimited usage across all tools</li>
+//               <li> Unlimited SFManagers seats</li>
+//               <li> Complete AI suite</li>
+//               <li> Hiring, payments, legal & contracts</li>
+//               <li> Team execution, dashboards & KPIs</li>
+//               <li> Investor access & portfolio guidance</li>
 //             </ul>
 //           </div>
 
@@ -35,12 +35,12 @@
 //               Equity Terms
 //             </h3>
 //             <ul className="space-y-2 text-sm text-gray-300">
-//               <li>• Equity range: 5% – 20% (based on startup stage)</li>
-//               <li>• Final percentage negotiated after evaluation</li>
-//               <li>• Equity cannot be diluted below 50% of original grant</li>
-//               <li>• Startup retains full IP (SF co-protects it)</li>
-//               <li>• Buyback clause available if leaving the ecosystem</li>
-//               <li>• No switching back to free plan after acceptance</li>
+//               <li> Equity range: 5%  20% (based on startup stage)</li>
+//               <li> Final percentage negotiated after evaluation</li>
+//               <li> Equity cannot be diluted below 50% of original grant</li>
+//               <li> Startup retains full IP (SF co-protects it)</li>
+//               <li> Buyback clause available if leaving the ecosystem</li>
+//               <li> No switching back to free plan after acceptance</li>
 //             </ul>
 //           </div>
 //         </div>
@@ -158,7 +158,7 @@ const EquityAccess = () => {
               {[
                 {
                   title: "Equity Range",
-                  value: "5% – 20%",
+                  value: "5%  20%",
                   description: "Based on startup stage, traction, and valuation",
                   gradient: "from-gray-700 to-gray-400"
                 },
@@ -206,7 +206,7 @@ const EquityAccess = () => {
               className="mt-8 p-4 bg-gradient-to-r from-red-900/30 to-orange-900/30 rounded-xl border border-red-500/30"
             >
               <p className="text-sm text-red-200 text-center">
-                ⚠️ Important: Once accepted, cannot switch back to free plan.
+                 Important: Once accepted, cannot switch back to free plan.
                 Commitment required for serious ventures only.
               </p>
             </motion.div>

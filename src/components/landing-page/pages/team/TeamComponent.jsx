@@ -3,19 +3,19 @@ import React, { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Linkedin, Instagram, Twitter, Facebook } from "lucide-react";
-import { 
-  getResponsiveScrollTrigger, 
+import {
+  getResponsiveScrollTrigger,
   getResponsiveDuration,
   setupScrollTriggerRefresh,
-  isMobile 
+  isMobile
 } from '../../utils/scrollTriggerConfig';
 import OskarImg from "@/assets/imgs/Oskar K (Founder & CEO).jpg";
 import FatimaImg from "@/assets/imgs/Fatima Abba (Backend Developer).png";
 import ChinmayImg from "@/assets/imgs/Chinmay Bharadwaj (Developer).jpg";
-import KrystianImg from "@/assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
+// import KrystianImg removed due to missing file
 import RazeenImg from "@/assets/imgs/Razeen Iqbal ( product Manager).jpg";
 import ShreyImg from "@/assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
-import VarunImg from "@/assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+import VarunImg from "@/assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; //  renamed file
 import IvanImg from "@/assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
 import LaurieImg from "@/assets/imgs/Laurie Breton (Management Department).jpg";
 gsap.registerPlugin(ScrollTrigger);
@@ -40,19 +40,14 @@ const teamMembers = [
     img: ChinmayImg,
     desc: "Building performant and scalable web applications.",
   },
-    {
+  {
     name: "Fatima Abba",
     role: "Backend Developer",
     img: FatimaImg,
     desc: "Architecting robust and scalable backend solutions.",
   },
+
   {
-    name: "Krystian Śledziewski",
-    role: "Cybersecurity Specialist",
-    img: KrystianImg,
-    desc: "Ensuring system security, privacy, and resilience.",
-  },
-    {
     name: "Ivan Gomez",
     role: "Cloud & Software Developer",
     img: IvanImg,
@@ -81,13 +76,13 @@ const teamMembers = [
 export default function TeamComponent() {
   const main = useRef(null);
 
-    
+
 
 
 
 
   return (
-      <section
+    <section
       ref={main}
       className="relative bg-gradient-to-b from-[#0b0b0b] via-[#0e0e0e] to-black text-white py-24 px-6 lg:px-20 overflow-hidden"
     >

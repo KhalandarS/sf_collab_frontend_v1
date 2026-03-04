@@ -27,7 +27,7 @@ function PromptInput({ value, onChange, placeholder, wFull, includeLogo, ...prop
         {...props}
       />
       {includeLogo &&
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/70 text-lg transition-transform duration-300 group-hover:scale-110">✉️</span>
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/70 text-lg transition-transform duration-300 group-hover:scale-110"></span>
       }
     </div>
   )
@@ -226,7 +226,7 @@ export function WaitlistSignup() {
                 </p>
               </div>
 
-              <p className="text-lg font-medium text-white">🚀 The competition has started!</p>
+              <p className="text-lg font-medium text-white"> The competition has started!</p>
 
               <Button
                 onClick={() => navigate('/dashboard')}

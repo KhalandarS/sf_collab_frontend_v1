@@ -15,13 +15,13 @@ export function SocketProvider({ token, children }) {
   const [onlineUsers, setOnlineUsers] = useState([]);
 
   useEffect(() => {
-    // ✅ Normalize token properly (handles undefined, "undefined", null, "Bearer ...")
+    //  Normalize token properly (handles undefined, "undefined", null, "Bearer ...")
     const rawToken = typeof token === "string" ? token.trim() : "";
 
     const normalizedToken =
       rawToken.startsWith("Bearer ") ? rawToken.slice(7).trim() : rawToken;
 
-    // ✅ block socket connection unless token looks valid
+    //  block socket connection unless token looks valid
     const isBadToken =
       !normalizedToken ||
       normalizedToken === "undefined" ||

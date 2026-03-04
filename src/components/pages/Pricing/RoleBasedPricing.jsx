@@ -203,7 +203,7 @@ const RoleBasedPricing = () => {
                   Start 7-Day Free Trial
                 </motion.button>
                 <p className="text-center text-white text-sm mt-2">
-                  No credit card required • Cancel anytime
+                  No credit card required  Cancel anytime
                 </p>
               </div>
             </div>

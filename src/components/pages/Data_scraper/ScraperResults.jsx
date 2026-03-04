@@ -6,9 +6,9 @@ function ScraperResults({ data, method }) {
   const [activeTab, setActiveTab] = useState('overview')
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: '📊' },
-    { id: 'content', label: 'Content', icon: '📝' },
-    { id: 'links', label: 'Links', icon: '🔗' },
+    { id: 'overview', label: 'Overview', icon: '' },
+    { id: 'content', label: 'Content', icon: '' },
+    { id: 'links', label: 'Links', icon: '' },
     { id: 'raw', label: 'JSON', icon: '{}' }
   ]
 
@@ -23,7 +23,7 @@ function ScraperResults({ data, method }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="p-2 bg-white/20 rounded-2xl backdrop-blur-sm">
-                <span className="text-2xl">✅</span>
+                <span className="text-2xl"></span>
               </div>
               <div>
                 <h2 className="text-2xl font-bold">Scraping Complete</h2>
@@ -33,7 +33,7 @@ function ScraperResults({ data, method }) {
                   }`}>
                     {method === 'static' ? 'BeautifulSoup (Static)' : 'Playwright (Dynamic)'}
                   </span>
-                  • Successfully extracted {data.meta.total_links} elements
+                   Successfully extracted {data.meta.total_links} elements
                 </p>
               </div>
             </div>
@@ -71,10 +71,10 @@ function ScraperResults({ data, method }) {
               {/* Stats Grid */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { label: 'Total Links', value: data.meta.total_links, color: 'blue', icon: '🔗' },
-                  { label: 'H1 Headings', value: data.meta.total_h1, color: 'green', icon: '📄' },
-                  { label: 'H2 Headings', value: data.meta.total_h2, color: 'purple', icon: '📑' },
-                  { label: 'Page Title', value: data.title ? 'Available' : 'Missing', color: 'amber', icon: '🏷️' }
+                  { label: 'Total Links', value: data.meta.total_links, color: 'blue', icon: '' },
+                  { label: 'H1 Headings', value: data.meta.total_h1, color: 'green', icon: '' },
+                  { label: 'H2 Headings', value: data.meta.total_h2, color: 'purple', icon: '' },
+                  { label: 'Page Title', value: data.title ? 'Available' : 'Missing', color: 'amber', icon: '' }
                 ].map((stat, index) => (
                   <div 
                     key={stat.label}
@@ -92,7 +92,7 @@ function ScraperResults({ data, method }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                   <h3 className="flex items-center gap-2 text-slate-300 font-semibold mb-3">
-                    <span className="text-blue-400">🔗</span> Scraped URL
+                    <span className="text-blue-400"></span> Scraped URL
                   </h3>
                   <a 
                     href={data.url} 
@@ -105,7 +105,7 @@ function ScraperResults({ data, method }) {
                 </div>
                 <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                   <h3 className="flex items-center gap-2 text-slate-300 font-semibold mb-3">
-                    <span className="text-green-400">📄</span> Page Title
+                    <span className="text-green-400"></span> Page Title
                   </h3>
                   <p className="text-white font-medium">{data.title || 'No title found'}</p>
                 </div>
@@ -165,7 +165,7 @@ function ScraperResults({ data, method }) {
             <div className="animate-fade-in">
               <div className="bg-slate-800/30 backdrop-blur-xl border border-white/10 rounded-2xl p-6">
                 <h3 className="flex items-center gap-2 text-slate-300 font-semibold mb-4">
-                  <span className="text-green-400">🔗</span>
+                  <span className="text-green-400"></span>
                   Extracted Links ({data.links.length})
                   {data.meta.total_links > data.links.length && (
                     <span className="text-sm text-slate-400 font-normal ml-2">
@@ -196,7 +196,7 @@ function ScraperResults({ data, method }) {
                         </div>
                         <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                           <span className="text-xs text-slate-400 bg-slate-600/50 px-2 py-1 rounded">
-                            ↗
+                            
                           </span>
                         </div>
                       </div>

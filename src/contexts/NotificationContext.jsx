@@ -2,7 +2,7 @@
  * SF Collab Notification Context - FIXED VERSION
  * 
  * FIXES APPLIED ON TOP OF YOUR ORIGINAL:
- * 1. markAllAsRead() is now OPTIMISTIC — badge drops to 0 BEFORE the API call
+ * 1. markAllAsRead() is now OPTIMISTIC  badge drops to 0 BEFORE the API call
  * 2. Added `notifications_marked_read` socket listener so all open tabs/windows
  *    sync instantly when any component calls mark-all-read
  * 3. All other original code preserved exactly
@@ -90,12 +90,12 @@ export const NotificationProvider = ({ children }) => {
       setIsConnected(true);
       socketInstance.emit("join_notifications", { user_id: user.id });
       // Fetch fresh unread count from server now that we are in the notification room
-      // (Call API directly here — avoids stale-closure / ref timing issues)
+      // (Call API directly here  avoids stale-closure / ref timing issues)
       try {
         const data = await notificationAPI.getUnreadCount();
         setUnreadCount(Number(data?.unreadCount ?? data?.unread_count ?? 0));
       } catch (e) {
-        // non-critical — count will be correct from initial load
+        // non-critical  count will be correct from initial load
       }
     };
 
@@ -108,7 +108,7 @@ export const NotificationProvider = ({ children }) => {
     }
 
     socketInstance.on("disconnect", (reason) => {
-      console.log("❌ Socket.IO disconnected:", reason);
+      console.log(" Socket.IO disconnected:", reason);
       setIsConnected(false);
     });
 
@@ -119,14 +119,14 @@ export const NotificationProvider = ({ children }) => {
 
     // Handle new notifications
     socketInstance.on("new_notification", (data) => {
-      console.log("📬 New notification received:", data);
+      console.log(" New notification received:", data);
       const rawNotif = data?.notification ?? data;
       if (!rawNotif) return;
 
       // Normalize the notification
       const notif = normalizeNotification(rawNotif);
 
-      // Add to notifications list (avoid duplicates — use String() for type-safe comparison)
+      // Add to notifications list (avoid duplicates  use String() for type-safe comparison)
       setNotifications((prev) => {
         if (prev.some(n => String(n.id) === String(notif.id))) {
           return prev;
@@ -157,7 +157,7 @@ export const NotificationProvider = ({ children }) => {
       console.log("User status update:", data);
     });
 
-    // Handle single notification read sync — use server's authoritative count
+    // Handle single notification read sync  use server's authoritative count
     socketInstance.on("notification_read", (data) => {
       const notifId = data?.notificationId ?? data?.notification_id;
       if (notifId !== undefined) {
@@ -175,7 +175,7 @@ export const NotificationProvider = ({ children }) => {
       }
     });
 
-    // ✅ FIX: Handle mark-ALL-read sync across tabs/windows.
+    //  FIX: Handle mark-ALL-read sync across tabs/windows.
     // The backend emits this event from service.py after mark_all_as_read() succeeds.
     // This means if you open the Notifications page in one tab and the Bell is open
     // in another, both zero out instantly without any polling.
@@ -296,7 +296,7 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       await notificationAPI.markAsRead(notificationId);
-      // Backend emits notification_read socket → other tabs sync via onNotificationRead above
+      // Backend emits notification_read socket  other tabs sync via onNotificationRead above
     } catch (err) {
       console.error("Error marking notification as read:", err);
       // Revert optimistic update on failure
@@ -331,7 +331,7 @@ export const NotificationProvider = ({ children }) => {
   /**
    * Mark all notifications as read
    * 
-   * ✅ FIX: Now OPTIMISTIC — unreadCount drops to 0 and all notifications are
+   *  FIX: Now OPTIMISTIC  unreadCount drops to 0 and all notifications are
    * marked read in local state IMMEDIATELY, before the API call resolves.
    * This means the badge zeroes out the instant you click, with no waiting.
    * If the API call fails, we re-fetch to restore accurate state.

@@ -264,25 +264,25 @@ const AnimeConverter = () => {
                   <ul className="space-y-2 text-xs text-gray-300">
                     <li className="flex items-start gap-2">
                       <div className="w-5 h-5 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center text-xs mt-0.5">
-                        ✨
+                        
                       </div>
                       <span>Use clear, well-lit photos</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-5 h-5 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center text-xs mt-0.5">
-                        🎨
+                        
                       </div>
                       <span>Try different styles for different looks</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-5 h-5 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center text-xs mt-0.5">
-                        ⚡
+                        
                       </div>
                       <span>Shonen style works best for action poses</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-5 h-5 rounded-full bg-blue-400/20 text-blue-400 flex items-center justify-center text-xs mt-0.5">
-                        💖
+                        
                       </div>
                       <span>Shojo style adds soft, romantic effects</span>
                     </li>
@@ -449,15 +449,15 @@ const AnimeConverter = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {[
-                  { before: '👤 Portrait', after: '🎨 Anime', style: 'Standard' },
-                  { before: '🤵 Formal', after: '⚡ Shonen', style: 'Shonen' },
-                  { before: '👩 Selfie', after: '💖 Shojo', style: 'Shojo' },
-                  { before: '👶 Casual', after: '⭐ Chibi', style: 'Chibi' },
+                  { before: ' Portrait', after: ' Anime', style: 'Standard' },
+                  { before: ' Formal', after: ' Shonen', style: 'Shonen' },
+                  { before: ' Selfie', after: ' Shojo', style: 'Shojo' },
+                  { before: ' Casual', after: ' Chibi', style: 'Chibi' },
                 ].map((example, idx) => (
                   <div key={idx} className="text-center p-4 rounded-lg border border-gray-600 hover:border-blue-400/50 transition-colors bg-gray-700/30">
                     <div className="mb-2">
                       <div className="text-lg font-semibold text-white">{example.before}</div>
-                      <div className="text-sm text-gray-400">→</div>
+                      <div className="text-sm text-gray-400"></div>
                       <div className="text-lg font-semibold text-blue-400">{example.after}</div>
                     </div>
                     <div className="text-xs text-gray-400 px-2 py-1 rounded-full bg-gray-600">

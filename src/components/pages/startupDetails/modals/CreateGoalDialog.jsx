@@ -246,7 +246,7 @@ export default function CreateGoalDialog({
                       [newMilestones[i - 1], newMilestones[i]] = [newMilestones[i], newMilestones[i - 1]];
                       return newMilestones;
                     });
-                  }}>▲</div>
+                  }}></div>
                   <div className={`arrow-down border-gray-400 cursor-pointer ${i === milestones.length - 1 ? 'opacity-50 cursor-not-allowed' : ''}`} onClick={() => {
                     if (i === milestones.length - 1) return;
                     setMilestones((prev) => {
@@ -254,12 +254,12 @@ export default function CreateGoalDialog({
                       [newMilestones[i + 1], newMilestones[i]] = [newMilestones[i], newMilestones[i + 1]];
                       return newMilestones;
                     });
-                  }}>▼
+                  }}>
 
                   </div>
                   <div className="remove border-gray-400 cursor-pointer" onClick={() => {
                     setMilestones((prev) => prev.filter((_, index) => index !== i));
-                  }}>✕</div>
+                  }}></div>
                   </div>
               ))}
             </div>

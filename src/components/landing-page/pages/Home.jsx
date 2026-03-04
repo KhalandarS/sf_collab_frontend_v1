@@ -19,14 +19,14 @@ const Home = () => {
   const navigate = useNavigate()
   const { user, access_token } = useSelector((state) => state.auth)
 
-  // 🔹 Redirect early (before heavy stuff runs)
+  //  Redirect early (before heavy stuff runs)
   useEffect(() => {
     if (user && access_token) {
       navigate('/dashboard')
     }
   }, [user, access_token, navigate])
 
-  // 🔹 Ultra-optimized Lenis loading
+  //  Ultra-optimized Lenis loading
   useEffect(() => {
     const isMobile = window.innerWidth < 768
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -52,7 +52,7 @@ const Home = () => {
       })
     }
 
-    // 👇 Espera a que el browser esté idle
+    //  Espera a que el browser est idle
     if ('requestIdleCallback' in window) {
       requestIdleCallback(loadLenis)
     } else {

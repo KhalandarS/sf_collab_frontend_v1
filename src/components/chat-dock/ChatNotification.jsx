@@ -1,5 +1,5 @@
 /**
- * ChatNotification — Redesigned popup notification
+ * ChatNotification  Redesigned popup notification
  * Shows when a new message arrives while user is not in that chat
  * Features: sender avatar, message preview, slide-in animation, auto-dismiss
  */
@@ -42,9 +42,9 @@ export default function ChatNotification({
   // Clean message preview
   const preview =
     typeof message === "string"
-      ? message.length > 70 ? message.slice(0, 70) + "…" : message
+      ? message.length > 70 ? message.slice(0, 70) + "" : message
       : message?.content
-        ? message.content.length > 70 ? message.content.slice(0, 70) + "…" : message.content
+        ? message.content.length > 70 ? message.content.slice(0, 70) + "" : message.content
         : "Sent a message";
 
   return (
@@ -106,7 +106,7 @@ export default function ChatNotification({
 
                 {/* CTA */}
                 <p className="mt-2 text-[10px] font-semibold text-indigo-400 tracking-wider uppercase">
-                  Tap to reply →
+                  Tap to reply 
                 </p>
               </div>
             </div>

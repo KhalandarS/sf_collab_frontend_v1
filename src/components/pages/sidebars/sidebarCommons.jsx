@@ -53,9 +53,9 @@ export function dashboardLink(userRoles = [], setActiveRole) {
         : role === 'investor' 
         ? <BarChart3 size={18} /> // inversiones / rendimiento
         : role === 'builder' 
-        ? <Cpu size={18} /> // tech / desarrollo / innovación
+        ? <Cpu size={18} /> // tech / desarrollo / innovacin
         : role === 'influencer' 
-        ? <IoChatbubbles size={18} /> // comunicación / social
+        ? <IoChatbubbles size={18} /> // comunicacin / social
         : <LuLayoutDashboard size={18} />,
       label: `${role.charAt(0).toUpperCase() + role.slice(1)} Dashboard`,
     })) : [],

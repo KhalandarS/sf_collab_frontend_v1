@@ -61,16 +61,16 @@ export interface AnimatedNotificationProps {
 }
 
 const defaultMessages = [
-  "Just completed a task! ✅",
-  "New feature deployed 🚀",
-  "Check out our latest update 📱",
-  "Server responded with 200 OK ✨",
-  "Background job finished 🔄",
-  "Data synced successfully! 💾",
-  "User logged in successfully 👋",
-  "Payment processed 💳",
-  "Email sent successfully 📧",
-  "Backup completed 🛡️"
+  "Just completed a task! ",
+  "New feature deployed ",
+  "Check out our latest update ",
+  "Server responded with 200 OK ",
+  "Background job finished ",
+  "Data synced successfully! ",
+  "User logged in successfully ",
+  "Payment processed ",
+  "Email sent successfully ",
+  "Backup completed "
 ];
 
 const Avatar: React.FC<{

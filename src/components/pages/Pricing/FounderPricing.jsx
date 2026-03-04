@@ -42,7 +42,7 @@ const FounderPricing = () => {
         name: "Builder Plan",
         price: "$9.99/month",
         description: "For solo founders and small teams",
-        role: "Individual Founders • Small Teams",
+        role: "Individual Founders  Small Teams",
         features: [
           { icon: Users, text: "Unlimited private projects", included: true },
           { icon: TrendingUp, text: "Team size (up to 10 members)", included: true },
@@ -56,7 +56,7 @@ const FounderPricing = () => {
           exchangeBonus: "10%",
           monthlyCoins: "50 SF Coins",
         },
-        support: "Email support • 24-hour response",
+        support: "Email support  24-hour response",
         color: "border-gray-500 bg-[#111111]",
       },
       {
@@ -64,7 +64,7 @@ const FounderPricing = () => {
         price: "$29.99/month",
         description: "For growing startups with teams",
         recommended: true,
-        role: "Founders • Engineering Managers • Product Managers",
+        role: "Founders  Engineering Managers  Product Managers",
         features: [
           { icon: Users, text: "Team management (up to 25 members)", included: true },
           { icon: TrendingUp, text: "Advanced analytics & reporting", included: true },
@@ -78,14 +78,14 @@ const FounderPricing = () => {
           exchangeBonus: "25%",
           monthlyCoins: "200 SF Coins",
         },
-        support: "Priority email/chat • 12-hour response",
+        support: "Priority email/chat  12-hour response",
         color: "border-purple-500 bg-[#111111] ring-2 ring-purple-500 ring-offset-2",
       },
       {
         name: "Startup Pro Plan",
         price: "$99.99/month",
         description: "For scaling startups and serious ventures",
-        role: "Scaling Startups • Investors • Advisors",
+        role: "Scaling Startups  Investors  Advisors",
         features: [
           { icon: Building2, text: "Unlimited team members", included: true },
           { icon: LineChart, text: "Dedicated account manager", included: true },
@@ -99,7 +99,7 @@ const FounderPricing = () => {
           exchangeBonus: "50%",
           monthlyCoins: "500 SF Coins",
         },
-        support: "Dedicated account manager • 4-hour response",
+        support: "Dedicated account manager  4-hour response",
         color: "border-gray-500 bg-[#111111]",
       },
     ];
@@ -243,10 +243,10 @@ const FounderPricing = () => {
                     <h3 className="text-2xl font-bold mb-2">Business Development Bundle</h3>
                     <p className="text-blue-200">For Founders, Investors, Advisors</p>
                     <ul className="mt-4 space-y-2 text-sm text-blue-100">
-                      <li>• Advanced financial modeling</li>
-                      <li>• Investor pitch coaching (AI-powered)</li>
-                      <li>• Market sizing tools</li>
-                      <li>• Competitive analysis databases</li>
+                      <li> Advanced financial modeling</li>
+                      <li> Investor pitch coaching (AI-powered)</li>
+                      <li> Market sizing tools</li>
+                      <li> Competitive analysis databases</li>
                     </ul>
                   </div>
                   <div className="mt-6 md:mt-0 text-center">

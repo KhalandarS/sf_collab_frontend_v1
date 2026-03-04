@@ -61,7 +61,7 @@ const AdminSendAnnouncementSection = () => {
 
   return (
     <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-gray-100">📢 Send Announcement / Newsletter</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-100"> Send Announcement / Newsletter</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Type Selector */}

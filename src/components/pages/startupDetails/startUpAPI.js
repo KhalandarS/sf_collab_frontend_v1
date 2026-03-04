@@ -29,7 +29,7 @@ api.interceptors.response.use(
   },
   (error) => {
     if (error.code === 'ECONNREFUSED') {
-      console.error('❌ Cannot connect to backend. Make sure server is running on', API_BASE_URL)
+      console.error(' Cannot connect to backend. Make sure server is running on', API_BASE_URL)
     } else if (error.response) {
       console.error('API Error:', error.response.status, error.response.data)
     } else {

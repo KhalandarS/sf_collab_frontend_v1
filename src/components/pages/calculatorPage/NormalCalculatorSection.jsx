@@ -25,8 +25,8 @@ const scientificButtons = [
   ["sin", "cos", "tan", "*"],
   ["(", ")", "^", "-"],
   ["log", "log2", "e", "+"],
-  ["7", "8", "9", "√"],
-  ["4", "5", "6", "π"],
+  ["7", "8", "9", "sqrt"],
+  ["4", "5", "6", "pi"],
   ["1", "2", "3", "!"],
   ["0", ".", "="],
 ];
@@ -69,8 +69,8 @@ export default function NormalCalculator() {
     try {
       let expression = closeMissingParens(display)
         .replace(/%/g, "*0.01")
-        .replace(/π/g, "pi")
-        .replace(/√/g, "sqrt");
+        .replace(/pi/g, "pi")
+        .replace(/sqrt/g, "sqrt");
 
       const result = parser.evaluate(expression);
       setHistory(display);
@@ -92,8 +92,8 @@ export default function NormalCalculator() {
       return append(`${value}(`);
     }
 
-    if (value === "√") return append("sqrt(");
-    if (value === "π") return append("pi");
+    if (value === "sqrt") return append("sqrt(");
+    if (value === "pi") return append("pi");
     if (value === "e") return append("e");
     if (value === "!") return append("!");
 
@@ -173,11 +173,11 @@ export default function NormalCalculator() {
                   ${["+", "-", "*", "/", "%", "^"].includes(btn)
                     ? "bg-orange-600 hover:bg-orange-700"
                     : ""}
-                  ${["sin", "cos", "tan", "log", "ln", "e", "√", "π", "!"].includes(btn)
+                  ${["sin", "cos", "tan", "log", "ln", "e", "pi", "sqrt", "!"].includes(btn)
                     ? "bg-green-600 hover:bg-green-700"
                     : ""}
                   ${btn === "AC" ? "bg-red-600 hover:bg-red-700" : ""}
-                  ${!["=", "+", "-", "*", "/", "%", "^", "AC", "sin", "cos", "tan", "log", "ln", "e", "√", "π", "!"].includes(btn)
+                  ${!["=", "+", "-", "*", "/", "%", "^", "AC", "sin", "cos", "tan", "log", "ln", "e", "pi", "sqrt", "!"].includes(btn)
                     ? "bg-gray-700 hover:bg-gray-600"
                     : ""}
                 `}

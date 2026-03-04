@@ -13,14 +13,14 @@ const initialState = {
   access_token: localStorage.getItem('access_token'),
   refreshToken: localStorage.getItem('refreshToken'),
 
-  // ⚠️ KEEP THIS for compatibility
+  //  KEEP THIS for compatibility
   isAuthenticated: !!localStorage.getItem('access_token'),
 
-  // ⚠️ KEEP THIS
+  //  KEEP THIS
   loading: false,
   error: null,
 
-  // ✅ ADD (non-breaking)
+  //  ADD (non-breaking)
   // allows us to distinguish "booting" vs "logged out"
   hasCheckedProfile: false,
 };
@@ -123,7 +123,7 @@ const authSlice = createSlice({
       })
 
       // ======================
-      // PROFILE (🔥 FIXED)
+      // PROFILE ( FIXED)
       // ======================
       .addCase(fetchUserProfile.pending, (state) => {
         state.loading = true;
@@ -138,7 +138,7 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
 
-        // 🔥 CRITICAL FIX:
+        //  CRITICAL FIX:
         // DO NOT force logout here.
         // Let guards decide based on hasCheckedProfile + token.
         state.hasCheckedProfile = true;

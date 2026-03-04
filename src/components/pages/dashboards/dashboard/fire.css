@@ -27,7 +27,7 @@
   z-index: 1;
 }
 
-/* botón */
+/* botn */
 .fire-button {
   background: linear-gradient(to right, #4f7cff, #8b5cf6);
   border-radius: 999px;
@@ -39,7 +39,7 @@
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 
-/* 🔥 Hover = más urgencia */
+/*  Hover = ms urgencia */
 .fire-border:hover::before {
   animation-duration: 0.7s;
   filter: blur(2.5px);

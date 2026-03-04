@@ -29,7 +29,7 @@ const INPUT_FIELDS = [
     fieldName: 'budget',
     label: 'Investment Range',
     icon: <DollarSign className="h-4 w-4" />,
-    placeholder: 'e.g., $10,000 – $100,000',
+    placeholder: 'e.g., $10,000  $100,000',
     btnId: 'budget'
   },
   {
@@ -163,7 +163,7 @@ export default function BusinessIdeaGenerator() {
 
     recognition.onstart = () => {
       setIsRecording((p) => ({ ...p, [id]: true }));
-      setVoiceStatus((p) => ({ ...p, [id]: 'Listening… speak clearly' }));
+      setVoiceStatus((p) => ({ ...p, [id]: 'Listening speak clearly' }));
     };
 
     recognition.onresult = (e) => {
@@ -204,7 +204,7 @@ export default function BusinessIdeaGenerator() {
 
     setTimeout(() => {
       setResults({
-        summary: 'Preview Output · AI Integration Pending'
+        summary: 'Preview Output  AI Integration Pending'
       });
       setIsLoading(false);
     }, 1800);
@@ -278,7 +278,7 @@ export default function BusinessIdeaGenerator() {
           >
             {isLoading ? (
               <span className="flex justify-center gap-2">
-                <Loader2 className="animate-spin" /> Generating…
+                <Loader2 className="animate-spin" /> Generating
               </span>
             ) : (
               'Generate'

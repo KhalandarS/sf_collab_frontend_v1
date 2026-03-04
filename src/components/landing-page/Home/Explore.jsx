@@ -133,13 +133,13 @@ export default function Explore() {
             Built for serious teams. Calm, fast, and continuous.
           </h2>
           <p className="text-gray-400 text-base lg:text-lg leading-relaxed">
-            Sf Collab unifies execution, real-time collaboration, operations, and AI-assisted workflows. It’s infrastructure for building, not a chat app.
+            Sf Collab unifies execution, real-time collaboration, operations, and AI-assisted workflows. Its infrastructure for building, not a chat app.
           </p>
           <Link
             to="https://sfcollab.com/login"
             className="inline-block mt-4 text-lg font-medium border-b border-white hover:text-white/80 transition-all"
           >
-            See The Platform →
+            See The Platform 
           </Link>
         </div>
       </section>

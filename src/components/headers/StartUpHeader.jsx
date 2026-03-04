@@ -105,7 +105,7 @@ const StartUpHeader = ({
         <div>
           <h1 className="text-2xl font-bold">Startups</h1>
           <p className="text-xs text-gray-400">
-            Explore startup companies and their profiles — filter by industry, stage, and location.
+            Explore startup companies and their profiles  filter by industry, stage, and location.
           </p>
         </div>
         <button

@@ -188,10 +188,10 @@ export const connectionAPI = {
    * Used to determine button state.
    * 
    * Returns status:
-   *   - 'none' → Show "Connect" button
-   *   - 'request_sent' → Show "Request Sent" (disabled)
-   *   - 'request_received' → Show "Accept" / "Decline"
-   *   - 'connected' → Show "Connected" / "Remove Connection"
+   *   - 'none'  Show "Connect" button
+   *   - 'request_sent'  Show "Request Sent" (disabled)
+   *   - 'request_received'  Show "Accept" / "Decline"
+   *   - 'connected'  Show "Connected" / "Remove Connection"
    * 
    * @param {number} userId - ID of the other user
    * @param {string} accessToken - JWT token

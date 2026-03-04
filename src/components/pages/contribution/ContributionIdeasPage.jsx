@@ -43,7 +43,7 @@ export default function ContributionIdeasPage({
       }
 
       setTimeout(() => {
-        toast.success("Idea submitted successfully 🚀");
+        toast.success("Idea submitted successfully ");
         setForm({
           title: "",
           description: "",
@@ -77,7 +77,7 @@ export default function ContributionIdeasPage({
 
           <p className="text-gray-300 max-w-2xl mx-auto">
             Ideas shape the future of SFCollab. Be clear, be honest, and think in
-            terms of impact — not features for yourself.
+            terms of impact  not features for yourself.
           </p>
         </header>
 

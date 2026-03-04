@@ -309,7 +309,7 @@ function ResourceCard({
         {/* Type Badge */}
         <div className="absolute top-3 left-3">
           <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/90 text-white">
-            {resource.type === 'video' ? '▶ Video' : '📄 Document'}
+            {resource.type === 'video' ? ' Video' : ' Document'}
           </span>
         </div>
       </div>

@@ -26,7 +26,7 @@ export default function InviteToStartup({ user }) {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
-  // ✅ Derive selected startup safely
+  //  Derive selected startup safely
   const selectedStartup = useMemo(() => {
     return startups.find((s) => String(s.id) === selectedStartupId);
   }, [startups, selectedStartupId]);

@@ -9,7 +9,7 @@ gsap.registerPlugin(ScrollTrigger);
 const phases = [
   {
     icon: Rocket,
-    phase: "🧬 PHASE 0 — MVP",
+    phase: " PHASE 0  MVP",
     title: "Community-Driven Foundation (SFCollab)",
     gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
@@ -29,7 +29,7 @@ const phases = [
   },
   {
     icon: Target,
-    phase: "⚙️ PHASE 1 — CORE PLATFORM",
+    phase: " PHASE 1  CORE PLATFORM",
     title: "Creation, Growth & Execution Bridge",
     gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
@@ -49,7 +49,7 @@ const phases = [
   },
   {
     icon: Brain,
-    phase: "🧠 PHASE 2 — INVESTOR-READY & SCALABLE ECOSYSTEM",
+    phase: " PHASE 2  INVESTOR-READY & SCALABLE ECOSYSTEM",
     title: "Intelligence, Capital & Long-Term Infrastructure",
     gradient: "from-purple-900 to-black-500",
     dot: "bg-white",
@@ -62,7 +62,7 @@ const phases = [
       "Automation & Intelligent Workflows",
       "Global Collaboration & Community Events",
       "Proprietary AI & Platform Intelligence",
-      "SFCollab × SFManagers Unified Operating System"
+      "SFCollab  SFManagers Unified Operating System"
     ],
     description:
       "Enable funding readiness, secure capital flows, advanced intelligence, and sustainable ecosystem growth.",

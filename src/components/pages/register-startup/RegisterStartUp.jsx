@@ -1236,7 +1236,7 @@ export default function RegisterStartUp() {
                     <div className="w-24 h-24 bg-linear-to-r from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 backdrop-blur-sm animate-bounce">
                       <CheckCircle size={40} className="text-white" />
                     </div>
-                    <CardTitle className="text-3xl mb-3 text-white">Launch Complete! 🚀</CardTitle>
+                    <CardTitle className="text-3xl mb-3 text-white">Launch Complete! </CardTitle>
                     <CardDescription className="text-lg mb-6 max-w-md mx-auto text-gray-300">
                       Your startup <span className="text-white font-semibold">{formData.name}</span> is now ready to change the world.
                     </CardDescription>

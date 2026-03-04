@@ -19,7 +19,7 @@ export const responseInterceptor = (response) => response;
 
 export const responseErrorInterceptor = (error) => {
   if (error.code === 'ECONNREFUSED') {
-    console.error('❌ Cannot connect to backend at', API_BASE_URL);
+    console.error(' Cannot connect to backend at', API_BASE_URL);
     return Promise.reject(error);
   }
   // Only log errors that are representative of actual issues (exclude 401, 403, 404 to avoid noise from auth issues or missing endpoints)
@@ -42,7 +42,7 @@ export const responseErrorInterceptor = (error) => {
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
 
-    console.warn('🔐 Unauthorized — redirecting to login');
+    console.warn(' Unauthorized  redirecting to login');
     window.location.href = '/login';
     return Promise.reject(error);
   }

@@ -166,7 +166,7 @@ export default function StartupAnnouncementsSection({ startup }) {
                       rel="noopener noreferrer"
                       className="text-blue-400 hover:text-blue-300 text-sm inline-flex items-center gap-1"
                     >
-                      Learn more →
+                      Learn more 
                     </Link>
                   )}
                 </CardContent>

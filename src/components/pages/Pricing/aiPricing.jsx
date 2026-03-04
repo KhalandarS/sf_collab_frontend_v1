@@ -25,7 +25,7 @@ const ExtrasSection = ({ aiTools }) => (
         className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/40 rounded-2xl p-8 mb-12"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-2xl font-bold">🤖 {aiTools.bundle.title}</h3>
+          <h3 className="text-2xl font-bold"> {aiTools.bundle.title}</h3>
           <span className="text-3xl font-bold text-purple-400">${(aiTools.bundle.price / 100).toFixed(2)}/mo</span>
         </div>
 
@@ -102,7 +102,7 @@ export default function AIPricing() {
           setCredits(creditPlan);
         }
       } catch (err) {
-        console.error("❌ Failed to load AI pricing plans", err);
+        console.error(" Failed to load AI pricing plans", err);
       } finally {
         setLoading(false);
       }

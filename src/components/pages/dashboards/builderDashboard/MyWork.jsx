@@ -102,7 +102,7 @@ const MyWork = () => {
     {
       label: 'Overdue Tasks',
       value: taskStats.overdueTasks,
-      change: taskStats.overdueTasks > 0 ? '⚠️ Needs attention' : '✓ All on track',
+      change: taskStats.overdueTasks > 0 ? ' Needs attention' : ' All on track',
       icon: AlertCircle,
       color: taskStats.overdueTasks > 0 ? 'from-red-600 to-red-500' : 'from-green-500 to-emerald-500',
       isAlert: taskStats.overdueTasks > 0

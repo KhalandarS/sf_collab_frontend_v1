@@ -64,7 +64,7 @@ export default function ReturnPage() {
           transition={{ repeat: Infinity, duration: 1.5 }}
           className="text-white text-lg"
         >
-          Verifying payment…
+          Verifying payment
         </motion.div>
       </div>
     );
@@ -92,8 +92,8 @@ export default function ReturnPage() {
 
             <p className="text-gray-200 mb-6">
               {donate
-                ? "Thank you for supporting SF Collab 💜"
-                : "Welcome aboard — your plan is now active."}
+                ? "Thank you for supporting SF Collab "
+                : "Welcome aboard  your plan is now active."}
             </p>
 
             <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-6">

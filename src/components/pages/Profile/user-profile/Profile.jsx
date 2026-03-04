@@ -188,7 +188,7 @@ const Profile = () => {
                 }
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Streak Days</span>
-                  <span className="text-orange-400">{profileData?.streak_days || 0} 🔥</span>
+                  <span className="text-orange-400">{profileData?.streak_days || 0} </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-400">Satisfaction</span>
@@ -285,7 +285,7 @@ const Profile = () => {
                   {profileData?.knowledgePosts?.length > 0 && (
                     <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
                       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        📚 Knowledge Posts
+                         Knowledge Posts
                       </h3>
                       <div className="space-y-3">
                         {profileData.knowledgePosts.map((post) => (
@@ -294,9 +294,9 @@ const Profile = () => {
                               <h4 className="font-semibold">{post.title}</h4>
                               <p className="text-sm text-gray-400 mt-1">{post.titleDescription}</p>
                               <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                                <span>👀 {post.views}</span>
-                                <span>❤️ {post.likes}</span>
-                                <span>📥 {post.downloads}</span>
+                                <span> {post.views}</span>
+                                <span> {post.likes}</span>
+                                <span> {post.downloads}</span>
                               </div>
                             </div>
                             <span className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -310,17 +310,17 @@ const Profile = () => {
                   {profileData?.posts?.length > 0 && (
                     <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
                       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        ✍️ Posts
+                         Posts
                       </h3>
                       <div className="space-y-3">
                         {profileData.posts.map((post) => (
                           <div key={`p-${post.id}`} className="p-4 bg-gray-700/30 rounded-xl flex justify-between items-start">
                             <div>
-                              <p className="text-sm text-gray-300">{post.content?.slice(0, 200)}{post.content?.length > 200 ? '…' : ''}</p>
+                              <p className="text-sm text-gray-300">{post.content?.slice(0, 200)}{post.content?.length > 200 ? '' : ''}</p>
                               <div className="flex gap-4 mt-2 text-xs text-gray-500">
-                                <span>❤️ {post.likes}</span>
-                                <span>💬 {post.commentsCount}</span>
-                                <span>🔄 {post.shares}</span>
+                                <span> {post.likes}</span>
+                                <span> {post.commentsCount}</span>
+                                <span> {post.shares}</span>
                               </div>
                             </div>
                             <span className="text-xs text-gray-500">{new Date(post.createdAt).toLocaleDateString()}</span>
@@ -334,7 +334,7 @@ const Profile = () => {
                   {!isOtherUser && profileData?.transactions?.length > 0 && (
                     <div className="bg-gray-800/50 backdrop-blur-xl border border-gray-700 rounded-2xl p-6">
                       <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                        💰 Transactions
+                         Transactions
                       </h3>
                       <div className="space-y-3">
                         {profileData.transactions.map((tx) => (
@@ -455,10 +455,10 @@ const Profile = () => {
                               <div className="flex items-center justify-between pt-3 border-t border-gray-700/50">
                                 <div className="flex gap-3 text-xs text-gray-400">
                                   <span className="flex items-center gap-1">
-                                    👥 {membership.startup.memberCount}
+                                     {membership.startup.memberCount}
                                   </span>
                                   <span className="flex items-center gap-1">
-                                    💰 {formatCurrency(membership.startup.funding_amount) || "—"}
+                                     {formatCurrency(membership.startup.funding_amount) || ""}
                                   </span>
                                 </div>
                                 <ExternalLink className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" />

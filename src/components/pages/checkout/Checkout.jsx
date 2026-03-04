@@ -145,7 +145,7 @@ export default function Checkout() {
             >
               {tier.options.map((opt) => (
                 <option key={opt.title} value={opt.title}>
-                  {opt.title} • {opt.duration_months > 0 ? `${opt.duration_months} months` : "Lifetime"} - {opt.description}
+                  {opt.title}  {opt.duration_months > 0 ? `${opt.duration_months} months` : "Lifetime"} - {opt.description}
                 </option>
               ))}
             </select>
@@ -156,7 +156,7 @@ export default function Checkout() {
         <ul className="text-left text-slate-300 mb-4 space-y-1">
           {(tier.options.find(opt => opt.title === selectedOption?.title)?.features || tier.features).map((f, i) => (
             <li key={i} className="flex items-center gap-2">
-              <span className="text-blue-400">•</span>
+              <span className="text-blue-400"></span>
               {f}
             </li>
           ))}

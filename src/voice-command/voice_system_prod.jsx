@@ -274,7 +274,7 @@ const VoiceController = ({ currentPage, onNavigate, onCommandExecuted }) => {
     const match = findBestMatch(text, commands, 0.75);
 
     if (match) {
-      console.log(`✓ Matched: ${match.command.id} (${(match.score * 100).toFixed(0)}%)`);
+      console.log(` Matched: ${match.command.id} (${(match.score * 100).toFixed(0)}%)`);
       
       if (match.wildcardData) {
         match.command.callback(match.wildcardData);
@@ -323,7 +323,7 @@ const VoiceController = ({ currentPage, onNavigate, onCommandExecuted }) => {
         fontSize: '14px',
         zIndex: 9999
       }}>
-        ⚠️ Browser doesn't support speech recognition. Try Chrome or Edge.
+         Browser doesn't support speech recognition. Try Chrome or Edge.
       </div>
     );
   }
@@ -395,7 +395,7 @@ const VoiceController = ({ currentPage, onNavigate, onCommandExecuted }) => {
             background: darkMode ? '#1a3a1a' : '#e8f5e9',
             borderRadius: '4px'
           }}>
-            ✓ {lastCommand}
+             {lastCommand}
           </div>
         )}
       </div>
@@ -426,7 +426,7 @@ const VoiceController = ({ currentPage, onNavigate, onCommandExecuted }) => {
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
           }}>
             <h2 style={{ marginTop: 0, marginBottom: '24px', fontSize: '24px' }}>
-              🎤 Voice Commands
+               Voice Commands
             </h2>
             
             {['navigation', 'action', 'control', 'wildcard'].map(category => (
@@ -562,27 +562,27 @@ const VoiceController = ({ currentPage, onNavigate, onCommandExecuted }) => {
 
 const pages = {
   home: {
-    title: '🏠 Home',
+    title: ' Home',
     icon: Home,
     content: 'Welcome! Try: "dashboard", "editor", "open modal", "toggle theme", "search AI"'
   },
   dashboard: {
-    title: '📊 Dashboard',
+    title: ' Dashboard',
     icon: LayoutDashboard,
     content: 'Try: "home", "settings", "search machine learning", "create project"'
   },
   editor: {
-    title: '✏️ Image Editor',
+    title: ' Image Editor',
     icon: Edit,
     content: 'Try: "profile", "help", "save", "dark mode"'
   },
   settings: {
-    title: '⚙️ Settings',
+    title: ' Settings',
     icon: Settings,
     content: 'Try: "home", "stop listening", "list commands", "refresh"'
   },
   profile: {
-    title: '👤 Profile',
+    title: ' Profile',
     icon: User,
     content: 'Try: "dashboard", "editor", "open calendar", "reset"'
   }
@@ -713,7 +713,7 @@ const TestVoiceCommand = () => {
                 <span>
                   <strong>{cmd.phrases[0]}</strong>
                   <span style={{ color: '#888', marginLeft: '8px' }}>
-                    • {cmd.description}
+                     {cmd.description}
                   </span>
                 </span>
                 <span style={{ fontSize: '12px', color: '#aaa' }}>
@@ -733,7 +733,7 @@ const TestVoiceCommand = () => {
           border: '1px solid #4CAF50'
         }}>
           <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', color: '#2e7d32' }}>
-            💡 Quick Tips
+             Quick Tips
           </h3>
           <ul style={{ margin: 0, paddingLeft: '20px', color: '#555' }}>
             <li>Say "help" to see all available commands</li>

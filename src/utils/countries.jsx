@@ -341,7 +341,7 @@ const countries = [
     { value: 'YE', label: 'Yemen', flag: <YE title="Yemen" className="h-6 w-6" /> },
     { value: 'ZM', label: 'Zambia', flag: <ZM title="Zambia" className="h-6 w-6" /> },
     { value: 'ZW', label: 'Zimbabwe', flag: <ZW title="Zimbabwe" className="h-6 w-6" /> },
-    { value: 'neutral', label: 'Neutral / Global', flag: '🌍' }
+    { value: 'neutral', label: 'Neutral / Global', flag: '' }
 ];
 
 export const accents_countries = [
@@ -514,6 +514,6 @@ export const accents_countries = [
     { value: 'YE', label: 'Yemen', flag: <YE title="Yemen" className="h-16 w-full rounded" /> },
     { value: 'ZM', label: 'Zambia', flag: <ZM title="Zambia" className="h-16 w-full rounded" /> },
     { value: 'ZW', label: 'Zimbabwe', flag: <ZW title="Zimbabwe" className="h-16 w-full rounded" /> },
-    { value: 'neutral', label: 'Neutral / Global', flag: '🌍' }
+    { value: 'neutral', label: 'Neutral / Global', flag: '' }
 ];
 export default countries;

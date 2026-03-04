@@ -343,7 +343,7 @@ const GettingStarted = () => {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    →
+                    
                   </motion.div>
                 </a>
               </div>
@@ -370,7 +370,7 @@ const GettingStarted = () => {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    →
+                    
                   </motion.div>
                 </a>
               </div>

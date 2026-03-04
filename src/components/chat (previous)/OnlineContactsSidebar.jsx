@@ -20,9 +20,9 @@ import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // Status colors
 const STATUS_COLORS = {
-  online: 'bg-emerald-500',   // Green  — active
-  idle:   'bg-amber-400',     // Amber  — Away (inactive 3+ min)
-  offline:'bg-red-500',       // Red    — disconnected
+  online: 'bg-emerald-500',   // Green   active
+  idle:   'bg-amber-400',     // Amber   Away (inactive 3+ min)
+  offline:'bg-red-500',       // Red     disconnected
 };
 
 // Avatar component with status indicator
@@ -167,7 +167,7 @@ const OnlineContactsSidebar = ({
     offline: false 
   });
 
-  // ── Clock for idle re-evaluation ──────────────────────────────────────────
+  //  Clock for idle re-evaluation 
   // If the parent passes nowTs we use that so all components tick together.
   // Otherwise we maintain our own 30-second interval.
   const [nowTsLocal, setNowTsLocal] = useState(() => Date.now());
@@ -205,7 +205,7 @@ const OnlineContactsSidebar = ({
     const lastActive = lastActiveAt?.[id];
     if (lastActive) {
       const diffMs = nowTs - Number(lastActive);
-      const IDLE_THRESHOLD = 3 * 60 * 1000; // 3 min → Away per spec
+      const IDLE_THRESHOLD = 3 * 60 * 1000; // 3 min  Away per spec
       if (diffMs > IDLE_THRESHOLD) return 'idle';
     }
     
@@ -350,7 +350,7 @@ const OnlineContactsSidebar = ({
               onClick={handleClearSearch}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
             >
-              ×
+              
             </button>
           )}
         </div>

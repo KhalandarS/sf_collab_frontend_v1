@@ -57,14 +57,14 @@ export default function StartupAdminItems({ startup }) {
           {/* Meta */}
           <div className="mt-1 text-xs text-gray-400 flex flex-wrap gap-x-3 gap-y-1">
             <span className="capitalize">
-              🚀 {startup.stage}
+               {startup.stage}
             </span>
             <span>
-              🏭 {startup.industry}
+               {startup.industry}
             </span>
             {startup.location && (
               <span>
-                📍 {startup.location}
+                 {startup.location}
               </span>
             )}
           </div>
@@ -90,7 +90,7 @@ export default function StartupAdminItems({ startup }) {
           {/* Footer */}
           <div className="mt-2 text-[11px] text-gray-500">
             Created{" "}
-            {new Date(startup.createdAt).toLocaleDateString()} • Creator{" "}
+            {new Date(startup.createdAt).toLocaleDateString()}  Creator{" "}
             {startup.creator?.firstName} {startup.creator?.lastName}
           </div>
         </div>

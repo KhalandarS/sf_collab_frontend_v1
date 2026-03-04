@@ -297,7 +297,7 @@ const FounderManageTasks = () => {
               <div>
                 <p className="text-xs text-gray-400 uppercase tracking-wide">Overdue Tasks</p>
                 <p className="text-3xl font-bold text-white mt-2">{taskStats.overdueTasks}</p>
-                <p className="text-xs text-gray-400 mt-1">{taskStats.overdueTasks > 0 ? '⚠️ Needs attention' : '✓ All on track'}</p>
+                <p className="text-xs text-gray-400 mt-1">{taskStats.overdueTasks > 0 ? ' Needs attention' : ' All on track'}</p>
               </div>
             </div>
           </motion.div>
@@ -345,7 +345,7 @@ const FounderManageTasks = () => {
               onClick={() => setSearchQuery("")}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Search
+               Clear Search
             </button>
           )}
 

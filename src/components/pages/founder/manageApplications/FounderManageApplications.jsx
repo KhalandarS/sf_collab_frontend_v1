@@ -69,7 +69,7 @@ const FounderManageApplications = () => {
           }
         }
       } catch (err) {
-        console.log("❌ Failed to load startups or applications", err); 
+        console.log(" Failed to load startups or applications", err); 
         setError("Failed to load startups");
       } finally {
         setLoading(false);
@@ -93,7 +93,7 @@ const FounderManageApplications = () => {
         setTimeout(() => setSuccess(null), 3000);
       }
     } catch (err) {
-      console.log("❌ Failed to accept application", err);
+      console.log(" Failed to accept application", err);
       setError("Failed to accept application");
     }
   };
@@ -112,7 +112,7 @@ const FounderManageApplications = () => {
         setTimeout(() => setSuccess(null), 3000);
       }
     } catch (err) {
-      console.log("❌ Failed to reject application", err);
+      console.log(" Failed to reject application", err);
       setError("Failed to reject application");
     }
   };
@@ -307,7 +307,7 @@ const FounderManageApplications = () => {
               onClick={() => setSearchQuery("")}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Search
+               Clear Search
             </button>
           )}
 
@@ -426,7 +426,7 @@ const FounderManageApplications = () => {
                                 {applications.length} total application
                                 {applications.length !== 1 ? "s" : ""}
                                 {filteredApps.length < applications.length &&
-                                  ` • ${filteredApps.length} matching filters`}
+                                  `  ${filteredApps.length} matching filters`}
                               </p>
                             </div>
                             <div className="flex items-center gap-3 flex-shrink-0">

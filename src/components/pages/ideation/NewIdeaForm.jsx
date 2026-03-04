@@ -398,7 +398,7 @@ export default function NewIdeaForm({
                       onClick={() => handleRemoveTag(index)}
                       className="text-blue-300 hover:text-red-400 transition-colors"
                     >
-                      ×
+                      
                     </button>
                   </motion.div>
                 ))}
@@ -430,7 +430,7 @@ export default function NewIdeaForm({
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
                   whileHover={{ scale: 1.01 }}
                 >
-                  {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
+                  {selectedImage ? ` ${selectedImage.name}` : "Choose Image"}
                 </motion.button>
               </motion.div>) : (
               <motion.div
@@ -455,7 +455,7 @@ export default function NewIdeaForm({
                   className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 transition-colors text-white"
                   whileHover={{ scale: 1.01 }}
                 >
-                  {selectedImage ? `✓ ${selectedImage.name}` : "Choose Image"}
+                  {selectedImage ? ` ${selectedImage.name}` : "Choose Image"}
                 </motion.button>
   
                 {selectedImage && (

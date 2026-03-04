@@ -176,7 +176,7 @@ export default function DocumentsSection({ documents, isAdmin, id, fetchStartupD
                             {reduceText(doc.filename, 40)}
                           </CardTitle>
                           <CardDescription className="text-gray-400 mt-1">
-                            {(doc.file_size / 1024 / 1024).toFixed(2)} MB • Uploaded {new Date(doc.uploaded_at).toLocaleDateString()}
+                            {(doc.file_size / 1024 / 1024).toFixed(2)} MB  Uploaded {new Date(doc.uploaded_at).toLocaleDateString()}
                           </CardDescription>
                         </div>
                       </div>

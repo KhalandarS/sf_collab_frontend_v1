@@ -232,7 +232,7 @@ const SavedStartups = () => {
                 }}
                 className="text-sm text-rose-400 hover:text-rose-300 transition-colors"
               >
-                ✕ Clear Filters
+                 Clear Filters
               </button>
             )}
           </div>

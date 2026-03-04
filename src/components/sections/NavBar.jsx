@@ -212,7 +212,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
             <div
               id="notification-dropdown"
               className="relative" ref={notificationRef}>
-              {/* 🔔 NOTIFICATIONS */}
+              {/*  NOTIFICATIONS */}
               <Tippy
                 content={
                   
@@ -305,7 +305,7 @@ const NavBar = ({ isOpen, setIsOpen, isHidden = false }) => {
             </div>
 
             <div className="relative" ref={profileRef}>
-              {/* 👤 PROFILE */}
+              {/*  PROFILE */}
               <Tippy
                 content={
                   <GlareHover

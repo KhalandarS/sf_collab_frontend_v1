@@ -81,7 +81,7 @@ const UserPopUp = ({ user, onClose }) => {
               </a>
             </div>
             <p className="text-sm text-gray-400 mt-1">
-              {user.fullName} • {user.email}
+              {user.fullName}  {user.email}
             </p>
           </div>
         </div>

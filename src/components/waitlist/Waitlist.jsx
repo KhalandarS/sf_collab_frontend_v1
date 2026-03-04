@@ -29,27 +29,27 @@ const POINT_VALUES = {
 const RANK_REWARDS = [
   {
     rank: "Top 1",
-    badge: "🌠 Stardust Overlord",
+    badge: " Stardust Overlord",
     points: "600+",
     reward: "Lifetime full access + 0% builder fees",
     perks: [
       "Ultra-premium animated profile background (1/1, never reused)",
       "Animated elite profile border (1/1)",
       "Animated nickname (1/1)",
-      "Animated custom title next to name “Stardust Overlord” or a custom permanent title",
+      "Animated custom title next to name Stardust Overlord or a custom permanent title",
       "1/1 Overlord sigil",
     ],
     access: [
       "Full platform lifetime access (all features) + 0% builder fees",
       "Direct founder communication",
-      "×5 governance voting weight",
+      "5 governance voting weight",
       "Permanent legacy recognition",
     ],
     description: "This rank carries significant real-world value and is reserved for the most committed contributors.",
   },
   {
     rank: "Top 10",
-    badge: "🔑 Void Keymaster",
+    badge: " Void Keymaster",
     points: "350+",
     reward: "Lifetime Founder Pro + 0% builder fees",
     perks: [
@@ -61,13 +61,13 @@ const RANK_REWARDS = [
     access: [
       "Lifetime Founder Pro Access (3 selected premium features) + 0% builder fees",
       "Core Circle channel",
-      "×3 governance voting weight",
+      "3 governance voting weight",
       "Guaranteed early access",
     ],
   },
   {
     rank: "Top 50",
-    badge: "☀ Solar Warlord",
+    badge: " Solar Warlord",
     points: "250+",
     reward: "18 months Founder Pro + 0% builder fees",
     perks: [
@@ -80,12 +80,12 @@ const RANK_REWARDS = [
     access: [
       "18 months Founder Pro Access (3 selected premium features) + 0% builder fees",
       "Priority support",
-      "×2.5 governance voting weight",
+      "2.5 governance voting weight",
     ],
   },
   {
     rank: "Top 150",
-    badge: "🌙 Lunar Dominator",
+    badge: " Lunar Dominator",
     points: "150+",
     reward: "6 months Founder Pro + 2% builder fees",
     perks: [
@@ -97,13 +97,13 @@ const RANK_REWARDS = [
     access: [
       "6 months Founder Pro Access (3 selected premium features) + 2% builder fees",
       "Priority support",
-      "×2 governance voting weight",
+      "2 governance voting weight",
       "Early access",
     ],
   },
   {
     rank: "Top 1,000",
-    badge: "🛠 Nebula Forgelord",
+    badge: " Nebula Forgelord",
     points: "75+",
     reward: "6 months Founder Starter + 5% builder fees",
     perks: [
@@ -120,7 +120,7 @@ const RANK_REWARDS = [
   },
   {
     rank: "Top 10,000",
-    badge: "✦ Astral Vanguard",
+    badge: " Astral Vanguard",
     points: "25+",
     reward: "1 month Founder Starter + 5% builder fees",
     perks: [
@@ -138,48 +138,48 @@ const RANK_REWARDS = [
 
 const CONTRIBUTION_PATHS = [
   {
-    icon: "🚀",
+    icon: "",
     title: "Crowdfunding Access",
     description: "Secure your access and help us grow by investing in future workspace.",
     fastest: true,
   },
   {
-    icon: "💡",
+    icon: "",
     title: "Submit an Idea",
     description: "Propose innovative ideas that will shape SFCollab's future.",
     valuable: true,
   },
   {
-    icon: "👥",
+    icon: "",
     title: "Refer Friends",
     description: "Invite builders or founders and earn points for every verified referral.",
   },
   {
-    icon: "🗳",
+    icon: "",
     title: "Vote in Polls",
     description: "Influence product decisions by participating in community polls.",
   },
   {
-    icon: "🚀",
+    icon: "",
     title: "Register Your Startup",
     description: "Create a profile for your startup and join the SFCollab community.",
   },
   {
-    icon: "💡",
+    icon: "",
     title: "Idea Incubator",
     description: "Develop and refine ideas daily with community feedback.",
   },
   {
-    icon: "⚡",
+    icon: "",
     title: "Report Bugs & Feedback",
     description: "Help improve SFCollab by reporting bugs and sharing feedback.",
   },
 ];
 
 const QUICK_RANK_TIPS = [
-  { action: "Create 1 Startup", points: "+15 pts/day", icon: "🏗" },
-  { action: "Post 1 Idea", points: "+10 pts/day", icon: "💡" },
-  { action: "5 Referrals", points: "+50 pts", icon: "🔗" },
+  { action: "Create 1 Startup", points: "+15 pts/day", icon: "" },
+  { action: "Post 1 Idea", points: "+10 pts/day", icon: "" },
+  { action: "5 Referrals", points: "+50 pts", icon: "" },
 ];
 
 /* =========================
@@ -234,7 +234,7 @@ export default function Waitlist() {
             variants={itemVariants}
             className="text-xl text-neutral-400 max-w-2xl mx-auto"
           >
-            Compete for exclusive ranks through meaningful contributions, consistency, and impact—not payments.
+            Compete for exclusive ranks through meaningful contributions, consistency, and impactnot payments.
           </motion.p>
         </motion.div>
 
@@ -346,12 +346,12 @@ export default function Waitlist() {
               <p className="text-sm text-neutral-400">{p.description}</p>
               {p.fastest && (
                 <span className="text-xs text-yellow-400 font-semibold block mt-2">
-                  ⚡ Fastest (Daily)
+                   Fastest (Daily)
                 </span>
               )}
               {p.valuable && (
                 <span className="text-xs text-purple-400 font-semibold block mt-2">
-                  ✨ Most Valuable (Daily)
+                   Most Valuable (Daily)
                 </span>
               )}
             </motion.div>
@@ -395,7 +395,7 @@ export default function Waitlist() {
                 <div className="font-semibold text-sm mb-3 text-neutral-200">{r.reward}</div>
                 <ul className="text-xs text-neutral-400 space-y-1">
                   {r.perks.map((p, idx) => (
-                    <li key={idx}>✓ {p}</li>
+                    <li key={idx}> {p}</li>
                   ))}
                 </ul>
               </motion.div>
@@ -416,10 +416,10 @@ export default function Waitlist() {
             Fair Play & System Integrity
           </motion.h3>
           <motion.div variants={containerVariants} className="space-y-3 text-sm text-neutral-300">
-            <motion.p variants={itemVariants}>✓ Unlimited startups & ideas allowed—only first of each per day earns points</motion.p>
-            <motion.p variants={itemVariants}>✓ Ranks are competitive and actively maintained</motion.p>
-            <motion.p variants={itemVariants}>✓ Abuse, automation, or farming may result in rank loss</motion.p>
-            <motion.p variants={itemVariants}>✓ Prestige status must be maintained through ongoing participation</motion.p>
+            <motion.p variants={itemVariants}> Unlimited startups & ideas allowedonly first of each per day earns points</motion.p>
+            <motion.p variants={itemVariants}> Ranks are competitive and actively maintained</motion.p>
+            <motion.p variants={itemVariants}> Abuse, automation, or farming may result in rank loss</motion.p>
+            <motion.p variants={itemVariants}> Prestige status must be maintained through ongoing participation</motion.p>
           </motion.div>
         </motion.section>
 

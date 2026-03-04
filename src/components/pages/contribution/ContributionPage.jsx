@@ -72,7 +72,7 @@ const contributionActions = [
     title: "Vote in Polls",
     description:
       "Influence product decisions by participating in community polls.",
-    points: "1–10 points per vote",
+    points: "110 points per vote",
     pointsDetail: "Recurring engagement reward",
     icon: Vote,
     cta: "View Community Polls",
@@ -135,12 +135,12 @@ const contributionActions = [
 ];
 
 const pointRanges = [
-  { action: "Submit Ideas", range: "10–50 pts", detail: "Based on quality & impact" },
+  { action: "Submit Ideas", range: "1050 pts", detail: "Based on quality & impact" },
   { action: "Bug Reports & Testing", range: "10-30 pts", detail: "Verified issues only" },
-  { action: "Polls & Engagement", range: "1–10 pts", detail: "Per vote or submission" },
+  { action: "Polls & Engagement", range: "110 pts", detail: "Per vote or submission" },
   { action: "Referrals", range: "5 pts each", detail: "Verified signups only" },
   { action: "Referral Bonus", range: "+25 pts", detail: "Every 5 successful referrals" },
-  { action: "Documentation & Guides", range: "10–50 pts", detail: "Community-approved content" },
+  { action: "Documentation & Guides", range: "1050 pts", detail: "Community-approved content" },
 ];
 
 const containerVariants = {
@@ -183,7 +183,7 @@ export default function ContributionPage() {
               Earn Points. Unlock Access.
             </h1>
             <p className="text-lg text-gray-400 max-w-3xl">
-              Your contributions shape SFCollab's future. Earn points through ideas, feedback, testing, and community engagement. Contributions matter more than referrals—quality always wins.
+              Your contributions shape SFCollab's future. Earn points through ideas, feedback, testing, and community engagement. Contributions matter more than referralsquality always wins.
             </p>
           </div>
         </motion.section>
@@ -227,11 +227,11 @@ export default function ContributionPage() {
 >
   <p className="font-semibold text-white mb-2">Important Contribution Rules</p>
   <ul className="space-y-1 text-blue-200/90">
-    <li>• You can contribute without limits across SFCollab.</li>
-    <li>• To keep rankings fair, points are capped per contribution type per day.</li>
+    <li> You can contribute without limits across SFCollab.</li>
+    <li> To keep rankings fair, points are capped per contribution type per day.</li>
     <li>
-      • Until February/March launch, you may create multiple startups, ideas, and
-      submissions freely — only the <b>first verified action per day</b> grants points.
+       Until February/March launch, you may create multiple startups, ideas, and
+      submissions freely  only the <b>first verified action per day</b> grants points.
     </li>
   </ul>
 </motion.div>
@@ -253,17 +253,17 @@ export default function ContributionPage() {
 
           <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">🎯 Points Determine</p>
+              <p className="text-sm text-gray-400 mb-2"> Points Determine</p>
               <p className="font-semibold text-white">Your Rank</p>
               <p className="text-xs text-gray-500 mt-2">Higher points = higher position on leaderboard</p>
             </div>
             <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">🔓 Rank Determines</p>
+              <p className="text-sm text-gray-400 mb-2"> Rank Determines</p>
               <p className="font-semibold text-white">Access & Rewards</p>
               <p className="text-xs text-gray-500 mt-2">Top ranks get lifetime discounts & early access</p>
             </div>
             <div className="bg-neutral-900/50 border border-neutral-700 rounded-lg p-4">
-              <p className="text-sm text-gray-400 mb-2">⭐ Contributions</p>
+              <p className="text-sm text-gray-400 mb-2"> Contributions</p>
               <p className="font-semibold text-white">&gt; Referrals</p>
               <p className="text-xs text-gray-500 mt-2">Quality feedback beats quantity every time</p>
             </div>
@@ -299,7 +299,7 @@ export default function ContributionPage() {
               <div>
                 <p className="font-semibold text-white mb-1">Builders Shape the Product</p>
                 <p className="text-sm text-gray-400">
-                  Your feedback, ideas, and testing directly influence feature prioritization and product direction. You're not just a user—you're a co-builder.
+                  Your feedback, ideas, and testing directly influence feature prioritization and product direction. You're not just a useryou're a co-builder.
                 </p>
               </div>
             </motion.div>
@@ -491,9 +491,9 @@ function ActionCard({ action }) {
         )}
 
         <div className="pt-2 border-t border-neutral-700/50 space-y-1 text-xs text-white">
-          {action.verified && <p>✓ Verified by team</p>}
-          {action.pointsDetail && <p>✓ {action.pointsDetail}</p>}
-          {action.impact && <p>✓ {action.impact}</p>}
+          {action.verified && <p> Verified by team</p>}
+          {action.pointsDetail && <p> {action.pointsDetail}</p>}
+          {action.impact && <p> {action.impact}</p>}
         </div>
       </div>
 

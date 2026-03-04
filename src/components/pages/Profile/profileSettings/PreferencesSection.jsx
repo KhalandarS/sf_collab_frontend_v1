@@ -130,8 +130,8 @@ export default function PreferencesSection({ formData, onChange }) {
             className="w-full bg-gray-700/50 border border-gray-600 rounded-lg px-4 py-3 text-gray-100 focus:border-purple-500 focus:outline-none transition-colors hover:border-gray-500"
           >
             <option value="en">English</option>
-            <option value="es">Español</option>
-            <option value="fr">Français</option>
+            <option value="es">Espaol</option>
+            <option value="fr">Franais</option>
             <option value="de">Deutsch</option>
             <option value="it">Italiano</option>
           </select>

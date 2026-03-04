@@ -95,7 +95,7 @@ const StoryViewerModal = ({ isOpen, stories, startIndex, onClose }) => {
           className="absolute top-4 left-4 text-white text-xl"
           onClick={onClose}
         >
-          ✕
+          
         </button>
       </div>
     </div>,

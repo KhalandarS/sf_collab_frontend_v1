@@ -87,7 +87,7 @@ export default function DesktopSidebarContent({
                     ${isUpcoming ? upcomingClasses : ""}
                   `}
                 >
-                  {/* ICON — always rendered */}
+                  {/* ICON  always rendered */}
                   {console.log(link.id)}
                   <div className="flex items-center justify-center w-6">
                     {link.icon}

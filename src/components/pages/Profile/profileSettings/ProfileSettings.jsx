@@ -295,7 +295,7 @@ useEffect(() => {
   //       const err = await res.json().catch(() => ({}));
   //       throw new Error(err.message || 'Change email failed');
   //     }
-  //     toast.success('Email changed — verify your new email');
+  //     toast.success('Email changed  verify your new email');
   //     // optionally refresh profile
   //   } catch (err) {
   //     console.error(err);

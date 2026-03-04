@@ -78,7 +78,7 @@ export default function UserAdminItems({ user, setActiveUser }) {
         </span>
 
         <span className="opacity-0 group-hover:opacity-100 transition">
-          View details →
+          View details 
         </span>
       </div>
     </li>

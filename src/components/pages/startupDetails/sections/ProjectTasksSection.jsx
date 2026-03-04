@@ -54,7 +54,7 @@ const itemVariants = {
   },
 };
 
-// All filter statuses — "unassigned" is new
+// All filter statuses  "unassigned" is new
 const FILTER_STATUSES = ["all", "unassigned", "today", "in_progress", "completed", "overdue"];
 
 export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupId, teamMembers }) {
@@ -68,7 +68,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const [claimingTaskId, setClaimingTaskId] = useState(null);
   const { user } = useSelector((state) => state.auth);
 
-  // Updated filter logic — handles "unassigned" as a special case
+  // Updated filter logic  handles "unassigned" as a special case
   const filteredTasks = useMemo(() => {
     if (filterStatus === "all") return tasks;
     if (filterStatus === "unassigned") return tasks.filter(t => !t.assigned_to);
@@ -103,12 +103,12 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
     }
   };
 
-  // NEW: Claim task — self-assign an unassigned task
+  // NEW: Claim task  self-assign an unassigned task
   const handleClaimTask = async (task) => {
     if (!user?.id) return;
     setClaimingTaskId(task.id);
     try {
-      // Optimistic update — immediately remove from unassigned list
+      // Optimistic update  immediately remove from unassigned list
       setTasks(prevTasks =>
         prevTasks.map(t =>
           t.id === task.id
@@ -129,7 +129,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
       const response = await tasksAPI.update(task.id, { assigned_to: user.id });
       if (!response.success) throw new Error("Failed to claim task");
 
-      toast.success(`✅ You claimed "${task.title}"!`);
+      toast.success(` You claimed "${task.title}"!`);
     } catch (err) {
       // Rollback optimistic update on failure
       setTasks(prevTasks =>
@@ -280,7 +280,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
           className="flex flex-col items-center justify-center py-12 text-center"
         >
           <CheckCircle className="w-12 h-12 text-green-500/50 mb-3" />
-          <p className="text-gray-400 text-lg font-medium">All tasks are assigned ✓</p>
+          <p className="text-gray-400 text-lg font-medium">All tasks are assigned </p>
           <p className="text-gray-500 text-sm mt-1">No unassigned tasks in this startup</p>
         </motion.div>
       )}
@@ -346,7 +346,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   );
 }
 
-// ─── TaskCard ────────────────────────────────────────────────────────────────
+//  TaskCard 
 // Now receives handleClaimTask and claimingTaskId props
 const TaskCard = ({
   task, isAdmin, isVisible, user,
@@ -521,7 +521,7 @@ const TaskCard = ({
       {isVisible(task) && (
         <CardFooter className="flex items-center justify-between pt-4 border-t border-gray-700/50 gap-2 flex-wrap">
           <motion.div className="flex gap-2" whileHover={{ scale: 1.02 }}>
-            {/* NEW: Claim Task button — only shown when task is unassigned */}
+            {/* NEW: Claim Task button  only shown when task is unassigned */}
             {isUnassigned && (
               <Button
                 size="sm"
@@ -579,7 +579,7 @@ const TaskCard = ({
   );
 };
 
-// ─── TaskListView ─────────────────────────────────────────────────────────────
+//  TaskListView 
 const TaskListView = (props) => {
   const { filteredTasks } = props;
 
@@ -609,7 +609,7 @@ const TaskListView = (props) => {
   );
 };
 
-// ─── TaskGridView ─────────────────────────────────────────────────────────────
+//  TaskGridView 
 const TaskGridView = (props) => {
   const { filteredTasks } = props;
 

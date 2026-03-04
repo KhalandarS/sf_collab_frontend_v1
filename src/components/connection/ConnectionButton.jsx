@@ -125,7 +125,7 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // NO CONNECTION → "Connect" button
+  // NO CONNECTION  "Connect" button
   // ==========================================================================
   if (status === ConnectionStatus.NONE) {
     return (
@@ -151,7 +151,7 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // REQUEST SENT → "Request Sent" with cancel option
+  // REQUEST SENT  "Request Sent" with cancel option
   // ==========================================================================
   if (status === ConnectionStatus.REQUEST_SENT) {
     // Show confirmation
@@ -204,7 +204,7 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // REQUEST RECEIVED → "Accept" / "Decline" buttons
+  // REQUEST RECEIVED  "Accept" / "Decline" buttons
   // ==========================================================================
   if (status === ConnectionStatus.REQUEST_RECEIVED) {
     return (
@@ -245,7 +245,7 @@ export function ConnectionButton({
   }
 
   // ==========================================================================
-  // CONNECTED → "Connected" with remove option
+  // CONNECTED  "Connected" with remove option
   // ==========================================================================
   if (status === ConnectionStatus.CONNECTED) {
     // Show confirmation

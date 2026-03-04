@@ -29,7 +29,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 1",
     maxPosition: 1,
-    badge: "🌠 Stardust Overlord",
+    badge: " Stardust Overlord",
     points: 600,
     reward: "Lifetime full access + 0% builder fees",
     color: "from-yellow-400 to-orange-500",
@@ -37,7 +37,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 10",
     maxPosition: 10,
-    badge: "🔑 Void Keymaster",
+    badge: " Void Keymaster",
     points: 350,
     reward: "Lifetime Founder Pro + 0% builder fees",
     color: "from-purple-500 to-indigo-500",
@@ -45,7 +45,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 50",
     maxPosition: 50,
-    badge: "☀ Solar Warlord",
+    badge: " Solar Warlord",
     points: 250,
     reward: "18 months Founder Pro + 0% builder fees",
     color: "from-orange-400 to-yellow-500",
@@ -53,7 +53,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 150",
     maxPosition: 150,
-    badge: "🌙 Lunar Dominator",
+    badge: " Lunar Dominator",
     points: 150,
     reward: "6 months Founder Pro + 2% builder fees",
     color: "from-blue-400 to-purple-500",
@@ -61,7 +61,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 1,000",
     maxPosition: 1000,
-    badge: "🛠 Nebula Forgelord",
+    badge: " Nebula Forgelord",
     points: 75,
     reward: "6 months Founder Starter + 5% builder fees",
     color: "from-slate-400 to-slate-600",
@@ -69,7 +69,7 @@ const RANK_REWARDS = [
   {
     rank: "Top 10,000",
     maxPosition: 10000,
-    badge: "✦ Astral Vanguard",
+    badge: " Astral Vanguard",
     points: 25,
     reward: "1 month Founder Starter + 5% builder fees",
     color: "from-neutral-400 to-neutral-600",
@@ -77,11 +77,11 @@ const RANK_REWARDS = [
 ];
 
 const RANK_DISCOUNTS = [
-  { rank: "Top 1–500", discount: "25% lifetime" },
-  { rank: "501–1000", discount: "20% lifetime" },
-  { rank: "1001–1500", discount: "15% lifetime" },
-  { rank: "1501–2000", discount: "10% lifetime" },
-  { rank: "2001–2500", discount: "5% lifetime" },
+  { rank: "Top 1500", discount: "25% lifetime" },
+  { rank: "5011000", discount: "20% lifetime" },
+  { rank: "10011500", discount: "15% lifetime" },
+  { rank: "15012000", discount: "10% lifetime" },
+  { rank: "20012500", discount: "5% lifetime" },
 ];
 
 const CONTRIBUTION_SYSTEM = [
@@ -412,7 +412,7 @@ const ReferPage = () => {
             whileTap={{ scale: 0.95 }}
             onClick={() => {
               navigator.clipboard.writeText(referralLink);
-              toast.success("Referral link copied! 🎉");
+              toast.success("Referral link copied! ");
             }}
             className="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 border border-green-500/50 hover:border-green-500/70 rounded-xl text-green-300 font-semibold transition-all duration-300 flex items-center justify-center gap-2"
           >
@@ -586,12 +586,12 @@ const ReferPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             {[
               { action: "Crowdfunding Access", reward: "Early access + bonuses", highlight: true },
-              { action: "Submit Ideas", reward: "10–50 points", highlight: false },
+              { action: "Submit Ideas", reward: "1050 points", highlight: false },
               { action: "Refer Friends", reward: "5 pts + 25 bonus per 5", highlight: false },
-              { action: "Vote in Polls", reward: "1–10 points per vote", highlight: false },
+              { action: "Vote in Polls", reward: "110 points per vote", highlight: false },
               { action: "Register Startup", reward: "15 points/day", highlight: false },
               { action: "Idea Incubator", reward: "10 points/day", highlight: false },
-              { action: "Report Bugs & Feedback", reward: "10–50 points", highlight: false },
+              { action: "Report Bugs & Feedback", reward: "1050 points", highlight: false },
             ].map((item, idx) => (
               <motion.div
                 key={idx}
@@ -651,7 +651,7 @@ const ReferPage = () => {
                 <ul className="text-xs text-gray-400 space-y-1.5">
                   {contrib.examples.map((ex, i) => (
                     <li key={i} className="flex gap-2">
-                      <span className="text-blue-400 flex-shrink-0">•</span>
+                      <span className="text-blue-400 flex-shrink-0"></span>
                       <span>{ex}</span>
                     </li>
                   ))}
@@ -744,22 +744,22 @@ const ReferPage = () => {
               {
                 title: "Profile Backgrounds",
                 desc: "Subtle animated gradients, particles, or energy effects. Some are 1/1 and never reused.",
-                icon: "🎨",
+                icon: "",
               },
               {
                 title: "Profile Borders",
                 desc: "Animated frames around avatars. Tier-exclusive designs.",
-                icon: "⭐",
+                icon: "",
               },
               {
                 title: "Nicknames",
                 desc: "Animated display names with glow, shimmer, or pulse effects. Highly visible across the platform.",
-                icon: "✨",
+                icon: "",
               },
               {
                 title: "Titles & Sigils",
                 desc: "Permanent titles displayed next to your name. Tier-specific crests and insignias.",
-                icon: "🏆",
+                icon: "",
               },
             ].map((item, idx) => (
               <motion.div
@@ -775,17 +775,17 @@ const ReferPage = () => {
           </div>
 
           <div className="mt-6 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
-            <p className="font-semibold text-blue-300 text-sm mb-3">💎 Cosmetic-Only Customization (Future)</p>
+            <p className="font-semibold text-blue-300 text-sm mb-3"> Cosmetic-Only Customization (Future)</p>
             <p className="text-xs text-blue-200 mb-3">Some non-prestige animated cosmetics may be available separately:</p>
             <ul className="text-xs text-blue-200 space-y-1 mb-3 ml-3">
-              <li>✓ Seasonal animated backgrounds</li>
-              <li>✓ Themed animated borders</li>
-              <li>✓ Supporter-exclusive visual styles</li>
+              <li> Seasonal animated backgrounds</li>
+              <li> Themed animated borders</li>
+              <li> Supporter-exclusive visual styles</li>
             </ul>
             <div className="bg-slate-900 rounded p-3 border border-blue-500/20">
               <p className="text-xs text-blue-300 font-semibold mb-1">Rules:</p>
               <p className="text-xs text-blue-200">
-                ❌ No ranking advantage  |  ❌ No leaderboard impact  |  ❌ No prestige titles
+                 No ranking advantage  |   No leaderboard impact  |   No prestige titles
               </p>
               <p className="text-xs text-blue-300 mt-2">
                 <strong>Prestige is earned. Style can be customized.</strong>
@@ -884,7 +884,7 @@ const ReferPage = () => {
               "Early users are co-builders, not customers",
               "Rank snapshots lock rewards fairly",
               "No fake urgency or empty promises",
-              "Quality over speed — measure twice, launch once",
+              "Quality over speed  measure twice, launch once",
             ].map((principle, idx) => (
               <motion.div
                 key={idx}
@@ -892,7 +892,7 @@ const ReferPage = () => {
                 className="flex items-start gap-3 bg-slate-900/90 border border-white/10 rounded-lg p-4 hover:border-white/20 transition-all"
               >
                 <span className="text-green-400 font-bold text-lg mt-0 flex-shrink-0">
-                  ✓
+                  
                 </span>
                 <span className="text-gray-300">{principle}</span>
               </motion.div>

@@ -40,7 +40,7 @@ const ApplyToStartupModal = ({ isOpen, onClose, startup, roleSelected }) => {
       const res = await startupsAPI.sendJoinRequest(startup.id, payload);
 
       if (res?.success || res?.data?.success) {
-        toast.success("🚀 Application sent!");
+        toast.success(" Application sent!");
         onClose();
         setMessage("");
         setLinks({ portfolio: "", github: "", linkedin: "" });

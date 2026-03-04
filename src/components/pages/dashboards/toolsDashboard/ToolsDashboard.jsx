@@ -148,9 +148,9 @@ export default function ToolsDashboard() {
             animate="visible"
           >
             {[
-              { icon: "⚡", label: "Quick Access" },
-              { icon: "🔒", label: "Secure" },
-              { icon: "📱", label: "All Devices" },
+              { icon: "", label: "Quick Access" },
+              { icon: "", label: "Secure" },
+              { icon: "", label: "All Devices" },
             ].map((feature, index) => (
               <motion.div
                 key={index}

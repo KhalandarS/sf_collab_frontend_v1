@@ -21,7 +21,7 @@ import {
   Copy,
   FileText
 } from 'lucide-react';
-// ✅ FIX: use shared NotificationContext so markAsRead updates the bell badge instantly
+//  FIX: use shared NotificationContext so markAsRead updates the bell badge instantly
 import { useNotifications } from '../../contexts/NotificationContext';
 
 
@@ -222,7 +222,7 @@ const NotificationItem = ({ notification, onDelete }) => {
     // Don't navigate if clicking menu or buttons
     if (e.target.closest('.menu-btn') || e.target.closest('.menu-dropdown')) return;
     
-    // Mark as read immediately when clicked (optimistic — no refresh needed)
+    // Mark as read immediately when clicked (optimistic  no refresh needed)
     if (!is_read && !markedRef.current) {
       markedRef.current = true;
       markAsRead(id); // fire-and-forget; context updates state instantly
@@ -252,7 +252,7 @@ const NotificationItem = ({ notification, onDelete }) => {
   const handleToggleRead = async (e) => {
     stop(e);
     setShowMenu(false);
-    // Context is optimistic — no refresh() needed
+    // Context is optimistic  no refresh() needed
     if (is_read) {
       await markAsUnread(id);
     } else {

@@ -219,7 +219,7 @@ export default function ProjectDetails() {
                   </div>
                   <div>
                     <h1 className="text-2xl font-bold">{goal.title}</h1>
-                    <p className="text-sm text-gray-400 mt-1">{goal.startup.name} • Owner: {goal.owner.name}</p>
+                    <p className="text-sm text-gray-400 mt-1">{goal.startup.name}  Owner: {goal.owner.name}</p>
                   </div>
                 </div>
 
@@ -252,7 +252,7 @@ export default function ProjectDetails() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
                           <h3 className="text-sm font-semibold">{m.title}</h3>
-                          <span className="text-xs text-gray-400">• Owner: {m.owner?.name}</span>
+                          <span className="text-xs text-gray-400"> Owner: {m.owner?.name}</span>
                         </div>
                         {m.description && <p className="text-xs text-gray-400 mt-1">{m.description}</p>}
                       </div>

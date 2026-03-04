@@ -291,7 +291,7 @@ const CaptionGenerator = () => {
                           }}
                           className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-2 hover:bg-red-600"
                         >
-                          ✕
+                          
                         </button>
                       </div>
                     )}
@@ -350,7 +350,7 @@ const CaptionGenerator = () => {
                       step={0.1}
                     />
                     <p className="text-xs text-gray-500">
-                      {temperature < 0.3 ? '🎯 Precise' : temperature < 0.7 ? '⚖️ Balanced' : '🎨 Creative'}
+                      {temperature < 0.3 ? ' Precise' : temperature < 0.7 ? ' Balanced' : ' Creative'}
                     </p>
                   </div>
 

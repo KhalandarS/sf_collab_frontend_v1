@@ -201,7 +201,7 @@ const BuilderStartups = () => {
               onClick={clearFilters}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Filters ({activeFiltersCount})
+               Clear Filters ({activeFiltersCount})
             </motion.button>
           )}
         </motion.div>

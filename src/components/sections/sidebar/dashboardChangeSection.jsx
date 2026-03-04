@@ -4,11 +4,11 @@ import { Layers, ChevronDown, Check } from "lucide-react";
 
 // Role icons mapping
 const ROLE_ICONS = {
-  founder: "🚀",
-  builder: "🔧",
-  investor: "💰",
-  influencer: "📣",
-  admin: "👑",
+  founder: "",
+  builder: "",
+  investor: "",
+  influencer: "",
+  admin: "",
 };
 
 // Role colors mapping
@@ -91,7 +91,7 @@ export default function DashboardChangeSection({
           {sections.map((section) => {
             const isActive = activeSection === section.id;
             const colors = ROLE_COLORS[section.id] || ROLE_COLORS.founder;
-            const icon = ROLE_ICONS[section.id] || "📊";
+            const icon = ROLE_ICONS[section.id] || "";
 
             return (
               <button
@@ -133,7 +133,7 @@ export default function DashboardChangeSection({
         >
           <div className="flex items-center gap-3">
             <span className="text-lg">
-              {ROLE_ICONS[activeSection] || "📊"}
+              {ROLE_ICONS[activeSection] || ""}
             </span>
             <div className="text-left">
               <p className="text-xs text-white/50">Active Dashboard</p>
@@ -166,7 +166,7 @@ export default function DashboardChangeSection({
               {sections.map((section) => {
                 const isActive = activeSection === section.id;
                 const colors = ROLE_COLORS[section.id] || ROLE_COLORS.founder;
-                const icon = ROLE_ICONS[section.id] || "📊";
+                const icon = ROLE_ICONS[section.id] || "";
 
                 return (
                   <button

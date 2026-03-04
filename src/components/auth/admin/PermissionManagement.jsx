@@ -669,7 +669,7 @@ const PermissionManagement = () => {
                 <p><span className="font-semibold">Description:</span> {selectedPermission.description}</p>
                 <p><span className="font-semibold">Category:</span> {selectedPermission.category}</p>
                 <p className="text-red-600 text-sm mt-4">
-                  ⚠️ Warning: Deleting a permission may affect users who currently have this permission.
+                   Warning: Deleting a permission may affect users who currently have this permission.
                 </p>
               </div>
             </div>

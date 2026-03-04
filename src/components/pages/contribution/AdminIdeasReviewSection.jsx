@@ -81,16 +81,16 @@ export default function AdminIdeasReviewSection() {
   };
 
   if (loading && ideas.length === 0) {
-    return <div className="text-center text-gray-400 py-20">Loading ideas…</div>;
+    return <div className="text-center text-gray-400 py-20">Loading ideas</div>;
   }
 
   return (
     <div className="px-6 py-10 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
       <div className="w-full mx-auto space-y-8">
-        <h1 className="text-3xl font-bold">Admin · Idea Review</h1>
+        <h1 className="text-3xl font-bold">Admin  Idea Review</h1>
 
         {ideas.length === 0 && !loading && (
-          <p className="text-gray-400">No pending ideas 🎉</p>
+          <p className="text-gray-400">No pending ideas </p>
         )}
 
         <div className="flex gap-3 flex-wrap">

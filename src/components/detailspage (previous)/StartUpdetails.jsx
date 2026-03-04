@@ -40,7 +40,7 @@ const StartUpdetails = () => {
   const queryParams = new URLSearchParams(location.search);
   const startupId = queryParams.get("id");
 
-  // ✅ Fetch Bookmarks — graceful handling of API
+  //  Fetch Bookmarks  graceful handling of API
   useEffect(() => {
     const fetchBookmarks = async () => {
       try {
@@ -86,7 +86,7 @@ const StartUpdetails = () => {
   // Whether current startup is bookmarked
   const isBookmarked = Boolean(startupId && bookmarks.has(startupId));
 
-  // Toggle bookmark — communicates with backend toggle endpoint
+  // Toggle bookmark  communicates with backend toggle endpoint
   const handleBookmark = async (e) => {
     e?.stopPropagation?.();
 
@@ -588,7 +588,7 @@ const StartUpdetails = () => {
                             <span className="text-sm sm:text-base font-medium">
                               {milestone.date}
                             </span>
-                            <span className="text-gray-400">•</span>
+                            <span className="text-gray-400"></span>
                             <span className="text-sm sm:text-base font-medium">
                               {milestone.title}
                             </span>

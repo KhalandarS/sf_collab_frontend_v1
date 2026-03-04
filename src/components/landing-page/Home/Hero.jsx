@@ -208,7 +208,7 @@ const Hero = () => {
         ref={contentRef}
         className="h-screen w-full relative flex flex-col items-center justify-center z-20 overflow-hidden  md:px-8"
       >
-        {/* Layer 1 — Background Metrics (Massive, Subtle) */}
+        {/* Layer 1  Background Metrics (Massive, Subtle) */}
         <div 
           ref={backgroundMetricsRef}
           className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -220,7 +220,7 @@ const Hero = () => {
           </div>
         </div>
 
-        {/* Layer 2 — Main Authority Statement */}
+        {/* Layer 2  Main Authority Statement */}
         <div className="relative z-10 flex flex-col items-center justify-center px-4 bg-black/10 backdrop-blur-sm rounded-lg py-6 md:py-10">
         <div className="relative z-10 text-center">
           <h1 
@@ -253,12 +253,12 @@ const Hero = () => {
           </h1>
         </div>
 
-        {/* Layer 3 — Proof-Driven Subline */}
+        {/* Layer 3  Proof-Driven Subline */}
         <div className="relative z-10 mt-4 md:mt-6 max-w-xl md:max-w-2xl px-4 md:text-auto text- text-center">
           <p className="text-base md:text-lg lg:text-xl text-white/85 font-light tracking-wide leading-relaxed">
             The real-time canvas where distributed teams build, think, and create in sync.
             <span className="block mt-2 text-sm md:text-base text-white/50 md:pt-0 pt-6 font-normal">
-              Sub-50ms sync • Infinite workspace • Enterprise-grade
+              Sub-50ms sync  Infinite workspace  Enterprise-grade
             </span>
           </p>
         </div>

@@ -91,7 +91,7 @@ const ChatPanel = ({ onClose, messages, onSend, isTyping }) => {
         ))}
 
         {isTyping && (
-          <div className="text-xs text-zinc-500">Support is typing…</div>
+          <div className="text-xs text-zinc-500">Support is typing</div>
         )}
         <div ref={endRef} />
       </div>

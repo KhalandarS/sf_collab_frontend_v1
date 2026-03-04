@@ -12,7 +12,7 @@ export default function AdminFeedbackSection({
     
   return (
     <div className="bg-gradient-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-            <h2 className="text-xl font-semibold mb-4 text-gray-100">💬 Feedback</h2>
+            <h2 className="text-xl font-semibold mb-4 text-gray-100"> Feedback</h2>
             <input
               type="text"
               placeholder="Filter feedback..."
@@ -45,7 +45,7 @@ export default function AdminFeedbackSection({
                   <p className="text-gray-100">User: {users.find(u => u.id === item.userId)?.fullName}</p>
                   <p className="text-gray-100 whitespace-pre-wrap break-words">{item.content}</p>
                   <p className="text-xs text-gray-400 mt-2">
-                    {new Date(item.createdAt).toLocaleDateString()} •{' '}
+                    {new Date(item.createdAt).toLocaleDateString()} {' '}
                     {new Date(item.createdAt).toLocaleTimeString()}
                   </p>
                 </li>

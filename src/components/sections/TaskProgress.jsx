@@ -369,7 +369,7 @@ export default function TaskProgress() {
                 >
                   <Filter className="h-4 w-4 mr-2" />
                   Filters
-                  {showFilters && <span className="ml-2 text-emerald-400">✓</span>}
+                  {showFilters && <span className="ml-2 text-emerald-400"></span>}
                 </Button>
                 
                 <Button

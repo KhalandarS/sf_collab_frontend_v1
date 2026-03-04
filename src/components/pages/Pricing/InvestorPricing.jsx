@@ -11,7 +11,7 @@
 //         </h2>
 
 //         <p className="mt-4 text-center text-gray-600 max-w-3xl mx-auto">
-//           Investors don’t pay for software. They pay for deal access,
+//           Investors dont pay for software. They pay for deal access,
 //           portfolio insights, and startup governance.
 //         </p>
 
@@ -24,9 +24,9 @@
 //             <p className="mt-2 text-sm text-gray-500">Free</p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• Browse startups</li>
-//               <li>• View basic metrics</li>
-//               <li>• Follow founders</li>
+//               <li> Browse startups</li>
+//               <li> View basic metrics</li>
+//               <li> Follow founders</li>
 //             </ul>
 //           </div>
 
@@ -36,11 +36,11 @@
 //             <p className="mt-2 text-sm text-gray-700">$99 / month</p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• Message founders</li>
-//               <li>• Access KPI insights & histories</li>
-//               <li>• Team productivity & contribution scoring</li>
-//               <li>• Due diligence data rooms</li>
-//               <li>• Smart startup filters</li>
+//               <li> Message founders</li>
+//               <li> Access KPI insights & histories</li>
+//               <li> Team productivity & contribution scoring</li>
+//               <li> Due diligence data rooms</li>
+//               <li> Smart startup filters</li>
 //             </ul>
 //           </div>
 
@@ -52,12 +52,12 @@
 //             </p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• Multi-startup investment dashboard</li>
-//               <li>• Team & talent pool access</li>
-//               <li>• Risk scoring & AI valuation forecasting</li>
-//               <li>• Legal docs & contract automation</li>
-//               <li>• Exclusive investor badge</li>
-//               <li>• Access to private deal auctions</li>
+//               <li> Multi-startup investment dashboard</li>
+//               <li> Team & talent pool access</li>
+//               <li> Risk scoring & AI valuation forecasting</li>
+//               <li> Legal docs & contract automation</li>
+//               <li> Exclusive investor badge</li>
+//               <li> Access to private deal auctions</li>
 //             </ul>
 //           </div>
 
@@ -86,7 +86,7 @@ const InvestorPricing = () => {
       name: "Community Plan",
       price: "$0",
       description: "Basic platform access for evaluation",
-      role: "Observers • New Investors",
+      role: "Observers  New Investors",
       features: [
         { icon: Eye, text: "Browse startups directory", included: true },
         { icon: TrendingUp, text: "View basic metrics", included: true },
@@ -103,7 +103,7 @@ const InvestorPricing = () => {
       name: "Builder Plan",
       price: "$9.99/month",
       description: "For individual angel investors",
-      role: "Angel Investors • Individual VCs",
+      role: "Angel Investors  Individual VCs",
       features: [
         { icon: Eye, text: "Message founders directly", included: true },
         { icon: TrendingUp, text: "Basic KPI insights", included: true },
@@ -113,7 +113,7 @@ const InvestorPricing = () => {
         { icon: Target, text: "Weekly deal updates", included: true },
       ],
       dealFee: "None",
-      support: "Email support • 24-hour response",
+      support: "Email support  24-hour response",
       color: "border-gray-500 bg-[#111111]",
     },
     {
@@ -121,7 +121,7 @@ const InvestorPricing = () => {
       price: "$29.99/month",
       description: "For active investors and small funds",
       recommended: true,
-      role: "VC Associates • Syndicate Leads",
+      role: "VC Associates  Syndicate Leads",
       features: [
         { icon: Eye, text: "Full due diligence data rooms", included: true },
         { icon: TrendingUp, text: "Advanced KPI insights & histories", included: true },
@@ -131,14 +131,14 @@ const InvestorPricing = () => {
         { icon: Target, text: "Priority deal notifications", included: true },
       ],
       dealFee: "None",
-      support: "Priority support • 12-hour response",
+      support: "Priority support  12-hour response",
       color: "border-purple-500 bg-[#111111] ring-2 ring-purple-500 ring-offset-2",
     },
     {
       name: "Startup Pro Plan",
       price: "$99.99/month",
       description: "For institutional investors and funds",
-      role: "VC Partners • Accelerators • Family Offices",
+      role: "VC Partners  Accelerators  Family Offices",
       features: [
         { icon: Eye, text: "Multi-startup investment dashboard", included: true },
         { icon: TrendingUp, text: "AI valuation forecasting", included: true },
@@ -148,7 +148,7 @@ const InvestorPricing = () => {
         { icon: Target, text: "Private deal auctions access", included: true },
       ],
       dealFee: "1% on funded deals",
-      support: "Dedicated account manager • 4-hour response",
+      support: "Dedicated account manager  4-hour response",
       color: "border-gray-500 bg-[#111111]",
     },
   ];
@@ -237,7 +237,7 @@ const InvestorPricing = () => {
                     {feature.included ? (
                       <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                     ) : (
-                      <span className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5">✗</span>
+                      <span className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5"></span>
                     )}
                     <span className={`text-sm ${feature.included ? 'text-gray-400' : 'text-gray-200 line-through'}`}>
                       {feature.text}
@@ -333,7 +333,7 @@ const InvestorPricing = () => {
                 <div className="text-3xl font-bold">Custom Pricing</div>
                 <p className="text-gray-300">Starting at $499/month</p>
               </div>
-              <p className="text-gray-400 mb-6">Minimum 10 seats • Volume discounts available</p>
+              <p className="text-gray-400 mb-6">Minimum 10 seats  Volume discounts available</p>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}

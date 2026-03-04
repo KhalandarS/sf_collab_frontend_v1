@@ -98,7 +98,7 @@ const Help = () => {
     //   title: 'Phone Support',
     //   icon: <Phone className="w-12 h-12 text-purple-400" />,
     //   description: 'Direct conversation with our experts',
-    //   details: '+48 507 351 830 • Mon-Fri 8AM-8PM EST',
+    //   details: '+48 507 351 830  Mon-Fri 8AM-8PM EST',
     //   badge: 'Priority',
     //   color: 'from-purple-500 to-pink-500'
     // },
@@ -107,7 +107,7 @@ const Help = () => {
     //   title: 'Email Support',
     //   icon: <Mail className="w-12 h-12 text-green-400" />,
     //   description: 'Detailed technical assistance',
-    //   details: 'support@sfcollab.com • Response within 24 hours',
+    //   details: 'support@sfcollab.com  Response within 24 hours',
     //   badge: '24h Response',
     //   color: 'from-green-500 to-emerald-500'
     // }

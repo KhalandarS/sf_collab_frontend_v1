@@ -119,7 +119,7 @@ const handleDonateClick = async () => {
       }
     );
 
-    // 🔥 Redirect to Stripe-hosted checkout
+    //  Redirect to Stripe-hosted checkout
     window.location.href = response.data.url;
 
   } catch (err) {

@@ -9,10 +9,10 @@ const SkillProfile = () => {
   const [skills, setSkills] = useState([]);
   const [portfolio, setPortfolio] = useState([]);
   const [badges, setBadges] = useState([
-    { id: 1, icon: '⭐', name: 'Rising Star', description: 'Completed first project' },
-    { id: 2, icon: '🚀', name: 'Quick Learner', description: '3+ skills added' },
-    { id: 3, icon: '🎯', name: 'Achiever', description: '5+ projects completed' },
-    { id: 4, icon: '👑', name: 'Expert', description: 'Rated 5 stars' },
+    { id: 1, icon: '', name: 'Rising Star', description: 'Completed first project' },
+    { id: 2, icon: '', name: 'Quick Learner', description: '3+ skills added' },
+    { id: 3, icon: '', name: 'Achiever', description: '5+ projects completed' },
+    { id: 4, icon: '', name: 'Expert', description: 'Rated 5 stars' },
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -280,7 +280,7 @@ const SkillProfile = () => {
                     <div className="flex items-center gap-2">
                       {skill.is_verified && (
                         <span className="px-2 py-1 rounded-full bg-green-500/20 text-green-300 text-xs font-medium border border-green-500/30">
-                          ✓ Verified
+                           Verified
                         </span>
                       )}
                       <button
@@ -333,7 +333,7 @@ const SkillProfile = () => {
                     {project.image_url ? (
                       <img loading="lazy" src={project.image_url} alt={project.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
-                      <div className="text-6xl">📦</div>
+                      <div className="text-6xl"></div>
                     )}
                     {/* Overlay on hover */}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
@@ -374,8 +374,8 @@ const SkillProfile = () => {
                     {/* Stats and Link */}
                     <div className="flex items-center justify-between pt-4 border-t border-white/10">
                       <div className="flex gap-4 text-xs text-gray-400">
-                        <span>👀 {project.views || 0}</span>
-                        <span>❤️ {project.likes || 0}</span>
+                        <span> {project.views || 0}</span>
+                        <span> {project.likes || 0}</span>
                       </div>
                       <button
                         onClick={() => handleDeleteProject(project.id)}

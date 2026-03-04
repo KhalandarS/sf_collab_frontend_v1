@@ -53,7 +53,7 @@ export function ChatContactsProvider({ token, children }) {
           (f) => String(f.id) !== String(currentUserId)
         );
         
-        console.log(`✅ Found ${friendsList.length} connections from /api/friend-requests/friends`);
+        console.log(` Found ${friendsList.length} connections from /api/friend-requests/friends`);
         setFriends(friendsList);
       } else {
         console.warn('No friends data in response:', data);

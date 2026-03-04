@@ -29,12 +29,12 @@ function shouldShowSenderName(messages, index) {
 const LS_WINDOWS_KEY = "chatDock:windows";
 const LS_UNREAD_KEY = "chatDock:unread";
 
-// ─── Feature 2: conversation_type → dock tab mapping ─────────────────────
+//  Feature 2: conversation_type  dock tab mapping 
 const TYPE_TO_DOCK_TAB = {
   direct: 'friends',
   group: 'groups',
   team: 'startups',
-  startup: 'startups',  // backend may use 'startup' or 'team' — accept both
+  startup: 'startups',  // backend may use 'startup' or 'team'  accept both
   general: 'general',
 };
 
@@ -52,9 +52,9 @@ function useDockTabUnreadCounts(unread, conversations) {
     return counts;
   }, [unread, conversations]);
 }
-// ✅ FIX: Use same key as ChatPage so last_seen is shared between both components.
+//  FIX: Use same key as ChatPage so last_seen is shared between both components.
 // Previously ChatDock used "chatDock:presence:lastSeen" and ChatPage used
-// "presence:lastSeenAt" — they never shared data, causing different timestamps.
+// "presence:lastSeenAt"  they never shared data, causing different timestamps.
 const LS_PRESENCE_KEY = "presence:lastSeenAt";
 const LS_UNREAD_USERS_KEY = "chatDock:unreadUsers";
 
@@ -241,14 +241,14 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("all");
-  // ─── Feature 5: archive panel state ──────────────────────────────────────
+  //  Feature 5: archive panel state 
   const [showArchived, setShowArchived] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [consideredActive, setConsideredActive] = useState(true);
   const [isTabVisible, setIsTabVisible] = useState(!document.hidden);
 
   const [conversations, setConversations] = useState([]);
-  // ─── Feature 5: archived conversations ───────────────────────────────────
+  //  Feature 5: archived conversations 
   const [archivedConversations, setArchivedConversations] = useState([]);
   const [pinnedConversations, setPinnedConversations] = useState(new Set());
   const [conversationToDelete, setConversationToDelete] = useState(null);
@@ -280,7 +280,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     const saved = safeJsonParse(localStorage.getItem(LS_WINDOWS_KEY), []);
     return Array.isArray(saved)
       ? saved.map((w) => {
-          // ─── Feature 3: restore draft from localStorage ────────────────
+          //  Feature 3: restore draft from localStorage 
           let savedDraft = "";
           try { savedDraft = localStorage.getItem("chatDock:draft:" + w.conversationId) || ""; } catch {}
           return {
@@ -323,7 +323,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     } catch {}
   }, [unreadUsers]);
 
-  // ─── Feature 2: per-tab unread badge counts ───────────────────────────────
+  //  Feature 2: per-tab unread badge counts 
   const dockTabUnreadCounts = useDockTabUnreadCounts(unread, conversations);
 
   const [typingByConversation, setTypingByConversation] = useState({});
@@ -452,7 +452,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
       const response = await chatAPI.getAllChats();
       if (response?.success) {
         const convos = response.data.conversations || [];
-        // ─── Feature 5: split active vs archived ─────────────────────────
+        //  Feature 5: split active vs archived 
         setConversations(convos.filter(c => !c.is_archived));
         setArchivedConversations(convos.filter(c => c.is_archived));
         setPinnedConversations(new Set(convos.filter(c => c.is_pinned).map(c => String(c.id))));
@@ -510,7 +510,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           setTimeout(() => scrollToBottom(cid), 30);
 
           // Always clear unread when messages load. isConvMinimized() reads stale state
-          // due to React batching — openWindow() already zeroed the badge optimistically,
+          // due to React batching  openWindow() already zeroed the badge optimistically,
           // but we still emit mark_read so the backend DB and other participants sync.
           if (consideredActive) {
             clearUnread(cid);
@@ -572,7 +572,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           return next;
         }
 
-        // ─── Feature 3: restore saved draft ───────────────────────────
+        //  Feature 3: restore saved draft 
         let savedDraft = "";
         try { savedDraft = localStorage.getItem("chatDock:draft:" + cid) || ""; } catch {}
 
@@ -597,7 +597,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
           await chatAPI.markConversationRead(cid);
         }
       } catch (e) {
-        // non-critical — local state already cleared above
+        // non-critical  local state already cleared above
       }
       await fetchMessages(cid);
     },
@@ -620,7 +620,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
         delete next[cid];
         return next;
       });
-      // ─── Feature 3: clear draft on close ──────────────────────────────
+      //  Feature 3: clear draft on close 
       try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
     },
     [persistWindows, socket]
@@ -640,7 +640,7 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
     [persistWindows]
   );
 
-  // ─── Feature 5: Archive / Unarchive ────────────────────────────────────
+  //  Feature 5: Archive / Unarchive 
   const handleArchiveConv = useCallback(async (conversationId) => {
     try {
       await chatAPI.archiveConversation(conversationId);
@@ -751,7 +751,7 @@ useEffect(() => {
         setLastActiveAt((prev) => ({ ...prev, [id]: now() }));
       }
       if (data.status === "away") {
-        // Server confirms user is Away — backdate lastActiveAt so idle shows immediately
+        // Server confirms user is Away  backdate lastActiveAt so idle shows immediately
         const awayTs = now() - (3 * 60 * 1000 + 1000);
         setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
       }
@@ -877,7 +877,7 @@ useEffect(() => {
       setConversations((prev) => {
         const exists = prev.some((c) => String(c.id) === cid);
         if (!exists) {
-          // ─── Feature 5: auto-unarchive if message for archived chat ────
+          //  Feature 5: auto-unarchive if message for archived chat 
           setArchivedConversations(arPrev => {
             const archConv = arPrev.find(c => String(c.id) === cid);
             if (archConv) {
@@ -893,7 +893,7 @@ useEffect(() => {
         );
       });
 
-      // ── Fix: guard against own file-upload messages (sender_id may be int vs str) ──
+      //  Fix: guard against own file-upload messages (sender_id may be int vs str) 
       const isOwnMessage = !!messageNorm.sender_id && !!currentUser?.id &&
         String(messageNorm.sender_id) === String(currentUser?.id);
 
@@ -916,9 +916,9 @@ useEffect(() => {
           bumpUnread(cid, senderInfo);
 
           // AUTO-OPEN: Only if chat window does NOT exist at all
-          // - If window is minimized → do NOT unminimize, just show unread badge
-          // - If browser tab is hidden/minimized → do NOT pop open
-          // - If window doesn't exist + tab is visible → OPEN the window
+          // - If window is minimized  do NOT unminimize, just show unread badge
+          // - If browser tab is hidden/minimized  do NOT pop open
+          // - If window doesn't exist + tab is visible  OPEN the window
 
           
           if (currentIsTabVisible && !isOpen) {
@@ -952,7 +952,7 @@ useEffect(() => {
     socket.on("new_message", handleIncomingMessage);
     socket.on("conversation_message", handleIncomingMessage);
 
-    // ─── Feature 6: real-time pin sync ────────────────────────────────────
+    //  Feature 6: real-time pin sync 
     const onConvPinned = (data) => {
       const cid = String(data.conversation_id);
       const ip = !!data.is_pinned;
@@ -961,7 +961,7 @@ useEffect(() => {
     };
     socket.on("conversation_pinned", onConvPinned);
 
-    // ── Startup membership: added to a conversation ────────────────────────
+    //  Startup membership: added to a conversation 
     const onConversationAdded = (data) => {
       const conv = data?.conversation;
       if (!conv) return;
@@ -972,7 +972,7 @@ useEffect(() => {
     };
     socket.on("conversation_added", onConversationAdded);
 
-    // ── Startup membership: removed from a conversation ────────────────────
+    //  Startup membership: removed from a conversation 
     const onConversationRemoved = (data) => {
       const cid = String(data?.conversation_id ?? '');
       if (!cid) return;
@@ -1106,7 +1106,7 @@ useEffect(() => {
       return (onlineUsers || []).some((id) => String(id) === String(other.id));
     };
 
-    // ─── Feature 5: switch source based on showArchived ─────────────────
+    //  Feature 5: switch source based on showArchived 
     const source = showArchived ? archivedConversations : (conversations || []);
 
     return source.filter((c) => {
@@ -1118,7 +1118,7 @@ useEffect(() => {
         if (!String(display).toLowerCase().includes(term)) return false;
       }
 
-      // ─── Feature 2: per-tab filtering ─────────────────────────────────
+      //  Feature 2: per-tab filtering 
       if (!showArchived) {
         if (activeTab === "online") return isDirectOnline(c);
         if (activeTab === "friends") return c.conversation_type === "direct";
@@ -1255,7 +1255,7 @@ useEffect(() => {
                     placeholder="Search chats..."
                     className="w-full px-3 py-2 bg-zinc-800 rounded-xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"
                   />
-                  {/* ─── Feature 1+2: Tabs with unread badges ─────────── */}
+                  {/*  Feature 1+2: Tabs with unread badges  */}
                   {!showArchived && (
                     <div className="flex gap-1.5 mt-2 flex-wrap">
                       {[
@@ -1291,7 +1291,7 @@ useEffect(() => {
                 {/* Conversations List */}
                 <div className="overflow-y-auto p-2 flex-1">
                   {isLoadingConvos ? (
-                    <div className="p-4 text-zinc-500 text-sm">Loading…</div>
+                    <div className="p-4 text-zinc-500 text-sm">Loading</div>
                   ) : filteredConversations.length === 0 ? (
                     <div className="p-4 text-zinc-500 text-sm text-center">
                       {showArchived ? "No archived chats" : "No conversations"}
@@ -1308,7 +1308,7 @@ useEffect(() => {
                       const unreadCount = localUnread != null ? Number(localUnread) : (Number(conv.unread_count) || 0);
                       let lastMsg = conv.last_message || conv.lastMessage;
 
-                      // ─── Feature 3: draft preview ──────────────────────
+                      //  Feature 3: draft preview 
                       let dockDraftText = "";
                       try { dockDraftText = localStorage.getItem("chatDock:draft:" + String(conv.id)) || ""; } catch {}
 
@@ -1387,7 +1387,7 @@ useEffect(() => {
                             )}
                           </div>
                         </motion.button>
-                        {/* ─── Feature 5: Archive/Unarchive + Delete buttons ─── */}
+                        {/*  Feature 5: Archive/Unarchive + Delete buttons  */}
                         <div className="absolute right-2 top-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
                           {showArchived ? (
                             <button
@@ -1447,7 +1447,7 @@ useEffect(() => {
                     })
                   )}
 
-                  {/* ─── Feature 5: Archive toggle at bottom of list ───── */}
+                  {/*  Feature 5: Archive toggle at bottom of list  */}
                   {!showArchived && archivedConversations.length > 0 && (
                     <button
                       onClick={() => setShowArchived(true)}
@@ -1462,7 +1462,7 @@ useEffect(() => {
                       onClick={() => setShowArchived(false)}
                       className="w-full flex items-center gap-2 px-3 py-2 mt-1 rounded-xl text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 text-xs transition-colors"
                     >
-                      <span>← Back to Chats</span>
+                      <span> Back to Chats</span>
                     </button>
                   )}
                 </div>
@@ -1576,7 +1576,7 @@ useEffect(() => {
                       {/* Messages */}
                       <div className={`${isMobile ? "flex-1" : "h-[60vh]"} overflow-y-auto p-3 bg-zinc-950 space-y-0`}>
                         {w.loading ? (
-                          <div className="text-sm text-zinc-500">Loading…</div>
+                          <div className="text-sm text-zinc-500">Loading</div>
                         ) : (
                           (w.messages || []).map((m, i) => {
                             const isOwn = String(m.sender_id) === String(currentUser?.id);
@@ -1635,7 +1635,7 @@ useEffect(() => {
                             setWindows((prev) =>
                               prev.map((x) => (String(x.conversationId) === cid ? { ...x, draft: val } : x))
                             );
-                            // ─── Feature 3: persist draft ────────────────
+                            //  Feature 3: persist draft 
                             try {
                               if (val && val.trim()) localStorage.setItem("chatDock:draft:" + cid, val);
                               else localStorage.removeItem("chatDock:draft:" + cid);
@@ -1652,7 +1652,7 @@ useEffect(() => {
                           onSend={(payload) => {
                             if (socket) socket.emit("typing_stop", { conversation_id: cid });
                             sendMessage(cid, payload);
-                            // ─── Feature 3: clear draft on send ──────────
+                            //  Feature 3: clear draft on send 
                             try { localStorage.removeItem("chatDock:draft:" + cid); } catch {}
                           }}
                           socket={socket}

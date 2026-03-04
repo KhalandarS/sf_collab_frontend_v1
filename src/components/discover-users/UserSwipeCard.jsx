@@ -104,7 +104,7 @@ export default function UserSwipeCard({ user, onViewProfile }) {
                   {user?.profile?.city ? `${user?.profile.city}, ${user?.profile.country}` : 'Location not set'}
                 </span>
               </div>
-              <span className="text-sm">·</span>
+              <span className="text-sm"></span>
               <div className="flex items-center gap-2">
                 <Users size={16} />
                 <span className="text-sm">{user?.active_startups_count || 0} startups</span>

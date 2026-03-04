@@ -222,7 +222,7 @@ const myInvite = invitations.find(inv =>
       fetchJoinRequests();
       fetchStartupData();
     } catch (error) {
-      console.error('❌ Accept join request failed', error);
+      console.error(' Accept join request failed', error);
       toast.error('Unable to accept the request right now.');
     }
   };
@@ -238,7 +238,7 @@ const myInvite = invitations.find(inv =>
       // Refresh data to ensure consistency
       fetchJoinRequests();
     } catch (error) {
-      console.error('❌ Reject join request failed', error);
+      console.error(' Reject join request failed', error);
       toast.error('Unable to reject the request right now.');
     }
   };

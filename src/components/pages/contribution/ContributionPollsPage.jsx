@@ -102,7 +102,7 @@ export default function ContributionPollsPage({ userRoles = [] }) {
                 No polls available right now
               </p>
               <p className="text-xs text-white/40">
-                New community polls will appear here once they’re published.
+                New community polls will appear here once theyre published.
               </p>
             </div>
           )}

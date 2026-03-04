@@ -287,7 +287,7 @@ function ScraperForm() {
                     <div className="flex items-start gap-4">
                         <div className="relative shrink-0">
                         <div className="relative p-3 bg-white/10 rounded-lg border border-white/20">
-                            <span className="text-xl text-amber-300">💡</span>
+                            <span className="text-xl text-amber-300"></span>
                         </div>
                         </div>
                         <div className="flex-1">
@@ -302,15 +302,15 @@ function ScraperForm() {
                                 <div className="font-semibold text-white mb-2">Static Analysis</div>
                                 <ul className="space-y-2 text-sm text-blue-100/80">
                                     <li className="flex items-center gap-2">
-                                    <span className="text-blue-300">•</span>
+                                    <span className="text-blue-300"></span>
                                     Traditional HTML websites
                                     </li>
                                     <li className="flex items-center gap-2">
-                                    <span className="text-blue-300">•</span>
+                                    <span className="text-blue-300"></span>
                                     Blogs, news, documentation
                                     </li>
                                     <li className="flex items-center gap-2">
-                                    <span className="text-blue-300">•</span>
+                                    <span className="text-blue-300"></span>
                                     Faster processing (under 2s)
                                     </li>
                                 </ul>
@@ -324,15 +324,15 @@ function ScraperForm() {
                                 <div className="font-semibold text-white mb-2">Dynamic Rendering</div>
                                 <ul className="space-y-2 text-sm text-blue-100/80">
                                     <li className="flex items-center gap-2">
-                                    <span className="text-purple-300">•</span>
+                                    <span className="text-purple-300"></span>
                                     React, Vue, Angular apps
                                     </li>
                                     <li className="flex items-center gap-2">
-                                    <span className="text-purple-300">•</span>
+                                    <span className="text-purple-300"></span>
                                     Single Page Applications
                                     </li>
                                     <li className="flex items-center gap-2">
-                                    <span className="text-purple-300">•</span>
+                                    <span className="text-purple-300"></span>
                                     JavaScript-heavy content
                                     </li>
                                 </ul>
@@ -353,7 +353,7 @@ function ScraperForm() {
           <div className="w-2/3 mb-4 relative bg-linear-to-br from-red-900/30 to-red-800/20 backdrop-blur-xl border border-red-500/30 rounded-2xl p-6 shadow-2xl">
             <div className="flex items-start gap-4">
               <div className="p-2 bg-red-500/20 rounded-lg border border-red-500/30">
-                <span className="text-red-400 text-xl">❌</span>
+                <span className="text-red-400 text-xl"></span>
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-red-400 mb-2">Scraping Error</h3>

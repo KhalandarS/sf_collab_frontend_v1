@@ -21,7 +21,7 @@ const ManageJoinRequestsModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl bg-gray-800 border border-white/10 mt-4">
         <DialogHeader>
-          <DialogTitle className="text-white text-2xl">📋 Manage Join Requests</DialogTitle>
+          <DialogTitle className="text-white text-2xl"> Manage Join Requests</DialogTitle>
           <DialogDescription className="text-gray-400">
             {startupName && <span className="block font-semibold text-white/80 mb-2">For: <span className="text-blue-400">{startupName}</span></span>}
             Review and respond to requests from people who want to join your team
@@ -31,18 +31,18 @@ const ManageJoinRequestsModal = ({
         {/* Info Box showing who is making decisions */}
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4">
           <p className="text-xs text-blue-300">
-            ✓ <span className="font-semibold text-white">{founderName}</span> (Founder) - You are reviewing and can accept/reject requests
+             <span className="font-semibold text-white">{founderName}</span> (Founder) - You are reviewing and can accept/reject requests
           </p>
         </div>
 
         <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
           {loading ? (
             <div className="text-center py-20 text-sm text-gray-400">
-              Loading join requests…
+              Loading join requests
             </div>
           ) : !hasRequests ? (
             <div className="text-center py-12">
-              <div className="text-gray-400 text-sm mb-2">✨ No pending requests</div>
+              <div className="text-gray-400 text-sm mb-2"> No pending requests</div>
               <p className="text-xs text-gray-500">When someone requests to join, they'll appear here</p>
             </div>
           ) : (

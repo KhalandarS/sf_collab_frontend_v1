@@ -16,7 +16,7 @@ export default function CrowdfundingSection() {
           access reserved for our first believers.
         </p>
 
-        {/* 🔥 FIRE BUTTON */}
+        {/*  FIRE BUTTON */}
         <div className="fire-border mx-auto overflow-hidden">
           <Link
             to="/crowdfunding"

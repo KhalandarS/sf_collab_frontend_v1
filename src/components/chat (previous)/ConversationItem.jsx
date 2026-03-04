@@ -179,7 +179,7 @@ const ConversationItem = ({
 
         {/* Action buttons: appear on hover, sit where the time text is */}
         <div className="absolute right-2 top-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all pointer-events-none group-hover:pointer-events-auto">
-          {/* Unarchive button — shown only on archived tab */}
+          {/* Unarchive button  shown only on archived tab */}
           {onUnarchive && (
             <button
               type="button"
@@ -216,7 +216,7 @@ const ConversationItem = ({
             </button>
           )}
 
-          {/* Archive button — shown on all non-archived tabs */}
+          {/* Archive button  shown on all non-archived tabs */}
           {onArchive && (
             <button
               type="button"
@@ -231,7 +231,7 @@ const ConversationItem = ({
             </button>
           )}
 
-          {/* Delete button — only for direct chats, only when not on archived tab */}
+          {/* Delete button  only for direct chats, only when not on archived tab */}
           {isDirect && !onUnarchive && (
             <button
               type="button"

@@ -451,7 +451,7 @@ export default function ConnectionsPage() {
               onClick={() => setSearchQuery("")}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Search
+               Clear Search
             </button>
           )}
         </motion.div>

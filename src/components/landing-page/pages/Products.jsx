@@ -39,7 +39,7 @@ const projects = [
     id: 4,
     year: "System",
     title: "Founder Dashboard",
-    desc: "Momentum metrics, priorities, and decisions — surfaced when they matter.",
+    desc: "Momentum metrics, priorities, and decisions  surfaced when they matter.",
     img: "/landing_page/4.4.png",
   },
   {
@@ -113,10 +113,10 @@ const Products = () => {
                 alt={project.title} 
                 className="w-full h-full object-cover transition-transform duration-500 ease-in-out group-hover:scale-105"
                 onLoad={(e) => {
-                  console.log(`✅ Image loaded: ${project.img}`);
+                  console.log(` Image loaded: ${project.img}`);
                 }}
                 onError={(e) => {
-                  console.error(`❌ Failed to load image: ${project.img}`);
+                  console.error(` Failed to load image: ${project.img}`);
                   e.target.style.display = 'none';
                   const fallback = document.createElement('div');
                   fallback.className = 'flex flex-col items-center justify-center h-full text-gray-500 p-6';

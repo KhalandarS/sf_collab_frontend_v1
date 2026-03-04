@@ -16,7 +16,7 @@ import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard, LuEye } from "react-icons/lu";
 import { Badge } from "@/components/ui/badge";
 
-// ✅ theme must be top-level (NOT inside any function)
+//  theme must be top-level (NOT inside any function)
 export const CONTEXT_THEME = {
   1: {
     pillBg: "bg-blue-600/20",

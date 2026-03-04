@@ -34,7 +34,7 @@ const [voiceStatus, setVoiceStatus] = useState({});
 
     recognition.onstart = () => {
       setIsRecording(prev => ({ ...prev, [btnId]: true }));
-      setVoiceStatus(prev => ({ ...prev, [btnId]: '🎤 Listening... Click stop when finished' }));
+      setVoiceStatus(prev => ({ ...prev, [btnId]: ' Listening... Click stop when finished' }));
     };
 
     recognition.onresult = (event) => {
@@ -63,7 +63,7 @@ const [voiceStatus, setVoiceStatus] = useState({});
       if (nonFatalErrors.includes(event.error)) {
         setVoiceStatus(prev => ({
           ...prev,
-          [btnId]: '⏸️ Listening paused'
+          [btnId]: ' Listening paused'
         }));
         return;
       }
@@ -72,7 +72,7 @@ const [voiceStatus, setVoiceStatus] = useState({});
       stopVoiceInput(btnId);
       setVoiceStatus(prev => ({
         ...prev,
-        [btnId]: '❌ Mic error: ' + event.error
+        [btnId]: ' Mic error: ' + event.error
       }));
     };
 
@@ -92,7 +92,7 @@ const [voiceStatus, setVoiceStatus] = useState({});
       recognitionInstances.current[btnId].stop();
       delete recognitionInstances.current[btnId];
       setIsRecording(prev => ({ ...prev, [btnId]: false }));
-      setVoiceStatus(prev => ({ ...prev, [btnId]: '✅ Recording stopped' }));
+      setVoiceStatus(prev => ({ ...prev, [btnId]: ' Recording stopped' }));
       
       setTimeout(() => {
         setVoiceStatus(prev => ({ ...prev, [btnId]: '' }));

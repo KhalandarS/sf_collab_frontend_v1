@@ -134,32 +134,32 @@ const TeamCollaboration = () => {
     {
       title: 'Set Clear Expectations',
       description: 'Define roles, responsibilities, and communication protocols from the start',
-      icon: '🎯'
+      icon: ''
     },
     {
       title: 'Regular Check-ins',
       description: 'Schedule consistent meetings to maintain alignment and address blockers',
-      icon: '📅'
+      icon: ''
     },
     {
       title: 'Use Async Communication',
       description: 'Leverage threaded discussions and comments for timezone-friendly collaboration',
-      icon: '💬'
+      icon: ''
     },
     {
       title: 'Document Everything',
       description: 'Keep shared documentation up-to-date for team knowledge and onboarding',
-      icon: '📝'
+      icon: ''
     },
     {
       title: 'Celebrate Wins',
       description: 'Acknowledge achievements and milestones to boost team morale',
-      icon: '🎉'
+      icon: ''
     },
     {
       title: 'Provide Feedback',
       description: 'Give timely, constructive feedback to help team members grow',
-      icon: '⭐'
+      icon: ''
     }
   ];
 
@@ -415,7 +415,7 @@ const TeamCollaboration = () => {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    →
+                    
                   </motion.div>
                 </a>
               </div>
@@ -442,7 +442,7 @@ const TeamCollaboration = () => {
                     animate={{ x: [0, 5, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   >
-                    →
+                    
                   </motion.div>
                 </a>
               </div>

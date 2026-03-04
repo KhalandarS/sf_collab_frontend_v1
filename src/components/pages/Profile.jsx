@@ -26,13 +26,13 @@ const EditModal = ({ item, type, onSave, onClose }) => {
   const fields = type === 'work'
     ? [
         { name: 'company', label: 'Company', type: 'text' },
-        { name: 'period', label: 'Period (e.g., 2022–2025)', type: 'text' },
+        { name: 'period', label: 'Period (e.g., 20222025)', type: 'text' },
         { name: 'description', label: 'Description', type: 'textarea' },
       ]
     : [
         { name: 'school', label: 'School/University', type: 'text' },
         { name: 'degree', label: 'Degree', type: 'text' },
-        { name: 'period', label: 'Period (e.g., 2017–2019)', type: 'text' },
+        { name: 'period', label: 'Period (e.g., 20172019)', type: 'text' },
         { name: 'description', label: 'Description', type: 'textarea' },
       ];
 
@@ -100,14 +100,14 @@ export default function Profile() {
       followers: 1250,
     },
     workExperience: [
-      { id: 1, company: "Google", period: "2022–2025", description: "Worked on scalable systems and product improvements across multiple teams.", title: "Senior Software Engineer" },
-      { id: 2, company: "Amazon", period: "2019–2022", description: "Led feature development and enhanced system performance for e-commerce platforms." },
-      { id: 3, company: "Apple", period: "2019–2022", description: "Collaborated on UI/UX design systems and implemented responsive frontend solutions." },
-      { id: 4, company: "Microsoft", period: "2019–2022", description: "Developed cloud services and contributed to open-source internal tools." },
+      { id: 1, company: "Google", period: "20222025", description: "Worked on scalable systems and product improvements across multiple teams.", title: "Senior Software Engineer" },
+      { id: 2, company: "Amazon", period: "20192022", description: "Led feature development and enhanced system performance for e-commerce platforms." },
+      { id: 3, company: "Apple", period: "20192022", description: "Collaborated on UI/UX design systems and implemented responsive frontend solutions." },
+      { id: 4, company: "Microsoft", period: "20192022", description: "Developed cloud services and contributed to open-source internal tools." },
     ],
     education: [
-      { id: 1, school: "Stanford University", degree: "Master of Science in Computer Science", period: "2017–2019", description: "Specialized in Artificial Intelligence and Machine Learning. Graduated with honors." },
-      { id: 2, school: "MIT", degree: "Bachelor of Science in Computer Engineering", period: "2013–2017", description: "Focused on Software Engineering and Data Structures. Dean's List recipient." },
+      { id: 1, school: "Stanford University", degree: "Master of Science in Computer Science", period: "20172019", description: "Specialized in Artificial Intelligence and Machine Learning. Graduated with honors." },
+      { id: 2, school: "MIT", degree: "Bachelor of Science in Computer Engineering", period: "20132017", description: "Focused on Software Engineering and Data Structures. Dean's List recipient." },
     ],
     posts: [
       {
@@ -122,7 +122,7 @@ export default function Profile() {
         id: 2,
         type: 'image',
         mediaUrl: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=2070&auto=format&fit=crop',
-        caption: 'Late night coding session for our new project. The future is bright! 💡 #devlife #startup',
+        caption: 'Late night coding session for our new project. The future is bright!  #devlife #startup',
         timestamp: '5 days ago',
         likes: 128,
         comments: 12,

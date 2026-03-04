@@ -145,7 +145,7 @@ export default function OnlineFriendsPanel() {
       if (!friend?.id) return;
       const conv = await ensureDirectConversation(friend.id);
 
-      // fallback: if backend didn’t return a conversation, still open a “best effort”
+      // fallback: if backend didnt return a conversation, still open a best effort
       const conversationId = conv?.id;
       const title = `${friend.firstName || ""} ${friend.lastName || ""}`.trim() || "Chat";
 
@@ -273,7 +273,7 @@ export default function OnlineFriendsPanel() {
                         </div>
                       </div>
 
-                      {/* Placeholder for unread badge (we’ll wire real unread per convo in Step 4) */}
+                      {/* Placeholder for unread badge (well wire real unread per convo in Step 4) */}
                       {/* <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-indigo-500 text-zinc-900 text-[11px] flex items-center justify-center">1</span> */}
                     </button>
                   );

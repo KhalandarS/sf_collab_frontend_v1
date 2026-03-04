@@ -10,16 +10,16 @@
 }
 
 @theme {
-  /* Primary Colors – for accents, highlights, and interactive elements */
-  --color-primary-accent: oklch(77.1% 95.0 203);      /* #00D5FF – Neon Blue */
-  --color-primary-highlight: oklch(55.0% 95.0 288);   /* #8C00FF – Electric Violet (slightly toned) */
-  --color-primary-alert: oklch(65.0% 90.0 326);       /* #FF00D8 – Neon Pink (slightly less intense) */
+  /* Primary Colors  for accents, highlights, and interactive elements */
+  --color-primary-accent: oklch(77.1% 95.0 203);      /* #00D5FF  Neon Blue */
+  --color-primary-highlight: oklch(55.0% 95.0 288);   /* #8C00FF  Electric Violet (slightly toned) */
+  --color-primary-alert: oklch(65.0% 90.0 326);       /* #FF00D8  Neon Pink (slightly less intense) */
 
-  /* Secondary Colors – backgrounds, text, and supporting UI elements */
-  --color-secondary-accent: oklch(85.0% 80.0 147);    /* #00E568 – Energy Green (slightly softer) */
-  --color-secondary-dark: oklch(15.0% 50.0 289);      /* #2B0057 – Deep Space Purple */
-  --color-secondary-black: oklch(0.5% 2.0 270);       /* #000012 – Black Void */
-  --color-secondary-light: oklch(98.8% 1.2 268);      /* #F2F2FF – Star White */
+  /* Secondary Colors  backgrounds, text, and supporting UI elements */
+  --color-secondary-accent: oklch(85.0% 80.0 147);    /* #00E568  Energy Green (slightly softer) */
+  --color-secondary-dark: oklch(15.0% 50.0 289);      /* #2B0057  Deep Space Purple */
+  --color-secondary-black: oklch(0.5% 2.0 270);       /* #000012  Black Void */
+  --color-secondary-light: oklch(98.8% 1.2 268);      /* #F2F2FF  Star White */
 
   --font-inter: 'Inter', sans-serif;
 }

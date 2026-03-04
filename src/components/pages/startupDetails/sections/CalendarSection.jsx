@@ -293,7 +293,7 @@ const CalendarAgendaView = ({
                       day: "numeric"
                     })}
                     {event.end_date && (
-                      <> → {new Date(event.end_date).toLocaleDateString("en-US", {
+                      <>  {new Date(event.end_date).toLocaleDateString("en-US", {
                         month: "short",
                         day: "numeric"
                       })}</>

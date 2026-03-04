@@ -123,7 +123,7 @@ function ReadReceipt({ status, size = 14 }) {
   return <Check size={size} className="text-zinc-400 opacity-80" />;
 }
 
-// ─── Feature 3: Task due-date modal ──────────────────────────────────────────
+//  Feature 3: Task due-date modal 
 const TaskModal = ({ isOpen, onClose, onSave }) => {
   const [dueDate, setDueDate] = useState('');
   const [note, setNote] = useState('');
@@ -184,7 +184,7 @@ export default function MessageBubble({
   const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
 
-  // ─── Feature 3: Star / Pin / Task state ──────────────────────────────────
+  //  Feature 3: Star / Pin / Task state 
   const [isStarred, setIsStarred] = useState(!!message?.is_starred);
   const [isPinned, setIsPinned] = useState(!!message?.is_pinned);
   const [isTask, setIsTask] = useState(!!message?.is_task);
@@ -339,7 +339,7 @@ export default function MessageBubble({
     }
   }, [conversationId, message.id, setMessages]);
 
-  // ─── Feature 3: Star handler ───────────────────────────────────────────────
+  //  Feature 3: Star handler 
   const handleStar = useCallback(async () => {
     if (!conversationId || starLoading) return;
     setMenuOpen(false);
@@ -358,7 +358,7 @@ export default function MessageBubble({
     finally { setStarLoading(false); }
   }, [conversationId, message.id, isStarred, starLoading, setMessages]);
 
-  // ─── Feature 3: Pin handler ────────────────────────────────────────────────
+  //  Feature 3: Pin handler 
   const handlePin = useCallback(async () => {
     if (!conversationId || pinLoading) return;
     setMenuOpen(false);
@@ -377,7 +377,7 @@ export default function MessageBubble({
     finally { setPinLoading(false); }
   }, [conversationId, message.id, isPinned, pinLoading, setMessages]);
 
-  // ─── Feature 3: Task handler ───────────────────────────────────────────────
+  //  Feature 3: Task handler 
   const handleSaveTask = useCallback(async (dueDate, note) => {
     if (!conversationId) return;
     setTaskModalOpen(false);
@@ -496,7 +496,7 @@ export default function MessageBubble({
                   : "bg-zinc-800 text-zinc-100"
                 }`}
             >
-              {/* ─── Feature 3: Pinned / Starred / Task indicators ─────── */}
+              {/*  Feature 3: Pinned / Starred / Task indicators  */}
               {(isPinned || isStarred || isTask) && (
                 <div className="flex gap-1 mb-1">
                   {isPinned && <Pin size={10} className="text-amber-400" />}
@@ -607,7 +607,7 @@ export default function MessageBubble({
               )}
             </div>
 
-            {/* Actions menu — star/pin/task for ALL, edit/delete for own only */}
+            {/* Actions menu  star/pin/task for ALL, edit/delete for own only */}
             {conversationId && !isEditing && (
               <div className="relative" ref={menuRef}>
                 <button
@@ -653,7 +653,7 @@ export default function MessageBubble({
                       {isTask ? 'Remove Task' : 'Add to Tasks'}
                     </button>
 
-                    {/* Edit / Delete — own messages only */}
+                    {/* Edit / Delete  own messages only */}
                     {isOwn && (
                       <>
                         <div className="border-t border-zinc-700 my-1" />
@@ -756,7 +756,7 @@ export default function MessageBubble({
           </div>
         </div>
       )}
-      {/* ─── Feature 3: Task modal ───────────────────────────────────── */}
+      {/*  Feature 3: Task modal  */}
       <TaskModal
         isOpen={taskModalOpen}
         onClose={() => setTaskModalOpen(false)}

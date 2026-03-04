@@ -19,19 +19,19 @@ export default function JoinSFSection({
           <div className="text-center">
           
             <p className="text-white/80 text-center max-w-2xl m-auto text-sm sm:text-base">
-              We’re hiring developers, content creators, and 3D designers to help build the future of SForger.
+              Were hiring developers, content creators, and 3D designers to help build the future of SForger.
             </p>
 
             {/* Roles */}
             <div className="flex flex-wrap items-center justify-center w-full gap-2 mt-4">
               <span className="px-3 py-1.5 bg-blue-500/40 border border-blue-400/50 rounded-full text-white text-xs sm:text-sm">
-                💻 Developers
+                 Developers
               </span>
               <span className="px-3 py-1.5 bg-purple-500/40 border border-purple-400/50 rounded-full text-white text-xs sm:text-sm">
-                ✍️ Content Creators
+                 Content Creators
               </span>
               <span className="px-3 py-1.5 bg-pink-500/40 border border-pink-400/50 rounded-full text-white text-xs sm:text-sm">
-                🎨 3D Designers
+                 3D Designers
               </span>
               <span className="px-3 py-1.5 bg-green-500/40 border border-green-400/50 rounded-full text-white text-xs sm:text-sm">
                 + More

@@ -644,11 +644,11 @@ export default function Knowledgedetails() {
                                   <div className="text-sm font-medium text-white mb-1">{attachment.name}</div>
                                   <div className="flex items-center gap-3 text-xs text-gray-400">
                                     <span>{attachment.size}</span>
-                                    <span>•</span>
+                                    <span></span>
                                     <span>{getFileTypeLabel(attachment.name).toUpperCase()}</span>
                                     {attachment.pages && (
                                       <>
-                                        <span>•</span>
+                                        <span></span>
                                         <span>{attachment.pages} pages</span>
                                       </>
                                     )}

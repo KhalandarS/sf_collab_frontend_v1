@@ -24,7 +24,7 @@ const PaintingBoard = ({ conversationId, currentUserId ,wsClient}) => {
             {showInstructions && (
                 <div className="instructions-banner">
                     <div className="instructions-content">
-                        <h3>🎨 Collaborative Whiteboard</h3>
+                        <h3> Collaborative Whiteboard</h3>
                         <p>Draw together with others in real-time. All changes are synchronized instantly.</p>
                         <button 
                             className="close-instructions"
@@ -50,19 +50,19 @@ const PaintingBoard = ({ conversationId, currentUserId ,wsClient}) => {
                             <p>To start drawing, please select a conversation from the sidebar.</p>
                             <div className="features-list">
                                 <div className="feature">
-                                    <span className="feature-icon">🎯</span>
+                                    <span className="feature-icon"></span>
                                     <span>Real-time collaboration</span>
                                 </div>
                                 <div className="feature">
-                                    <span className="feature-icon">🔄</span>
+                                    <span className="feature-icon"></span>
                                     <span>Instant synchronization</span>
                                 </div>
                                 <div className="feature">
-                                    <span className="feature-icon">👥</span>
+                                    <span className="feature-icon"></span>
                                     <span>See who's drawing</span>
                                 </div>
                                 <div className="feature">
-                                    <span className="feature-icon">💾</span>
+                                    <span className="feature-icon"></span>
                                     <span>Save & share your work</span>
                                 </div>
                             </div>

@@ -326,7 +326,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-green-300">Donations</h3>
-                  <span className="text-sm text-gray-400">Total: {totalDonations} • ${(totalDonationsAmount / 100).toFixed(2)}</span>
+                  <span className="text-sm text-gray-400">Total: {totalDonations}  ${(totalDonationsAmount / 100).toFixed(2)}</span>
                 </div>
                 <div className="max-h-80 space-y-2 overflow-y-auto pr-2">
                   <InfiniteList
@@ -368,7 +368,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-purple-300">Crowdfunding</h3>
-                  <span className="text-sm text-gray-400">Total: {totalCrowdfunding} • ${(totalCrowdAmount / 100).toFixed(2)}</span>
+                  <span className="text-sm text-gray-400">Total: {totalCrowdfunding}  ${(totalCrowdAmount / 100).toFixed(2)}</span>
                 </div>
                 <div className="max-h-80 space-y-2 overflow-y-auto pr-2">
                   <InfiniteList
@@ -555,7 +555,7 @@ const AdminDashboard = () => {
                 className="bg-gradient-to-br from-slate-900 to-slate-800 p-8 rounded-2xl w-full max-w-md border border-white/10 shadow-2xl"
               >
                 <h2 className="text-2xl font-semibold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                  ⭐ Give Contribution Points
+                   Give Contribution Points
                 </h2>
                 <p className="text-sm text-gray-400 mb-6">
                   User: <span className="text-green-300 font-medium">{selectedUser.fullName}</span>

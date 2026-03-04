@@ -55,7 +55,7 @@ export default function AITutorial() {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Ready to Explore AI? 🚀
+            Ready to Explore AI? 
           </h2>
           <p>
             The AI Tools suite is your launchpad for creativity and collaboration. Dive in, explore AI-powered features, connect with like-minded innovators, and let's build the future together!

@@ -39,10 +39,10 @@ export default function DashboardTutorial({ activeRole }) {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Welcome to the Ecosystem 👋
+            Welcome to the Ecosystem 
           </h2>
           <p>
-            This platform adapts to your role — founders, builders,
+            This platform adapts to your role  founders, builders,
             investors and influencers each get a unique experience.
           </p>
         </div>

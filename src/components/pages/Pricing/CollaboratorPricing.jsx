@@ -10,7 +10,7 @@
 //         </h2>
 
 //         <p className="mt-4 text-center text-gray-600 max-w-3xl mx-auto">
-//           Collaborators don’t pay for ideas; they pay for the ability to earn,
+//           Collaborators dont pay for ideas; they pay for the ability to earn,
 //           get hired, and build a professional career.
 //         </p>
 
@@ -23,12 +23,12 @@
 //             <p className="mt-2 text-sm text-gray-500">Free</p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• 10 minutes/day full access</li>
-//               <li>• Join 1 startup</li>
-//               <li>• Earn CP (withdraw disabled)</li>
-//               <li>• Full AI tools (time-limited)</li>
-//               <li>• Watermark on exports</li>
-//               <li>• No recruitment board access</li>
+//               <li> 10 minutes/day full access</li>
+//               <li> Join 1 startup</li>
+//               <li> Earn CP (withdraw disabled)</li>
+//               <li> Full AI tools (time-limited)</li>
+//               <li> Watermark on exports</li>
+//               <li> No recruitment board access</li>
 //             </ul>
 //           </div>
 
@@ -38,12 +38,12 @@
 //             <p className="mt-2 text-sm text-gray-700">$9.99 / month</p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• 2 hours/day full access</li>
-//               <li>• Withdraw earnings</li>
-//               <li>• Full chat + video upload</li>
-//               <li>• Recruitment visibility boost</li>
-//               <li>• Join unlimited startups</li>
-//               <li>• Eligible for artifacts & rewards</li>
+//               <li> 2 hours/day full access</li>
+//               <li> Withdraw earnings</li>
+//               <li> Full chat + video upload</li>
+//               <li> Recruitment visibility boost</li>
+//               <li> Join unlimited startups</li>
+//               <li> Eligible for artifacts & rewards</li>
 //             </ul>
 //           </div>
 
@@ -53,12 +53,12 @@
 //             <p className="mt-2 text-sm text-gray-700">$19.99 / month</p>
 
 //             <ul className="mt-4 space-y-2 text-sm text-gray-700">
-//               <li>• Unlimited access</li>
-//               <li>• Top ranking in recruitment</li>
-//               <li>• AI career advisor</li>
-//               <li>• Auto-generated CV from portfolio</li>
-//               <li>• Reduced payout fee (3%)</li>
-//               <li>• Exclusive artifact drops & badges</li>
+//               <li> Unlimited access</li>
+//               <li> Top ranking in recruitment</li>
+//               <li> AI career advisor</li>
+//               <li> Auto-generated CV from portfolio</li>
+//               <li> Reduced payout fee (3%)</li>
+//               <li> Exclusive artifact drops & badges</li>
 //             </ul>
 //           </div>
 
@@ -112,7 +112,7 @@ const CollaboratorPricing = () => {
       price: "$9.99/month",
       description: "For individual contributors and specialists",
       recommended: true,
-      role: "Engineers • Designers • Data Professionals",
+      role: "Engineers  Designers  Data Professionals",
       features: [
         { icon: Users, text: "Unlimited private projects", included: true },
         { icon: Zap, text: "Advanced task management", included: true },
@@ -136,7 +136,7 @@ const CollaboratorPricing = () => {
       price: "$29.99/month",
       description: "For team leaders and growing professionals",
       recommended: false,
-      role: "Technical Leads • Senior Engineers • Managers",
+      role: "Technical Leads  Senior Engineers  Managers",
       features: [
         { icon: Users, text: "Team management (up to 25 members)", included: true },
         { icon: Zap, text: "Advanced analytics & reporting", included: true },
@@ -249,7 +249,7 @@ const CollaboratorPricing = () => {
                     {feature.included ? (
                       <Check className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
                     ) : (
-                      <span className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5">✗</span>
+                      <span className="w-5 h-5 text-red-400 mr-3 flex-shrink-0 mt-0.5"></span>
                     )}
                     <span className={`text-sm ${feature.included ? 'text-gray-400' : 'text-gray-400'}`}>
                       {feature.text}
@@ -299,30 +299,30 @@ const CollaboratorPricing = () => {
               <h4 className="text-xl font-bold mb-2">Technical Bundle</h4>
               <p className="text-purple-200 mb-4">$19.99/month</p>
               <ul className="space-y-2 text-sm text-purple-100">
-                <li>• Advanced code repository integration</li>
-                <li>• CI/CD pipeline templates</li>
-                <li>• Infrastructure as code generators</li>
-                <li>• Technical debt tracking</li>
+                <li> Advanced code repository integration</li>
+                <li> CI/CD pipeline templates</li>
+                <li> Infrastructure as code generators</li>
+                <li> Technical debt tracking</li>
               </ul>
             </div>
             <div className="bg-gradient-to-br from-purple-900 to-black p-6 rounded-xl">
               <h4 className="text-xl font-bold mb-2">Data & AI Bundle</h4>
               <p className="text-purple-200 mb-4">$24.99/month</p>
               <ul className="space-y-2 text-sm text-purple-100">
-                <li>• Advanced data visualization</li>
-                <li>• Machine learning model templates</li>
-                <li>• Data pipeline automation</li>
-                <li>• AI model training environments</li>
+                <li> Advanced data visualization</li>
+                <li> Machine learning model templates</li>
+                <li> Data pipeline automation</li>
+                <li> AI model training environments</li>
               </ul>
             </div>
             <div className="bg-gradient-to-br from-purple-900 to-black p-6 rounded-xl">
               <h4 className="text-xl font-bold mb-2">Design & Product Bundle</h4>
               <p className="text-purple-200 mb-4">$14.99/month</p>
               <ul className="space-y-2 text-sm text-purple-100">
-                <li>• Advanced prototyping tools</li>
-                <li>• Design system management</li>
-                <li>• Product roadmap visualization</li>
-                <li>• User feedback aggregation</li>
+                <li> Advanced prototyping tools</li>
+                <li> Design system management</li>
+                <li> Product roadmap visualization</li>
+                <li> User feedback aggregation</li>
               </ul>
             </div>
           </div>

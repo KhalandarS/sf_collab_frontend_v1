@@ -182,7 +182,7 @@ const SendJoinRequestModal = ({ isOpen, onClose, startupRoles, startupId, startu
           {/* Info Box */}
           <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 md:p-3">
             <p className="text-xs text-blue-300">
-              💡 <strong>Note:</strong> The founder will review your request soon. One pending request per startup.
+               <strong>Note:</strong> The founder will review your request soon. One pending request per startup.
             </p>
           </div>
 

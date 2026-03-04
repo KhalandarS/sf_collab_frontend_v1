@@ -37,7 +37,7 @@ export default function BuilderDashboard({
         console.log("Builder dashbard:", res);
         setStartups(res.data.startups || []);
       } catch (err) {
-        console.error("❌ Failed to load builder dashboard", err);
+        console.error(" Failed to load builder dashboard", err);
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ export default function BuilderDashboard({
 
 
   if (loading) {
-    return <div className="p-8 text-white/60">Loading builder dashboard…</div>;
+    return <div className="p-8 text-white/60">Loading builder dashboard</div>;
   }
 
   return (
@@ -95,7 +95,7 @@ export default function BuilderDashboard({
       </div>
 
       <div className="text-sm text-white/50 italic">
-        More builder features coming soon 🚀
+        More builder features coming soon 
       </div>
     </div>
   );
@@ -268,7 +268,7 @@ function TaskRow({ task }) {
             : "text-amber-400"
           }`}
       >
-        {isCompleted ? "✓" : "•"} {task.status.replace(/_/g, " ")}
+        {isCompleted ? "" : ""} {task.status.replace(/_/g, " ")}
       </span>
     </div>
   );

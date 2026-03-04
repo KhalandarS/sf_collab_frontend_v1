@@ -299,7 +299,7 @@ const Ideation = ({ activeRole}) => {
                   {shouldBlur && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
                       <div className="text-center p-4">
-                        <div className="text-gray-400 text-sm mb-2">🔒 Private Idea</div>
+                        <div className="text-gray-400 text-sm mb-2"> Private Idea</div>
                         <div className="text-gray-500 text-xs">Only the creator can view this</div>
                       </div>
                     </div>

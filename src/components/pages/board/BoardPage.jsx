@@ -230,12 +230,12 @@ return (
       <label className="text-xs font-semibold text-gray-400 uppercase">Tools</label>
       <div className="grid grid-cols-4 gap-2">
         {[
-          { id: TOOLS.PENCIL, icon: '✏️', label: 'Pencil' },
-          { id: TOOLS.ERASER, icon: '🧹', label: 'Eraser' },
-          { id: TOOLS.RECTANGLE, icon: '▭', label: 'Rectangle' },
-          { id: TOOLS.CIRCLE, icon: '◯', label: 'Circle' },
+          { id: TOOLS.PENCIL, icon: '', label: 'Pencil' },
+          { id: TOOLS.ERASER, icon: '', label: 'Eraser' },
+          { id: TOOLS.RECTANGLE, icon: '', label: 'Rectangle' },
+          { id: TOOLS.CIRCLE, icon: '', label: 'Circle' },
           { id: TOOLS.LINE, icon: '/', label: 'Line' },
-          { id: TOOLS.ARROW, icon: '→', label: 'Arrow' },
+          { id: TOOLS.ARROW, icon: '', label: 'Arrow' },
           { id: TOOLS.TEXT, icon: 'T', label: 'Text' },
         ].map((t) => (
           <motion.button

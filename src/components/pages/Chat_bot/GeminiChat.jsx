@@ -263,7 +263,7 @@ const GeminiChat = () => {
                  serviceStatus === 'loading' ? 'Checking Status...' :
                  'Service Error'}
               </span>
-              <span className="text-xs text-gray-400">• Google Gemini AI</span>
+              <span className="text-xs text-gray-400"> Google Gemini AI</span>
             </div>
           </div>
 
@@ -513,7 +513,7 @@ const GeminiChat = () => {
                           </span>
                           {message.role === 'assistant' && !message.isError && (
                             <>
-                              <span className="text-gray-600">•</span>
+                              <span className="text-gray-600"></span>
                               <span className="text-teal-400 font-medium">{message.model || 'Gemini'}</span>
                             </>
                           )}

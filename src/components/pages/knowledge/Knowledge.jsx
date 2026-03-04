@@ -102,7 +102,7 @@ const Knowledge = () => {
       setKnowledgeContent(mapped);
       setTotalContent(data.total || 0)
     } catch (error) {
-      console.warn("Backend failed — using mock data instead.");
+      console.warn("Backend failed  using mock data instead.");
       setKnowledgeContent(mockKnowledgeData);
       setNetworkError(true);
     } finally {
@@ -274,7 +274,7 @@ const Knowledge = () => {
               <div className="flex items-center gap-3">
                 <WifiOff className="w-5 h-5 text-yellow-400" />
                 <span className="text-sm text-yellow-400">
-                  Backend unavailable — showing demo data
+                  Backend unavailable  showing demo data
                 </span>
               </div>
             </motion.div>

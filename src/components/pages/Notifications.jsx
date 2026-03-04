@@ -43,7 +43,7 @@ import { ScrollArea } from '../ui/scroll-area';
 import { Badge } from '../ui/badge';
 import { Input } from '../ui/input';
 import LoadingSpinner from "../LoadingSpinner";
-// ✅ FIX: import shared context so the page and bell stay in sync
+//  FIX: import shared context so the page and bell stay in sync
 import { useNotifications as useNotificationsContext } from '../../contexts/NotificationContext';
 
 
@@ -54,7 +54,7 @@ const Notifications = () => {
   const dispatch = useDispatch();
   const { user, access_token } = useSelector((state) => state.auth);
   
-  // ✅ FIX: pull markAllAsRead and unread count from the shared context.
+  //  FIX: pull markAllAsRead and unread count from the shared context.
   // This means when this page opens the bell badge also drops to 0 instantly.
   const {
     markAllAsRead: markAllAsReadContext,
@@ -123,8 +123,8 @@ const Notifications = () => {
     fetchNotifications();
   }, [access_token, user]);
 
-  // ✅ FIX: Auto-mark ALL notifications as read the moment this page opens.
-  // markAllAsReadContext() is optimistic — the bell badge drops to 0 immediately.
+  //  FIX: Auto-mark ALL notifications as read the moment this page opens.
+  // markAllAsReadContext() is optimistic  the bell badge drops to 0 immediately.
   // The backend call and socket emit happen in the background.
   useEffect(() => {
     if (access_token) {
@@ -180,7 +180,7 @@ const Notifications = () => {
     return matchesSearch && matchesFilter && matchesTab;
   });
 
-  // ✅ FIX: use contextUnreadCount from shared context so the page header
+  //  FIX: use contextUnreadCount from shared context so the page header
   // badge matches the bell badge exactly, without needing a page refresh.
   const unreadCount = contextUnreadCount;
   const totalCount = notifications.length;
@@ -197,7 +197,7 @@ const Notifications = () => {
       });
 
       if (response.ok) {
-        // ✅ FIX: set both is_read (backend) and isRead (legacy page state)
+        //  FIX: set both is_read (backend) and isRead (legacy page state)
         setNotifications(prev => prev.map(n => 
           n.id === id ? { ...n, is_read: true, isRead: true, readAt: new Date().toISOString() } : n
         ));
@@ -310,7 +310,7 @@ const Notifications = () => {
 
   const handleMarkAllAsRead = async () => {
     try {
-      // ✅ FIX: use shared context — single API call, optimistic badge update,
+      //  FIX: use shared context  single API call, optimistic badge update,
       // and socket emission to sync the bell badge instantly.
       await markAllAsReadContext();
       // Also update the local list so unread dots disappear
@@ -389,7 +389,7 @@ const Notifications = () => {
   if (loading) {
     return (
       <LoadingSpinner
-        title="Syncing notifications…"
+        title="Syncing notifications"
         message="Just a moment while we pull the latest activity for you."
       />
     

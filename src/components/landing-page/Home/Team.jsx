@@ -14,10 +14,10 @@ import Footer from "../Footer";
 import OskarImg from "../../../assets/imgs/Oskar K (Founder & CEO).jpg";
 import FatimaImg from "../../../assets/imgs/Fatima Abba (Backend Developer).png";
 import ChinmayImg from "../../../assets/imgs/Chinmay Bharadwaj (Developer).jpg";
-import KrystianImg from "../../../assets/imgs/Krystian Śledziewski (cybersecurity)_.jpg";
+import KrystianImg from "../../../assets/imgs/Krystian ledziewski (cybersecurity)_.jpg";
 import RazeenImg from "../../../assets/imgs/Razeen Iqbal ( product Manager).jpg";
 import ShreyImg from "../../../assets/imgs/Shrey Dikshant (AI_ML Engineer).jpg";
-import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; // ✅ renamed file
+import VarunImg from "../../../assets/imgs/Varun.png (Frontend Developer & AI researcher).jpg"; //  renamed file
 import IvanImg from "../../../assets/imgs/Ivan Gomez (Cloud & Software Developer).jpg";
 gsap.registerPlugin(ScrollTrigger);
 
@@ -42,7 +42,7 @@ const teamMembers = [
     desc: "Building performant and scalable web applications.",
   },
   {
-    name: "Krystian Śledziewski",
+    name: "Krystian ledziewski",
     role: "Cybersecurity Specialist",
     img: KrystianImg,
     desc: "Ensuring system security, privacy, and resilience.",

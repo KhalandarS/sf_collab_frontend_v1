@@ -89,7 +89,7 @@ const About = () => {
             Where Builders Create Real Products Together
           </h1>
           <p className="text-gray-300 max-w-2xl leading-relaxed text-lg">
-            SFcollab is where builders, operators, and founders come together to create real products — with clarity, fairness, and shared upside.
+            SFcollab is where builders, operators, and founders come together to create real products  with clarity, fairness, and shared upside.
           </p>
         </section>
 
@@ -111,15 +111,15 @@ const About = () => {
             </p>
             <ul className="space-y-4 text-gray-300">
               <li className="flex items-start gap-3">
-                <span className="text-indigo-400 mt-1">→</span>
+                <span className="text-indigo-400 mt-1"></span>
                 <span>Instead of temporary gigs, you build <strong className="text-white">long-term collaborations</strong>.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-indigo-400 mt-1">→</span>
+                <span className="text-indigo-400 mt-1"></span>
                 <span>Instead of scattered tools, everything lives in <strong className="text-white">one shared system</strong>.</span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="text-indigo-400 mt-1">→</span>
+                <span className="text-indigo-400 mt-1"></span>
                 <span>Instead of working for someone, you work <strong className="text-white">with them</strong>.</span>
               </li>
             </ul>
@@ -143,7 +143,7 @@ const About = () => {
               {
                 step: "01",
                 title: "Start with People",
-                desc: "Share an idea or join one. Meet founders, builders, designers, and thinkers — all in one place. No pitching. No pressure. Just collaboration.",
+                desc: "Share an idea or join one. Meet founders, builders, designers, and thinkers  all in one place. No pitching. No pressure. Just collaboration.",
               },
               {
                 step: "02",

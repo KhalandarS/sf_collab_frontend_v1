@@ -148,7 +148,7 @@ export default function Project() {
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <h3 className="text-lg font-medium">{g.title}</h3>
-                  <p className="text-xs text-gray-400">{g.startup?.name} • Owner: {g.owner?.name}</p>
+                  <p className="text-xs text-gray-400">{g.startup?.name}  Owner: {g.owner?.name}</p>
                 </div>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase ${g.status === "completed" ? "bg-green-600" : "bg-blue-600"}`}>
                   {g.status}

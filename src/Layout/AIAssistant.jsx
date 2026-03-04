@@ -165,7 +165,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
                 <div className="flex-1 overflow-y-auto overscroll-contain py-2 bg-zinc-950 space-y-2">
                   {messages.length === 0 ? (
                     <div className="text-sm text-zinc-500 text-center py-8">
-                      Ask me anything…
+                      Ask me anything
                     </div>
                   ) : (
                     messages.map((m) => (
@@ -180,7 +180,7 @@ export default function AIAssistant({ callback = () => {}, isMobile = false }) {
 
                   {isLoading && (
                     <div className="text-xs text-zinc-500 italic">
-                      AI is thinking…
+                      AI is thinking
                     </div>
                   )}
 

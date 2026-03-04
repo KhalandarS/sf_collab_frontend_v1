@@ -41,7 +41,7 @@ export default function NotificationPage() {
   const [activeFilter, setActiveFilter] = useState("general");
   const [isClearing, setIsClearing] = useState(false);
   const [confirmModal, setConfirmModal] = useState(null);
-  // (Refs removed — no IntersectionObserver needed; unmount handles mark-all-read)
+  // (Refs removed  no IntersectionObserver needed; unmount handles mark-all-read)
 
   // Filter definitions
   const filters = useMemo(
@@ -118,13 +118,13 @@ export default function NotificationPage() {
   // Handle mark all as read
   const handleMarkAllRead = useCallback(async () => {
     await markAllAsRead();
-    // No refresh() — markAllAsRead is optimistic, refresh would race and revert
+    // No refresh()  markAllAsRead is optimistic, refresh would race and revert
   }, [markAllAsRead]);
 
   // Handle delete all read
   const handleDeleteAllRead = useCallback(async () => {
     await deleteAllRead();
-    // No refresh() — local state is already updated optimistically
+    // No refresh()  local state is already updated optimistically
   }, [deleteAllRead]);
 
   // Handle clear all with custom modal

@@ -434,7 +434,7 @@ const QuickActionsCard = ({ onTransferClick, onLeaderboardClick }) => {
       icon: Gift, 
       label: 'Daily Bonus', 
       color: 'from-amber-500 to-orange-500', 
-      onClick: () => toast.info('🎁 Daily bonus system coming soon!') 
+      onClick: () => toast.info(' Daily bonus system coming soon!') 
     },
     { 
       icon: Trophy, 
@@ -531,7 +531,7 @@ const DailyProgressCard = ({ stats }) => {
         
         <div className="pt-4 border-t border-white/10">
           <p className="text-gray-400 text-sm">
-            💡 Complete tasks and contribute to earn more coins!
+             Complete tasks and contribute to earn more coins!
           </p>
         </div>
       </div>
@@ -631,7 +631,7 @@ const TransactionHistoryCard = ({ transactions, formatDate }) => (
                   <p className="text-white font-medium">{tx.description || 'Transaction'}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-gray-500 text-sm">{formatDate(tx.created_at)}</span>
-                    <span className="text-gray-600">•</span>
+                    <span className="text-gray-600"></span>
                     <span className="text-gray-500 text-sm capitalize">{tx.transaction_type}</span>
                   </div>
                 </div>

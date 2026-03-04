@@ -615,7 +615,7 @@ const PDFSigningApp = () => {
                         <p className="text-xs text-white font-medium truncate">{previewText(selectedFile.name, 20)}</p>
                         <p className="text-xs text-gray-400 mt-1">
                           {formatFileSize(selectedFile.size)}
-                          {uploadedFileData && ` • ${uploadedFileData.num_pages || 1} pages`}
+                          {uploadedFileData && `  ${uploadedFileData.num_pages || 1} pages`}
                         </p>
                       </motion.div>
                     )}
@@ -708,7 +708,7 @@ const PDFSigningApp = () => {
                           />
                         </div>
                         <p className="text-xs text-emerald-400 text-center font-medium">
-                          ✓ Ready to position
+                           Ready to position
                         </p>
                       </motion.div>
                     )}
@@ -825,7 +825,7 @@ const PDFSigningApp = () => {
                                 onClick={zoomOut}
                                 className="p-2 border border-slate-600 bg-slate-700/50 hover:bg-slate-600 text-white rounded-lg transition-all"
                               >
-                                −
+                                
                               </motion.button>
                               <span className="text-sm text-white font-medium min-w-12 text-center">{Math.round(scale * 100)}%</span>
                               <motion.button
@@ -999,7 +999,7 @@ const PDFSigningApp = () => {
                               <div className="min-w-0 flex-1">
                                 <p className="font-semibold text-white text-sm truncate">{previewText(doc.name, 20)}</p>
                                 <p className="text-xs text-gray-400 truncate">
-                                  {doc.date} • {doc.size}
+                                  {doc.date}  {doc.size}
                                 </p>
                               </div>
                             </div>

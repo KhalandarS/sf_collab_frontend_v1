@@ -312,9 +312,9 @@ const QwenChat = () => {
                       className="w-full"
                     />
                     <p className="text-xs text-gray-500">
-                      {temperature < 0.3 ? '🎯 Precise' :
-                        temperature < 0.7 ? '⚖️ Balanced' :
-                          '🎨 Creative'}
+                      {temperature < 0.3 ? ' Precise' :
+                        temperature < 0.7 ? ' Balanced' :
+                          ' Creative'}
                     </p>
                   </div>
                   <div className="w-full my-2">

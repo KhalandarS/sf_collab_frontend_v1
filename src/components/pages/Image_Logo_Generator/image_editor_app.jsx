@@ -703,7 +703,7 @@ const ImageEditor = () => {
                           className="border-gray-600 bg-gray-700/50 text-white hover:bg-gray-600"
                         >
                           <RotateCw className="h-4 w-4 " />
-                          Rotate 90°
+                          Rotate 90
                         </Button>
                         <Button
                           onClick={() => rotateImage(-90)}
@@ -711,7 +711,7 @@ const ImageEditor = () => {
                           className="border-gray-600 bg-gray-700/50 text-white hover:bg-gray-600"
                         >
                           <RotateCcw className="h-4 w-4 " />
-                          Rotate -90°
+                          Rotate -90
                         </Button>
                         <Button
                           onClick={deleteSelected}
@@ -864,7 +864,7 @@ const ImageEditor = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">Dimensions:</span>
-                            <span className="text-white">{imageInfo.width} × {imageInfo.height}</span>
+                            <span className="text-white">{imageInfo.width}  {imageInfo.height}</span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-400">Size:</span>

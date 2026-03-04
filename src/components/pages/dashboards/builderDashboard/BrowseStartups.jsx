@@ -62,7 +62,7 @@ const BrowseStartups = () => {
                 <p className="text-sm text-gray-400 mb-4">Brief description of the startup</p>
                 <div className="flex gap-2 text-xs text-gray-500">
                   <span>Series A</span>
-                  <span>•</span>
+                  <span></span>
                   <span>5 members</span>
                 </div>
               </div>

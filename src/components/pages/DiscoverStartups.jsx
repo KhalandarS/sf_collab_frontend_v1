@@ -594,7 +594,7 @@ const DiscoverStartups = ({ myStartupsOnly = false }) => {
 
                           {/* CTA hint */}
                           <span className="mt-2 text-xs text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                            View plans →
+                            View plans 
                           </span>
                         </div>
                       </motion.div>

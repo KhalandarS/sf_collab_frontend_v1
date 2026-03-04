@@ -825,7 +825,7 @@ const AboutSection = () => {
             </div>
             
             <div className="hidden lg:flex items-center gap-4">
-              <span className="text-sm text-white/40">Drag to explore →</span>
+              <span className="text-sm text-white/40">Drag to explore </span>
             </div>
           </div>
 
@@ -985,7 +985,7 @@ const AboutSection = () => {
               <div className="stat-item p-6 rounded-xl bg-white/[0.02] border border-white/10">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-2 h-2 rounded-full bg-white" />
-                  <span className="font-mono text-2xl lg:text-3xl font-bold">∞</span>
+                  <span className="font-mono text-2xl lg:text-3xl font-bold"></span>
                 </div>
                 <p className="text-sm text-white/50">Canvas scale</p>
               </div>
@@ -1027,7 +1027,7 @@ const AboutSection = () => {
           </motion.button>
           
           <p className="mt-6 text-sm text-white/40">
-            No credit card required • Full platform access • Cancel anytime
+            No credit card required  Full platform access  Cancel anytime
           </p>
         </motion.div>
       </div>

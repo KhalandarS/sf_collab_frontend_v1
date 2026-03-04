@@ -12,19 +12,19 @@ export default function AdminApplicationsSection() {
     }, []);
   return (
     <div className="bg-linear-to-br from-gray-800/40 to-gray-700/20 p-6 rounded-xl shadow-xl border border-gray-700/50 mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-gray-100">📋 Applications</h2>
+      <h2 className="text-xl font-semibold mb-4 text-gray-100"> Applications</h2>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Job Applications */}
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-blue-300">💼 Job Applications</h3>
+          <h3 className="text-lg font-semibold mb-3 text-blue-300"> Job Applications</h3>
           <ul className="space-y-3 max-h-96 overflow-y-auto">
             {allApplications
               .filter(item => item.application_type === 'job')
               .map((app) => (
                 <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
                   <div className="font-medium text-blue-300">{app.name}</div>
-                  <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
-                  <p className="text-xs text-gray-400">🌍 {app.country}</p>
+                  <p className="text-xs text-gray-400 mt-1"> {app.email}</p>
+                  <p className="text-xs text-gray-400"> {app.country}</p>
                   <div className="text-xs text-gray-300 mt-2">
                     <p><strong>Area:</strong> {app.data?.area}</p>
                     <p><strong>Skills:</strong> {app.data?.skills}</p>
@@ -39,15 +39,15 @@ export default function AdminApplicationsSection() {
     
         {/* Influencer Applications */}
         <div>
-          <h3 className="text-lg font-semibold mb-3 text-purple-300">⭐ Influencer Applications</h3>
+          <h3 className="text-lg font-semibold mb-3 text-purple-300"> Influencer Applications</h3>
           <ul className="space-y-3 max-h-96 overflow-y-auto">
             {allApplications
               .filter(item => item.application_type === 'influencer')
               .map((app) => (
                 <li key={app.id} className="p-4 bg-gray-700/30 rounded-lg border border-gray-600/30 hover:border-gray-500/50 transition">
                   <div className="font-medium text-purple-300">{app.name}</div>
-                  <p className="text-xs text-gray-400 mt-1">📧 {app.email}</p>
-                  <p className="text-xs text-gray-400">🌍 {app.country}</p>
+                  <p className="text-xs text-gray-400 mt-1"> {app.email}</p>
+                  <p className="text-xs text-gray-400"> {app.country}</p>
                   <div className="text-xs text-gray-300 mt-2">
                     <p><strong>Niche:</strong> {app.data?.niche}</p>
                     <p><strong>Followers:</strong> {app.data?.followers}</p>

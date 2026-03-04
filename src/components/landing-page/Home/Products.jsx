@@ -36,7 +36,7 @@ const Products = () => {
       id: 4,
       year: "System",
       title: "Founder Dashboard",
-      desc: "Momentum metrics, priorities, and decisions — surfaced when they matter.",
+      desc: "Momentum metrics, priorities, and decisions  surfaced when they matter.",
       img: "/landing_page/4.4.png",
     },
     {

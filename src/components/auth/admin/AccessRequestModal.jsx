@@ -110,7 +110,7 @@ const AccessRequestModal = ({ isOpen, onClose, permissionKey }) => {
               onClick={hideAlert}
               className="absolute top-2 right-2"
             >
-              ×
+              
             </Button>
           </Alert>
         </div>

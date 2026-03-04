@@ -82,7 +82,7 @@ export default function Preferences() {
             <div className="w-1/2">
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-medium">Customize your experience</h2>
-                <span className="text-gray-400 text-sm" title="Info">ℹ️</span>
+                <span className="text-gray-400 text-sm" title="Info"></span>
               </div>
               <p className="text-gray-400 text-sm">
                 You can change language, time zone, default page experience.

@@ -9,7 +9,7 @@ export default function JoinSection({ title, text, ref }) {
         href="/waitlist"
         className="bg-white text-black px-8 py-3 rounded-full font-semibold hover:bg-gray-200 transition"
       >
-        Join Waitlist →
+        Join Waitlist 
       </a>
     </section>
   </>

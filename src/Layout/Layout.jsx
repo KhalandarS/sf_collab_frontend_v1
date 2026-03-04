@@ -63,27 +63,12 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     AOS.init({ duration: 800, easing: "ease-out", once: false });
   }, []);
 
-  // Waitlist guard
+  // Waitlist guard bypassed
   useEffect(() => {
-    if (!user || !access_token) return;
-
-    const checkWaitlist = async () => {
-      try {
-        const res = await waitlistAPI.isOnWaitlist(user.email, access_token);
-        if (
-          !res?.on_waitlist &&
-          !["/waitlist", "/waitlist-terms", "/user-profile", "/apply-influencer", "/joinsf", "/pricing"].includes(location.pathname)
-        ) {
-          toast.info("You should join the waitlist to access this section.");
-          navigate("/waitlist");
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    checkWaitlist();
-  }, [user, access_token, location.pathname]);
+    if (location.pathname === "/waitlist") {
+      navigate("/dashboard");
+    }
+  }, [location.pathname]);
 
   // Connection notifications via Socket.IO
   useEffect(() => {
@@ -97,7 +82,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <p className="font-semibold">New Connection Request</p>
           <p className="text-sm opacity-90">{senderName} wants to connect with you</p>
         </div>,
-        { 
+        {
           onClick: () => navigate("/connections?tab=incoming"),
           autoClose: 5000,
         }
@@ -113,7 +98,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
           <p className="font-semibold">Connection Accepted!</p>
           <p className="text-sm opacity-90">{accepterName} accepted your connection request</p>
         </div>,
-        { 
+        {
           onClick: () => navigate(`/user-profile?userId=${data.accepter_id || data.accepter?.id}`),
           autoClose: 5000,
         }
@@ -184,8 +169,9 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
   //   return () => client.disconnect();
   // }, [user?.id]);
 
-  // Profile completion reminder
+  // Profile completion reminder bypassed
   useEffect(() => {
+    /*
     if (!user) return;
 
     const checkProfileCompletion = async () => {
@@ -195,6 +181,7 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
     };
 
     checkProfileCompletion();
+    */
   }, [user, location]);
   // Sidebar resolver
   const SideBar = () => {
@@ -306,17 +293,17 @@ const Layout = ({ activeRole, setActiveRole, userRoles }) => {
       </div>
       {/* Chat docks */}
       {
-  (location.pathname !== "/chat") &&
-  <>
-    <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
+        (location.pathname !== "/chat") &&
+        <>
+          <AIAssistant callback={() => isMobile ? setDisableNavbar(!disableNavbar) : null} isMobile={isMobile} />
 
-    <ChatDock
-      maxWindows={isMobile ? 1 : 2}
-      isMobile={isMobile}
-      callback={() => (isMobile ? setDisableNavbar(!disableNavbar) : null)}
-    />
-  </>
-}
+          <ChatDock
+            maxWindows={isMobile ? 1 : 2}
+            isMobile={isMobile}
+            callback={() => (isMobile ? setDisableNavbar(!disableNavbar) : null)}
+          />
+        </>
+      }
 
       {/* )} */}
     </>

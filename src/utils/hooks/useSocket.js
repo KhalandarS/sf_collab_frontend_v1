@@ -27,12 +27,12 @@ const useSocket = () => {
         });
 
         newSocket.on('connect', () => {
-            console.log('✅ Connected to WebSocket:', newSocket.id);
+            console.log(' Connected to WebSocket:', newSocket.id);
             setIsConnected(true);
         });
 
         newSocket.on('disconnect', (reason) => {
-            console.log('❌ Disconnected:', reason);
+            console.log(' Disconnected:', reason);
             setIsConnected(false);
         });
 

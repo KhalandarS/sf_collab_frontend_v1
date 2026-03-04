@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bell, X, ExternalLink, CheckCheck, Loader2 } from 'lucide-react';
-// ✅ FIX: import from the shared context so Bell and Notifications page share state
+//  FIX: import from the shared context so Bell and Notifications page share state
 import { useNotifications } from '../../contexts/NotificationContext';
-// ✅ FIX: corrected import path — ChatNotificationProvider lives in pages/chat, not context/
+//  FIX: corrected import path  ChatNotificationProvider lives in pages/chat, not context/
 import { useChatNotifications } from '@/components/pages/chat/Chatnotificationprovider';
 
 const NotificationBell = () => {
@@ -20,7 +20,7 @@ const NotificationBell = () => {
     refresh
   } = useNotifications();
 
-  // ─── Feature 4: Chat unread count from ChatNotificationProvider ──────────
+  //  Feature 4: Chat unread count from ChatNotificationProvider 
   const { chatUnreadCount = 0, resetChatUnreadCount } = useChatNotifications();
 
   // Combined badge = REST notifications unread + chat messages unread
@@ -109,7 +109,7 @@ const NotificationBell = () => {
   
   // Handle notification click
   const handleNotificationClick = async (notification) => {
-    // Mark as read — optimistic, no refresh() needed (avoids race with DB write)
+    // Mark as read  optimistic, no refresh() needed (avoids race with DB write)
     if (!notification.is_read) {
       markAsRead(notification.id); // fire-and-forget; state updates instantly
     }
@@ -164,7 +164,7 @@ const NotificationBell = () => {
           setIsOpen((prev) => {
             const next = !prev;
             if (!prev && next) {
-              // ─── Feature 4: reset chat badge on open ──────────────────
+              //  Feature 4: reset chat badge on open 
               if (resetChatUnreadCount) resetChatUnreadCount();
               // NOTE: We do NOT call markAllAsRead() here.
               // Individual notifications are marked read when clicked.
@@ -179,7 +179,7 @@ const NotificationBell = () => {
       >
         <Bell className="w-6 h-6" />
         
-        {/* Unread badge — combined REST + chat */}
+        {/* Unread badge  combined REST + chat */}
         {totalUnread > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full">
             {totalUnread > 99 ? '99+' : totalUnread}

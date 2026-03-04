@@ -7,7 +7,7 @@ export default function usePaginatedFetch({
   search = "",
   enabled = true,
   startPage = 1,
-  searchDelay = 400, // ⬅ debounce time (ms)
+  searchDelay = 400, //  debounce time (ms)
   totalAmountKey = "total_amount",
 }) {
   const [items, setItems] = useState([]);
@@ -68,7 +68,7 @@ export default function usePaginatedFetch({
     enabled,
   });
 
-  // 🔁 Debounced search reset
+  //  Debounced search reset
   useEffect(() => {
     if (!enabled) return;
 

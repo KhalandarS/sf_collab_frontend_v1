@@ -259,7 +259,7 @@ export const SidebarV2 = () => {
                         <team.logo className="size-4 shrink-0" />
                       </div>
                       {team.name}
-                      <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                      <DropdownMenuShortcut>{index + 1}</DropdownMenuShortcut>
                     </DropdownMenuItem>
                   ))}
                   <DropdownMenuSeparator />

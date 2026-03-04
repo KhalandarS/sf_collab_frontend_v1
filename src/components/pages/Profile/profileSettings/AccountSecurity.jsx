@@ -23,7 +23,7 @@ export default function AccountSecurity ({ formData, onChange, confirmedDelete, 
     <div className="space-y-10">
       <h2 className="text-2xl font-bold mb-6">Account & Security</h2>
       <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-6 mb-8">
-        <p className="text-gray-300 text-sm">🔄 More security features coming soon...</p>
+        <p className="text-gray-300 text-sm"> More security features coming soon...</p>
       </div>
 {/* 
       <div className="space-y-6">
@@ -61,8 +61,8 @@ export default function AccountSecurity ({ formData, onChange, confirmedDelete, 
         </div>
 
         <div className="text-sm text-gray-400 space-y-1">
-          <div>{newPassword.length < 8 ? <span className="text-red-400">• Must be at least 8 characters</span> : <span className="text-green-400">• Length OK</span>}</div>
-          <div>{newPassword !== confirmPassword ? <span className="text-red-400">• Passwords do not match</span> : <span className="text-green-400">• Passwords match</span>}</div>
+          <div>{newPassword.length < 8 ? <span className="text-red-400"> Must be at least 8 characters</span> : <span className="text-green-400"> Length OK</span>}</div>
+          <div>{newPassword !== confirmPassword ? <span className="text-red-400"> Passwords do not match</span> : <span className="text-green-400"> Passwords match</span>}</div>
         </div>
 
         <button disabled={!canChangePassword} onClick={() => changePassword(currentPassword, newPassword)} className={`px-6 py-3 rounded-lg mt-4 transition-colors ${canChangePassword ? "bg-blue-600 hover:bg-blue-700" : "bg-gray-600 cursor-not-allowed text-gray-400"}`}>Update Password</button>

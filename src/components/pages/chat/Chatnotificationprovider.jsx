@@ -348,7 +348,7 @@ export const ChatNotificationProvider = ({ children }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [flashingTabs, setFlashingTabs] = useState({});
 
-  // ─── Feature 4: Bell sync — chat unread count exposed to NotificationBell ─
+  //  Feature 4: Bell sync  chat unread count exposed to NotificationBell 
   const [chatUnreadCount, setChatUnreadCount] = useState(0);
   
   const flashingIntervalsRef = useRef({});
@@ -416,7 +416,7 @@ export const ChatNotificationProvider = ({ children }) => {
   const addNotification = useCallback((notification) => {
     setNotifications((prev) => [notification, ...prev]);
 
-    // 🔔 broadcast so NotificationPage can live-update
+    //  broadcast so NotificationPage can live-update
     window.dispatchEvent(new CustomEvent("notifications:new", { detail: notification }));
   }, []);
 
@@ -496,16 +496,16 @@ export const ChatNotificationProvider = ({ children }) => {
       if (!message) return;
 
       // Guard: skip own messages (fix for file uploads which also trigger new_message)
-      // sender_id may be int while currentUserId is string — use String() for safe compare
+      // sender_id may be int while currentUserId is string  use String() for safe compare
       const sId = message?.sender_id;
       const isOwnMessage = sId != null && currentUserId != null && String(sId) === String(currentUserId);
       if (isOwnMessage) return;
 
-      // Get conversation type — now reliably included in socket payload
+      // Get conversation type  now reliably included in socket payload
       const conversationType = data.conversation?.conversation_type || 'direct';
       const isMuted = MUTED_CONVERSATION_TYPES.includes(conversationType);
 
-      // Never show toast or popup for general chat — it's too noisy
+      // Never show toast or popup for general chat  it's too noisy
       if (isMuted) return;
 
       // Only show toast when not on chat page
@@ -522,7 +522,7 @@ export const ChatNotificationProvider = ({ children }) => {
         playNotificationSound();
         
         setUnreadCount((prev) => prev + 1);
-        // ─── Feature 4: also increment bell chat badge ─────────────────
+        //  Feature 4: also increment bell chat badge 
         setChatUnreadCount((prev) => prev + 1);
 
         // Auto-popup ChatDock (like Facebook Messenger)
@@ -569,7 +569,7 @@ export const ChatNotificationProvider = ({ children }) => {
     setUnreadCount(0);
   }, []);
 
-  // ─── Feature 4: called by NotificationBell when opened ───────────────────
+  //  Feature 4: called by NotificationBell when opened 
   const resetChatUnreadCount = useCallback(() => {
     setChatUnreadCount(0);
   }, []);
@@ -593,7 +593,7 @@ export const ChatNotificationProvider = ({ children }) => {
     isConnected,
     notifications,
     unreadCount,
-    chatUnreadCount,          // ─── Feature 4
+    chatUnreadCount,          //  Feature 4
     flashingTabs, // NEW: Export flashing tabs state
     addNotification,
     removeNotification,
@@ -601,7 +601,7 @@ export const ChatNotificationProvider = ({ children }) => {
     navigateToConversation,
     sendQuickReply,
     resetUnreadCount,
-    resetChatUnreadCount,     // ─── Feature 4
+    resetChatUnreadCount,     //  Feature 4
     joinConversation,
     leaveConversation,
     startFlashing, // NEW: Export flashing controls

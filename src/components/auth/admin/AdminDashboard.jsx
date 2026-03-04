@@ -7,9 +7,9 @@ const AdminDashboard = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: "/admin/access-requests", label: "Access Requests", icon: "📋" },
-    { path: "/admin/user-permissions", label: "User Permissions", icon: "👥" },
-    { path: "/admin/permissions", label: "Permission Management", icon: "🔑" },
+    { path: "/admin/access-requests", label: "Access Requests", icon: "" },
+    { path: "/admin/user-permissions", label: "User Permissions", icon: "" },
+    { path: "/admin/permissions", label: "Permission Management", icon: "" },
   ];
 
   return (
@@ -43,7 +43,7 @@ const AdminDashboard = () => {
             </div>
             <Link to="/dashboard">
               <Button variant="outline" className="border-black text-black hover:bg-gray-100">
-                ← Back to App
+                 Back to App
               </Button>
             </Link>
           </div>

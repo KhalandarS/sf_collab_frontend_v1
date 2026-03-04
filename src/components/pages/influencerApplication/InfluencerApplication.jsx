@@ -59,15 +59,15 @@ export default function InfluencerApplication() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="mt-8 p-6 bg-gradient-to-br from-slate-800/40 to-slate-700/20 rounded-xl border border-slate-700/50"
             >
-              <h3 className="text-lg font-semibold mb-4 text-purple-300">⭐ Influencer Applications</h3>
+              <h3 className="text-lg font-semibold mb-4 text-purple-300"> Influencer Applications</h3>
               <ul className="space-y-3 max-h-96 overflow-y-auto">
                 {allApplications
                   .filter(item => item.application_type === 'influencer')
                   .map((app) => (
                     <li key={app.id} className="p-4 bg-slate-700/30 rounded-lg border border-slate-600/30 hover:border-slate-500/50 transition">
                       <div className="font-medium text-purple-300">{app.name}</div>
-                      <p className="text-xs text-slate-400 mt-1">📧 {app.email}</p>
-                      <p className="text-xs text-slate-400">🌍 {app.country}</p>
+                      <p className="text-xs text-slate-400 mt-1"> {app.email}</p>
+                      <p className="text-xs text-slate-400"> {app.country}</p>
                       <div className="text-xs text-slate-300 mt-2">
                         <p><strong>Niche:</strong> {app.data?.niche}</p>
                         <p><strong>Followers:</strong> {app.data?.followers}</p>

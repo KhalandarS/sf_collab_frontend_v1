@@ -90,7 +90,7 @@ export default function IdeationCard({ content, shouldBlur }) {
         {shouldBlur && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
             <div className="text-center">
-              <div className="text-5xl mb-3">🔒</div>
+              <div className="text-5xl mb-3"></div>
               <div className="text-gray-300 text-sm font-medium">
                 Private Idea
               </div>

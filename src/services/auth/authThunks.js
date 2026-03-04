@@ -69,7 +69,7 @@ export const refreshAccessToken = createAsyncThunk(
 
       const data = await authAPI.refreshTokenRequest(refreshToken);
 
-      // 🔥 Make sure to match backend response keys (Flask usually returns `access_token`)
+      //  Make sure to match backend response keys (Flask usually returns `access_token`)
       if (data.access_token) {
         localStorage.setItem('accessToken', data.access_token);
       }

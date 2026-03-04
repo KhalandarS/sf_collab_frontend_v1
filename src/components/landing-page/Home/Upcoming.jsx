@@ -22,7 +22,7 @@ export default function Upcoming() {
           to="/"
           className="inline-block text-lg font-medium border-b border-white hover:text-white/80 transition-all"
         >
-          ← Back to Home
+           Back to Home
         </Link>
       </div>
     </div>

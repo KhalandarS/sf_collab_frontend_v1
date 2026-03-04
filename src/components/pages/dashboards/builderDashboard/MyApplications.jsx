@@ -234,7 +234,7 @@ const MyApplications = () => {
               }}
               className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
             >
-              ✕ Clear Filters
+               Clear Filters
             </button>
           )}
         </motion.div>

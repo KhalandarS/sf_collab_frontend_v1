@@ -25,7 +25,7 @@ export default function FounderDashboard({
         const response = await dashboardAPI.getFounderDashboard();
         setStartups(response.data.startups || []);
       } catch (err) {
-        console.error("❌ Failed to load founder dashboard data", err);
+        console.error(" Failed to load founder dashboard data", err);
       } finally {
         setLoading(false);
       }
@@ -54,7 +54,7 @@ export default function FounderDashboard({
   ], [startups, totals, user]);
 
   if (loading) {
-    return <div className="p-8 text-white/60">Loading founder dashboard…</div>;
+    return <div className="p-8 text-white/60">Loading founder dashboard</div>;
   }
 
   return (

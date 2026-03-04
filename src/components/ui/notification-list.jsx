@@ -86,7 +86,7 @@ function NotificationList() {
             </div>
             <div className="text-xs text-neutral-500 font-medium">
               <span>{notification.time}</span>
-              &nbsp;•&nbsp;
+              &nbsp;&nbsp;
               <span>{notification.subtitle}</span>
             </div>
           </motion.div>

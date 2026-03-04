@@ -17,7 +17,7 @@ export default function ReferralTutorial() {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Welcome to SF Referral & Rankings! 🚀
+            Welcome to SF Referral & Rankings! 
           </h2>
           <p>
             Climb the ranks by referring friends and contributing to the SFCollab community. Earn exclusive rewards, unlock prestige badges, and gain lifetime discounts!
@@ -62,7 +62,7 @@ export default function ReferralTutorial() {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Earn Points & Climb Ranks 📈
+            Earn Points & Climb Ranks 
           </h2>
           <p>
             Refer friends, submit ideas, participate in polls, and contribute to the community. Every action brings you closer to exclusive rewards!
@@ -77,7 +77,7 @@ export default function ReferralTutorial() {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Ready to Compete? 🏆
+            Ready to Compete? 
           </h2>
           <p>
             Start referring, contributing, and engaging with the community. Watch your rank climb and unlock exclusive rewards. Let's build the future together!

@@ -38,7 +38,7 @@ export default function IdeationTutorial({ activeRole }) {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Ready to Innovate? 🚀
+            Ready to Innovate? 
           </h2>
           <p>
             The Ideation Hub is your launchpad for creativity and collaboration. Dive in, explore ideas, connect with like-minded innovators, and let's build the future together!

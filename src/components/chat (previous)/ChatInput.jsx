@@ -15,14 +15,14 @@ import { Send, Smile, Paperclip, Image as ImageIcon, X, Loader2 } from 'lucide-r
 
 // Simple emoji list
 const EMOJI_LIST = [
-  '😀', '😂', '🥰', '😍', '🤩', '😎', '🙂', '😊',
-  '👍', '👎', '👏', '🙌', '🤝', '✌️', '🤞', '💪',
-  '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💔',
-  '🔥', '⭐', '✨', '💯', '🎉', '🎊', '🎁', '🏆',
-  '👋', '🤚', '✋', '🖐️', '👌', '🤌', '🤏', '✊',
-  '😢', '😭', '😤', '😠', '🤬', '😱', '😨', '😰',
-  '🤔', '🤨', '😐', '😑', '😶', '🙄', '😏', '😣',
-  '🙏', '💕', '💞', '💓', '💗', '💖', '💘', '💝',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
 ];
 
 // File preview component
@@ -225,7 +225,7 @@ const ChatInput = ({
 
   // Handle like/thumbs up
   const handleLike = () => {
-    onSend('👍');
+    onSend('');
   };
 
   // Handle Enter key (send on Enter, new line on Shift+Enter)
@@ -345,7 +345,7 @@ const ChatInput = ({
               className="p-1.5 md:p-2 text-lg md:text-xl hover:bg-zinc-700/50 rounded-full transition-colors shrink-0 disabled:opacity-50 mb-1"
               disabled={disabled}
             >
-              👍
+              
             </button>
           )}
         </form>

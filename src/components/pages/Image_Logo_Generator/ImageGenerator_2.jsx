@@ -149,13 +149,13 @@ const ImageGenerator = () => {
   };
 
   const presetSizes = [
-    { label: '512×512', w: 512, h: 512, aspect: '1:1' },
-    { label: '768×768', w: 768, h: 768, aspect: '1:1' },
-    { label: '1024×1024', w: 1024, h: 1024, aspect: '1:1' },
-    { label: '1024×768', w: 1024, h: 768, aspect: '4:3' },
-    { label: '768×1024', w: 768, h: 1024, aspect: '3:4' },
-    { label: '1280×720', w: 1280, h: 720, aspect: '16:9' },
-    { label: '720×1280', w: 720, h: 1280, aspect: '9:16' }
+    { label: '512512', w: 512, h: 512, aspect: '1:1' },
+    { label: '768768', w: 768, h: 768, aspect: '1:1' },
+    { label: '10241024', w: 1024, h: 1024, aspect: '1:1' },
+    { label: '1024768', w: 1024, h: 768, aspect: '4:3' },
+    { label: '7681024', w: 768, h: 1024, aspect: '3:4' },
+    { label: '1280720', w: 1280, h: 720, aspect: '16:9' },
+    { label: '7201280', w: 720, h: 1280, aspect: '9:16' }
   ];
 
   const promptExamples = [
@@ -280,7 +280,7 @@ const ImageGenerator = () => {
                   <div className="space-y-4">
                     <div className="space-y-3">
                       <Label className="text-sm font-semibold text-white">
-                        Dimensions: {width} × {height}
+                        Dimensions: {width}  {height}
                       </Label>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
@@ -409,7 +409,7 @@ const ImageGenerator = () => {
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-white truncate">{item.prompt}</p>
-                        <p className="text-xs text-gray-400">{item.model} • {item.dimensions}</p>
+                        <p className="text-xs text-gray-400">{item.model}  {item.dimensions}</p>
                       </div>
                     </div>
                   ))}
@@ -509,7 +509,7 @@ const ImageGenerator = () => {
                               Generated Image
                             </h3>
                             <p className="text-sm text-gray-400">
-                              {availableModels[model]?.name || model} • {width}×{height} pixels
+                              {availableModels[model]?.name || model}  {width}{height} pixels
                             </p>
                           </div>
                           <Button
@@ -540,7 +540,7 @@ const ImageGenerator = () => {
                             <div>
                               <span className="text-gray-400">Dimensions:</span>
                               <span className="ml-2 font-medium text-blue-400">
-                                {width} × {height}
+                                {width}  {height}
                               </span>
                             </div>
                             <div>

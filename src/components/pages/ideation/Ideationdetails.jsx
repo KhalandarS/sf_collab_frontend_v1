@@ -866,12 +866,12 @@ const IdeationDetails = () => {
                   </h3>
                   {ideaCreator?.profile?.company && (
                     <p className="text-xs text-blue-400 font-medium mt-1">
-                      💼 {ideaCreator.profile.company}
+                       {ideaCreator.profile.company}
                     </p>
                   )}
                   {ideaCreator?.profile?.city && (
                     <p className="text-xs text-gray-400 mt-1">
-                      📍 {ideaCreator.profile.city}, {ideaCreator.profile.country}
+                       {ideaCreator.profile.city}, {ideaCreator.profile.country}
                     </p>
                   )}
                 </div>

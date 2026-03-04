@@ -40,7 +40,7 @@ export default function DonationSection() {
         {/* Left content */}
         <div className="flex flex-col gap-2 text-center md:text-left">
           <h3 className="text-xl font-semibold transition-transform transform hover:scale-105">
-            Support what we’re building
+            Support what were building
           </h3>
           <p className="text-sm text-white/70 max-w-md transition-opacity hover:opacity-80">
             If you like what we do, your contribution helps us grow, improve,

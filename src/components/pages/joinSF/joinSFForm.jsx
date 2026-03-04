@@ -81,7 +81,7 @@ export default function JoinSFApplicationForm() {
         }
       };
     try {
-      // 🔁 Replace with your backend endpoint
+      //  Replace with your backend endpoint
       const response = await applicationAPI.createJobApplication(body);
       if (!response.success) {
         throw new Error("Application submission failed");
@@ -212,7 +212,7 @@ export default function JoinSFApplicationForm() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-slate-300">
-                    Main skills (1–3 keywords) *
+                    Main skills (13 keywords) *
                   </Label>
                   <Input
                     placeholder="React, Python, Figma"

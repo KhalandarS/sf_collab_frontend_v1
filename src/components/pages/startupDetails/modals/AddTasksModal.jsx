@@ -177,10 +177,10 @@ export default function AddTaskModal({
       let response;
       if (editMode && task) {
         response = await tasksAPI.update(task.id, payload);
-        toast.success("✅ Task updated successfully!");
+        toast.success(" Task updated successfully!");
       } else {
         response = await tasksAPI.create(payload);
-        toast.success("✅ Task created successfully!");
+        toast.success(" Task created successfully!");
       }
 
       setTasks((prevTasks) => {

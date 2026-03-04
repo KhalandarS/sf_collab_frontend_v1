@@ -230,7 +230,7 @@ const popularTechnologies = [
   "Virtual Reality (VR)",
   "Mixed Reality (XR)",
   "Brain-Computer Interfaces (BCI)",
-  "Human–AI Collaboration"
+  "HumanAI Collaboration"
 ];
 
 export { industries, fundingRounds, roleTypes, startupStages, popularTechnologies };

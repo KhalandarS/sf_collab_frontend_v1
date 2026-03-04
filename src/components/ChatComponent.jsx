@@ -772,14 +772,14 @@ const [isRightSidebarOpen, setIsRightSidebarOpen] = useState(false);
 
     // --- Connection events ---
     client.on('connected', () => {
-      console.log('✅ WebSocket connected with token');
+      console.log(' WebSocket connected with token');
       setIsConnected(true);
       loadConversations();
       showNotification('success', 'Connected to chat server');
     });
 
     client.on('disconnected', () => {
-      console.log('❌ WebSocket disconnected');
+      console.log(' WebSocket disconnected');
       setIsConnected(false);
       showNotification('error', 'Disconnected from chat server');
     });

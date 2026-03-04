@@ -228,8 +228,8 @@ const ImageGenerator = () => {
             {[
               { label: 'Your Credits', value: credits, icon: Sparkles, color: 'text-yellow-400' },
               { label: 'Text Gen', value: '1-2', suffix: 'credits', icon: Type, color: 'text-blue-400' },
-              { label: 'Txt→Img', value: '40', suffix: 'credits', icon: ImageLucide, color: 'text-purple-400' },
-              { label: 'Img→Img', value: '50', suffix: 'credits', icon: FileImage, color: 'text-emerald-400' }
+              { label: 'TxtImg', value: '40', suffix: 'credits', icon: ImageLucide, color: 'text-purple-400' },
+              { label: 'ImgImg', value: '50', suffix: 'credits', icon: FileImage, color: 'text-emerald-400' }
             ].map((stat, idx) => {
               const Icon = stat.icon;
               return (
@@ -647,7 +647,7 @@ const ImageGenerator = () => {
             <p className="text-sm text-neutral-500">
               Powered by <span className="text-blue-400 font-semibold">Qwen 2.5</span> & <span className="text-purple-400 font-semibold">Stable Diffusion XL</span>
             </p>
-            <p className="text-xs text-neutral-600 mt-2">Premium AI Generation • 100% Free Access</p>
+            <p className="text-xs text-neutral-600 mt-2">Premium AI Generation  100% Free Access</p>
           </motion.div>
         </div>
       </div>

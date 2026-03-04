@@ -9,11 +9,11 @@ import { paymentAPI } from "@/utils/APIs/paymentAPI";
 import { IoChatbubble } from "react-icons/io5";
 import { Copy } from "lucide-react";
 
-// ─────────────────────────────────────────────
+// 
 // Crowdfunding is temporarily disabled.
 // This page collects "interest" from users only.
 // No payments or campaign creation are possible.
-// ─────────────────────────────────────────────
+// 
 
 export default function CrowdfundingSection() {
   const [loading, setLoading] = useState(true);
@@ -71,7 +71,7 @@ export default function CrowdfundingSection() {
         localStorage.setItem(`cf_interest_${user.id}`, "true");
       }
       setInterestSubmitted(true);
-      toast.success("🎉 Your interest has been registered! We'll notify you when crowdfunding launches.");
+      toast.success(" Your interest has been registered! We'll notify you when crowdfunding launches.");
     } catch (err) {
       // If already registered (409) just mark as submitted
       if (err?.response?.status === 409) {
@@ -111,7 +111,7 @@ export default function CrowdfundingSection() {
       <section className="relative mb-20 py-24 px-6 bg-gradient-to-br from-gray-950 via-slate-900 to-gray-950 text-white">
         <div className="w-full px-6 md:px-40 mx-auto space-y-16">
 
-          {/* ── HEADER ── */}
+          {/*  HEADER  */}
           <header className="text-center space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
               Support SFCollab.{" "}
@@ -150,7 +150,7 @@ export default function CrowdfundingSection() {
             </div>
           </header>
 
-          {/* ── PROGRESS METER ── */}
+          {/*  PROGRESS METER  */}
           <div className="max-w-3xl mx-auto space-y-4">
             <div className="flex justify-between text-sm text-white/70">
               <span>
@@ -173,12 +173,12 @@ export default function CrowdfundingSection() {
             <div className="flex justify-between items-center text-xs text-white/60">
               <span>{progressPercent}% funded</span>
               <span className="text-indigo-400 font-medium">
-                Early supporters get permanent advantages 🚀
+                Early supporters get permanent advantages 
               </span>
             </div>
           </div>
 
-          {/* ── COMING SOON CARD ── */}
+          {/*  COMING SOON CARD  */}
           <div className="max-w-2xl mx-auto">
             <div className="relative overflow-hidden rounded-2xl border border-indigo-500/30 bg-gradient-to-br from-indigo-900/30 to-purple-900/20 p-10 text-center space-y-6 shadow-2xl shadow-indigo-500/10">
 
@@ -208,7 +208,7 @@ export default function CrowdfundingSection() {
                 </h2>
                 <p className="text-white/60 max-w-md mx-auto leading-relaxed">
                   We're putting the final touches on our crowdfunding platform. 
-                  Register your interest now and be the first to know when it goes live — 
+                  Register your interest now and be the first to know when it goes live  
                   early supporters will unlock exclusive permanent advantages.
                 </p>
               </div>
@@ -216,9 +216,9 @@ export default function CrowdfundingSection() {
               {/* What to expect bullets */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-white/70 relative">
                 {[
-                  { icon: "🎯", text: "Exclusive early-supporter perks" },
-                  { icon: "🔔", text: "Priority launch notification" },
-                  { icon: "🏆", text: "Permanent platform advantages" },
+                  { icon: "", text: "Exclusive early-supporter perks" },
+                  { icon: "", text: "Priority launch notification" },
+                  { icon: "", text: "Permanent platform advantages" },
                 ].map((item, i) => (
                   <div
                     key={i}
@@ -230,7 +230,7 @@ export default function CrowdfundingSection() {
                 ))}
               </div>
 
-              {/* ── INTEREST BUTTON ── */}
+              {/*  INTEREST BUTTON  */}
               <div className="relative">
                 {interestSubmitted ? (
                   <div className="flex flex-col items-center gap-3">
@@ -261,13 +261,13 @@ export default function CrowdfundingSection() {
             </div>
           </div>
 
-          {/* ── DISCLAIMER ── */}
+          {/*  DISCLAIMER  */}
           <div className="max-w-3xl mx-auto bg-neutral-900/50 border border-neutral-700 rounded-xl p-6 text-sm text-neutral-300 space-y-2">
-            <p>● Crowdfunding is not yet available — no payments can be made at this time</p>
-            <p>● Platform fees apply only when you earn</p>
-            <p>● Crowdfunding does not guarantee work or income</p>
-            <p>● Priority affects matching order, not selection outcomes</p>
-            <p>● All core tools remain free for builders</p>
+            <p> Crowdfunding is not yet available  no payments can be made at this time</p>
+            <p> Platform fees apply only when you earn</p>
+            <p> Crowdfunding does not guarantee work or income</p>
+            <p> Priority affects matching order, not selection outcomes</p>
+            <p> All core tools remain free for builders</p>
           </div>
         </div>
       </section>

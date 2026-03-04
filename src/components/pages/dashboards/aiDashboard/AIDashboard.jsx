@@ -120,9 +120,9 @@ export default function AIDashboard() {
           animate="visible"
         >
           {[
-            { icon: '⚡', label: 'Lightning Fast', color: 'from-blue-500 to-cyan-500' },
-            { icon: '🧠', label: 'AI Powered', color: 'from-purple-500 to-pink-500' },
-            { icon: '🔒', label: 'Enterprise Grade', color: 'from-green-500 to-emerald-500' }
+            { icon: '', label: 'Lightning Fast', color: 'from-blue-500 to-cyan-500' },
+            { icon: '', label: 'AI Powered', color: 'from-purple-500 to-pink-500' },
+            { icon: '', label: 'Enterprise Grade', color: 'from-green-500 to-emerald-500' }
           ].map((feature, index) => (
             <motion.div
               key={index}

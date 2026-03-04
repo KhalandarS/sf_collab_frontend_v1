@@ -127,7 +127,7 @@ const FeedbackPopup = ({
             <div className="mt-4 flex gap-3 p-3 bg-blue-900/20 border border-blue-700/30 rounded-lg">
               <FcAbout className="w-5 h-5 mt-0.5 shrink-0" />
               <p className="text-xs text-blue-400">
-                You can earn 10–50 points for helpful feedback.
+                You can earn 1050 points for helpful feedback.
               </p>
             </div>
 

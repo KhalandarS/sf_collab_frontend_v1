@@ -416,7 +416,7 @@ const BackgroundRemover = () => {
                               className="w-full h-auto max-h-[400px] object-contain rounded"
                             />
                             <div className="mt-2 text-xs text-gray-400">
-                              Format: {outputFormat.toUpperCase()} • Transparent background
+                              Format: {outputFormat.toUpperCase()}  Transparent background
                             </div>
                           </>
                         ) : (
