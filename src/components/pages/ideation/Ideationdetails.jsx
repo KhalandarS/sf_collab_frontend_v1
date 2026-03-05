@@ -15,6 +15,11 @@ import {
   Trash2,
   Zap,
   TrendingUp,
+  UserCheck,
+  Check,
+  XCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -23,6 +28,7 @@ import { ideaAPI } from "@/utils/APIs/ideaAPI";
 import { useSelector } from "react-redux";
 import { usersAPI } from "@/utils/APIs/userAPI";
 import { getProfilePicture } from "@/utils/getProfilePicture";
+import useSocket from "@/utils/hooks/useSocket";
 import DeleteConfirmationModal from "@/utils/confirm";
 
 const BASE_URL = API_BASE_URL + "/ideas";
@@ -54,6 +60,46 @@ const IdeationDetails = () => {
   const queryParams = new URLSearchParams(location.search);
   const ideaId = queryParams.get("id")?.toString();
   const { user, access_token } = useSelector((state) => state.auth);
+  const { socket } = useSocket();
+
+  // Co-developer requests state (creator only)
+  const [collabRequests, setCollabRequests] = useState([]);
+  const [collabRequestsLoading, setCollabRequestsLoading] = useState(false);
+  const [showCollabRequests, setShowCollabRequests] = useState(true);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+  const fetchCollabRequests = useCallback(async () => {
+    if (!ideaId || !access_token) return;
+    setCollabRequestsLoading(true);
+    try {
+      const res = await axios.get(`${API_URL}/api/ideas/${ideaId}/collab-requests`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      setCollabRequests(res.data.data?.collab_requests || []);
+    } catch (err) {
+      // Not creator or no requests — silently ignore
+    } finally {
+      setCollabRequestsLoading(false);
+    }
+  }, [ideaId, access_token]);
+
+  const handleCollabAction = async (requestId, action) => {
+    try {
+      await axios.post(
+        `${API_URL}/api/ideas/collab-requests/${requestId}/${action}`,
+        {},
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      toast.success(action === "approve" ? "Request approved! They've been added to your team." : "Request rejected.");
+      // Refresh requests and idea (team members may have changed)
+      fetchCollabRequests();
+      const res = await ideaAPI.getIdeaById(ideaId, access_token);
+      setIdea(res.data.idea);
+    } catch (err) {
+      toast.error(`Failed to ${action} request`);
+    }
+  };
 
   useEffect(() => {
     const fetchIdea = async () => {
@@ -86,6 +132,28 @@ const IdeationDetails = () => {
     };
     if (ideaId) fetchIdea();
   }, [ideaId, access_token, user]);
+
+  // Fetch collab requests when idea loads (only succeeds if user is creator)
+  useEffect(() => {
+    if (idea && user?.id === idea?.creator?.id) {
+      fetchCollabRequests();
+    }
+  }, [idea, user, fetchCollabRequests]);
+
+  // Realtime: listen for new collab requests via socket
+  useEffect(() => {
+    if (!idea || user?.id !== idea?.creator?.id) return;
+    if (!socket) return;
+
+    const handleNewRequest = (data) => {
+      if (String(data?.idea_id) !== String(ideaId)) return;
+      fetchCollabRequests();
+      toast.info(`New co-developer request from ${data?.requester_name || "someone"}!`);
+    };
+
+    socket.on("new_collab_request", handleNewRequest);
+    return () => socket.off("new_collab_request", handleNewRequest);
+  }, [idea, user, ideaId, fetchCollabRequests, socket]);
 
 
   useEffect(() => {
@@ -947,6 +1015,123 @@ const IdeationDetails = () => {
               </div>
             </div>
           </motion.div>
+
+          {/* Co-Developer Requests Panel — creator only */}
+          {isCreator && (
+            <motion.div
+              className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-500/30 rounded-2xl p-6 backdrop-blur-sm"
+              variants={itemVariants}
+            >
+              {/* Header */}
+              <button
+                onClick={() => setShowCollabRequests((v) => !v)}
+                className="w-full flex items-center justify-between mb-1"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 bg-emerald-500/20 rounded-lg">
+                    <UserCheck className="h-4 w-4 text-emerald-400" />
+                  </div>
+                  <h3 className="font-semibold text-white">Co-Developer Requests</h3>
+                  {collabRequests.filter(r => r.status === 'pending').length > 0 && (
+                    <span className="px-2 py-0.5 bg-emerald-500 text-black text-xs font-bold rounded-full">
+                      {collabRequests.filter(r => r.status === 'pending').length}
+                    </span>
+                  )}
+                </div>
+                {showCollabRequests ? (
+                  <ChevronUp className="h-4 w-4 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 text-gray-400" />
+                )}
+              </button>
+
+              <AnimatePresence>
+                {showCollabRequests && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    {collabRequestsLoading ? (
+                      <div className="flex justify-center py-6">
+                        <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+                      </div>
+                    ) : collabRequests.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4 mt-2">
+                        No requests yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-3 mt-4">
+                        {collabRequests.map((req) => (
+                          <div
+                            key={req.id}
+                            className={`rounded-xl p-4 border transition-all ${
+                              req.status === 'pending'
+                                ? 'bg-white/5 border-emerald-500/20'
+                                : req.status === 'approved'
+                                ? 'bg-emerald-500/5 border-emerald-500/10 opacity-60'
+                                : 'bg-red-500/5 border-red-500/10 opacity-60'
+                            }`}
+                          >
+                            {/* Requester info */}
+                            <div className="flex items-start gap-3">
+                              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
+                                {req.first_name?.[0]?.toUpperCase() || "?"}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-white text-sm">
+                                  {req.first_name} {req.last_name}
+                                </p>
+                                <span className="inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full capitalize mt-0.5">
+                                  {req.role}
+                                </span>
+                                {req.message && (
+                                  <p className="text-gray-400 text-xs mt-2 leading-relaxed line-clamp-3 italic">
+                                    "{req.message}"
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Status badge or action buttons */}
+                            {req.status === 'pending' ? (
+                              <div className="flex gap-2 mt-3">
+                                <button
+                                  onClick={() => handleCollabAction(req.id, 'approve')}
+                                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-all"
+                                >
+                                  <Check className="h-3.5 w-3.5" />
+                                  Accept
+                                </button>
+                                <button
+                                  onClick={() => handleCollabAction(req.id, 'reject')}
+                                  className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-gray-700 hover:border-red-500/40 text-gray-400 hover:text-red-400 font-semibold text-xs transition-all"
+                                >
+                                  <XCircle className="h-3.5 w-3.5" />
+                                  Reject
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="mt-2">
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                  req.status === 'approved'
+                                    ? 'bg-emerald-500/20 text-emerald-400'
+                                    : 'bg-red-500/20 text-red-400'
+                                }`}>
+                                  {req.status === 'approved' ? '✓ Accepted' : '✗ Rejected'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          )}
         </div>
       </motion.div>
 
