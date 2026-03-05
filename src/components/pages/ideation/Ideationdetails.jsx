@@ -50,6 +50,10 @@ const IdeationDetails = () => {
   const [joinMessage, setJoinMessage] = useState("");
   const [joinName, setJoinName] = useState("");
   const [joinPosition, setJoinPosition] = useState("");
+
+  // Current user's own collab request status
+  const [myCollabStatus, setMyCollabStatus] = useState(null);
+  const [myCollabRequestId, setMyCollabRequestId] = useState(null);
   const [joinSkills, setJoinSkills] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const commentInputRef = useRef(null);
@@ -62,12 +66,12 @@ const IdeationDetails = () => {
   const { user, access_token } = useSelector((state) => state.auth);
   const { socket } = useSocket();
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
   // Co-developer requests state (creator only)
   const [collabRequests, setCollabRequests] = useState([]);
   const [collabRequestsLoading, setCollabRequestsLoading] = useState(false);
   const [showCollabRequests, setShowCollabRequests] = useState(true);
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
   const fetchCollabRequests = useCallback(async () => {
     if (!ideaId || !access_token) return;
@@ -77,10 +81,30 @@ const IdeationDetails = () => {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setCollabRequests(res.data.data?.collab_requests || []);
-    } catch (err) {
+    } catch {
       // Not creator or no requests — silently ignore
     } finally {
       setCollabRequestsLoading(false);
+    }
+  }, [ideaId, access_token]);
+
+  // Fetch current user's own request status (non-creator)
+  const fetchMyCollabStatus = useCallback(async () => {
+    if (!ideaId || !access_token) return;
+    try {
+      const res = await axios.get(`${API_URL}/api/ideas/${ideaId}/collab-requests/my-status`, {
+        headers: { Authorization: `Bearer ${access_token}` },
+      });
+      const cr = res.data.data?.collab_request;
+      if (cr) {
+        setMyCollabStatus(cr.status);
+        setMyCollabRequestId(cr.id);
+      } else {
+        setMyCollabStatus(null);
+        setMyCollabRequestId(null);
+      }
+    } catch {
+      setMyCollabStatus(null);
     }
   }, [ideaId, access_token]);
 
@@ -92,11 +116,11 @@ const IdeationDetails = () => {
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
       toast.success(action === "approve" ? "Request approved! They've been added to your team." : "Request rejected.");
-      // Refresh requests and idea (team members may have changed)
       fetchCollabRequests();
       const res = await ideaAPI.getIdeaById(ideaId, access_token);
-      setIdea(res.data.idea);
-    } catch (err) {
+      const ideaData = res.data.data?.idea || res.data.idea;
+      if (ideaData) setIdea(ideaData);
+    } catch {
       toast.error(`Failed to ${action} request`);
     }
   };
@@ -133,27 +157,31 @@ const IdeationDetails = () => {
     if (ideaId) fetchIdea();
   }, [ideaId, access_token, user]);
 
-  // Fetch collab requests when idea loads (only succeeds if user is creator)
+  // Fetch collab requests when idea loads (creator only)
   useEffect(() => {
     if (idea && user?.id === idea?.creator?.id) {
       fetchCollabRequests();
     }
-  }, [idea, user, fetchCollabRequests]);
+  }, [idea?.id, user?.id]);
+
+  // Fetch current user's own request status (non-creator)
+  useEffect(() => {
+    if (idea && user?.id !== idea?.creator?.id) {
+      fetchMyCollabStatus();
+    }
+  }, [idea?.id, user?.id]);
 
   // Realtime: listen for new collab requests via socket
   useEffect(() => {
-    if (!idea || user?.id !== idea?.creator?.id) return;
-    if (!socket) return;
-
+    if (!socket || !idea || user?.id !== idea?.creator?.id) return;
     const handleNewRequest = (data) => {
       if (String(data?.idea_id) !== String(ideaId)) return;
       fetchCollabRequests();
       toast.info(`New co-developer request from ${data?.requester_name || "someone"}!`);
     };
-
     socket.on("new_collab_request", handleNewRequest);
     return () => socket.off("new_collab_request", handleNewRequest);
-  }, [idea, user, ideaId, fetchCollabRequests, socket]);
+  }, [socket, idea?.id, user?.id, ideaId]);
 
 
   useEffect(() => {
@@ -218,54 +246,59 @@ const IdeationDetails = () => {
     }
   };
 
-  const handleJoinSubmit = async (e) => {
-    e.preventDefault();
+  const handleJoinSubmit = async () => {
     try {
-
-
-      if (!joinName.trim() || !joinPosition.trim()) {
-        toast.error("Please fill in name and position");
-        return;
+      const res = await axios.post(
+        `${API_URL}/api/ideas/${ideaId}/collab-requests`,
+        { message: joinMessage, role: "co-developer" },
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      const cr = res.data.data?.collab_request;
+      if (cr) {
+        setMyCollabStatus(cr.status);
+        setMyCollabRequestId(cr.id);
       }
-
-      const response = await ideaAPI.addTeamMember(ideaId, {
-        name: joinName,
-        position: joinPosition,
-        skills: joinSkills,
-        message: joinMessage,
-      });
-
-
-      if (!response.success) {
-        const errorMessage = response.error || response.message || "Failed to add team member";
-        throw new Error(errorMessage);
-      }
-
-      if (response.success && response.data?.team_member) {
-        const res = await ideaAPI.getIdeaById(ideaId, access_token);
-        const isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const ideaData = isLocal
-          ? (res.data.data?.idea || res.data.idea)
-          : (res.data.idea || res.data.data?.idea);
-        
-        if (ideaData) {
-          setIdea(ideaData);
-        }
-        
-        toast.success(response.message || "Successfully joined the team!");
-        setJoinMessage("");
-        setJoinName("");
-        setJoinPosition("");
-        setJoinSkills("");
-          setShowJoinModal(false);
-
-          setSuccessMsg("");
-
-      }
+      toast.success("Request sent! The creator will review it.");
+      setJoinMessage("");
+      setShowJoinModal(false);
     } catch (err) {
-      console.error("Error joining team:", err);
-      const errorMessage = err.error || "Failed to join team. Please try again.";
-      toast.error(errorMessage);
+      const msg = err?.response?.data?.error || "Failed to send request";
+      toast.error(msg);
+    }
+  };
+
+  const handleCancelMyRequest = async () => {
+    if (!myCollabRequestId) return;
+    try {
+      await axios.post(
+        `${API_URL}/api/ideas/collab-requests/${myCollabRequestId}/cancel`,
+        {},
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      setMyCollabStatus(null);
+      setMyCollabRequestId(null);
+      toast.info("Request cancelled");
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to cancel request");
+    }
+  };
+
+  const handleLeaveIdea = async () => {
+    try {
+      await axios.post(
+        `${API_URL}/api/ideas/${ideaId}/leave`,
+        {},
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      setMyCollabStatus(null);
+      setMyCollabRequestId(null);
+      // Refresh idea to update team count
+      const res = await ideaAPI.getIdeaById(ideaId, access_token);
+      const ideaData = res.data.data?.idea || res.data.idea;
+      if (ideaData) setIdea(ideaData);
+      toast.info("You have left the project");
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to leave project");
     }
   };
 
@@ -636,16 +669,48 @@ const IdeationDetails = () => {
                 <MessageSquare className="h-4 w-4 mr-2 inline" />
                 Start Discussion
               </motion.button>
-              <motion.button
-                variants={buttonVariants}
-                whileHover="hover"
-                whileTap="tap"
-                className="bg-white/5 hover:bg-white/10 border border-white/20 px-6 py-3 rounded-lg font-medium transition-all"
-                onClick={() => setShowJoinModal(true)}
-              >
-                <Users className="h-4 w-4 mr-2 inline" />
-                Join Project
-              </motion.button>
+              {!isCreator && (
+                <div>
+                  {myCollabStatus === 'approved' ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm font-medium">
+                        <Users className="h-4 w-4" />
+                        ✓ Co-Developer on this project
+                      </div>
+                      <motion.button
+                        variants={buttonVariants} whileHover="hover" whileTap="tap"
+                        onClick={handleLeaveIdea}
+                        className="px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all"
+                      >
+                        Leave Project
+                      </motion.button>
+                    </div>
+                  ) : myCollabStatus === 'pending' ? (
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm font-medium">
+                        <Users className="h-4 w-4" />
+                        Interest Sent — Awaiting Review
+                      </div>
+                      <motion.button
+                        variants={buttonVariants} whileHover="hover" whileTap="tap"
+                        onClick={handleCancelMyRequest}
+                        className="px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all"
+                      >
+                        Cancel Request
+                      </motion.button>
+                    </div>
+                  ) : (
+                    <motion.button
+                      variants={buttonVariants} whileHover="hover" whileTap="tap"
+                      className="bg-white/5 hover:bg-white/10 border border-white/20 px-6 py-3 rounded-lg font-medium transition-all"
+                      onClick={() => setShowJoinModal(true)}
+                    >
+                      <Users className="h-4 w-4 mr-2 inline" />
+                      {myCollabStatus === 'rejected' ? 'Express Interest Again' : 'Interested in Co-Developing'}
+                    </motion.button>
+                  )}
+                </div>
+              )}
             </motion.div>
           </motion.div>
 
@@ -1019,10 +1084,9 @@ const IdeationDetails = () => {
           {/* Co-Developer Requests Panel — creator only */}
           {isCreator && (
             <motion.div
-              className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-500/30 rounded-2xl p-6 backdrop-blur-sm"
+              className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-500/30 rounded-2xl p-5 backdrop-blur-sm"
               variants={itemVariants}
             >
-              {/* Header */}
               <button
                 onClick={() => setShowCollabRequests((v) => !v)}
                 className="w-full flex items-center justify-between mb-1"
@@ -1038,11 +1102,9 @@ const IdeationDetails = () => {
                     </span>
                   )}
                 </div>
-                {showCollabRequests ? (
-                  <ChevronUp className="h-4 w-4 text-gray-400" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-400" />
-                )}
+                {showCollabRequests
+                  ? <ChevronUp className="h-4 w-4 text-gray-400" />
+                  : <ChevronDown className="h-4 w-4 text-gray-400" />}
               </button>
 
               <AnimatePresence>
@@ -1058,9 +1120,7 @@ const IdeationDetails = () => {
                         <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
                       </div>
                     ) : collabRequests.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4 mt-2">
-                        No requests yet.
-                      </p>
+                      <p className="text-sm text-gray-500 text-center py-4 mt-2">No requests yet.</p>
                     ) : (
                       <div className="space-y-3 mt-4">
                         {collabRequests.map((req) => (
@@ -1074,50 +1134,39 @@ const IdeationDetails = () => {
                                 : 'bg-red-500/5 border-red-500/10 opacity-60'
                             }`}
                           >
-                            {/* Requester info */}
                             <div className="flex items-start gap-3">
                               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-sm font-bold text-white flex-shrink-0">
                                 {req.first_name?.[0]?.toUpperCase() || "?"}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-white text-sm">
-                                  {req.first_name} {req.last_name}
-                                </p>
+                                <p className="font-semibold text-white text-sm">{req.first_name} {req.last_name}</p>
                                 <span className="inline-block px-2 py-0.5 bg-emerald-500/20 text-emerald-300 text-xs rounded-full capitalize mt-0.5">
                                   {req.role}
                                 </span>
                                 {req.message && (
-                                  <p className="text-gray-400 text-xs mt-2 leading-relaxed line-clamp-3 italic">
-                                    "{req.message}"
-                                  </p>
+                                  <p className="text-gray-400 text-xs mt-2 italic line-clamp-3">"{req.message}"</p>
                                 )}
                               </div>
                             </div>
-
-                            {/* Status badge or action buttons */}
                             {req.status === 'pending' ? (
                               <div className="flex gap-2 mt-3">
                                 <button
                                   onClick={() => handleCollabAction(req.id, 'approve')}
                                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs transition-all"
                                 >
-                                  <Check className="h-3.5 w-3.5" />
-                                  Accept
+                                  <Check className="h-3.5 w-3.5" /> Accept
                                 </button>
                                 <button
                                   onClick={() => handleCollabAction(req.id, 'reject')}
                                   className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-white/5 hover:bg-red-500/20 border border-gray-700 hover:border-red-500/40 text-gray-400 hover:text-red-400 font-semibold text-xs transition-all"
                                 >
-                                  <XCircle className="h-3.5 w-3.5" />
-                                  Reject
+                                  <XCircle className="h-3.5 w-3.5" /> Reject
                                 </button>
                               </div>
                             ) : (
                               <div className="mt-2">
                                 <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                  req.status === 'approved'
-                                    ? 'bg-emerald-500/20 text-emerald-400'
-                                    : 'bg-red-500/20 text-red-400'
+                                  req.status === 'approved' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
                                 }`}>
                                   {req.status === 'approved' ? '✓ Accepted' : '✗ Rejected'}
                                 </span>
@@ -1153,76 +1202,58 @@ const IdeationDetails = () => {
       <AnimatePresence>
         {showJoinModal && (
           <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onClick={() => setShowJoinModal(false)}
           >
             <motion.div
-              className="bg-gradient-to-br from-gray-900 to-gray-800 border border-white/10 w-full max-w-md p-8 rounded-2xl relative"
+              className="bg-gray-900 border border-emerald-500/30 w-full max-w-md p-6 rounded-2xl relative shadow-2xl"
               variants={modalVariants}
               initial="hidden"
               animate="visible"
               exit="exit"
+              onClick={(e) => e.stopPropagation()}
             >
-              <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.95 }}
+              <button
                 onClick={() => setShowJoinModal(false)}
-                className="absolute top-4 left-4 text-gray-400 hover:text-white transition-colors"
+                className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
               >
                 <X className="h-5 w-5" />
-              </motion.button>
-              <h2 className="text-2xl font-bold mb-6 text-center">Join Project Team</h2>
-              <form onSubmit={handleJoinSubmit} className="space-y-4">
+              </button>
+              <h2 className="text-lg font-bold text-white mb-1">Interested in Co-Developing?</h2>
+              <p className="text-sm text-gray-400 mb-5 line-clamp-1">"{idea?.title}"</p>
+
+              <div className="space-y-4">
                 <div>
-                  <input
-                    type="text"
-                    value={joinName}
-                    onChange={(e) => setJoinName(e.target.value)}
-                    placeholder="Your Name *"
-                    required
-                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    value={joinPosition}
-                    onChange={(e) => setJoinPosition(e.target.value)}
-                    placeholder="Position/Role *"
-                    required
-                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
-                  <input
-                    type="text"
-                    value={joinSkills}
-                    onChange={(e) => setJoinSkills(e.target.value)}
-                    placeholder="Skills (e.g., Python, React, AWS)"
-                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                  />
-                </div>
-                <div>
+                  <label className="text-sm text-gray-400 mb-2 block">
+                    Message to creator <span className="text-gray-600">(optional)</span>
+                  </label>
                   <textarea
                     value={joinMessage}
                     onChange={(e) => setJoinMessage(e.target.value)}
-                    placeholder="Why do you want to join? (optional)"
-                    className="w-full bg-white/5 border border-white/20 rounded-lg p-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
-                    rows={3}
+                    placeholder="Tell them why you'd be a great fit..."
+                    rows={4}
+                    className="w-full bg-white/5 border border-gray-700 focus:border-emerald-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
                   />
                 </div>
-                <motion.button
-                  type="submit"
-                  variants={buttonVariants}
-                  whileHover="hover"
-                  whileTap="tap"
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 px-4 py-3 rounded-lg font-semibold transition-all"
-                >
-                  Join Team
-                </motion.button>
-              </form>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowJoinModal(false)}
+                    className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleJoinSubmit}
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Send className="h-4 w-4" />
+                    Express Interest
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </motion.div>
         )}

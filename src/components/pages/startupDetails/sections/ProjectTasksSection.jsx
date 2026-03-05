@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import AddTaskModal from "../modals/AddTasksModal";
 import { tasksAPI } from "@/utils/APIs/startupsAPI";
 import { API_URL } from "@/utils/config";
+import axios from "axios";
 import DeleteConfirmationModal from "@/utils/confirm";
 
 const priorityColors = {
@@ -66,7 +67,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const [view, setView] = useState(localStorage.getItem("tasksView") || "list");
   // NEW: track which task is being claimed
   const [claimingTaskId, setClaimingTaskId] = useState(null);
-  const { user } = useSelector((state) => state.auth);
+  const { user, access_token } = useSelector((state) => state.auth);
 
   // Updated filter logic — handles "unassigned" as a special case
   const filteredTasks = useMemo(() => {
@@ -83,7 +84,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
       setTasks(prevTasks =>
         prevTasks.map(t => t?.id === taskId ? { ...t, status: newStatus } : t)
       );
-      const response = await tasksAPI.update(taskId, { status: newStatus });
+      const response = await tasksAPI.update(taskId, { status: newStatus }, access_token);
       if (!response.success) throw new Error("Failed to update task status");
       toast.success("Task status updated");
     } catch (err) {
@@ -95,7 +96,7 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const handleDeleteTask = async (taskId) => {
     try {
       setTasks(prevTasks => prevTasks.filter(t => t?.id !== taskId));
-      await tasksAPI.delete(taskId);
+      await tasksAPI.delete(taskId, access_token);
       toast.success("Task deleted successfully");
     } catch (err) {
       toast.error("Error deleting task");
@@ -126,8 +127,18 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
         )
       );
 
-      const response = await tasksAPI.update(task.id, { assigned_to: user.id });
-      if (!response.success) throw new Error("Failed to claim task");
+      const response = await axios.post(
+        `${API_URL}/tasks/${task.id}/claim`,
+        {},
+        { headers: { Authorization: `Bearer ${access_token}` } }
+      );
+      if (!response.data?.success) throw new Error(response.data?.error || "Failed to claim task");
+
+      // Sync with server response if available
+      const serverTask = response.data?.data?.task;
+      if (serverTask) {
+        setTasks(prev => prev.map(t => t.id === task.id ? { ...t, ...serverTask } : t));
+      }
 
       toast.success(`✅ You claimed "${task.title}"!`);
     } catch (err) {
@@ -137,8 +148,9 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
           t.id === task.id ? { ...t, assigned_to: null, assigned_user: null } : t
         )
       );
-      toast.error("Failed to claim task. Please try again.");
-      console.error(err);
+      const msg = err?.response?.data?.error || err?.message || "Failed to claim task. Please try again.";
+      toast.error(msg);
+      console.error("Claim task error:", err?.response?.data || err);
     } finally {
       setClaimingTaskId(null);
     }
@@ -147,13 +159,20 @@ export default function ProjectTasksSection({ tasks, isAdmin, setTasks, startupI
   const isVisible = (task) => {
     if (isAdmin) return true;
     if (task.visible_by === 'all' || task.visible_by === 'public') return true;
+    // Check membership using both id and userId shapes
+    const isMember = teamMembers.some(
+      member => member?.id === user?.id || member?.userId === user?.id
+    );
     if (task.visible_by === 'team') {
-      return teamMembers.some(member => member?.id === user?.id);
+      return isMember;
     }
     if (task.visible_by === 'private') {
       return (task.assigned_user && task.assigned_user?.id === user?.id) ||
-             task.created_by.id === user?.id;
+             task?.created_by?.id === user?.id ||
+             task?.user_id === user?.id;
     }
+    // Fallback: members can always see unassigned tasks
+    if (!task.assigned_to && isMember) return true;
     return false;
   };
 

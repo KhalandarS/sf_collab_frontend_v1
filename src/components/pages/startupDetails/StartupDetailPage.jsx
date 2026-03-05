@@ -237,6 +237,18 @@ const fetchJoinRequests = useCallback(async () => {
   };
   
   
+  const fetchJoinRequests = useCallback(async () => {
+    if (!id || !access_token) return;
+    try {
+      const res = await startupsAPI.getJoinRequests(id, { status: 'pending' });
+      if (res?.success) {
+        setJoinRequests(res.data?.join_requests || res.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch join requests:', err);
+    }
+  }, [id, access_token]);
+
   const handleAcceptJoinRequest = async (request) => {
     const requestId = request?.id || request?.request_id;
     if (!requestId) return;

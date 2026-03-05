@@ -26,6 +26,244 @@ import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
 
 // ── Co-Developer Request Modal ────────────────────────────────────────────
+function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.post(
+        `${API_URL}/api/ideas/${idea.id}/collab-requests`,
+        { message, role: "co-developer" },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      toast.success("Request sent! The creator will review it.");
+      onSuccess(res?.data?.data?.collab_request?.id);
+      onClose();
+    } catch (err) {
+      const msg = err?.response?.data?.error || "Failed to send request";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-gray-900 border border-emerald-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-white">Interested in Co-Developing?</h2>
+            <p className="text-sm text-gray-400 mt-1 line-clamp-1">
+              "{idea?.title}"
+            </p>
+          </div>
+          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Message */}
+        <div>
+          <label className="text-sm text-gray-400 mb-2 block">
+            Message to creator <span className="text-gray-600">(optional)</span>
+          </label>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Tell them why you'd be a great fit..."
+            rows={4}
+            className="w-full bg-white/5 border border-gray-700 focus:border-emerald-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white text-sm font-medium transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+          >
+            {loading ? (
+              <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                Express Interest
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </div>,
+    document.body
+  );
+}
+
+// ── Collab Button ─────────────────────────────────────────────────────────
+function CollabButton({ content, accessToken, isOwnIdea }) {
+  const [status, setStatus] = useState(null);
+  const [requestId, setRequestId] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [interestedCount, setInterestedCount] = useState(content?.pending_collab_count ?? 0);
+
+  useEffect(() => {
+    if (isOwnIdea || !content?.id) return;
+    axios
+      .get(`${API_URL}/api/ideas/${content.id}/collab-requests/my-status`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      .then((res) => {
+        const cr = res?.data?.data?.collab_request;
+        if (cr) {
+          setStatus(cr.status);
+          setRequestId(cr.id);
+        }
+      })
+      .catch(() => {});
+  }, [content?.id, accessToken, isOwnIdea]);
+
+  const handleCancel = async (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    if (!requestId) { toast.error("Request ID missing — try refreshing"); return; }
+    setLoading(true);
+    try {
+      await axios.post(
+        `${API_URL}/api/ideas/collab-requests/${requestId}/cancel`,
+        {},
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      setStatus(null);
+      setRequestId(null);
+      setInterestedCount((c) => Math.max(0, c - 1));
+      toast.info("Request cancelled");
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to cancel request");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLeave = async (e) => {
+    e?.preventDefault?.();
+    e?.stopPropagation?.();
+    setLoading(true);
+    try {
+      await axios.post(
+        `${API_URL}/api/ideas/${content.id}/leave`,
+        {},
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      setStatus(null);
+      setRequestId(null);
+      toast.info("You have left the project");
+    } catch (err) {
+      toast.error(err?.response?.data?.error || "Failed to leave project");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (isOwnIdea) return null;
+
+  if (status === "approved") {
+    return (
+      <div className="w-full space-y-1.5">
+        <div className="w-full py-2 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center justify-center gap-2">
+          <CheckCircle className="h-4 w-4" />
+          Co-Developer ✓
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleLeave}
+          disabled={loading}
+          className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+        >
+          {loading ? <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" /> : <X className="h-3 w-3" />}
+          {loading ? "Leaving..." : "Leave Project"}
+        </motion.button>
+      </div>
+    );
+  }
+
+  if (status === "pending") {
+    return (
+      <div className="w-full space-y-1.5">
+        <div className="w-full py-2 px-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm flex items-center justify-center gap-2">
+          <Clock3 className="h-4 w-4" />
+          Interest Sent — Awaiting Review
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleCancel}
+          disabled={loading}
+          className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
+        >
+          {loading ? <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" /> : <X className="h-3 w-3" />}
+          {loading ? "Cancelling..." : "Cancel Request"}
+        </motion.button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {showModal && (
+        <CollabRequestModal
+          idea={content}
+          accessToken={accessToken}
+          onClose={() => setShowModal(false)}
+          onSuccess={(newRequestId) => {
+            setStatus("pending");
+            setRequestId(newRequestId);
+            setInterestedCount((c) => c + 1);
+          }}
+        />
+      )}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={(e) => {
+          e?.preventDefault?.();
+          e?.stopPropagation?.();
+          setShowModal(true);
+        }}
+        className="w-full py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-400 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+      >
+        <UserPlus className="h-4 w-4" />
+        {status === "rejected" ? "Express Interest Again" : "Interested in Co-Developing"}
+        {interestedCount > 0 && (
+          <span className="ml-1 px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-xs font-bold text-emerald-300">
+            {interestedCount}
+          </span>
+        )}
+      </motion.button>
+    </>
+  );
+}
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+
+// ── Co-Developer Request Modal ────────────────────────────────────────────
 // Rendered via Portal so it sits outside the <Link> and won't trigger navigation
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
   const [message, setMessage] = useState("");
@@ -357,6 +595,9 @@ export default function IdeationCard({ content, shouldBlur }) {
     }
   };
 
+  // Don't show connection button for own ideas
+  const isOwnIdea = user?.id === (content?.author?.id || content?.creator?.id);
+  const author = useMemo(() => content?.author || content?.creator || {}, [content]);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -407,8 +648,7 @@ export default function IdeationCard({ content, shouldBlur }) {
           {/* Author + Stage */}
           <Link
             to={`/user-profile?userId=${author?.id}`}
-            className="flex items-start justify-between"
-          >
+            className="flex items-start justify-between">
             <div className="flex items-center gap-3">
               <img
                 src={getProfilePicture(author)}
@@ -561,6 +801,21 @@ export default function IdeationCard({ content, shouldBlur }) {
                 className="w-full"
               />
             </div>
+
+            {/* Interested in Co-Developing */}
+            <div
+              onClick={(e) => {
+                e?.preventDefault?.();
+                e?.stopPropagation?.();
+              }}
+            >
+              <CollabButton
+                content={content}
+                accessToken={access_token}
+                isOwnIdea={isOwnIdea}
+              />
+            </div>
+            
           </div>
         </div>
       </Link>
