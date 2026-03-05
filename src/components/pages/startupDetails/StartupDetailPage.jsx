@@ -181,7 +181,35 @@ const myInvite = invitations.find(inv =>
     console.error("Error fetching invitations:", error);
   }
 }, [user, id, isAdmin]);
+const fetchJoinRequests = useCallback(async () => {
 
+    
+    if (!isAdmin || !access_token || !id) {
+
+      setJoinRequests([]);
+      return;
+    }
+    try {
+      let response = await startupsAPI.getJoinRequests(id, { status: 'pending', per_page: 20 });
+      response = response.data
+      // Handle multiple possible response structures from backend
+      // The API returns response.data.data which should be { join_requests: [...], ... }
+      let pending = [];
+      if (Array.isArray(response)) {
+        pending = response; // Direct array
+      } else if (response?.join_requests && Array.isArray(response.join_requests)) {
+        pending = response.join_requests; // Wrapped in join_requests key
+      } else if (response?.requests && Array.isArray(response.requests)) {
+        pending = response.requests; // Wrapped in requests key
+      } else {
+        console.warn('⚠️ Could not find requests in response. Full response:', JSON.stringify(response, null, 2));
+      }
+      setJoinRequests(pending);
+    } catch (error) {
+      console.error('❌ Failed to load join requests:', error);
+      setJoinRequests([]);
+    }
+  }, [isAdmin, access_token, id]);
 
   useEffect(() => {
     if (id) {
@@ -240,6 +268,20 @@ const myInvite = invitations.find(inv =>
     } catch (error) {
       console.error('❌ Reject join request failed', error);
       toast.error('Unable to reject the request right now.');
+    }
+  };
+  const handleBookmarkClick = async () => {
+    try {
+        // Remove bookmark
+        const response = await startupsAPI.toggleBookmarkStartup({ startupId: id, userId: user?.id });
+        if (response.success) {
+          setIsFavorited(response.data.bookmarked);
+          toast.info(`Startup ${response.data.bookmarked ? 'added to' : 'removed from'} favorites`);
+        } else {
+          throw new Error('Failed to remove bookmark');
+        }
+    } catch {
+        toast.error('Error updating favorite status');
     }
   };
  const handleAcceptInvitation = async () => {

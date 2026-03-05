@@ -15,6 +15,7 @@ import { Separator } from "../../ui/separator";
 import { userSocialAPI, postsAPI } from "@/utils/APIs/socialAPI";
 import { postAPI } from "@/utils/APIs/postAPI";
 import { useSelector } from "react-redux";
+import PostActions from "./PostActions";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },

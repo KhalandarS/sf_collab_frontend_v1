@@ -224,8 +224,11 @@ const ChatPage = () => {
     // BroadcastChannel: sync to other browser tabs
     try {
       const bc = new BroadcastChannel('sfcollab:chat_tab');
-      bc.postMessage({ userId: currentUser?.id, tab });
-      bc.close();
+      if (currentUser?.id && bc) {
+        bc.postMessage({ userId: currentUser?.id, tab });
+        bc.close();
+      }
+      
     } catch {}
   }, [tabKey, currentUser?.id]);
 
