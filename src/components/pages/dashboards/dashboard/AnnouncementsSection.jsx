@@ -144,16 +144,16 @@ export default function AnnouncementsSection({ userRoles }) {
         console.error('Failed to fetch newsletter', error);
       }
     };
-    
+
     fetchNewsletter();
   }, []);
 
-  const hasUnreadAnnouncements = useMemo(() => 
-    announcements.some(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true'), 
+  const hasUnreadAnnouncements = useMemo(() =>
+    announcements.some(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true'),
     [announcements]
   );
-  const hasUnreadNewsletter = useMemo(() => 
-    newsletter.some(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true'), 
+  const hasUnreadNewsletter = useMemo(() =>
+    newsletter.some(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true'),
     [newsletter]
   );
   const [isExpanded, setIsExpanded] = useState(() => {
@@ -171,7 +171,7 @@ export default function AnnouncementsSection({ userRoles }) {
         setActiveTab('newsletter');
         return
       }
-    const stored = localStorage.getItem('announcements:activeTab');
+      const stored = localStorage.getItem('announcements:activeTab');
       if (stored) {
         setActiveTab(stored);
         return
@@ -228,16 +228,20 @@ export default function AnnouncementsSection({ userRoles }) {
   const markTabItemsAsRead = async (tabId) => {
     let changed = false;
     if (tabId === 'announcements') {
-      for (const ann of announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true')) {
-        localStorage.setItem(`announcement:${ann.id}:read`, 'true');
-        changed = true;
-      }
+      announcements.forEach(ann => {
+        if (localStorage.getItem(`announcement:${ann.id}:read`) !== 'true') {
+          localStorage.setItem(`announcement:${ann.id}:read`, 'true');
+          changed = true;
+        }
+      });
       if (changed) setReadVersion(v => v + 1);
     } else if (tabId === 'newsletter') {
-      for (const nl of newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true')) {
-        localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
-        changed = true;
-      }
+      newsletter.forEach(nl => {
+        if (localStorage.getItem(`newsletter:${nl.id}:read`) !== 'true') {
+          localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
+          changed = true;
+        }
+      });
       if (changed) setReadVersion(v => v + 1);
     } else if (tabId === 'waitlist') {
       try { await notificationAPI.markAllRead('access'); } catch (e) { /* ignore */ }
@@ -251,9 +255,16 @@ export default function AnnouncementsSection({ userRoles }) {
     }
   };
 
-  // Handle tab click: immediately mark the CURRENT tab as read, then switch
+  // Automatically mark as read after a short delay when expanded/tab switches
+  useEffect(() => {
+    if (isExpanded) {
+      const timer = setTimeout(() => markTabItemsAsRead(activeTab), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, isExpanded, announcements, newsletter]);
+
+  // Handle tab click: switch tab and rely on useEffect to mark as read
   const handleTabClick = (newTabId) => {
-    markTabItemsAsRead(activeTab);
     setActiveTab(newTabId);
   };
 
@@ -356,8 +367,8 @@ export default function AnnouncementsSection({ userRoles }) {
   const handleEditAnnouncement = async (formData) => {
     try {
       await notificationAPI.updateAnnouncement(editModal.announcement.id, formData);
-      setAnnouncements(announcements.map(a => 
-        a.id === editModal.announcement.id 
+      setAnnouncements(announcements.map(a =>
+        a.id === editModal.announcement.id
           ? { ...a, ...formData }
           : a
       ));
@@ -407,7 +418,7 @@ export default function AnnouncementsSection({ userRoles }) {
             Announcements
           </h2>
           {(hasUnreadAnnouncements || hasUnreadNewsletter) && (
-            <motion.div 
+            <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               className="px-2 py-1 bg-white/10 rounded-full"
@@ -450,17 +461,16 @@ export default function AnnouncementsSection({ userRoles }) {
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleTabClick(id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap relative ${
-                    activeTab === id
-                      ? 'bg-linear-to-br from-amber-500 via-pink-600 to-purple-500 text-white border border-white/20'
-                      : 'bg-white/5 text-white/70 hover:bg-white/10 border border-white/10 hover:border-white/20'
-                  }`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap relative ${activeTab === id
+                      ? 'bg-linear-to-br from-amber-500 via-pink-600 to-purple-500 text-white border border-white/20 shadow-lg shadow-purple-500/20'
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10 hover:border-white/20'
+                    }`}
                   layout
                 >
                   <Icon className="h-4 w-4" />
                   {label}
                   {badge > 0 && (
-                    <motion.span 
+                    <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full"
@@ -519,16 +529,15 @@ export default function AnnouncementsSection({ userRoles }) {
                               </h3>
                               <div className="space-y-4">
                                 {items.map((announcement, idx) => (
-                                  <motion.div 
+                                  <motion.div
                                     key={announcement.id}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-5 rounded-lg border transition-all hover:border-white/20 ${
-                                      localStorage.getItem(`announcement:${announcement.id}:read`) === 'true'
-                                        ? 'bg-white/[0.02] border-white/5' 
-                                        : 'bg-white/[0.05] border-white/10 shadow-md'
-                                    }`}
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${localStorage.getItem(`announcement:${announcement.id}:read`) === 'true'
+                                      ? 'bg-white/[0.03] border-white/10'
+                                      : 'bg-white/[0.07] border-white/20 shadow-xl shadow-blue-500/5'
+                                      }`}
                                   >
                                     <div className="flex items-start justify-between gap-4 mb-3">
                                       <h3 className="text-base font-semibold text-white flex-1 leading-relaxed">{announcement.title}</h3>
@@ -563,7 +572,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                         )}
                                       </div>
                                     </div>
-                                    <p className="text-sm text-white/70 mt-3 leading-relaxed whitespace-pre-wrap">{announcement.message}</p>
+                                    <p className="text-sm text-white/90 mt-3 leading-relaxed font-medium whitespace-pre-wrap">{announcement.message}</p>
                                     <span className="text-xs text-white/50 block">
                                       {formatFriendlyDate(announcement.createdAt)}
                                     </span>
@@ -609,16 +618,15 @@ export default function AnnouncementsSection({ userRoles }) {
                               </h3>
                               <div className="space-y-4">
                                 {items.map((item, idx) => (
-                                  <motion.div 
+                                  <motion.div
                                     key={item.id}
                                     initial={{ opacity: 0, x: -20 }}
                                     animate={{ opacity: 1, x: 0 }}
                                     transition={{ delay: idx * 0.05 }}
-                                    className={`p-5 rounded-lg border transition-all hover:border-white/20 ${
-                                      localStorage.getItem(`newsletter:${item.id}:read`) === 'true'
-                                        ? 'bg-white/[0.02] border-white/5' 
-                                        : 'bg-white/[0.05] border-white/10 shadow-md'
-                                    }`}
+                                    className={`p-5 rounded-lg border transition-all hover:border-white/30 ${localStorage.getItem(`newsletter:${item.id}:read`) === 'true'
+                                      ? 'bg-white/[0.03] border-white/10'
+                                      : 'bg-white/[0.07] border-white/20 shadow-xl shadow-purple-500/5'
+                                      }`}
                                   >
                                     <div className="flex items-start justify-between gap-4 mb-3">
                                       <h3 className="text-base font-semibold text-white flex-1 leading-relaxed">{item.title}</h3>
@@ -633,7 +641,7 @@ export default function AnnouncementsSection({ userRoles }) {
                                         </motion.button>
                                       )}
                                     </div>
-                                    <p className="text-sm text-white/70 mt-3 leading-relaxed whitespace-pre-wrap line-clamp-4">{item.message}</p>
+                                    <p className="text-sm text-white/90 mt-3 leading-relaxed font-medium whitespace-pre-wrap line-clamp-4">{item.message}</p>
                                     <span className="text-xs text-white/50 mt-4 block">{formatFriendlyDate(item.createdAt)}</span>
                                   </motion.div>
                                 ))}
