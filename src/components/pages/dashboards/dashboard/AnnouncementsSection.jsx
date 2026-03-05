@@ -194,42 +194,101 @@ export default function AnnouncementsSection({ userRoles }) {
     localStorage.setItem('preferences:announcementsExpanded', isExpanded);
   }, [isExpanded]);
 
+  // Counter to force re-render when localStorage read markers change
+  const [readVersion, setReadVersion] = useState(0);
+
+  // Server-side unread counts for Waitlist / Crowdfunding / Applications
+  const [serverUnread, setServerUnread] = useState({ waitlist: 0, crowdfunding: 0, applications: 0 });
+
   useEffect(() => {
-    const markAsRead = async () => {
-      if (activeTab === 'announcements') {
-        for (const ann of announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true')) {
-          try {
-           localStorage.setItem(`announcement:${ann.id}:read`, 'true');
-          } catch (error) {
-            console.error('Failed to mark announcement as read', error);
-          }
-        }
-      } else if (activeTab === 'newsletter') {
-        for (const nl of newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true')) {
-          try {
-            localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
-          } catch (error) {
-            console.error('Failed to mark newsletter as read', error);
-          }
-        }
+    const fetchServerUnread = async () => {
+      try {
+        const [accessRes, fundingRes, appRes] = await Promise.all([
+          notificationAPI.getByCategory('access'),
+          notificationAPI.getByCategory('funding'),
+          notificationAPI.getByCategory('application'),
+        ]);
+        const countUnread = (res) => {
+          const items = res?.notifications || res?.data?.notifications || [];
+          return items.filter(n => !n.is_read).length;
+        };
+        setServerUnread({
+          waitlist: countUnread(accessRes),
+          crowdfunding: countUnread(fundingRes),
+          applications: countUnread(appRes),
+        });
+      } catch (err) {
+        console.error('Failed to fetch server unread counts', err);
       }
     };
+    fetchServerUnread();
+  }, []);
 
-    if (isExpanded) {
-      markAsRead();
+  // Helper to mark all items in a tab as read
+  const markTabItemsAsRead = async (tabId) => {
+    let changed = false;
+    if (tabId === 'announcements') {
+      for (const ann of announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true')) {
+        localStorage.setItem(`announcement:${ann.id}:read`, 'true');
+        changed = true;
+      }
+      if (changed) setReadVersion(v => v + 1);
+    } else if (tabId === 'newsletter') {
+      for (const nl of newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true')) {
+        localStorage.setItem(`newsletter:${nl.id}:read`, 'true');
+        changed = true;
+      }
+      if (changed) setReadVersion(v => v + 1);
+    } else if (tabId === 'waitlist') {
+      try { await notificationAPI.markAllRead('access'); } catch (e) { /* ignore */ }
+      setServerUnread(prev => ({ ...prev, waitlist: 0 }));
+    } else if (tabId === 'crowdfunding') {
+      try { await notificationAPI.markAllRead('funding'); } catch (e) { /* ignore */ }
+      setServerUnread(prev => ({ ...prev, crowdfunding: 0 }));
+    } else if (tabId === 'applications') {
+      try { await notificationAPI.markAllRead('application'); } catch (e) { /* ignore */ }
+      setServerUnread(prev => ({ ...prev, applications: 0 }));
     }
-  }, [activeTab, isExpanded, announcements, newsletter]);
+  };
+
+  // Handle tab click: immediately mark the CURRENT tab as read, then switch
+  const handleTabClick = (newTabId) => {
+    markTabItemsAsRead(activeTab);
+    setActiveTab(newTabId);
+  };
 
   const [hideInfluencerInfo, setHideInfluencerInfo] = useState(false);
   const [hideShowJobApplication, setHideJobApplication] = useState(false);
 
+  // Track which tabs the user has visited (localStorage-based)
+  const [visitedTabs, setVisitedTabs] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('announcements:visitedTabs')) || {};
+    } catch { return {}; }
+  });
+
+  const markTabVisited = (tabId) => {
+    setVisitedTabs(prev => {
+      const next = { ...prev, [tabId]: true };
+      localStorage.setItem('announcements:visitedTabs', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Mark the active tab as visited whenever it changes
+  useEffect(() => {
+    if (!visitedTabs[activeTab]) {
+      markTabVisited(activeTab);
+    }
+  }, [activeTab]);
+
   const tabs = useMemo(() => [
     { id: 'announcements', label: 'Announcements', icon: Megaphone, badge: announcements.filter(a => localStorage.getItem(`announcement:${a.id}:read`) !== 'true').length },
     { id: 'newsletter', label: 'Newsletter', icon: Mail, badge: newsletter.filter(n => localStorage.getItem(`newsletter:${n.id}:read`) !== 'true').length },
-    { id: 'waitlist', label: 'Waitlist', icon: Bell },
-    { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap },
-    { id: 'applications', label: 'Applications', icon: FileText },
-  ], [announcements, newsletter]);
+    { id: 'waitlist', label: 'Waitlist', icon: Bell, badge: serverUnread.waitlist },
+    { id: 'crowdfunding', label: 'Crowdfunding', icon: Zap, badge: serverUnread.crowdfunding },
+    { id: 'applications', label: 'Applications', icon: FileText, badge: serverUnread.applications },
+  ], [announcements, newsletter, visitedTabs, readVersion, serverUnread]);
 
   const filteredAnnouncements = useMemo(() => {
     if (announcementFilter === 'all' || announcementFilter === '') return announcements;
@@ -385,12 +444,12 @@ export default function AnnouncementsSection({ userRoles }) {
           >
             {/* Tab Navigation */}
             <div className="flex flex-wrap gap-2 px-6 py-4 border-b border-white/10 bg-white/[0.01] overflow-x-auto">
-              {tabs.map(({ id, label, icon: Icon, badge }) => (
+              {tabs.map(({ id, label, icon: Icon, badge, isNew }) => (
                 <motion.button
                   key={id}
                   whileHover={{ scale: 1.05, y: -2 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setActiveTab(id)}
+                  onClick={() => handleTabClick(id)}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 whitespace-nowrap relative ${
                     activeTab === id
                       ? 'bg-linear-to-br from-amber-500 via-pink-600 to-purple-500 text-white border border-white/20'
@@ -404,10 +463,17 @@ export default function AnnouncementsSection({ userRoles }) {
                     <motion.span 
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-xs font-bold"
+                      className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 flex items-center justify-center text-xs font-bold bg-red-500 text-white rounded-full"
                     >
-                      {plotCount(badge)}
+                      {badge > 99 ? '99+' : badge}
                     </motion.span>
+                  )}
+                  {isNew && !badge && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.5)]"
+                    />
                   )}
                 </motion.button>
               ))}
