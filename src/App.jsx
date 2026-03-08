@@ -206,8 +206,7 @@ export default function App() {
                     path="dashboard"
                     element={
                       (() => {
-                        const props = { activeRole, setActiveRole, userRoles };
-
+                        const props = { activeRole, setActiveRole, userRoles, setUserRoles };
                         if (user && activeRole === 'influencer') {
                           return <InfluencerDashboard {...props} />;
                         } else if (user && activeRole === 'builder') {

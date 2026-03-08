@@ -34,6 +34,7 @@ import StartupFinancialForm from "./steps/4_StartupFinancialForm";
 import { formatCurrency } from "@/lib/utils";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { startupsAPI } from "@/utils/APIs/startupsAPI";
+import IdeaLaunchingLoader from "./IdeaLaunchingLoader";
 export default function RegisterStartUp() {
   const navigate = useNavigate();
   const { access_token, user } = useSelector((state) => state.auth);
@@ -56,6 +57,8 @@ export default function RegisterStartUp() {
   const [currentStep, setCurrentStep] = useState(1);
   const [query] = useSearchParams();
   const id = query.get('id') || null;
+  const ideaId = query.get('ideaId') || null;
+  const [ideaLoading, setIdeaLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -67,7 +70,6 @@ export default function RegisterStartUp() {
     creator_first_name: "",
     creator_last_name: "",
     creator_email: "",
-    
     revenue: 0,
     funding_amount: 0,
     funding_round: "pre-seed",
@@ -167,6 +169,57 @@ export default function RegisterStartUp() {
   
 
   }, [id, user?.id]);
+  useEffect(() => {
+    
+      async function fetchIdeaLaunch() {
+        try {
+          setIdeaLoading(true);
+          const response = await startupsAPI.getIdeaLaunchData(ideaId);
+          console.log("Idea launch data:", response);
+          if (response.success && response.data?.suggestions) {
+            const idea = response.data.suggestions;
+            setFormData(prev => ({
+              ...prev,
+              name: idea.name || "",
+              industry: idea.industry || "",
+              location: idea.location || "",
+              description: idea.description || "",
+              stage: idea.stage || "",
+              positions: idea.positions || 0,
+              roles: idea.roles || {},
+              revenue: 0,
+              funding_amount: 0,
+              funding_round: "pre-seed",
+              burn_rate: 0,
+              runway_months: 0,
+              valuation: 0,
+              financial_notes: "",
+              tech_stack: idea.tech_stack || [],
+            }));
+          }
+        } catch (error) {
+          console.error('Error fetching idea launch data:', error);
+          toast.error('Error fetching idea launch data');
+        } finally {
+          setIdeaLoading(false);
+        }
+      }
+    if (ideaId && !id) {
+      fetchIdeaLaunch();
+    }
+  }, [ideaId, id]);
+  useEffect(() => {
+    if (ideaId && !id) {
+      setTechStack(formData.tech_stack || []);
+      setRoles(
+        Object.entries(formData.roles || {}).map(([title, details]) => ({
+          title,
+          roleType: details.roleType || "Full Time",
+          positionsNumber: details.positionsNumber || 0,
+        }))
+      );
+    }
+  }, [formData, ideaId, id]);
   useEffect(() => {
     async function getStartupDocuments() {
       const response = await startupsAPI.getDocuments(id);
@@ -625,10 +678,11 @@ export default function RegisterStartUp() {
 
   
 
-
+  console.log("Current formData:", formData);
 
   return (
     <div className="min-h-screen">
+      <IdeaLaunchingLoader loading={ideaLoading} />
       <div className="container mx-auto px-0 py-8 w-full">
         {/* Header */}
         <div className="text-center mb-8 mt-10">

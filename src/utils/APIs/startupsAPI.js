@@ -42,8 +42,12 @@ export const startupsAPI = {
     return response.data
   },
   // Get single startup
-  getById: async (startupId) => {
-    const response = await api.get(`/startups/${startupId}`)
+  getById: async (startupId, userId = null) => {
+    const response = await api.get(`/startups/${startupId}`, {
+      params: {
+        user_id: userId,
+      },
+    })
     return response.data
   },
 
@@ -321,20 +325,21 @@ declineInvitation: async (startupId, invitationId) => {
   changeMemberRole: async (startupId, memberId, newRole) => {
     const response = await api.post(`/startups/${startupId}/members/${memberId}/change-role`, { role: newRole })
     return response.data
+  },
+  getIdeaLaunchData: async (ideaId) => {
+    const response = await api.get(`/startups/${ideaId}/launch-data`)
+    return response.data
   }
 }
 // Project Goals API
 export const projectGoalsAPI = {
   // Get all project goals with filters
-  getAll: async (params = {}, accessToken) => {
+  getAll: async (params = {}) => {
     const response = await api.get('/project-goals', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
         ...params,
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
       },
     })
     return response.data

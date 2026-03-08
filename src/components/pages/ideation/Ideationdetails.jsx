@@ -33,7 +33,7 @@ import DeleteConfirmationModal from "@/utils/confirm";
 
 const BASE_URL = API_BASE_URL + "/ideas";
 
-const IdeationDetails = () => {
+const VisionDetails = () => {
   const [idea, setIdea] = useState(null);
   const [comments, setComments] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
@@ -77,7 +77,7 @@ const IdeationDetails = () => {
     if (!ideaId || !access_token) return;
     setCollabRequestsLoading(true);
     try {
-      const res = await axios.get(`${API_URL}/api/ideas/${ideaId}/collab-requests`, {
+      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       setCollabRequests(res.data.data?.collab_requests || []);
@@ -92,7 +92,7 @@ const IdeationDetails = () => {
   const fetchMyCollabStatus = useCallback(async () => {
     if (!ideaId || !access_token) return;
     try {
-      const res = await axios.get(`${API_URL}/api/ideas/${ideaId}/collab-requests/my-status`, {
+      const res = await axios.get(`${API_URL}/ideas/${ideaId}/collab-requests/my-status`, {
         headers: { Authorization: `Bearer ${access_token}` },
       });
       const cr = res.data.data?.collab_request;
@@ -111,7 +111,7 @@ const IdeationDetails = () => {
   const handleCollabAction = async (requestId, action) => {
     try {
       await axios.post(
-        `${API_URL}/api/ideas/collab-requests/${requestId}/${action}`,
+        `${API_URL}/ideas/collab-requests/${requestId}/${action}`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -129,7 +129,7 @@ const IdeationDetails = () => {
     const fetchIdea = async () => {
       try {
         setLoading(true);
-        const res = await ideaAPI.getIdeaById(ideaId, access_token);
+        const res = await ideaAPI.getIdeaById(ideaId);
         setIdea(res.data.idea);
         setLikes(res.data.idea.likes ?? 0);
         setLiked(res.data.idea.hasLiked || false);
@@ -137,7 +137,7 @@ const IdeationDetails = () => {
         if (user && res.data.idea.likedBy?.length) {
           setLiked(res.data.idea.likedBy.includes(user.id));
         }
-        const comments = await ideaAPI.getIdeaComments(access_token, { ideaId });
+        const comments = await ideaAPI.getIdeaComments({ ideaId });
         const result = Object.groupBy(comments.data.comments, ({ suggestion }) => suggestion ? 'suggestions' : 'comments');
       
         setComments(result.comments || []);
@@ -148,7 +148,7 @@ const IdeationDetails = () => {
           comments: comments.data.comments,
         }));
       } catch (error) {
-        console.error("Error fetching idea:", error);
+        console.error("Error fetching vision:", error);
         setIdea(null);
       } finally {
         setLoading(false);
@@ -191,7 +191,7 @@ const IdeationDetails = () => {
           const res = await usersAPI.getById(idea.creator.id, { include_stats: true });
           setIdeaCreator(res.data.user);
         } catch (err) {
-          console.error("Error fetching idea creator:", err);
+          console.error("Error fetching vision creator:", err);
         }
       }
 
@@ -249,7 +249,7 @@ const IdeationDetails = () => {
   const handleJoinSubmit = async () => {
     try {
       const res = await axios.post(
-        `${API_URL}/api/ideas/${ideaId}/collab-requests`,
+        `${API_URL}/ideas/${ideaId}/collab-requests`,
         { message: joinMessage, role: "co-developer" },
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -271,7 +271,7 @@ const IdeationDetails = () => {
     if (!myCollabRequestId) return;
     try {
       await axios.post(
-        `${API_URL}/api/ideas/collab-requests/${myCollabRequestId}/cancel`,
+        `${API_URL}/ideas/collab-requests/${myCollabRequestId}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -286,7 +286,7 @@ const IdeationDetails = () => {
   const handleLeaveIdea = async () => {
     try {
       await axios.post(
-        `${API_URL}/api/ideas/${ideaId}/leave`,
+        `${API_URL}/ideas/${ideaId}/leave`,
         {},
         { headers: { Authorization: `Bearer ${access_token}` } }
       );
@@ -339,15 +339,15 @@ const IdeationDetails = () => {
       
       if (response.success) {
         setShowDeleteModal(false);
-        setSuccessMsg(response?.message || "Idea deleted successfully");
+        setSuccessMsg(response?.message || "Vision deleted successfully");
         setTimeout(() => {
           navigate("/ideation");
         }, 1500);
       }
     } catch (err) {
-      console.error("Error deleting idea:", err);
+      console.error("Error deleting vision:", err);
       setShowDeleteModal(false);
-      toast.error("Failed to delete idea. Please try again.");
+      toast.error("Failed to delete vision. Please try again.");
     }
   };
 
@@ -365,7 +365,7 @@ const IdeationDetails = () => {
         setLikes(res.data.idea.likes);
         setLiked(res.data.idea.likedBy.includes(user.id));
       } catch (err) {
-        console.error("Error liking idea:", err);
+        console.error("Error liking vision:", err);
       }
     },
     [ideaId, access_token, user]
@@ -419,7 +419,7 @@ const IdeationDetails = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
       >
-        Idea not found.
+        Vision not found.
       </motion.div>
     );
   }
@@ -483,7 +483,7 @@ const IdeationDetails = () => {
             <motion.div whileHover={{ x: -4 }} transition={{ duration: 0.2 }}>
               <ArrowLeft className="h-5 w-5" />
             </motion.div>
-            <span className="font-medium">Back to Ideas</span>
+            <span className="font-medium">Back to Visions</span>
           </Link>
 
           <div className="flex items-center gap-2">
@@ -496,7 +496,7 @@ const IdeationDetails = () => {
                 : "bg-white/5 border-white/20 hover:bg-white/10"
                 }`}
               onClick={handleLike}
-              title="Like this idea"
+              title="Like this vision"
             >
               <motion.div
                 animate={liked ? { scale: [1, 1.3, 1] } : {}}
@@ -512,7 +512,7 @@ const IdeationDetails = () => {
               whileTap="tap"
               className="p-2.5 rounded-lg border border-white/20 bg-white/5 hover:bg-white/10 transition-all"
               onClick={handleShare}
-              title="Share this idea"
+              title="Share this vision"
             >
               <Share2 className="h-5 w-5" />
             </motion.button>
@@ -527,7 +527,7 @@ const IdeationDetails = () => {
                 }`}
               onClick={handleBookmark}
               aria-pressed={bookmarked}
-              title="Bookmark this idea"
+              title="Bookmark this vision"
             >
               <motion.div
                 animate={bookmarked ? { scale: [1, 1.2, 1] } : {}}
@@ -546,7 +546,7 @@ const IdeationDetails = () => {
                 whileTap="tap"
                 className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-all"
                 onClick={() => setShowDeleteModal(true)}
-                title="Delete this idea"
+                title="Delete this vision"
               >
                 <Trash2 className="h-5 w-5" />
               </motion.button>
@@ -582,7 +582,7 @@ const IdeationDetails = () => {
                 <motion.img
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  src={idea.imageUrl} // Here we are using s3 URL directly, no need to prepend API_BASE_URL
+                  src={idea.imageUrl}
                   alt={idea.title}
                   className="w-full h-64 object-cover rounded-xl border border-white/10"
                 />
@@ -985,7 +985,7 @@ const IdeationDetails = () => {
               variants={itemVariants}
               whileHover={{ y: -4 }}
             >
-              <h2 className="text-lg font-bold mb-6">Idea Creator</h2>
+              <h2 className="text-lg font-bold mb-6">Vision Creator</h2>
               <div className="text-center space-y-4">
                 <motion.img
                   whileHover={{ scale: 1.1 }}
@@ -1083,6 +1083,7 @@ const IdeationDetails = () => {
 
           {/* Co-Developer Requests Panel — creator only */}
           {isCreator && (
+            <>
             <motion.div
               className="bg-gradient-to-br from-emerald-900/20 to-teal-900/10 border border-emerald-500/30 rounded-2xl p-5 backdrop-blur-sm"
               variants={itemVariants}
@@ -1180,6 +1181,40 @@ const IdeationDetails = () => {
                 )}
               </AnimatePresence>
             </motion.div>
+            {/* Launch Vision Card */}
+            <motion.div
+              className="bg-gradient-to-br from-purple-900/20 to-pink-900/20 border border-purple-500/30 rounded-2xl p-6 backdrop-blur-sm"
+              variants={itemVariants}
+            >
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-purple-500/20 rounded-lg">
+                    <Zap className="h-5 w-5 text-purple-400" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-white">Ready to Launch?</h3>
+                    <p className="text-sm text-gray-300 mt-1">
+                      Turn this vision into reality and start your journey as a founder.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to={`/register-startup?ideaId=${ideaId}`}
+                  className="w-full"
+                >
+                  <motion.button
+                    variants={buttonVariants}
+                    whileHover="hover"
+                    whileTap="tap"
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center gap-2"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Launch as Startup
+                  </motion.button>
+                </Link>
+              </div>
+            </motion.div>
+            </>
           )}
         </div>
       </motion.div>
@@ -1265,12 +1300,12 @@ const IdeationDetails = () => {
           isOpen={showDeleteModal}
           onClose={() => setShowDeleteModal(false)}
           onConfirm={handleDeleteIdea}
-          title="Delete Idea"
-          message="Are you sure you want to delete this idea? This action cannot be undone."
+          title="Delete Vision"
+          message="Are you sure you want to delete this vision? This action cannot be undone."
         />
       )}
     </div>
   );
 };
 
-export default IdeationDetails;
+export default VisionDetails;

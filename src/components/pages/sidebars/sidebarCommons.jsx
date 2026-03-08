@@ -95,10 +95,10 @@ export function ideation(id) {
       id,
       icon: <LightbulbIcon size={22} />,
       href: "/ideation",
-      label: "Ideation",
+      label: "Vision",
       subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "saved-ideas", href: "/saved-ideas", label: "Saved Ideas", icon: <Bookmark size={18} /> },
+        { id: "vision-board", href: "/ideation", label: "Vision Board", icon: <LightbulbIcon size={18} /> },
+        { id: "saved-visions", href: "/saved-ideas", label: "Saved Visions", icon: <Bookmark size={18} /> },
         { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
       ]
     }

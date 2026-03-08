@@ -1,98 +1,52 @@
-/**
- * WalletDashboard - SF Collab Virtual Economy Dashboard
- * Displays wallet balance, transactions, and currency management
- * 
- * FIXED: Quick Actions now use modals and valid routes instead of broken links
- */
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Coins,
-  Gem,
-  Ticket,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpRight,
-  ArrowDownLeft,
-  History,
-  Gift,
-  Send,
-  ShoppingBag,
-  Trophy,
-  Sparkles,
-  RefreshCw,
-  ChevronRight,
-  Zap,
-  Target,
-  Crown,
-  X,
-  User,
+  Coins, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft,
+  History, Gift, Send, ShoppingBag, Sparkles, RefreshCw, ChevronRight,
+  Zap, Target, X, CreditCard, Plus, Minus, RotateCcw, DollarSign,
 } from 'lucide-react';
 import { walletAPI } from '@/utils/APIs/walletAPI';
+import { paymentAPI } from '@/utils/APIs/paymentAPI';
+import useGetCredits from '@/utils/hooks/useGetCredits';
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { Link, useSearchParams } from 'react-router-dom';
 
-// Currency configurations
-const CURRENCY_COLORS = {
-  sf_coins: {
-    gradient: 'from-amber-500 to-yellow-600',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/30',
-    text: 'text-amber-400',
-    glow: 'shadow-amber-500/20',
-  },
-  premium_gems: {
-    gradient: 'from-purple-500 to-pink-600',
-    bg: 'bg-purple-500/10',
-    border: 'border-purple-500/30',
-    text: 'text-purple-400',
-    glow: 'shadow-purple-500/20',
-  },
-  event_tokens: {
-    gradient: 'from-cyan-500 to-blue-600',
-    bg: 'bg-cyan-500/10',
-    border: 'border-cyan-500/30',
-    text: 'text-cyan-400',
-    glow: 'shadow-cyan-500/20',
-  },
-};
-
 const TRANSACTION_ICONS = {
-  earn: { icon: ArrowDownLeft, color: 'text-green-400', bg: 'bg-green-500/10' },
-  spend: { icon: ArrowUpRight, color: 'text-red-400', bg: 'bg-red-500/10' },
-  purchase: { icon: ShoppingBag, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-  refund: { icon: RefreshCw, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-  bonus: { icon: Gift, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-  transfer: { icon: Send, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
+  earn: { icon: TrendingUp, bg: 'bg-green-500/20', color: 'text-green-400' },
+  spend: { icon: TrendingDown, bg: 'bg-red-500/20', color: 'text-red-400' },
+  deposit: { icon: ArrowDownLeft, bg: 'bg-cyan-500/20', color: 'text-cyan-400' },
+  withdraw: { icon: ArrowUpRight, bg: 'bg-orange-500/20', color: 'text-orange-400' },
+  refund: { icon: RotateCcw, bg: 'bg-yellow-500/20', color: 'text-yellow-400' },
 };
-
-// ============================================================================
-// MAIN COMPONENT
-// ============================================================================
 
 const WalletDashboard = () => {
   const { user } = useSelector((state) => state.auth);
   const [searchParams, setSearchParams] = useSearchParams();
-  
+  const credits = useGetCredits();
+
   const [wallet, setWallet] = useState(null);
-  const [stats, setStats] = useState(null);
+  const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
-  const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [refreshing, setRefreshing] = useState(false);
-  const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   useEffect(() => {
     fetchWalletData();
   }, []);
 
-  // Update tab from URL params
+  useEffect(() => {
+    if (wallet) {
+      setWallet((prev) => ({ ...prev, sf_coins: credits }));
+    }
+  }, [credits]);
+
   useEffect(() => {
     const tab = searchParams.get('tab');
-    if (tab && ['overview', 'history', 'leaderboard'].includes(tab)) {
+    if (tab && ['overview', 'history'].includes(tab)) {
       setActiveTab(tab);
     }
   }, [searchParams]);
@@ -101,18 +55,25 @@ const WalletDashboard = () => {
     try {
       setLoading(true);
       
-      const [balanceRes, statsRes, historyRes, leaderboardRes] = await Promise.all([
-        walletAPI.getBalance(),
-        walletAPI.getStats(),
-        walletAPI.getHistory({ per_page: 10 }),
-        walletAPI.getLeaderboard({ limit: 10 }),
-      ]);
-
-      if (balanceRes.success) setWallet(balanceRes.wallet);
-      if (statsRes.success) setStats(statsRes);
-      if (historyRes.success) setTransactions(historyRes.transactions || []);
-      if (leaderboardRes.success) setLeaderboard(leaderboardRes.leaderboard || []);
+      // Fetch wallet history
+      const historyRes = await walletAPI.getHistory({ per_page: 20 });
       
+      // Fetch wallet balance (real money)
+      const balanceRes = await paymentAPI.getWalletBalance();
+
+      setWallet({
+        sf_coins: credits,
+        total_earned: 0,
+        total_spent: 0,
+      });
+
+      if (balanceRes && balanceRes.data) {
+        setWalletBalance(balanceRes.data.balance || 0);
+      }
+
+      if (historyRes.success) {
+        setTransactions(historyRes.transactions || []);
+      }
     } catch (error) {
       console.error('Error fetching wallet data:', error);
       toast.error('Failed to load wallet data');
@@ -140,19 +101,31 @@ const WalletDashboard = () => {
     return num.toLocaleString();
   };
 
+  const formatCurrency = (cents) => {
+    return `$${(cents / 100).toFixed(2)}`;
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
     const date = new Date(dateStr);
     const now = new Date();
     const diff = now.getTime() - date.getTime();
-    
+
     if (diff < 60000) return 'Just now';
     if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
     if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
     if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
-    
+
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
+
+  const totalEarned = transactions
+    .filter((tx) => ['earn', 'deposit', 'refund'].includes(tx.transaction_type))
+    .reduce((sum, tx) => sum + (tx.amount || 0), 0);
+
+  const totalSpent = transactions
+    .filter((tx) => ['spend', 'withdraw'].includes(tx.transaction_type))
+    .reduce((sum, tx) => sum + (tx.amount || 0), 0);
 
   if (loading) {
     return (
@@ -180,9 +153,9 @@ const WalletDashboard = () => {
             </div>
             My Wallet
           </h1>
-          <p className="text-gray-400 mt-1">Manage your SF Coins, Crystals & Event Tokens</p>
+          <p className="text-gray-400 mt-1">Manage your SF Coins & Balance</p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <button
             onClick={handleRefresh}
@@ -191,7 +164,7 @@ const WalletDashboard = () => {
           >
             <RefreshCw className={`w-5 h-5 text-gray-400 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
-          
+
           <Link
             to="/store"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all"
@@ -202,71 +175,90 @@ const WalletDashboard = () => {
         </div>
       </motion.div>
 
-      {/* Currency Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <CurrencyCard
-          name="SF Coins"
-          balance={wallet?.sf_coins || 0}
-          icon={Coins}
-          colors={CURRENCY_COLORS.sf_coins}
-          subtitle="Earned through contributions"
-          trend={wallet ? ((wallet.daily_earnings / wallet.daily_earning_limit) * 100) : 0}
-          trendLabel="Daily Progress"
-        />
+      {/* Cards Container */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* SF Coins Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 to-yellow-600/10 border border-amber-500/30 p-6 group hover:scale-[1.02] transition-transform"
+        >
+          <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br from-amber-500 to-yellow-500 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity" />
 
-        <CurrencyCard
-          name="SF Crystals"
-          balance={wallet?.premium_gems || 0}
-          icon={Gem}
-          colors={CURRENCY_COLORS.premium_gems}
-          subtitle="Premium currency"
-          action={
-            <Link
-              to="/pricing"
-              className="text-xs px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors"
-            >
-              Get More
-            </Link>
-          }
-        />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 shadow-lg shadow-amber-500/20">
+                <Coins className="w-6 h-6 text-white" />
+              </div>
+            </div>
 
-        <CurrencyCard
-          name="Event Tokens"
-          balance={wallet?.event_tokens || 0}
-          icon={Ticket}
-          colors={CURRENCY_COLORS.event_tokens}
-          subtitle="Special event rewards"
-          action={
-            <span className="text-xs px-3 py-1.5 rounded-lg bg-cyan-500/20 text-cyan-300">
-              Limited Time
-            </span>
-          }
-        />
+            <p className="text-gray-400 text-sm mb-1">SF Coins Balance</p>
+            <h2 className="text-5xl font-bold text-white mb-2">
+              {(wallet?.sf_coins || 0).toLocaleString()}
+            </h2>
+            <p className="text-gray-500 text-xs">Earned through activities & purchases</p>
+          </div>
+        </motion.div>
+
+        {/* Wallet Balance Card */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 border border-green-500/30 p-6 group hover:scale-[1.02] transition-transform"
+        >
+          <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity" />
+
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 shadow-lg shadow-green-500/20">
+                <DollarSign className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowDepositModal(true)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-green-500/20 text-green-300 hover:bg-green-500/30 transition-colors flex items-center gap-1"
+                >
+                  <Plus className="w-3 h-3" /> Deposit
+                </button>
+                <button
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-orange-500/20 text-orange-300 hover:bg-orange-500/30 transition-colors flex items-center gap-1"
+                >
+                  <Minus className="w-3 h-3" /> Withdraw
+                </button>
+              </div>
+            </div>
+
+            <p className="text-gray-400 text-sm mb-1">Wallet Balance</p>
+            <h2 className="text-5xl font-bold text-white mb-2">
+              {formatCurrency(walletBalance)}
+            </h2>
+            <p className="text-gray-500 text-xs">Real money in your account</p>
+          </div>
+        </motion.div>
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <StatCard
           label="Total Earned"
-          value={formatNumber(wallet?.total_coins_earned || 0)}
+          value={formatNumber(totalEarned)}
+          subtext="SF Coins"
           icon={TrendingUp}
           color="text-green-400"
         />
         <StatCard
           label="Total Spent"
-          value={formatNumber(wallet?.total_coins_spent || 0)}
+          value={formatNumber(totalSpent)}
+          subtext="SF Coins"
           icon={TrendingDown}
           color="text-red-400"
         />
         <StatCard
-          label="Daily Earnings"
-          value={`${wallet?.daily_earnings || 0}/${wallet?.daily_earning_limit || 1000}`}
-          icon={Target}
-          color="text-amber-400"
-        />
-        <StatCard
-          label="Net Balance"
-          value={formatNumber((wallet?.total_coins_earned || 0) - (wallet?.total_coins_spent || 0))}
+          label="Current Balance"
+          value={formatNumber(wallet?.sf_coins || 0)}
+          subtext="SF Coins"
           icon={Zap}
           color="text-blue-400"
         />
@@ -274,7 +266,7 @@ const WalletDashboard = () => {
 
       {/* Tabs */}
       <div className="flex items-center gap-2 mb-6 p-1 bg-white/5 rounded-xl w-fit">
-        {['overview', 'history', 'leaderboard'].map((tab) => (
+        {['overview', 'history'].map((tab) => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
@@ -297,20 +289,17 @@ const WalletDashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6"
+            className="space-y-6"
           >
-            <QuickActionsCard 
-              onTransferClick={() => setShowTransferModal(true)} 
-              onLeaderboardClick={() => handleTabChange('leaderboard')}
+            <QuickActionsCard
+              onDepositClick={() => setShowDepositModal(true)}
+              onWithdrawClick={() => setShowWithdrawModal(true)}
             />
-            <DailyProgressCard stats={stats} />
-            <div className="lg:col-span-2">
-              <RecentActivityCard 
-                transactions={transactions.slice(0, 5)} 
-                formatDate={formatDate}
-                onViewAll={() => handleTabChange('history')} 
-              />
-            </div>
+            <RecentActivityCard
+              transactions={transactions.slice(0, 5)}
+              formatDate={formatDate}
+              onViewAll={() => handleTabChange('history')}
+            />
           </motion.div>
         )}
 
@@ -324,27 +313,25 @@ const WalletDashboard = () => {
             <TransactionHistoryCard transactions={transactions} formatDate={formatDate} />
           </motion.div>
         )}
-
-        {activeTab === 'leaderboard' && (
-          <motion.div
-            key="leaderboard"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-          >
-            <LeaderboardCard leaderboard={leaderboard} currentUserId={user?.id} />
-          </motion.div>
-        )}
       </AnimatePresence>
 
-      {/* Transfer Modal */}
+      {/* Modals */}
       <AnimatePresence>
-        {showTransferModal && (
-          <TransferModal
-            wallet={wallet}
-            onClose={() => setShowTransferModal(false)}
+        {showDepositModal && (
+          <DepositModal
+            onClose={() => setShowDepositModal(false)}
             onSuccess={() => {
-              setShowTransferModal(false);
+              setShowDepositModal(false);
+              fetchWalletData();
+            }}
+          />
+        )}
+        {showWithdrawModal && (
+          <WithdrawModal
+            walletBalance={walletBalance}
+            onClose={() => setShowWithdrawModal(false)}
+            onSuccess={() => {
+              setShowWithdrawModal(false);
               fetchWalletData();
             }}
           />
@@ -354,54 +341,8 @@ const WalletDashboard = () => {
   );
 };
 
-
-// ============================================================================
-// SUB-COMPONENTS
-// ============================================================================
-
-const CurrencyCard = ({ name, balance, icon: Icon, colors, subtitle, trend, trendLabel, action }) => (
-  <motion.div
-    initial={{ opacity: 0, scale: 0.95 }}
-    animate={{ opacity: 1, scale: 1 }}
-    className={`relative overflow-hidden rounded-2xl ${colors.bg} border ${colors.border} p-6 group hover:scale-[1.02] transition-transform`}
-  >
-    <div className={`absolute -top-20 -right-20 w-40 h-40 rounded-full bg-gradient-to-br ${colors.gradient} opacity-10 blur-3xl group-hover:opacity-20 transition-opacity`} />
-    
-    <div className="relative z-10">
-      <div className="flex items-start justify-between mb-4">
-        <div className={`p-3 rounded-xl bg-gradient-to-br ${colors.gradient} shadow-lg ${colors.glow}`}>
-          <Icon className="w-6 h-6 text-white" />
-        </div>
-        {action}
-      </div>
-      
-      <p className="text-gray-400 text-sm mb-1">{name}</p>
-      <h2 className="text-3xl font-bold text-white mb-2">
-        {(balance || 0).toLocaleString()}
-      </h2>
-      <p className="text-gray-500 text-xs">{subtitle}</p>
-      
-      {trend !== undefined && (
-        <div className="mt-4">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-gray-400">{trendLabel}</span>
-            <span className={colors.text}>{Math.round(trend)}%</span>
-          </div>
-          <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${Math.min(trend, 100)}%` }}
-              transition={{ duration: 1, ease: 'easeOut' }}
-              className={`h-full bg-gradient-to-r ${colors.gradient} rounded-full`}
-            />
-          </div>
-        </div>
-      )}
-    </div>
-  </motion.div>
-);
-
-const StatCard = ({ label, value, icon: Icon, color }) => (
+// Sub-components
+const StatCard = ({ label, value, subtext, icon: Icon, color }) => (
   <div className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/[0.07] transition-colors">
     <div className="flex items-center gap-3">
       <div className={`p-2 rounded-lg bg-white/5 ${color}`}>
@@ -410,38 +351,16 @@ const StatCard = ({ label, value, icon: Icon, color }) => (
       <div>
         <p className="text-gray-400 text-xs">{label}</p>
         <p className="text-white font-semibold">{value}</p>
+        {subtext && <p className="text-gray-500 text-xs">{subtext}</p>}
       </div>
     </div>
   </div>
 );
 
-// FIXED: Quick Actions now use onClick handlers instead of broken routes
-const QuickActionsCard = ({ onTransferClick, onLeaderboardClick }) => {
+const QuickActionsCard = ({ onDepositClick, onWithdrawClick }) => {
   const actions = [
-    { 
-      icon: Send, 
-      label: 'Send Coins', 
-      color: 'from-blue-500 to-cyan-500', 
-      onClick: onTransferClick 
-    },
-    { 
-      icon: ShoppingBag, 
-      label: 'Shop', 
-      color: 'from-purple-500 to-pink-500', 
-      href: '/store' 
-    },
-    { 
-      icon: Gift, 
-      label: 'Daily Bonus', 
-      color: 'from-amber-500 to-orange-500', 
-      onClick: () => toast.info('🎁 Daily bonus system coming soon!') 
-    },
-    { 
-      icon: Trophy, 
-      label: 'Leaderboard', 
-      color: 'from-green-500 to-emerald-500', 
-      onClick: onLeaderboardClick 
-    },
+    { icon: Plus, label: 'Deposit Money', color: 'from-green-500 to-emerald-500', onClick: onDepositClick },
+    { icon: Minus, label: 'Withdraw Money', color: 'from-orange-500 to-red-500', onClick: onWithdrawClick },
   ];
 
   return (
@@ -450,90 +369,22 @@ const QuickActionsCard = ({ onTransferClick, onLeaderboardClick }) => {
         <Sparkles className="w-5 h-5 text-blue-400" />
         Quick Actions
       </h3>
-      
+
       <div className="grid grid-cols-2 gap-3">
-        {actions.map((action) => {
-          const content = (
-            <>
-              <div className={`p-2 rounded-lg bg-gradient-to-br ${action.color}`}>
-                <action.icon className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
-                {action.label}
-              </span>
-            </>
-          );
-
-          // Use Link for routes that exist
-          if (action.href) {
-            return (
-              <Link
-                key={action.label}
-                to={action.href}
-                className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group"
-              >
-                {content}
-              </Link>
-            );
-          }
-
-          // Use button with onClick for actions
-          return (
-            <button
-              key={action.label}
-              onClick={action.onClick}
-              className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group text-left"
-            >
-              {content}
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-const DailyProgressCard = ({ stats }) => {
-  const progress = stats?.stats?.daily_progress;
-  
-  return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Target className="w-5 h-5 text-amber-400" />
-        Daily Earnings
-      </h3>
-      
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <span className="text-gray-400">Progress</span>
-          <span className="text-white font-semibold">
-            {progress?.earned || 0} / {progress?.limit || 1000} Coins
-          </span>
-        </div>
-        
-        <div className="h-3 bg-white/10 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${progress?.percentage || 0}%` }}
-            transition={{ duration: 1, ease: 'easeOut' }}
-            className="h-full bg-gradient-to-r from-amber-500 to-yellow-500 rounded-full"
-          />
-        </div>
-        
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-gray-500">
-            {progress?.remaining || 1000} coins remaining
-          </span>
-          <span className="text-amber-400 font-medium">
-            {progress?.percentage || 0}%
-          </span>
-        </div>
-        
-        <div className="pt-4 border-t border-white/10">
-          <p className="text-gray-400 text-sm">
-            💡 Complete tasks and contribute to earn more coins!
-          </p>
-        </div>
+        {actions.map((action) => (
+          <button
+            key={action.label}
+            onClick={action.onClick}
+            className="flex items-center gap-3 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all group text-left"
+          >
+            <div className={`p-2 rounded-lg bg-gradient-to-br ${action.color}`}>
+              <action.icon className="w-4 h-4 text-white" />
+            </div>
+            <span className="text-sm text-gray-300 group-hover:text-white transition-colors">
+              {action.label}
+            </span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -553,7 +404,7 @@ const RecentActivityCard = ({ transactions, formatDate, onViewAll }) => (
         View All <ChevronRight className="w-4 h-4" />
       </button>
     </div>
-    
+
     {!transactions || transactions.length === 0 ? (
       <div className="text-center py-8">
         <History className="w-12 h-12 text-gray-600 mx-auto mb-3" />
@@ -564,8 +415,8 @@ const RecentActivityCard = ({ transactions, formatDate, onViewAll }) => (
         {transactions.map((tx) => {
           const txConfig = TRANSACTION_ICONS[tx.transaction_type] || TRANSACTION_ICONS.earn;
           const Icon = txConfig.icon;
-          const isPositive = ['earn', 'bonus', 'refund'].includes(tx.transaction_type);
-          
+          const isPositive = ['earn', 'deposit', 'refund'].includes(tx.transaction_type);
+
           return (
             <div
               key={tx.id}
@@ -584,9 +435,7 @@ const RecentActivityCard = ({ transactions, formatDate, onViewAll }) => (
                 <p className={`font-semibold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
                   {isPositive ? '+' : '-'}{(tx.amount || 0).toLocaleString()}
                 </p>
-                <p className="text-gray-500 text-xs capitalize">
-                  {tx.currency_type?.replace('_', ' ') || 'coins'}
-                </p>
+                <p className="text-gray-500 text-xs">SF Coins</p>
               </div>
             </div>
           );
@@ -602,20 +451,19 @@ const TransactionHistoryCard = ({ transactions, formatDate }) => (
       <History className="w-5 h-5 text-blue-400" />
       Transaction History
     </h3>
-    
+
     {!transactions || transactions.length === 0 ? (
       <div className="text-center py-12">
         <History className="w-16 h-16 text-gray-600 mx-auto mb-4" />
         <p className="text-gray-400 text-lg">No transactions yet</p>
-        <p className="text-gray-500 text-sm mt-2">Your transaction history will appear here</p>
       </div>
     ) : (
       <div className="space-y-3">
         {transactions.map((tx) => {
           const txConfig = TRANSACTION_ICONS[tx.transaction_type] || TRANSACTION_ICONS.earn;
           const Icon = txConfig.icon;
-          const isPositive = ['earn', 'bonus', 'refund'].includes(tx.transaction_type);
-          
+          const isPositive = ['earn', 'deposit', 'refund'].includes(tx.transaction_type);
+
           return (
             <motion.div
               key={tx.id}
@@ -640,7 +488,7 @@ const TransactionHistoryCard = ({ transactions, formatDate }) => (
                 <p className={`text-lg font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
                   {isPositive ? '+' : '-'}{(tx.amount || 0).toLocaleString()}
                 </p>
-                <p className="text-gray-500 text-sm capitalize">{tx.currency_type?.replace('_', ' ') || 'coins'}</p>
+                <p className="text-gray-500 text-sm">SF Coins</p>
               </div>
             </motion.div>
           );
@@ -650,129 +498,34 @@ const TransactionHistoryCard = ({ transactions, formatDate }) => (
   </div>
 );
 
-const LeaderboardCard = ({ leaderboard, currentUserId }) => {
-  const RANK_STYLES = {
-    1: { bg: 'bg-gradient-to-br from-amber-500/20 to-yellow-600/20', border: 'border-amber-500/30', text: 'text-amber-400' },
-    2: { bg: 'bg-gradient-to-br from-gray-300/20 to-gray-400/20', border: 'border-gray-400/30', text: 'text-gray-300' },
-    3: { bg: 'bg-gradient-to-br from-orange-600/20 to-orange-700/20', border: 'border-orange-600/30', text: 'text-orange-400' },
-  };
-
-  return (
-    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-        <Trophy className="w-5 h-5 text-amber-400" />
-        Top Earners Leaderboard
-      </h3>
-      
-      {!leaderboard || leaderboard.length === 0 ? (
-        <div className="text-center py-12">
-          <Trophy className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg">No leaderboard data yet</p>
-          <p className="text-gray-500 text-sm mt-2">Start earning to appear on the leaderboard!</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {leaderboard.map((entry, index) => {
-            const isCurrentUser = String(entry.user_id) === String(currentUserId);
-            const rankStyle = RANK_STYLES[entry.rank];
-            
-            return (
-              <motion.div
-                key={entry.user_id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`flex items-center justify-between p-4 rounded-xl border transition-colors ${
-                  isCurrentUser
-                    ? 'bg-blue-500/10 border-blue-500/30'
-                    : rankStyle
-                    ? `${rankStyle.bg} ${rankStyle.border}`
-                    : 'bg-white/5 border-white/10'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                    rankStyle ? rankStyle.text : 'text-gray-400'
-                  } ${entry.rank <= 3 ? 'text-lg' : 'text-sm'}`}>
-                    {entry.rank <= 3 ? (
-                      <Crown className={`w-6 h-6 ${rankStyle?.text}`} />
-                    ) : (
-                      `#${entry.rank}`
-                    )}
-                  </div>
-                  
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center overflow-hidden">
-                    {entry.profile_picture ? (
-                      <img src={entry.profile_picture} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white font-semibold">
-                        {entry.username?.charAt(0)?.toUpperCase() || '?'}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div>
-                    <p className="text-white font-medium flex items-center gap-2">
-                      {entry.username || 'Unknown'}
-                      {isCurrentUser && (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">You</span>
-                      )}
-                    </p>
-                    <p className="text-gray-500 text-sm">
-                      Balance: {(entry.current_balance || 0).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <p className="text-amber-400 font-bold text-lg">
-                    {(entry.total_earned || 0).toLocaleString()}
-                  </p>
-                  <p className="text-gray-500 text-sm">Total Earned</p>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Transfer Modal Component
-const TransferModal = ({ wallet, onClose, onSuccess }) => {
-  const [recipientId, setRecipientId] = useState('');
+const DepositModal = ({ onClose, onSuccess }) => {
   const [amount, setAmount] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleTransfer = async () => {
-    if (!recipientId || !amount || parseInt(amount) <= 0) {
-      toast.error('Please enter valid recipient and amount');
-      return;
-    }
-
-    if (parseInt(amount) > (wallet?.sf_coins || 0)) {
-      toast.error('Insufficient balance');
+  const handleDeposit = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
       return;
     }
 
     try {
       setLoading(true);
-      const result = await walletAPI.transfer({
-        recipient_id: recipientId,
-        amount: parseInt(amount),
-        message: message
+      const result = await paymentAPI.createCheckoutSession({
+        type: 'deposit',
+        title: 'Wallet Deposit',
+        price: parseFloat(amount) * 100,
+        description: `Deposit $${amount} to wallet`,
       });
 
-      if (result.success) {
-        toast.success(`Successfully transferred ${amount} SF Coins!`);
+      if (result.success && result.url) {
+        window.location.href = result.url;
         onSuccess();
       } else {
-        toast.error(result.error || 'Transfer failed');
+        toast.error('Failed to create checkout session');
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Transfer failed');
+      console.error('Deposit error:', error);
+      toast.error(error.response?.data?.error || 'Deposit failed');
     } finally {
       setLoading(false);
     }
@@ -793,77 +546,167 @@ const TransferModal = ({ wallet, onClose, onSuccess }) => {
         onClick={(e) => e.stopPropagation()}
         className="relative w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 p-6"
       >
-        <button 
-          onClick={onClose} 
+        <button
+          onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
         >
           <X className="w-5 h-5 text-gray-400" />
         </button>
 
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Send className="w-5 h-5 text-blue-400" />
-          Send SF Coins
+          <Plus className="w-5 h-5 text-green-400" />
+          Deposit Money
         </h2>
 
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-gray-400 mb-2 block">Recipient User ID</label>
+            <label className="text-sm text-gray-400 mb-2 block">Amount (USD)</label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                value={recipientId}
-                onChange={(e) => setRecipientId(e.target.value)}
-                placeholder="Enter user ID"
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm text-gray-400 mb-2 block">Amount</label>
-            <div className="relative">
-              <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-amber-400" />
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="0"
+                placeholder="0.00"
                 min="1"
-                max={wallet?.sf_coins || 0}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                step="0.01"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
               />
             </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Available: {(wallet?.sf_coins || 0).toLocaleString()} SF Coins
+            <p className="text-xs text-gray-500 mt-1">Minimum: $1.00</p>
+          </div>
+
+          <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+            <p className="text-sm text-green-300">
+              💳 Secure payment via Stripe. Balance will be added to your account instantly.
             </p>
           </div>
 
-          <div>
-            <label className="text-sm text-gray-400 mb-2 block">Message (optional)</label>
-            <input
-              type="text"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add a note..."
-              className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
-            />
-          </div>
-
           <button
-            onClick={handleTransfer}
-            disabled={loading || !recipientId || !amount}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-medium hover:shadow-lg hover:shadow-blue-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            onClick={handleDeposit}
+            disabled={loading || !amount}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:shadow-lg hover:shadow-green-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Sending...
+                Processing...
               </>
             ) : (
               <>
-                <Send className="w-4 h-4" />
-                Send Coins
+                <Plus className="w-4 h-4" />
+                Deposit ${amount || '0.00'}
+              </>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const availableAmount = walletBalance / 100;
+
+  const handleWithdraw = async () => {
+    if (!amount || parseFloat(amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
+    if (parseFloat(amount) > availableAmount) {
+      toast.error('Insufficient balance');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const result = await paymentAPI.withdrawFunds(Math.round(parseFloat(amount) * 100));
+
+      if (result.success) {
+        toast.success(`$${amount} withdrawal initiated! You'll receive it in 2-3 business days.`);
+        onSuccess();
+      } else {
+        toast.error(result.error || 'Withdrawal failed');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Withdrawal failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 p-6"
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
+        >
+          <X className="w-5 h-5 text-gray-400" />
+        </button>
+
+        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <Minus className="w-5 h-5 text-orange-400" />
+          Withdraw Money
+        </h2>
+
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+            <p className="text-sm text-blue-300">
+              💡 Withdrawals are processed within 2-3 business days to your connected bank account.
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-400 mb-2 block">Amount (USD)</label>
+            <div className="relative">
+              <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0.00"
+                min="1"
+                max={availableAmount}
+                step="0.01"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Available: ${availableAmount.toFixed(2)}
+            </p>
+          </div>
+
+          <button
+            onClick={handleWithdraw}
+            disabled={loading || !amount}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-white font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Processing...
+              </>
+            ) : (
+              <>
+                <Minus className="w-4 h-4" />
+                Withdraw ${amount || '0.00'}
               </>
             )}
           </button>

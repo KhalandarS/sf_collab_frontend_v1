@@ -5,12 +5,11 @@ import { toast } from "react-toastify";
 export const requestInterceptor = (config) => {
   const token = localStorage.getItem('access_token');
   
-  if (!config.headers.Authorization && token) {
+  if (!config.headers.Authorization && !!token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 }
-
 export const requestErrorInterceptor = (error) => {
   return Promise.reject(error);
 }
@@ -43,7 +42,7 @@ export const responseErrorInterceptor = (error) => {
     localStorage.removeItem('user');
 
     console.warn('🔐 Unauthorized — redirecting to login');
-    window.location.href = '/login';
+    // window.location.href = '/login';
     return Promise.reject(error);
   }
 

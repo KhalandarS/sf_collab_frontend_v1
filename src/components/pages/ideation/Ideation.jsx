@@ -133,12 +133,12 @@ const Ideation = ({ activeRole}) => {
   const handleCreateIdea = async (payload) => {
     try {
       if (!user || !access_token) {
-        throw new Error("You must be logged in to create an idea.");
+        throw new Error("You must be logged in to create a vision.");
       }
       const response = await ideaAPI.createIdea(payload, access_token, { 'Content-Type': 'multipart/form-data' });
 
       if (!response.success) {
-        throw new Error(response.message || "Failed to create idea");
+        throw new Error(response.message || "Failed to create vision");
       }
 
 
@@ -174,8 +174,8 @@ const Ideation = ({ activeRole}) => {
       setSortBy("latest");
       setSearchQuery("");
     } catch (err) {
-      console.error("Failed to create idea:", err);
-      setError(err.message || "Failed to create idea. Please try again.");
+      console.error("Failed to create vision:", err);
+      setError(err.message || "Failed to create vision. Please try again.");
     }
   };
 
@@ -208,7 +208,7 @@ const Ideation = ({ activeRole}) => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <p className="text-gray-300">Loading ideas...</p>
+        <p className="text-gray-300">Loading visions...</p>
       </div>
     );
   }
@@ -299,7 +299,7 @@ const Ideation = ({ activeRole}) => {
                   {shouldBlur && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-md z-10 flex items-center justify-center">
                       <div className="text-center p-4">
-                        <div className="text-gray-400 text-sm mb-2">🔒 Private Idea</div>
+                        <div className="text-gray-400 text-sm mb-2">🔒 Private Vision</div>
                         <div className="text-gray-500 text-xs">Only the creator can view this</div>
                       </div>
                     </div>
@@ -396,18 +396,18 @@ const Ideation = ({ activeRole}) => {
       {ideas.length === 0 && !isLoading && (
         <div className="flex flex-col items-center justify-center py-16 px-4">
           <div className="text-center space-y-4">
-            <Lightbulb className="h-16 w-16 text-gray-600 mx-auto" />
+            <Eye className="h-16 w-16 text-gray-600 mx-auto" />
             <h3 className="text-xl font-semibold text-gray-300">
-              No ideas found
+              No visions found
             </h3>
             <p className="text-gray-500 max-w-md">
-              Be the first to share an innovative idea! Try adjusting your
-              filters or create a new idea to get the conversation started.
+              Be the first to share a bold vision! Try adjusting your
+              filters or create a new vision to inspire others.
             </p>
             <button
               onClick={() => setShowNewIdeaForm(true)}
               className="bg-white text-black px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
-              Share Your Idea
+              Share Your Vision
             </button>
           </div>
         </div>

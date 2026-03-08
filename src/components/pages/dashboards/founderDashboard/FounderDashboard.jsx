@@ -13,6 +13,7 @@ export default function FounderDashboard({
   userRoles,
   activeRole,
   setActiveRole,
+  setUserRoles
 }) {
   const { user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,9 @@ export default function FounderDashboard({
           id: r,
           label: r.charAt(0).toUpperCase() + r.slice(1),
         }))}
+        setUserRoles={setUserRoles}
+        setActiveRole={setActiveRole}
+        userRoles={userRoles}
         activeRole={activeRole}
         onSectionChange={(r) => {
           setActiveRole(r);

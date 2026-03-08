@@ -102,27 +102,24 @@ const [pendingInvitation, setPendingInvitation] = useState(null);
   const fetchStartupData = async () => {
     try {
       setLoading(true);
-      const token = access_token;
-      if (!token) {
-        console.error('No access token found');
-        return;
-      }
+
   
       const args = {
         startup_id: id,
         per_page: 100,
         page: 1,
+        user_id: user?.id,
         include_milestones: true
       }
       const [startupResult, membersResult, documentsResult, statsResult, goalsResult, eventsResult, bookmarkResult, tasksResult] = await Promise.all([
-        startupsAPI.getById(id, token).catch(err => ({ success: false, error: err })),
-        startupsAPI.getMembers(id, token, args).catch(err => ({ success: false, error: err })),
-        startupsAPI.getDocuments(id, token).catch(err => ({ success: false, error: err })),
-        startupsAPI.getStats(id, token).catch(err => ({ success: false, error: err })),
-        projectGoalsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
-        calendarEventsAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        startupsAPI.getById(id, user?.id).catch(err => ({ success: false, error: err })),
+        startupsAPI.getMembers(id).catch(err => ({ success: false, error: err })),
+        startupsAPI.getDocuments(id).catch(err => ({ success: false, error: err })),
+        startupsAPI.getStats(id).catch(err => ({ success: false, error: err })),
+        projectGoalsAPI.getAll(args).catch(err => ({ success: false, error: err })),
+        calendarEventsAPI.getAll(args).catch(err => ({ success: false, error: err })),
         startupsAPI.getBookmarkStatus({ startupId: id, userId: user?.id }).catch(err => ({ success: false, error: err })),
-        tasksAPI.getAll(args, token).catch(err => ({ success: false, error: err })),
+        tasksAPI.getAll(args).catch(err => ({ success: false, error: err })),
       ]);
       const startupData = startupResult.success ? startupResult : { success: false, data: null };
       const membersData = membersResult.success ? membersResult : { success: false, data: { members: [] } };
@@ -132,7 +129,7 @@ const [pendingInvitation, setPendingInvitation] = useState(null);
       const eventsData = eventsResult.success ? eventsResult : { success: false, data: { events: [] } };
       const bookmarkData = bookmarkResult.success ? bookmarkResult : { success: false, data: { bookmarked: false } };
       const tasksData = tasksResult.success ? tasksResult : { success: false, data: { tasks: [] } };
-
+      console.log("Fetched startup data:", { startupData, membersData, documentsData, statsData, goalsData, eventsData, bookmarkData, tasksData });
       if (startupData.success) setStartup(startupData.data.startup);
       if (membersData.success) setMembers(membersData.data.members);
       if (documentsData.success) setDocuments(documentsData.data.documents);
@@ -235,19 +232,6 @@ const fetchJoinRequests = useCallback(async () => {
     };
     return variants[stage] || 'bg-gray-500/20 text-gray-400 border-gray-400/30';
   };
-  
-  
-  const fetchJoinRequests = useCallback(async () => {
-    if (!id || !access_token) return;
-    try {
-      const res = await startupsAPI.getJoinRequests(id, { status: 'pending' });
-      if (res?.success) {
-        setJoinRequests(res.data?.join_requests || res.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch join requests:', err);
-    }
-  }, [id, access_token]);
 
   const handleAcceptJoinRequest = async (request) => {
     const requestId = request?.id || request?.request_id;

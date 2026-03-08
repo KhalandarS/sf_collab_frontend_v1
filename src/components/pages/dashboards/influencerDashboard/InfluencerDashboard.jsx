@@ -24,6 +24,7 @@ export default function InfluencerDashboard({
   userRoles,
   activeRole,
   setActiveRole,
+  setUserRoles
 }) {
   // Sticky navigation visibility
   const isNavHidden = useDashboardNavHide();
@@ -56,6 +57,9 @@ export default function InfluencerDashboard({
             setActiveRole(sectionId);
             localStorage.setItem("activeRole", sectionId);
           }}
+          setActiveRole={setActiveRole}
+          setUserRoles={setUserRoles}
+          userRoles={userRoles}
           activeRole={activeRole}
         />
         <AnnouncementsSection userRoles={userRoles} />

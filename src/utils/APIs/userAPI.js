@@ -83,13 +83,9 @@ export const usersAPI = {
     return response.data.data;
   },
 
-  addRole: async (userId, roles, accessToken) => {
-    const response = await api.put(`/user-roles/${userId}`, { roles }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return response.data.data;
+  addRole: async (roles) => {
+    const response = await api.post(`/user-roles`, { roles });
+    return response.data;
   },
 
   getFollowersCount: async (userId, accessToken) => {
@@ -164,6 +160,14 @@ export const usersAPI = {
     });
     return response.data;
   },
+  getTopUsers: async () => {
+    const response = await api.get('/users/top', {
+      params: {
+        limit: 20
+      },
+    });
+    return response.data;
+  }
 };
 
 export default api;

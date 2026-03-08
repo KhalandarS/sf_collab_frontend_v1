@@ -15,7 +15,7 @@ import Calendar from "@/components/sections/Calendar";
 import WorldClock from "@/components/sections/WorldClock";
 
 export default function InvestorDashboard({
-  userRoles, activeRole, setActiveRole
+  userRoles, activeRole, setActiveRole, setUserRoles
 }) {
   return (
     <div className="dashboard relative my-6 space-y-10">
@@ -24,13 +24,20 @@ export default function InvestorDashboard({
   bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_1px)]
   bg-[length:20px_20px]" />
       <OverviewWebsite />
-      <DashboardChangeSection sections={userRoles.map(role => ({
-        id: role,
-        label: role.charAt(0).toUpperCase() + role.slice(1)
-      }))} onSectionChange={(sectionId) => {
-        setActiveRole(sectionId);
-        localStorage.setItem('activeRole', sectionId);
-      }} activeRole={activeRole} />
+      <DashboardChangeSection
+        sections={userRoles.map(role => ({
+          id: role,
+          label: role.charAt(0).toUpperCase() + role.slice(1)
+          }))}
+        onSectionChange={(sectionId) => {
+          setActiveRole(sectionId);
+          localStorage.setItem('activeRole', sectionId);
+        }}
+        setUserRoles={setUserRoles}
+        setActiveRole={setActiveRole}
+        userRoles={userRoles}
+        activeRole={activeRole}
+      />
       <AnnouncementsSection userRoles={userRoles} />
       <div className="relative z-10 space-y-8">
       </div>
