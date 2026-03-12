@@ -367,6 +367,11 @@ export const ChatNotificationProvider = ({ children }) => {
   // Track if user is on chat page
   useEffect(() => {
     isOnChatPageRef.current = location.pathname.startsWith('/chat');
+    // Reset badge when user opens chat
+    if (location.pathname.startsWith('/chat')) {
+      setUnreadCount(0);
+      setChatUnreadCount(0);
+    }
   }, [location.pathname]);
 
   // NEW: Start flashing a conversation tab
@@ -510,20 +515,12 @@ export const ChatNotificationProvider = ({ children }) => {
 
       // Only show toast when not on chat page
       if (!isOnChatPageRef.current) {
-        // Add toast notification
-        addNotification({
-          id: `notif-${message.id}-${Date.now()}`,
-          message,
-          conversation: data.conversation || { id: conversation_id },
-          sender: message.sender,
-          timestamp: new Date(),
-        });
-
-        playNotificationSound();
-        
+        // Badge count only — no popup toast
         setUnreadCount((prev) => prev + 1);
         // ─── Feature 4: also increment bell chat badge ─────────────────
         setChatUnreadCount((prev) => prev + 1);
+
+        playNotificationSound();
 
         // Auto-popup ChatDock (like Facebook Messenger)
         autoPopupChatDock(data);
@@ -611,12 +608,7 @@ export const ChatNotificationProvider = ({ children }) => {
   return (
     <ChatNotificationContext.Provider value={value}>
       {children}
-      {/* Render notification toasts */}
-      <NotificationContainer
-        notifications={notifications}
-        onClose={removeNotification}
-        onNavigate={navigateToConversation}
-      />
+      {/* Popup toasts removed — unread badge on chat icon is used instead */}
     </ChatNotificationContext.Provider>
   );
 };
