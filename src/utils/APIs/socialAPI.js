@@ -22,7 +22,7 @@ api.interceptors.response.use(
 // Posts API (backend uses /api/posts)
 export const postsAPI = {
   getAll: async (params = {}) => {
-    const response = await api.get('/profile/posts', {
+    const response = await api.get('/posts', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
@@ -49,32 +49,32 @@ export const postsAPI = {
   },
 
   create: async (postData) => {
-    const response = await api.post('/profile/posts', postData)
+    const response = await api.post('/posts', postData)
     return response.data
   },
 
   update: async (postId, postData) => {
-    const response = await api.put(`/profile/posts/${postId}`, postData)
+    const response = await api.put(`/posts/${postId}`, postData)
     return response.data
   },
 
   delete: async (postId) => {
-    const response = await api.delete(`/profile/posts/${postId}`)
+    const response = await api.delete(`/posts/${postId}`)
     return response.data
   },
 
   like: async (postId, userId) => {
-    const response = await api.post(`/profile/posts/${postId}/like`)
+    const response = await api.post(`/posts/${postId}/like`)
     return response.data
   },
 
   unlike: async (postId, userId) => {
-    const response = await api.post(`/profile/posts/${postId}/like`)
+    const response = await api.post(`/posts/${postId}/like`)
     return response.data
   },
 
   addTag: async (postId, tag) => {
-    const response = await api.post(`/profile/posts/${postId}/tags`, { tag })
+    const response = await api.post(`/posts/${postId}/tags`, { tag })
     return response.data
   },
 }
@@ -82,7 +82,7 @@ export const postsAPI = {
 // Stories API (backend uses /api/stories)
 export const storiesAPI = {
   getAll: async (params = {}) => {
-    const response = await api.get('/profile/stories', {
+    const response = await api.get('/stories', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 20,
@@ -98,22 +98,26 @@ export const storiesAPI = {
   },
 
   create: async (storyData) => {
-    const response = await api.post('/profile/stories', storyData)
+    const response = await api.post('/stories', storyData, {
+      headers: {
+        "Content-Type": undefined
+      }
+    })
     return response.data
   },
 
   update: async (storyId, storyData) => {
-    const response = await api.put(`/profile/stories/${storyId}`, storyData)
+    const response = await api.put(`/stories/${storyId}`, storyData)
     return response.data
   },
 
   view: async (storyId, userId) => {
-    const response = await api.post(`/profile/stories/${storyId}/view`, { user_id: userId })
+    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
     return response.data
   },
 
   getActive: async (userIds, currentUserId) => {
-    const response = await api.get('/profile/stories', {
+    const response = await api.get('/stories', {
       params: {
         page: 1,
         limit: 50,
@@ -124,7 +128,7 @@ export const storiesAPI = {
   },
 
   delete: async (storyId) => {
-    const response = await api.delete(`/profile/stories/${storyId}`)
+    const response = await api.delete(`/stories/${storyId}`)
     return response.data
   },
 }
@@ -172,12 +176,12 @@ export const userSocialAPI = {
   },
 
   savePost: async (userId, postId) => {
-    const response = await api.post(`/profile/posts/${postId}/save`)
+    const response = await api.post(`/posts/${postId}/save`)
     return response.data
   },
 
   unsavePost: async (userId, postId) => {
-    const response = await api.post(`/profile/posts/${postId}/unsave`)
+    const response = await api.post(`/posts/${postId}/unsave`)
     return response.data
   },
 
@@ -221,8 +225,8 @@ export const userSocialAPI = {
     return response.data
   },
 
-  createSocialProfile: async () => {
-    const response = await api.post('/user-social/create')
+  createSocialProfile: async (userId) => {
+    const response = await api.post(`/user-social/${userId}`)
     return response.data
   },
 
