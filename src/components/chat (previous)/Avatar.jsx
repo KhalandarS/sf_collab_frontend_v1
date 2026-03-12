@@ -144,7 +144,6 @@ export default function Avatar({
           {initials}
         </div>
       )}
-  {isOnline && <span className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${STATUS_COLORS.online}`} title="Online" />}
       {showStatus && (
         <span
           className={`absolute -bottom-0.5 -right-0.5 ${statusSizes[size]} rounded-full border-zinc-900 ${statusColor}`}

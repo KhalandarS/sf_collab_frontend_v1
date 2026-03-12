@@ -72,7 +72,7 @@ const EmojiPicker = ({ isOpen, onSelect, onClose }) => {
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} />
       <div className="absolute bottom-full right-0 mb-2 p-2 bg-zinc-900 border border-zinc-700 rounded-xl shadow-xl z-50 w-72">
-        <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+        <div className="grid grid-cols-8 gap-1">
           {EMOJI_LIST.map((emoji, index) => (
             <button
               key={index}
@@ -181,27 +181,21 @@ const ChatInput = ({
     }
   }, []);
 
-  // Send file
+  // Send file with optional text caption.
+  // onFileUpload is a REST call - the backend saves the message and
+  // broadcasts it to all clients via socket (new_message event).
+  // Do NOT also emit a socket event here or the message appears twice.
   const handleFileSend = async () => {
     if (!selectedFile) return;
+    const caption = value?.trim() || '';
 
-    // If we have an onFileUpload function, use it
     if (onFileUpload) {
       setIsUploading(true);
-      
       try {
-        const fileUrl = await onFileUpload(selectedFile);
-        
-        if (fileUrl && socket && conversationId) {
-          socket.emit('send_file', {
-            conversation_id: conversationId,
-            file_url: fileUrl,
-            file_name: selectedFile.name,
-            file_type: selectedFile.type.startsWith('image/') ? 'image' : 'file'
-          });
-        }
-        
+        await onFileUpload(selectedFile, caption);
         setSelectedFile(null);
+        if (onChange) onChange('');
+        if (inputRef.current) inputRef.current.style.height = '40px';
       } catch (error) {
         console.error('Failed to upload file:', error);
         alert('Failed to upload file. Please try again.');
@@ -209,9 +203,9 @@ const ChatInput = ({
         setIsUploading(false);
       }
     } else {
-      // No upload function - just send file name as message (fallback)
-      onSend(`[File: ${selectedFile.name}]`);
+      onSend(caption ? `${caption}\n[File: ${selectedFile.name}]` : `[File: ${selectedFile.name}]`);
       setSelectedFile(null);
+      if (onChange) onChange('');
     }
   };
 
@@ -249,17 +243,17 @@ const ChatInput = ({
       )}
 
       {/* Input Area */}
-      <div className="p-2 md:p-3">
-        <form onSubmit={handleSubmit} className="flex items-end gap-1.5 md:gap-2">
+      <div className="px-2 py-2">
+        <form onSubmit={handleSubmit} className="flex items-center gap-1.5">
           {/* Image button */}
           <button 
             type="button"
             onClick={() => imageInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0 mb-1"
+            className="p-1.5 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
             disabled={disabled || isUploading}
             title="Send image"
           >
-            <ImageIcon size={18} className="md:w-5 md:h-5" />
+            <ImageIcon size={18} />
           </button>
           <input
             ref={imageInputRef}
@@ -273,11 +267,11 @@ const ChatInput = ({
           <button 
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="p-1.5 md:p-2 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0 mb-1"
+            className="p-1.5 hover:bg-zinc-800 rounded-full text-indigo-400 hover:text-indigo-300 transition-colors shrink-0"
             disabled={disabled || isUploading}
             title="Attach file"
           >
-            <Paperclip size={18} className="md:w-5 md:h-5" />
+            <Paperclip size={18} />
           </button>
           <input
             ref={fileInputRef}
@@ -299,11 +293,8 @@ const ChatInput = ({
               placeholder={placeholder}
               disabled={disabled || isUploading}
               rows={1}
-              className="w-full px-3 md:px-4 py-2 md:py-2.5 pr-12 md:pr-14 bg-zinc-800 rounded-2xl text-xs md:text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all resize-none overflow-y-auto"
-              style={{
-                minHeight: '40px',
-                maxHeight: '120px',
-              }}
+              className="w-full px-3 py-2 pr-10 bg-zinc-800 rounded-2xl text-sm text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50 transition-all resize-none overflow-y-hidden"
+              style={{scrollbarWidth:"none",msOverflowStyle:"none",minHeight:"36px",maxHeight:"120px"}}
             />
             
             {/* Emoji button */}

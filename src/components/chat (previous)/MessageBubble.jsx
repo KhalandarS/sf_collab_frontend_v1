@@ -171,6 +171,7 @@ export default function MessageBubble({
   onMessageUpdated = null,
   conversationId = null,
   conversationType = "direct",
+  currentUserId = null,
   variant = "page" // "page" or "dock"
 }) {
   const navigate = useNavigate();
@@ -183,6 +184,78 @@ export default function MessageBubble({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const menuRef = useRef(null);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
+  const [reactionLoading, setReactionLoading] = useState(false);
+  const [showReactionBar, setShowReactionBar] = useState(false);
+
+  // Quick reaction emojis shown in the hover bar
+  const QUICK_REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "👍", "👎", "🔥", "🎉", "💯"];
+  // Full picker for "more" button
+  const FULL_REACTIONS = [
+    "❤️","😂","😮","😢","😡","👍","👎","🔥","🎉","💯",
+    "😀","😍","🥰","🤩","😎","🙂","😊","🥹","😤","🤔",
+    "👏","🙌","🤝","✌️","💪","🙏","👋","✋","🤞","👌",
+    "💕","💔","🧡","💛","💚","💙","💜","⭐","✨","🎁",
+  ];
+
+  // Derive reaction counts from message.reactions array
+  const reactionCounts = useMemo(() => {
+    const reactions = message?.reactions || [];
+    const map = {};
+    reactions.forEach(r => {
+      const emoji = r.emoji || r.reaction;
+      if (!emoji) return;
+      if (!map[emoji]) map[emoji] = { count: 0, users: [], hasReacted: false };
+      map[emoji].count++;
+      map[emoji].users.push(r.user_id || r.userId);
+      if (String(r.user_id || r.userId) === String(currentUserId)) {
+        map[emoji].hasReacted = true;
+      }
+    });
+    return map;
+  }, [message?.reactions, currentUserId]);
+
+  const handleReact = useCallback(async (emoji) => {
+    // Cannot react to your own messages
+    if (isOwn) return;
+    if (!conversationId || !message?.id || reactionLoading) return;
+    setReactionPickerOpen(false);
+    setShowReactionBar(false);
+    setReactionLoading(true);
+    const uid = String(currentUserId);
+
+    // Find if user already reacted with ANY emoji (one reaction per user)
+    const allReactions = message?.reactions || [];
+    const existingReaction = allReactions.find(
+      r => String(r.user_id || r.userId) === uid
+    );
+    const clickedSameEmoji = existingReaction && (existingReaction.emoji || existingReaction.reaction) === emoji;
+
+    // Optimistic update
+    setMessages && setMessages(prev => prev.map(m => {
+      if (String(m.id) !== String(message.id)) return m;
+      const existing = m.reactions || [];
+      let updated;
+      if (clickedSameEmoji) {
+        // Toggle off — remove their reaction
+        updated = existing.filter(r => String(r.user_id || r.userId) !== uid);
+      } else {
+        // Replace existing reaction (or add first one) — only one allowed
+        updated = [
+          ...existing.filter(r => String(r.user_id || r.userId) !== uid),
+          { emoji, user_id: uid, userId: uid },
+        ];
+      }
+      return { ...m, reactions: updated };
+    }));
+    try {
+      await chatAPI.reactToMessage(conversationId, message.id, emoji);
+    } catch (e) {
+      console.error("Reaction failed:", e);
+    } finally {
+      setReactionLoading(false);
+    }
+  }, [isOwn, conversationId, message?.id, message?.reactions, currentUserId, reactionLoading, setMessages]);
 
   // ─── Feature 3: Star / Pin / Task state ──────────────────────────────────
   const [isStarred, setIsStarred] = useState(!!message?.is_starred);
@@ -407,7 +480,12 @@ export default function MessageBubble({
   // If message is deleted, show deleted placeholder
   if (message?.is_deleted) {
     return (
-      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
+        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
+        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+      >
         <div className="w-8 shrink-0" />
         <div className={`flex flex-col max-w-[65%] ${isOwn ? "items-end" : "items-start"}`}>
           <div className={`px-3 py-2 rounded-2xl text-sm italic ${isOwn ? "bg-zinc-700/50 text-zinc-400" : "bg-zinc-800/50 text-zinc-500"
@@ -463,7 +541,12 @@ export default function MessageBubble({
         </div>
       )}
 
-      <div className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}>
+      <div
+        className={`group flex gap-1 px-1 py-0.5 mb-1 ${isOwn ? "flex-row-reverse" : ""}`}
+        onMouseEnter={() => !isOwn && setShowReactionBar(true)}
+        onMouseLeave={() => { if (!reactionPickerOpen) setShowReactionBar(false); }}
+        onTouchStart={() => !isOwn && setShowReactionBar(true)}
+      >
         {/* Avatar column */}
         <div
           onClick={() => {
@@ -517,7 +600,7 @@ export default function MessageBubble({
                       <img
                         src={fileUrl}
                         alt={message?.file_name || "image"}
-                        className="max-w-full rounded-lg max-h-48 object-cover hover:opacity-90"
+                        className={`rounded-xl object-cover hover:opacity-90 block ${variant === "dock" ? "max-w-[180px] max-h-[160px]" : "max-w-[280px] max-h-[320px]"}`}
                         loading="lazy"
                       />
                     </button>
@@ -591,7 +674,7 @@ export default function MessageBubble({
               ) : (
                 <>
                   {/* Message content */}
-                  <div className="flex gap-1 justify-center align-bottom">
+                  <div className="flex gap-1 items-end">
                     <div>
                       {!hideAutoFileText({
                         fileUrl,
@@ -686,9 +769,75 @@ export default function MessageBubble({
           {/* Timestamp and status - ALWAYS VISIBLE */}
           <span className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1">
             <span>{formatTime(ts)}</span>
-
             {isOwn && <ReadReceipt status={getMsgStatus(message)} size={12} />}
           </span>
+
+          {/* Reactions row — pills always visible, + button on hover/tap */}
+          {(Object.keys(reactionCounts).length > 0 || (!isOwn && showReactionBar)) && (
+            <div className={`flex flex-wrap items-center gap-1 mt-1 ${isOwn ? "justify-end" : "justify-start"}`}>
+              {/* Existing reaction pills */}
+              {Object.entries(reactionCounts).map(([emoji, data]) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => !isOwn && handleReact(emoji)}
+                  title={isOwn ? undefined : (data.hasReacted ? "Remove reaction" : `React with ${emoji}`)}
+                  className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-xs border transition-all ${
+                    data.hasReacted
+                      ? "bg-indigo-500/20 border-indigo-500/50 text-indigo-300"
+                      : "bg-zinc-800 border-zinc-700 text-zinc-300"
+                  } ${!isOwn ? "hover:border-zinc-500 cursor-pointer" : "cursor-default"}`}
+                >
+                  <span>{emoji}</span>
+                  {data.count > 1 && <span className="font-medium ml-0.5">{data.count}</span>}
+                </button>
+              ))}
+
+              {/* Add reaction button — only for OTHER users' messages */}
+              {!isOwn && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setReactionPickerOpen(v => !v)}
+                    className="flex items-center justify-center w-6 h-6 rounded-full bg-zinc-800 border border-zinc-700 hover:border-zinc-500 text-zinc-400 hover:text-white transition-all text-sm"
+                    title="Add reaction"
+                  >
+                    +
+                  </button>
+                  {reactionPickerOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => { setReactionPickerOpen(false); setShowReactionBar(false); }} />
+                      <div
+                        className="absolute bottom-full mb-2 left-0 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl z-50 p-2 w-56"
+                        onClick={e => e.stopPropagation()}
+                      >
+                        <div className="grid grid-cols-5 gap-1">
+                          {FULL_REACTIONS.map(emoji => {
+                            const isSelected = reactionCounts[emoji]?.hasReacted;
+                            return (
+                              <button
+                                key={emoji}
+                                type="button"
+                                onClick={() => handleReact(emoji)}
+                                className={`p-1.5 rounded-lg text-lg text-center transition-all hover:scale-110 ${
+                                  isSelected
+                                    ? "bg-indigo-500/30 ring-1 ring-indigo-500/60 hover:bg-indigo-500/40"
+                                    : "hover:bg-zinc-700"
+                                }`}
+                                title={emoji}
+                              >
+                                {emoji}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

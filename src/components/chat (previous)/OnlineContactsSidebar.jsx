@@ -15,7 +15,7 @@
  */
 
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { Search, Plus, ChevronDown, ChevronRight, UserCheck, Loader2 } from 'lucide-react';
+import { Search, Plus, ChevronDown, ChevronRight, UserCheck, Loader2, X } from 'lucide-react';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 
 // Status colors
@@ -152,6 +152,7 @@ const OnlineContactsSidebar = ({
   friends = [],           // Connected users (friends) - ONLY these will be shown
   onlineUsers = [],       // Array of online user IDs
   lastActiveAt = {},      // Map of userId -> last active timestamp (for idle detection)
+  lastSeenAt = {},        // Map of userId -> disconnect timestamp (for last seen display)
   onOpenChat,             // Callback when clicking a user to open chat
   onNewMessage,           // Callback for new message button
   token,               
@@ -159,6 +160,8 @@ const OnlineContactsSidebar = ({
   isLoading = false,      // Show loading state while fetching friends
   className = '',
   nowTs: nowTsProp,       // Optional: shared clock tick from parent keeps sidebar in sync
+  isOpen = false,         // Mobile: controls drawer slide-in
+  onClose,                // Mobile: closes the drawer
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedSections, setExpandedSections] = useState({ 
@@ -195,36 +198,54 @@ const OnlineContactsSidebar = ({
   }, [friends, currentUserId]);
 
   // Determine user status (online/idle/offline)
+  // Mirrors ChatPage logic exactly:
+  //   connected + < 5min inactive  => online
+  //   connected + 5min+ inactive   => idle (Away)
+  //   not in onlineUsers            => offline
   const getUserStatus = useCallback((userId) => {
     const id = String(userId);
     const isConnected = onlineSet.has(id);
-    
+
     if (!isConnected) return 'offline';
-    
-    // Check for idle (inactive for 5+ minutes)
+
     const lastActive = lastActiveAt?.[id];
     if (lastActive) {
-      const diffMs = nowTs - Number(lastActive);
-      const IDLE_THRESHOLD = 3 * 60 * 1000; // 3 min → Away per spec
-      if (diffMs > IDLE_THRESHOLD) return 'idle';
+      const d = nowTs - Number(lastActive);
+      if (d >= 5 * 60 * 1000) return 'idle';
     }
-    
+
     return 'online';
   }, [onlineSet, lastActiveAt, nowTs]);
 
-  // Get status text
-  const getStatusText = (status) => {
+  // Format last seen timestamp into human-readable string
+  const formatLastSeen = useCallback((ts) => {
+    if (!ts) return 'Offline';
+    const diffMs = nowTs - Number(ts);
+    const mins = Math.floor(diffMs / 60000);
+    const hours = Math.floor(diffMs / 3600000);
+    const days = Math.floor(diffMs / 86400000);
+    if (mins < 1) return 'Last seen just now';
+    if (mins < 60) return `Last seen ${mins}m ago`;
+    if (hours < 24) return `Last seen ${hours}h ago`;
+    return `Last seen ${days}d ago`;
+  }, [nowTs]);
+
+  // Get status text - shows last seen for offline users
+  const getStatusText = useCallback((status, userId) => {
     switch (status) {
-      case 'online':
-        return 'Active now';
-      case 'idle':
-        return 'Away';
-      case 'offline':
+      case 'online': return 'Active now';
+      case 'idle': return 'Away';
+      case 'offline': {
+        if (userId) {
+          const id = String(userId);
+          const seenTs = lastSeenAt?.[id];
+          if (seenTs) return formatLastSeen(seenTs);
+        }
         return 'Offline';
-      default:
-        return '';
+      }
+      default: return '';
     }
-  };
+  }, [lastSeenAt, formatLastSeen]);
 
   // Filter by search - improved to search multiple fields
   const filterBySearch = useCallback((users) => {
@@ -262,7 +283,8 @@ const OnlineContactsSidebar = ({
     
     filtered.forEach((user) => {
       const status = getUserStatus(user.id || user.user_id || user._id);
-      const statusText = getStatusText(status);
+      const uid = user.id || user.user_id || user._id;
+      const statusText = getStatusText(status, uid);
       
       const userData = { ...user, status, statusText };
       
@@ -290,17 +312,18 @@ const OnlineContactsSidebar = ({
     offline.sort(sortByName);
     
     return { online, idle, offline };
-  }, [filteredFriends, filterBySearch, getUserStatus]);
+  }, [filteredFriends, filterBySearch, getUserStatus, getStatusText]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Handle opening chat with a user
+  // Handle opening chat with a user — also closes mobile drawer
   const handleOpenChat = (user) => {
     if (onOpenChat && typeof onOpenChat === 'function') {
       onOpenChat(user);
     }
+    if (onClose) onClose();
   };
 
   // Clear search
@@ -314,182 +337,220 @@ const OnlineContactsSidebar = ({
   const totalConnections = filteredFriends.length;
 
   return (
-    <div className={`w-60 bg-zinc-950 border-l border-zinc-800 flex flex-col h-full ${className}`}>
-      {/* Header */}
-      <div className="p-3 border-b border-zinc-800/50 flex-shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <UserCheck size={16} className="text-amber-500" />
-            <h3 className="font-semibold text-zinc-200 text-sm">Connections</h3>
-          </div>
-          <div className="flex items-center gap-1">
-            <button 
-              type="button"
-              onClick={onNewMessage}
-              className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors"
-              title="New message"
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-        </div>
+    <>
+      {/* ── Mobile backdrop — tap outside to close ── */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-[9990] lg:hidden"
+          onClick={onClose}
+        />
+      )}
 
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
-          <input
-            type="text"
-            placeholder="Search connections..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-8 py-1.5 bg-zinc-800/50 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-          />
+      {/*
+        Panel
+        • Mobile  : fixed drawer sliding in from the right, z-index above backdrop
+        • Desktop : static in the normal flex flow (lg:static overrides fixed)
+      */}
+      <div
+        className={[
+          // shared
+          'bg-zinc-950 border-l border-zinc-800 flex flex-col',
+          // mobile — fixed drawer
+          'fixed inset-y-0 right-0 z-[9991] w-72 h-full',
+          'transition-transform duration-300 ease-in-out',
+          isOpen ? 'translate-x-0' : 'translate-x-full',
+          // desktop override
+          'lg:static lg:inset-auto lg:z-auto lg:w-60 lg:translate-x-0 lg:h-full',
+          className,
+        ].join(' ')}
+      >
+        {/* Header */}
+        <div className="p-3 border-b border-zinc-800/50 flex-shrink-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <UserCheck size={16} className="text-amber-500" />
+              <h3 className="font-semibold text-zinc-200 text-sm">Connections</h3>
+            </div>
+            <div className="flex items-center gap-1">
+              <button 
+                type="button"
+                onClick={onNewMessage}
+                className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors"
+                title="New message"
+              >
+                <Plus size={16} />
+              </button>
+              {/* Close button — mobile only */}
+              {onClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-1.5 hover:bg-zinc-800 rounded-lg text-zinc-500 hover:text-white transition-colors lg:hidden"
+                  title="Close"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-500" size={14} />
+            <input
+              type="text"
+              placeholder="Search connections..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-8 pr-8 py-1.5 bg-zinc-800/50 rounded-full text-xs text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
+              >
+                ×
+              </button>
+            )}
+          </div>
+
+          {/* Search Results Count */}
           {searchTerm && (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white"
-            >
-              ×
-            </button>
+            <p className="text-[10px] text-zinc-500 mt-1.5 px-1">
+              {totalOnline + totalIdle + totalOffline} result{totalOnline + totalIdle + totalOffline !== 1 ? 's' : ''} found
+            </p>
           )}
         </div>
 
-        {/* Search Results Count */}
-        {searchTerm && (
-          <p className="text-[10px] text-zinc-500 mt-1.5 px-1">
-            {totalOnline + totalIdle + totalOffline} result{totalOnline + totalIdle + totalOffline !== 1 ? 's' : ''} found
-          </p>
-        )}
-      </div>
-
-      {/* Contact List - Scrollable */}
-      <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-8">
-            <Loader2 size={24} className="text-amber-500 animate-spin mb-2" />
-            <p className="text-xs text-zinc-500">Loading connections...</p>
-          </div>
-        ) : totalConnections === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 px-4">
-            <UserCheck size={32} className="text-zinc-600 mb-2" />
-            <p className="text-xs text-zinc-500 text-center">
-              No connections yet. Start connecting with other users!
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* ONLINE Section (Green) */}
-            <div className="p-2">
-              <SectionHeader
-                title="Online"
-                count={totalOnline}
-                isExpanded={expandedSections.online}
-                onToggle={() => toggleSection('online')}
-                statusColor={STATUS_COLORS.online}
-              />
-
-              {expandedSections.online && (
-                <div className="mt-1 space-y-0.5">
-                  {totalOnline === 0 ? (
-                    <p className="text-xs text-zinc-600 px-2 py-2">No connections online</p>
-                  ) : (
-                    categorizedFriends.online.map((user, idx) => (
-                      <ContactItem
-                        key={idx}
-                        user={user}
-                        status="online"
-                        statusText={user.statusText}
-                        onClick={handleOpenChat}
-                      />
-                    ))
-                  )}
-                </div>
-              )}
+        {/* Contact List - Scrollable */}
+        <div className="flex-1 overflow-y-auto min-h-0 scrollbar-thin scrollbar-thumb-zinc-700 scrollbar-track-transparent">
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-8">
+              <Loader2 size={24} className="text-amber-500 animate-spin mb-2" />
+              <p className="text-xs text-zinc-500">Loading connections...</p>
             </div>
-
-            {/* IDLE Section (Grey) - Only show if there are idle users */}
-            {totalIdle > 0 && (
-              <div className="p-2 border-t border-zinc-800/30">
+          ) : totalConnections === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4">
+              <UserCheck size={32} className="text-zinc-600 mb-2" />
+              <p className="text-xs text-zinc-500 text-center">
+                No connections yet. Start connecting with other users!
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* ONLINE Section (Green) */}
+              <div className="p-2">
                 <SectionHeader
-                  title="Away"
-                  count={totalIdle}
-                  isExpanded={expandedSections.idle}
-                  onToggle={() => toggleSection('idle')}
-                  statusColor={STATUS_COLORS.idle}
+                  title="Online"
+                  count={totalOnline}
+                  isExpanded={expandedSections.online}
+                  onToggle={() => toggleSection('online')}
+                  statusColor={STATUS_COLORS.online}
                 />
 
-                {expandedSections.idle && (
+                {expandedSections.online && (
                   <div className="mt-1 space-y-0.5">
-                    {categorizedFriends.idle.map((user, idx) => (
-                      <ContactItem
-                        key={idx}
-                        user={user}
-                        status="idle"
-                        statusText={user.statusText}
-                        onClick={handleOpenChat}
-                      />
-                    ))}
+                    {totalOnline === 0 ? (
+                      <p className="text-xs text-zinc-600 px-2 py-2">No connections online</p>
+                    ) : (
+                      categorizedFriends.online.map((user, idx) => (
+                        <ContactItem
+                          key={idx}
+                          user={user}
+                          status="online"
+                          statusText={user.statusText}
+                          onClick={handleOpenChat}
+                        />
+                      ))
+                    )}
                   </div>
                 )}
               </div>
-            )}
 
-            {/* OFFLINE Section (Red) */}
-            <div className="p-2 border-t border-zinc-800/30">
-              <SectionHeader
-                title="Offline"
-                count={totalOffline}
-                isExpanded={expandedSections.offline}
-                onToggle={() => toggleSection('offline')}
-                statusColor={STATUS_COLORS.offline}
-              />
+              {/* IDLE Section (Amber) - Only show if there are idle users */}
+              {totalIdle > 0 && (
+                <div className="p-2 border-t border-zinc-800/30">
+                  <SectionHeader
+                    title="Away"
+                    count={totalIdle}
+                    isExpanded={expandedSections.idle}
+                    onToggle={() => toggleSection('idle')}
+                    statusColor={STATUS_COLORS.idle}
+                  />
 
-              {expandedSections.offline && (
-                <div className="mt-1 space-y-0.5">
-                  {totalOffline === 0 ? (
-                    <p className="text-xs text-zinc-600 px-2 py-2">All connections are online!</p>
-                  ) : (
-                    categorizedFriends.offline.map((user, idx) => (
-                      <ContactItem
-                        key={idx}
-                        user={user}
-                        status="offline"
-                        statusText={user.statusText}
-                        onClick={handleOpenChat}
-                      />
-                    ))
+                  {expandedSections.idle && (
+                    <div className="mt-1 space-y-0.5">
+                      {categorizedFriends.idle.map((user, idx) => (
+                        <ContactItem
+                          key={idx}
+                          user={user}
+                          status="idle"
+                          statusText={user.statusText}
+                          onClick={handleOpenChat}
+                        />
+                      ))}
+                    </div>
                   )}
                 </div>
               )}
-            </div>
-          </>
-        )}
-      </div>
 
-      {/* Footer with status legend */}
-      <div className="p-3 border-t border-zinc-800/50 flex-shrink-0">
-        <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500">
-          <div className="flex items-center gap-1">
-            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.online}`} />
-            <span>{totalOnline}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.idle}`} />
-            <span>{totalIdle}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.offline}`} />
-            <span>{totalOffline}</span>
-          </div>
+              {/* OFFLINE Section (Red) */}
+              <div className="p-2 border-t border-zinc-800/30">
+                <SectionHeader
+                  title="Offline"
+                  count={totalOffline}
+                  isExpanded={expandedSections.offline}
+                  onToggle={() => toggleSection('offline')}
+                  statusColor={STATUS_COLORS.offline}
+                />
+
+                {expandedSections.offline && (
+                  <div className="mt-1 space-y-0.5">
+                    {totalOffline === 0 ? (
+                      <p className="text-xs text-zinc-600 px-2 py-2">All connections are online!</p>
+                    ) : (
+                      categorizedFriends.offline.map((user, idx) => (
+                        <ContactItem
+                          key={idx}
+                          user={user}
+                          status="offline"
+                          statusText={user.statusText}
+                          onClick={handleOpenChat}
+                        />
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </div>
-        <div className="text-center mt-1">
-          <span className="text-[10px] text-zinc-600">
-            {totalConnections} connection{totalConnections !== 1 ? 's' : ''}
-          </span>
+
+        {/* Footer with status legend */}
+        <div className="p-3 border-t border-zinc-800/50 flex-shrink-0">
+          <div className="flex items-center justify-center gap-4 text-[10px] text-zinc-500">
+            <div className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.online}`} />
+              <span>{totalOnline}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.idle}`} />
+              <span>{totalIdle}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`w-2 h-2 rounded-full ${STATUS_COLORS.offline}`} />
+              <span>{totalOffline}</span>
+            </div>
+          </div>
+          <div className="text-center mt-1">
+            <span className="text-[10px] text-zinc-600">
+              {totalConnections} connection{totalConnections !== 1 ? 's' : ''}
+            </span>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

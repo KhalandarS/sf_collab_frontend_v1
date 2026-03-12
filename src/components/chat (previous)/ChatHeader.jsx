@@ -10,9 +10,10 @@
  */
 
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
-import { ArrowLeft, LogOut, MoreVertical } from "lucide-react";
+import { ArrowLeft, LogOut, MoreVertical, Users, X as XIcon } from "lucide-react";
 import { chatAPI } from "@/utils/APIs/chatApi";
 
 const ChatHeader = ({ 
@@ -30,6 +31,8 @@ const ChatHeader = ({
   const [leaveModalOpen, setLeaveModalOpen] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState(null);
+  const [membersOpen, setMembersOpen] = useState(false);
+  const navigate = useNavigate();
   const menuRef = useRef(null);
   const optionsRef = useRef(null);
 
@@ -64,11 +67,13 @@ const ChatHeader = ({
 
   // Status color based on presence
   const statusColor =
-    presenceStatus === "online"
-      ? "text-emerald-500"
-      : presenceStatus === "idle"
-        ? "text-yellow-400"
-        : "text-zinc-500";
+    presenceStatus === "typing"
+      ? "text-indigo-400"
+      : presenceStatus === "online"
+        ? "text-emerald-500"
+        : presenceStatus === "idle"
+          ? "text-yellow-400"
+          : "text-zinc-500";
 
   const handleMenuToggle = () => {
     if (!onAvatarClick) return;
@@ -169,11 +174,22 @@ const ChatHeader = ({
             {conversation.conversation_type === "direct" && (
               <p className={`text-xs ${statusColor}`}>{statusText}</p>
             )}
-            {(isGroupChat || isGeneralChat) && (
-              <p className="text-xs text-zinc-500">
-                {conversation.participants?.length || 0} members
-              </p>
-            )}
+            {(isGroupChat || isGeneralChat) && (() => {
+              const parts = conversation.participants || [];
+              const others = parts.filter(p => String(p.id) !== String(currentUserId));
+              const MAX = 3;
+              const shown = others.slice(0, MAX).map(p => p.firstName || p.first_name || "").filter(Boolean).join(", ");
+              const extra = others.length - MAX;
+              const label = shown
+                ? (extra > 0 ? `${shown} +${extra} others` : shown)
+                : `${parts.length} members`;
+              return (
+                <button type="button" onClick={() => setMembersOpen(v => !v)}
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors text-left truncate max-w-[200px] block">
+                  {label}
+                </button>
+              );
+            })()}
           </div>
         </div>
 
@@ -191,14 +207,15 @@ const ChatHeader = ({
 
             {optionsMenuOpen && (
               <div className="absolute right-0 top-12 z-50 w-48 rounded-xl border border-zinc-700/60 bg-zinc-900/95 shadow-xl backdrop-blur overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOptionsMenuOpen(false);
-                    setLeaveModalOpen(true);
-                  }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors"
-                >
+                <button type="button"
+                  onClick={() => { setOptionsMenuOpen(false); setMembersOpen(v => !v); }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-zinc-200 hover:bg-zinc-800/70 transition-colors">
+                  <Users size={16} />
+                  Members ({conversation.participants?.length || 0})
+                </button>
+                <button type="button"
+                  onClick={() => { setOptionsMenuOpen(false); setLeaveModalOpen(true); }}
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/20 transition-colors">
                   <LogOut size={16} />
                   Leave Group
                 </button>
@@ -207,6 +224,62 @@ const ChatHeader = ({
           </div>
         )}
       </div>
+
+      {/* Members Panel — opens below header, clickable, shows profile pics */}
+      {membersOpen && (isGroupChat || isGeneralChat) && (
+        <div className="border-b border-zinc-800 bg-zinc-900/98 px-4 py-3 max-h-64 overflow-y-auto shadow-lg">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+              Members · {conversation.participants?.length || 0}
+            </span>
+            <button type="button" onClick={() => setMembersOpen(false)}
+              className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-500 hover:text-white transition-colors">
+              <XIcon size={14} />
+            </button>
+          </div>
+          <div className="space-y-0.5">
+            {(conversation.participants || []).map((p) => {
+              const name = `${p.firstName || p.first_name || ""} ${p.lastName || p.last_name || ""}`.trim() || "Unknown";
+              const initials = name.split(" ").filter(Boolean).map(n => n[0]).join("").toUpperCase().slice(0, 2);
+              const isCreator = conversation.creator_id && String(p.id) === String(conversation.creator_id);
+              const isMe = String(p.id) === String(currentUserId);
+              // Try multiple profile pic fields
+              const pic = getProfilePicture(p);
+              return (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => {
+                    if (!isMe) navigate(`/user-profile?userId=${p.id}`);
+                  }}
+                  className={`w-full flex items-center gap-2.5 px-1 py-1.5 rounded-lg transition-colors text-left ${
+                    isMe ? "cursor-default hover:bg-zinc-800/30" : "hover:bg-zinc-800/60 cursor-pointer"
+                  }`}
+                >
+                  {/* Profile picture */}
+                  {pic ? (
+                    <img src={pic} alt={name}
+                      className="w-8 h-8 rounded-full object-cover flex-shrink-0 border border-zinc-700" />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                      {initials}
+                    </div>
+                  )}
+                  <span className="text-sm text-zinc-200 truncate flex-1">
+                    {name}{isMe ? " (You)" : ""}
+                  </span>
+                  {isCreator && (
+                    <span className="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded-full shrink-0">Admin</span>
+                  )}
+                  {!isMe && (
+                    <span className="text-[10px] text-zinc-600 shrink-0">→</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Leave Group Confirmation Modal */}
       {leaveModalOpen && (

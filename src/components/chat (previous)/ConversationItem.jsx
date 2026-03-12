@@ -64,10 +64,12 @@ const ConversationItem = ({
   const presenceStatus = useMemo(() => {
     if (isDirect && otherId) {
       if (connected) {
+        // Connected = NEVER offline. Only Online or Away.
         const d = diffMs(lastActiveTs);
         if (d == null || d < 5 * 60 * 1000) return "online";
-        else if (d < 6 * 60 * 1000) return "idle";
+        return "idle"; // connected but inactive 5+ min = Away
       }
+      // Disconnected = offline
     }
     return "offline";
   }, [isDirect, otherId, connected, lastActiveTs, nowTs]);

@@ -206,6 +206,7 @@ const ChatPage = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
+  const [showContactsSidebar, setShowContactsSidebar] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchParams] = useSearchParams();
@@ -297,11 +298,10 @@ const ChatPage = () => {
           );
           if (!other?.id) continue;
 
+          // Only seed from last_seen (real disconnect time), NOT last_login
           const ts =
             other.last_seen ??
             other.lastSeen ??
-            other.last_login ??
-            other.lastLogin ??
             null;
 
           const ms = toMs(ts);
@@ -387,13 +387,14 @@ useEffect(() => {
   // ============================================
   // FILE UPLOAD HANDLER
   // ============================================
-  const handleFileUpload = useCallback(async (file) => {
+  const handleFileUpload = useCallback(async (file, caption = '') => {
     if (!token || !file) return null;
     try {
-      const response = await chatAPI.uploadFile(activeConversation?.id, file, file.name);
-      const data = response.data;
-      
-      return data.message.file_url;
+      // REST upload - backend persists + broadcasts via socket (new_message)
+      // No additional socket.emit needed after this call
+      const response = await chatAPI.uploadFile(activeConversation?.id, file, caption || ' ');
+      const data = response?.data || response;
+      return data?.message?.file_url || data?.file_url || null;
     } catch (error) {
       console.error('File upload failed:', error);
       return null;
@@ -667,9 +668,8 @@ useEffect(() => {
       }
 
       if (data.status === "away") {
-        // Server confirmed this user is now Away — backdate their lastActiveAt
-        // by 3+ min so getUserStatus returns 'idle' without waiting for clock tick
-        const awayTs = now() - (3 * 60 * 1000 + 1000);
+        // Backdate by 5min+1s so idle threshold (5min) triggers immediately
+        const awayTs = now() - (5 * 60 * 1000 + 1000);
         setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
       }
 
@@ -697,13 +697,17 @@ useEffect(() => {
     // 🔹 THROTTLED ACTIVITY PING (THIS IS THE PART YOU ASKED ABOUT)
     const ping = () => socket.emit("user_activity", { ts: now() });
 
-    // only keypress + interval (NO mousemove spam)
+    // Track keydown, click, scroll to reset Away timer
     window.addEventListener("keydown", ping);
-    const interval = setInterval(ping, 20000); // every 20s
+    window.addEventListener("click", ping);
+    window.addEventListener("scroll", ping, { passive: true });
+    const interval = setInterval(ping, 20000); // heartbeat every 20s
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("keydown", ping);
+      window.removeEventListener("click", ping);
+      window.removeEventListener("scroll", ping);
       socket.off("user_status", onUserStatus);
       socket.off("user_activity", onUserActivity);
     };
@@ -1029,44 +1033,58 @@ useEffect(() => {
     : false;
 
   const lastActiveTs = otherId ? toMs(lastActiveAt?.[otherId]) : null;
-  const lastSeenTs =
-    otherId
-      ? toMs(
-          lastSeenAt?.[otherId] ??
-            otherParticipant?.last_seen ??
-            otherParticipant?.lastSeen ??
-            otherParticipant?.last_login ??
-            otherParticipant?.lastLogin
-        )
-      : null;
+  // lastSeenTs: ONLY trust the real-time socket event value (lastSeenAt map).
+  // DB fields (last_seen/last_login) are stale login times, not disconnect times.
+  // Exception: on first page load before any socket event, seed from DB as fallback.
+  const lastSeenTs = otherId
+    ? toMs(lastSeenAt?.[otherId]) ??
+      // Seed fallback - only used until first socket offline event arrives
+      toMs(otherParticipant?.last_seen ?? otherParticipant?.lastSeen)
+    : null;
 
   const diffMs = (ts) => (ts ? Math.max(0, nowTs - ts) : null);
 
-  let presenceStatus = "offline"; // "online" | "idle" | "offline"
-  let statusText = "";
+  // ============================================================
+  // PRESENCE LOGIC (WhatsApp / Firebase model):
+  //   connected + active < 5min  => "online"   => "Online"
+  //   connected + inactive 5min+ => "idle"     => "Away"
+  //   disconnected               => "offline"  => "Last seen X" or "Offline"
+  // NEVER show "last seen" while the socket says user is connected.
+  // ============================================================
+  let presenceStatus = "offline";
+  let statusText = "Offline";
 
   if (activeConversation?.conversation_type === "direct" && otherId) {
     if (connected) {
+      // User is connected right now - show online or away only
       const d = diffMs(lastActiveTs);
-
-      // If we haven't received activity yet, assume online while connected
       if (d == null || d < 5 * 60 * 1000) {
         presenceStatus = "online";
-        statusText = "online";
-      } else if (d < 6 * 60 * 1000) {
-        presenceStatus = "idle";
-        statusText = "idle";
+        statusText = "Online";
       } else {
-        presenceStatus = "offline";
-        statusText = formatLastSeen(lastActiveTs, nowTs);
+        presenceStatus = "idle";
+        statusText = "Away";
       }
     } else {
+      // User is offline - show last seen from disconnect timestamp
       presenceStatus = "offline";
-      statusText = formatLastSeen(lastSeenTs || lastActiveTs, nowTs);
+      const seenTs = lastSeenTs || lastActiveTs;
+      statusText = seenTs ? formatLastSeen(seenTs, nowTs) : "Offline";
     }
   }
 
   const isOnline = presenceStatus === "online";
+
+  // Typing overrides status text in header
+  const typingNames = (typingUsers || [])
+    .filter((u) => String(u.id) !== String(currentUser?.id))
+    .map((u) => u.firstName || u.first_name || "Someone");
+  const typingStatusText = typingNames.length
+    ? `${typingNames[0]} is typing...`
+    : null;
+  const headerStatusText = typingStatusText || statusText;
+  const headerPresenceStatus = typingStatusText ? "typing" : presenceStatus;
+
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
 // ============================================
   // RENDER: Not logged in
@@ -1252,8 +1270,8 @@ useEffect(() => {
               <ChatHeader
                 conversation={activeConversation}
                 currentUserId={currentUser.id}
-                presenceStatus={presenceStatus}
-                statusText={statusText}
+                presenceStatus={headerPresenceStatus}
+                statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
@@ -1265,8 +1283,8 @@ useEffect(() => {
               <ChatHeader
                 conversation={activeConversation}
                 currentUserId={currentUser.id}
-                presenceStatus={presenceStatus}
-                statusText={statusText}
+                presenceStatus={headerPresenceStatus}
+                statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
@@ -1366,18 +1384,62 @@ useEffect(() => {
       {/* ============================================ */}
       {/* RIGHT SIDEBAR: Online Contacts */}
       {/* ============================================ */}
+      {/* RIGHT SIDEBAR: Online Contacts — always visible lg+, drawer on mobile */}
       <div className="hidden lg:block w-60 bg-zinc-900 border-l border-zinc-800 shrink-0">
         <OnlineContactsSidebar
           friends={friends}
           onlineUsers={onlineUsers}
           lastActiveAt={lastActiveAt}
+          lastSeenAt={lastSeenAt}
           nowTs={nowTs}
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}
           currentUserId={currentUser?.id}
+          isOpen={showContactsSidebar}
+          onClose={() => setShowContactsSidebar(false)}
         />
       </div>
+
+      {/* Mobile-only: drawer rendered outside desktop block so it overlays properly */}
+      <div className="lg:hidden">
+        <OnlineContactsSidebar
+          friends={friends}
+          onlineUsers={onlineUsers}
+          lastActiveAt={lastActiveAt}
+          lastSeenAt={lastSeenAt}
+          nowTs={nowTs}
+          onOpenChat={handleOpenChatWithFriend}
+          onNewMessage={() => setShowNewMessage(true)}
+          token={token}
+          currentUserId={currentUser?.id}
+          isOpen={showContactsSidebar}
+          onClose={() => setShowContactsSidebar(false)}
+        />
+      </div>
+
+      {/* Mobile floating button to open contacts sidebar */}
+      <button
+        type="button"
+        onClick={() => setShowContactsSidebar(true)}
+        className="lg:hidden fixed bottom-20 right-4 z-[9980] w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700 text-zinc-300 shadow-lg flex items-center justify-center hover:bg-zinc-700 transition-colors"
+        title="Online contacts"
+      >
+        <span className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          {/* Online count badge */}
+          {onlineUsers && onlineUsers.length > 0 && (
+            <span className="absolute -top-2 -right-2 min-w-[16px] h-[16px] px-0.5 rounded-full bg-emerald-500 text-zinc-900 text-[9px] font-bold flex items-center justify-center">
+              {onlineUsers.length > 9 ? '9+' : onlineUsers.length}
+            </span>
+          )}
+        </span>
+      </button>
 
       {/* ============================================ */}
       {/* NEW MESSAGE MODAL */}
