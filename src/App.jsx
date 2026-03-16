@@ -107,6 +107,7 @@ import SavedIdeas from "./components/pages/ideation/SavedIdeas.jsx";
 import AIToolsGuard from "./components/ai/AIToolsGuard.jsx";
 import BuilderStartups from "./components/pages/builderStartups/BuilderStartups.jsx";
 import InviteToStartup from "./components/pages/inviteToStartup/InviteToStartup.jsx";
+import MarketplacePage from './components/pages/marketplace/MarketplacePage';
 
 
 
@@ -379,6 +380,9 @@ export default function App() {
 
                   {/* User */}
                   <Route path="discover-users" element={<DiscoverUsers />} />
+
+                  {/* ====== MARKETPLACE ====== */}
+                  <Route path="marketplace" element={<MarketplacePage />} />
 
                   <Route path="setting" element={<Setting />}>
                     <Route index element={<ProfileSetting />} />
