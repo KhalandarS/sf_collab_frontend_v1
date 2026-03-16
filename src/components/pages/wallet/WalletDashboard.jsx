@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Coins, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft,
   History, ShoppingBag, Sparkles, RefreshCw, ChevronRight,
-  Zap, X, Plus, Minus, RotateCcw, DollarSign, Gem, Ticket,
+  Zap, X, Plus, Minus, RotateCcw, DollarSign, Gem,
 } from 'lucide-react';
 import { walletAPI } from '@/utils/APIs/walletAPI';
 import { paymentAPI } from '@/utils/APIs/paymentAPI';
@@ -24,31 +24,39 @@ const TRANSACTION_ICONS = {
 };
 
 const CURRENCY_CONFIG = {
-  sf_coins:     { label: 'SF Coins',      icon: Coins,  color: 'text-amber-400',  bg: 'bg-amber-500/10',  border: 'border-amber-500/20',  gradient: 'from-amber-500 to-yellow-500' },
-  premium_gems: { label: 'SF Crystals',   icon: Gem,    color: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/20', gradient: 'from-purple-500 to-pink-500' },
-  event_tokens: { label: 'Event Tokens',  icon: Ticket, color: 'text-cyan-400',   bg: 'bg-cyan-500/10',   border: 'border-cyan-500/20',   gradient: 'from-cyan-500 to-blue-500' },
-  credits:      { label: 'Balance ($)',   icon: DollarSign, color: 'text-green-400', bg: 'bg-green-500/10', border: 'border-green-500/20', gradient: 'from-green-500 to-emerald-500' },
+  sf_coins:     { label: 'SF Coins',    icon: Coins,      color: 'text-amber-400',  bg: 'bg-amber-500/10',  gradient: 'from-amber-500 to-yellow-500' },
+  premium_gems: { label: 'SF Crystals', icon: Gem,        color: 'text-purple-400', bg: 'bg-purple-500/10', gradient: 'from-purple-500 to-pink-500' },
+  credits:      { label: 'Balance ($)', icon: DollarSign, color: 'text-green-400',  bg: 'bg-green-500/10',  gradient: 'from-green-500 to-emerald-500' },
 };
+
+// Crystal packs — must match CRYSTAL_PACKS in payment_routes.py
+const CRYSTAL_PACKS = [
+  { id: 'crystals_100',  crystals: 100,  price: 0.99,  label: '100 Crystals',   popular: false },
+  { id: 'crystals_500',  crystals: 500,  price: 4.49,  label: '500 Crystals',   popular: true  },
+  { id: 'crystals_1200', crystals: 1200, price: 9.99,  label: '1,200 Crystals', popular: false },
+  { id: 'crystals_3000', crystals: 3000, price: 21.99, label: '3,000 Crystals', popular: false },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const WalletDashboard = () => {
   const { user } = useSelector(state => state.auth);
   const [searchParams, setSearchParams] = useSearchParams();
-  const sfCoins = useGetCredits(); // live sf_coins from Redux/hook
+  const sfCoins = useGetCredits();
 
   const [wallet, setWallet] = useState(null);
-  const [walletBalance, setWalletBalance] = useState(0); // real money in cents
+  const [walletBalance, setWalletBalance] = useState(0); // cents
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
   const [refreshing, setRefreshing] = useState(false);
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showCrystalModal, setShowCrystalModal] = useState(false);
 
   useEffect(() => { fetchWalletData(); }, []);
 
-  // Keep sf_coins in sync with live hook
+  // Keep sf_coins live
   useEffect(() => {
     if (wallet) setWallet(prev => ({ ...prev, sf_coins: sfCoins }));
   }, [sfCoins]);
@@ -57,6 +65,22 @@ const WalletDashboard = () => {
     const tab = searchParams.get('tab');
     if (tab && ['overview', 'history'].includes(tab)) setActiveTab(tab);
   }, [searchParams]);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    const deposit = searchParams.get('deposit');
+    const crystals = searchParams.get('crystals');
+    if (deposit === 'success') {
+      toast.success('Deposit successful! Balance updated.');
+      fetchWalletData();
+      setSearchParams({});
+    }
+    if (crystals === 'success') {
+      toast.success('Crystals purchased! Check your balance.');
+      fetchWalletData();
+      setSearchParams({});
+    }
+  }, []);
 
   const fetchWalletData = async () => {
     try {
@@ -74,6 +98,7 @@ const WalletDashboard = () => {
         }));
       }
       if (historyRes?.success) setTransactions(historyRes.transactions || []);
+      // balance is in cents
       if (paymentRes?.data) setWalletBalance(paymentRes.data.balance || 0);
     } catch (err) {
       console.error(err);
@@ -135,6 +160,7 @@ const WalletDashboard = () => {
 
   return (
     <div className="min-h-screen pb-20 px-4 md:px-6 lg:px-8 max-w-7xl mx-auto">
+
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}
@@ -147,7 +173,7 @@ const WalletDashboard = () => {
             </div>
             My Wallet
           </h1>
-          <p className="text-gray-400 mt-1">SF Coins · Crystals · Event Tokens · Balance</p>
+          <p className="text-gray-400 mt-1">SF Coins · Crystals · Balance</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -166,12 +192,13 @@ const WalletDashboard = () => {
         </div>
       </motion.div>
 
-      {/* ── All 4 currency cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+      {/* ── 3 currency cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+
         {/* SF Coins */}
         <CurrencyCard
           label="SF Coins"
-          value={wallet?.sf_coins ?? 0}
+          value={0}
           icon={Coins}
           gradient="from-amber-500/10 to-yellow-600/10"
           border="border-amber-500/30"
@@ -180,35 +207,38 @@ const WalletDashboard = () => {
           subtext="Earned through activities"
           delay={0}
         />
-        {/* Crystals */}
-        <CurrencyCard
-          label="SF Crystals"
-          value={wallet?.premium_gems ?? 0}
-          icon={Gem}
-          gradient="from-purple-500/10 to-pink-600/10"
-          border="border-purple-500/30"
-          iconGradient="from-purple-500 to-pink-500"
-          iconShadow="shadow-purple-500/20"
-          subtext="For visibility boosts"
-          delay={0.05}
-        />
-        {/* Event Tokens */}
-        <CurrencyCard
-          label="Event Tokens"
-          value={wallet?.event_tokens ?? 0}
-          icon={Ticket}
-          gradient="from-cyan-500/10 to-blue-600/10"
-          border="border-cyan-500/30"
-          iconGradient="from-cyan-500 to-blue-500"
-          iconShadow="shadow-cyan-500/20"
-          subtext="For event-specific use"
-          delay={0.1}
-        />
-        {/* Real money balance */}
+
+        {/* Crystals — with Buy button */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 }}
+          transition={{ delay: 0.05 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500/10 to-pink-600/10 border border-purple-500/30 p-5 group hover:scale-[1.02] transition-transform"
+        >
+          <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity" />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between mb-3">
+              <div className="p-2.5 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/20">
+                <Gem className="w-5 h-5 text-white" />
+              </div>
+              <button
+                onClick={() => setShowCrystalModal(true)}
+                className="text-xs px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 transition-colors flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> Buy
+              </button>
+            </div>
+            <p className="text-gray-400 text-xs mb-1">SF Crystals</p>
+            <h2 className="text-3xl font-bold text-white mb-1">{(wallet?.premium_gems ?? 0).toLocaleString()}</h2>
+            <p className="text-gray-500 text-xs">For visibility boosts</p>
+          </div>
+        </motion.div>
+
+        {/* Balance (real money) */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
           className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 border border-green-500/30 p-5 group hover:scale-[1.02] transition-transform"
         >
           <div className="absolute -top-16 -right-16 w-32 h-32 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity" />
@@ -241,9 +271,9 @@ const WalletDashboard = () => {
 
       {/* Stats row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <StatCard label="Total Earned"   value={formatNumber(totalEarned)} subtext="SF Coins" icon={TrendingUp}  color="text-green-400" />
-        <StatCard label="Total Spent"    value={formatNumber(totalSpent)}  subtext="SF Coins" icon={TrendingDown} color="text-red-400" />
-        <StatCard label="Current Balance" value={formatNumber(wallet?.sf_coins ?? 0)} subtext="SF Coins" icon={Zap} color="text-blue-400" />
+        <StatCard label="Total Earned"    value={formatNumber(totalEarned)}           subtext="SF Coins" icon={TrendingUp}  color="text-green-400" />
+        <StatCard label="Total Spent"     value={formatNumber(totalSpent)}            subtext="SF Coins" icon={TrendingDown} color="text-red-400" />
+        <StatCard label="Current Balance" value={formatNumber(0)} subtext="SF Coins" icon={Zap} color="text-blue-400" />
       </div>
 
       {/* Tabs */}
@@ -264,7 +294,11 @@ const WalletDashboard = () => {
       <AnimatePresence mode="wait">
         {activeTab === 'overview' && (
           <motion.div key="overview" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-6">
-            <QuickActionsCard onDepositClick={() => setShowDepositModal(true)} onWithdrawClick={() => setShowWithdrawModal(true)} />
+            <QuickActionsCard
+              onDepositClick={() => setShowDepositModal(true)}
+              onWithdrawClick={() => setShowWithdrawModal(true)}
+              onBuyCrystalsClick={() => setShowCrystalModal(true)}
+            />
             <RecentActivityCard transactions={transactions.slice(0, 5)} formatDate={formatDate} onViewAll={() => handleTabChange('history')} />
           </motion.div>
         )}
@@ -278,17 +312,30 @@ const WalletDashboard = () => {
       {/* Modals */}
       <AnimatePresence>
         {showDepositModal && (
-          <DepositModal onClose={() => setShowDepositModal(false)} onSuccess={() => { setShowDepositModal(false); fetchWalletData(); }} />
+          <DepositModal
+            onClose={() => setShowDepositModal(false)}
+            onSuccess={() => { setShowDepositModal(false); fetchWalletData(); }}
+          />
         )}
         {showWithdrawModal && (
-          <WithdrawModal walletBalance={walletBalance} onClose={() => setShowWithdrawModal(false)} onSuccess={() => { setShowWithdrawModal(false); fetchWalletData(); }} />
+          <WithdrawModal
+            walletBalance={walletBalance}
+            onClose={() => setShowWithdrawModal(false)}
+            onSuccess={() => { setShowWithdrawModal(false); fetchWalletData(); }}
+          />
+        )}
+        {showCrystalModal && (
+          <CrystalPurchaseModal
+            onClose={() => setShowCrystalModal(false)}
+            onSuccess={() => { setShowCrystalModal(false); fetchWalletData(); }}
+          />
         )}
       </AnimatePresence>
     </div>
   );
 };
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 const CurrencyCard = ({ label, value, icon: Icon, gradient, border, iconGradient, iconShadow, subtext, delay }) => (
   <motion.div
@@ -320,15 +367,16 @@ const StatCard = ({ label, value, subtext, icon: Icon, color }) => (
   </div>
 );
 
-const QuickActionsCard = ({ onDepositClick, onWithdrawClick }) => (
+const QuickActionsCard = ({ onDepositClick, onWithdrawClick, onBuyCrystalsClick }) => (
   <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
       <Sparkles className="w-5 h-5 text-blue-400" /> Quick Actions
     </h3>
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {[
-        { icon: Plus,  label: 'Deposit Money',   color: 'from-green-500 to-emerald-500', onClick: onDepositClick },
-        { icon: Minus, label: 'Withdraw Money',  color: 'from-orange-500 to-red-500',    onClick: onWithdrawClick },
+        { icon: Plus,  label: 'Deposit',       color: 'from-green-500 to-emerald-500', onClick: onDepositClick },
+        { icon: Minus, label: 'Withdraw',       color: 'from-orange-500 to-red-500',    onClick: onWithdrawClick },
+        { icon: Gem,   label: 'Buy Crystals',   color: 'from-purple-500 to-pink-500',   onClick: onBuyCrystalsClick },
       ].map(action => (
         <button
           key={action.label} onClick={action.onClick}
@@ -423,21 +471,22 @@ const TransactionHistoryCard = ({ transactions, formatDate }) => (
   </div>
 );
 
+// ── Deposit Modal ─────────────────────────────────────────────────────────────
 const DepositModal = ({ onClose, onSuccess }) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleDeposit = async () => {
-    if (!amount || parseFloat(amount) <= 0) { toast.error('Enter a valid amount'); return; }
+    if (!amount || parseFloat(amount) < 1) { toast.error('Minimum deposit is $1.00'); return; }
     try {
       setLoading(true);
-      const result = await paymentAPI.createCheckoutSession({
-        type: 'deposit', title: 'Wallet Deposit',
-        price: parseFloat(amount) * 100,
-        description: `Deposit $${amount} to wallet`,
-      });
-      if (result.success && result.url) { window.location.href = result.url; onSuccess(); }
-      else toast.error('Failed to create checkout session');
+      // depositFunds takes cents
+      const result = await paymentAPI.depositFunds(Math.round(parseFloat(amount) * 100));
+      if (result.success && result.url) {
+        window.location.href = result.url;
+      } else {
+        toast.error(result.error || 'Failed to start deposit');
+      }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Deposit failed');
     } finally { setLoading(false); }
@@ -453,17 +502,21 @@ const DepositModal = ({ onClose, onSuccess }) => {
           <label className="text-sm text-gray-400 mb-2 block">Amount (USD)</label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
-              min="1" step="0.01"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50" />
+            <input
+              type="number" value={amount} onChange={e => setAmount(e.target.value)}
+              placeholder="0.00" min="1" step="0.01"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50"
+            />
           </div>
           <p className="text-xs text-gray-500 mt-1">Minimum: $1.00</p>
         </div>
         <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/20">
-          <p className="text-sm text-green-300">💳 Secure payment via Stripe. Balance added instantly.</p>
+          <p className="text-sm text-green-300">💳 Secure payment via Stripe. Balance credited after payment completes.</p>
         </div>
-        <button onClick={handleDeposit} disabled={loading || !amount}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:shadow-lg hover:shadow-green-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+        <button
+          onClick={handleDeposit} disabled={loading || !amount}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 text-white font-medium hover:shadow-lg hover:shadow-green-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
           {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus className="w-4 h-4" />}
           Deposit ${amount || '0.00'}
         </button>
@@ -472,6 +525,7 @@ const DepositModal = ({ onClose, onSuccess }) => {
   );
 };
 
+// ── Withdraw Modal ────────────────────────────────────────────────────────────
 const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
@@ -483,8 +537,12 @@ const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
     try {
       setLoading(true);
       const result = await paymentAPI.withdrawFunds(Math.round(parseFloat(amount) * 100));
-      if (result.success) { toast.success(`$${amount} withdrawal initiated!`); onSuccess(); }
-      else toast.error(result.error || 'Withdrawal failed');
+      if (result.success) {
+        toast.success(`$${parseFloat(amount).toFixed(2)} withdrawal initiated. Arrives in 2-3 business days.`);
+        onSuccess();
+      } else {
+        toast.error(result.error || 'Withdrawal failed');
+      }
     } catch (err) {
       toast.error(err.response?.data?.error || 'Withdrawal failed');
     } finally { setLoading(false); }
@@ -497,20 +555,24 @@ const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
       </h2>
       <div className="space-y-4">
         <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-          <p className="text-sm text-blue-300">💡 Processed within 2–3 business days.</p>
+          <p className="text-sm text-blue-300">💡 Processed within 2–3 business days to your connected bank account.</p>
         </div>
         <div>
           <label className="text-sm text-gray-400 mb-2 block">Amount (USD)</label>
           <div className="relative">
             <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-green-400" />
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0.00"
-              min="1" max={available} step="0.01"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50" />
+            <input
+              type="number" value={amount} onChange={e => setAmount(e.target.value)}
+              placeholder="0.00" min="1" max={available} step="0.01"
+              className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500/50"
+            />
           </div>
           <p className="text-xs text-gray-500 mt-1">Available: ${available.toFixed(2)}</p>
         </div>
-        <button onClick={handleWithdraw} disabled={loading || !amount}
-          className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-white font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+        <button
+          onClick={handleWithdraw} disabled={loading || !amount}
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-600 to-red-600 text-white font-medium hover:shadow-lg hover:shadow-orange-500/25 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+        >
           {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Minus className="w-4 h-4" />}
           Withdraw ${amount || '0.00'}
         </button>
@@ -519,12 +581,42 @@ const WithdrawModal = ({ walletBalance, onClose, onSuccess }) => {
   );
 };
 
+// ── Crystal Purchase Modal — Coming Soon ─────────────────────────────────────
+const CrystalPurchaseModal = ({ onClose }) => (
+  <ModalWrapper onClose={onClose}>
+    <div className="flex flex-col items-center text-center py-4">
+      <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 flex items-center justify-center mb-4">
+        <Gem className="w-8 h-8 text-purple-400" />
+      </div>
+      <h2 className="text-xl font-bold text-white mb-2">SF Crystals</h2>
+      <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-xs font-medium mb-4">
+        Coming Soon
+      </span>
+      <p className="text-gray-400 text-sm leading-relaxed mb-6">
+        Crystal packs are being finalised.
+      </p>
+      <button
+        onClick={onClose}
+        className="w-full py-3 rounded-xl bg-white/5 border border-white/10 text-gray-300 font-medium hover:bg-white/10 transition-colors"
+      >
+        Got it
+      </button>
+    </div>
+  </ModalWrapper>
+);
+
+// ── Modal wrapper ─────────────────────────────────────────────────────────────
 const ModalWrapper = ({ onClose, children }) => (
-  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
-    <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+  <motion.div
+    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+    onClick={onClose}
+  >
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
       onClick={e => e.stopPropagation()}
-      className="relative w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 p-6">
+      className="relative w-full max-w-md rounded-2xl bg-[#1a1a1a] border border-white/10 p-6"
+    >
       <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors">
         <X className="w-5 h-5 text-gray-400" />
       </button>
