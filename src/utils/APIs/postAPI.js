@@ -4,15 +4,18 @@ import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, 
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 })
 
-api.interceptors.request.use(
-  requestInterceptor,
-  requestErrorInterceptor
-);
+api.interceptors.request.use((config) => {
+  // Let axios set Content-Type automatically for FormData (multipart/form-data + boundary).
+  // For plain objects, default to application/json.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  } else if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return requestInterceptor(config);
+}, requestErrorInterceptor);
 
 api.interceptors.response.use(
   responseInterceptor,

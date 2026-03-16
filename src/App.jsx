@@ -119,27 +119,27 @@ export default function App() {
     localStorage.setItem('activeRole', activeRole);
   }, [activeRole]);
   if (import.meta.env.PROD) {
-  console.log = () => {}
-  console.warn = () => {}
-}
+    console.log = () => { }
+    console.warn = () => { }
+  }
 
   useEffect(() => {
     async function fetchUserRoles() {
-        try {
-          // console.log(access_token);
-          const response = await usersAPI.getMyRoles();
-          setUserRoles([...response.data.map(role => role.role)]);
-          // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
-          // setActiveRole('member');
-        } catch (error) {
-          console.error("Error fetching user roles:", error);
-        }
+      try {
+        // console.log(access_token);
+        const response = await usersAPI.getMyRoles();
+        setUserRoles([...response.data.map(role => role.role)]);
+        // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
+        // setActiveRole('member');
+      } catch (error) {
+        console.error("Error fetching user roles:", error);
+      }
     }
     const location = window.location;
     if (!['/login', '/signup', '/verify-email'].includes(location.pathname) || location.pathname !== '/' && access_token)
-    fetchUserRoles();
+      fetchUserRoles();
   }, [access_token]);
-  
+
 
   function ScrollToTop() {
     const { pathname } = useLocation();
@@ -177,13 +177,13 @@ export default function App() {
                 <Route path="/startuppage" element={<StartupPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/explore_section" element={<Explore_Section />} />
-      
+
                 {/* Public Authentication Routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<SignUp />} />
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 {/* Refer and Waitlist */}
-      
+
                 <Route path='membership-benefits' element={<MembershipBenefits />} />
                 <Route path='implementation-plans' element={<ImplementationPlans />} />
                 <Route path='featured-projects' element={<FeaturedProjects />} />
@@ -222,7 +222,7 @@ export default function App() {
                     }
                   />
                   {/* <Route path="dashboard" element={<Dashboard activeRole={activeRole} setActiveRole={setActiveRole} userRoles={userRoles} />} /> */}
-            
+
                   {/* ===== BUILDER DASHBOARD ROUTES ===== */}
                   <Route path="builder/my-applications" element={<MyApplications />} />
                   <Route path="builder/my-work" element={<MyWork />} />
@@ -236,11 +236,13 @@ export default function App() {
                   <Route path="founder/my-team" element={<FounderManageTeam />} />
                   <Route path="founder/manage-tasks" element={<FounderManageTasks />} />
 
-            
+
                   <Route
                     path="ai-dashboard"
                     element={
+                      <AIToolsGuard>
                         <AIDashboard />
+                      </AIToolsGuard>
                     }
                   />
                   <Route path="tools-dashboard" element={<ToolsDashboard />} />
@@ -259,16 +261,16 @@ export default function App() {
                   <Route path="projects" element={<Project />} />
                   <Route path="project-management" element={<ProjectManagement />} />
                   <Route path="project-details" element={<ProjectDetails />} />
-        
+
                   {/* Ideation */}
                   <Route path="ideation" element={<Ideation activeRole={activeRole} />} />
                   <Route path="saved-ideas" element={<SavedIdeas />} />
                   <Route path="ideation-details" element={<Ideationdetails />} />
-        
+
                   {/* Knowledge */}
                   <Route path="knowledge" element={<Knowledge />} />
                   <Route path="knowledge-details" element={<Knowledgedetails />} />
-        
+
                   {/* Help */}
                   <Route path="help" element={<Help />} />
                   <Route path="video-tutorials" element={<VideoTutorials />} />
@@ -278,13 +280,13 @@ export default function App() {
                   <Route path="notifications" element={<NotificationPage />} />
                   {/* Posts */}
                   <Route path="posts" element={<Posts />} />
-                
-                
+
+
                   {/* Contribution */}
                   <Route path="contribution" element={<ContributionPage />} />
                   <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
                   <Route path="contribution-polls" element={<ContributionPollsPage />} />
-                
+
                   {/* Crowdfunding */}
                   <Route path="crowdfunding" element={<Crowdfunding />} />
                   <Route path="checkout/:tierId" element={<Checkout />} />
@@ -293,10 +295,10 @@ export default function App() {
                   {/* Quick Guides */}
                   <Route path="getting-started" element={<GettingStarted />} />
                   <Route path="team-collaboration" element={<TeamCollaboration />} />
-                
+
                   {/* Saved Ideas */}
                   {/* <Route path="saved-ideas" element={<SavedList />} /> */}
-                
+
                   {/* Test Page */}
                   <Route path="test" element={<Test />} />
                   {/* Startups */}
@@ -386,7 +388,7 @@ export default function App() {
                 </Route>
                 <Route path="*" element={<NotFound />} />
                 {/* Catch all route */}
-      
+
               </Routes>
               <ToastContainer
                 position="bottom-center"
