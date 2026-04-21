@@ -9,6 +9,11 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authAPI.loginRequest(credentials);
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refreshToken', response.refresh_token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      return response;
+
       const data = response.data ?? response;
 
       const access_token =
@@ -108,7 +113,7 @@ export const refreshAccessToken = createAsyncThunk(
 
       // 🔥 Make sure to match backend response keys (Flask usually returns `access_token`)
       if (data.access_token) {
-        localStorage.setItem('accessToken', data.access_token);
+        localStorage.setItem('access_token', data.access_token);
       }
       if (data.refresh_token) {
         localStorage.setItem('refreshToken', data.refresh_token);
