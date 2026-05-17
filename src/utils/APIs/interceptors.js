@@ -2,6 +2,22 @@ import axios from "axios";
 import { API_BASE_URL } from "../config";
 import { toast } from "react-toastify";
 
+const logErrorToBackend = async (error) => {
+  try {
+    // Use a clean axios instance to avoid interceptor recursion
+    const cleanAxios = axios.create();
+    await cleanAxios.post(`${API_BASE_URL}/log-client-error`, {
+      errorMessage: error.message,
+      stack: error.stack,
+      url: window.location.href,
+      timestamp: new Date().toISOString(),
+      errorFromBackend: true
+    });
+  } catch (e) {
+    // Silently fail to avoid infinite error loops
+  }
+};
+
 export const requestInterceptor = (config) => {
   const token = localStorage.getItem('access_token');
   
@@ -89,24 +105,10 @@ export const responseErrorInterceptor = (error) => {
 
   return Promise.reject(error);
 };
-
-const logErrorToBackend = (error) => {
-  try {
-    console.log("Logging error to backend:", {
-      errorFromBackend: error.response?.data?.error,
-      errorMessage: error.message,
-      stack: error.stack,
-      page: window.location.pathname,
-      component: error.component || "Unknown Component",
-    });
-    axios.post(`${API_BASE_URL}/log-client-error`, {
-      errorFromBackend: error?.response?.data?.error || error?.error || false,
-      errorMessage: error.message,
-      stack: error.stack,
-      page: window.location.pathname,
-      component: error.component || "Unknown Component",
-    });
-  } catch (logError) {
-    console.error('Failed to log error to backend:', logError);
-  }
+export const API_CONFIG = {
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 }
