@@ -25,6 +25,7 @@ export default function BuilderDashboard({
   userRoles,
   activeRole,
   setActiveRole,
+  setUserRoles
 }) {
   const { user } = useSelector((state) => state.auth);
   const [startups, setStartups] = useState([]);
@@ -76,6 +77,9 @@ export default function BuilderDashboard({
           id: role,
           label: role.charAt(0).toUpperCase() + role.slice(1),
         }))}
+        setUserRoles={setUserRoles}
+        setActiveRole={setActiveRole}
+        userRoles={userRoles}
         activeRole={activeRole}
         onSectionChange={(r) => {
           setActiveRole(r);

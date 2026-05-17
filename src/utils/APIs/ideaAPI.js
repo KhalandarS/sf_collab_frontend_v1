@@ -1,13 +1,7 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -28,12 +22,8 @@ export const ideaAPI = {
     return response.data;
   },
 
-  getIdeaById: async (ideaId, accessToken) => {
-    const response = await api.get(`/ideas/${ideaId}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
+  getIdeaById: async (ideaId) => {
+    const response = await api.get(`/ideas/${ideaId}`);
     return response.data;
   },
 
@@ -78,11 +68,8 @@ export const ideaAPI = {
     return response.data;
     },
   // Idea Comments API
-  getIdeaComments: async (accessToken, params) => {
+  getIdeaComments: async (params) => {
     const response = await api.get("/idea-comments", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
       params: params,
     });
     return response.data;
@@ -167,6 +154,16 @@ export const ideaAPI = {
   },
   toggleIdeaCommentLike: async (commentId) => {
     const response = await api.post(`/idea-comments/${commentId}/like`, {});
+    return response.data;
+  },
+  getTopIdeas: async (params = {}) => {
+    const response = await api.get('/ideas/top', {
+      params: {
+        page: params.page || 1,
+        per_page: params.per_page || 10,
+        limit: 10
+      },
+    });
     return response.data;
   }
 };

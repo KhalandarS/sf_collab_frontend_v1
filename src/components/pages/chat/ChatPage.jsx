@@ -18,9 +18,10 @@ import { useSearchParams } from "react-router-dom";
 import { useSelector } from 'react-redux';
 import { getProfilePicture } from '@/utils/getProfilePicture';
 import { chatAPI } from '@/utils/APIs/chatApi';
+import { resolveUserId } from '@/utils/resolveUserId';
 
 // API Configuration
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 // ─── Feature 1: Tab persistence helpers ──────────────────────────────────
 const getTabKey = (userId) => `sfcollab:chat_tab:${userId}`;
@@ -43,6 +44,8 @@ const toMs = (ts) => {
   const d = new Date(ts);
   return Number.isNaN(d.getTime()) ? null : d.getTime();
 };
+
+const isArchivedFlag = (value) => value === true || value === 1 || value === "1";
 
 const formatLastSeen = (ts, nowTs) => {
   const ms = toMs(ts);
@@ -206,12 +209,14 @@ const ChatPage = () => {
 
   const [messageInput, setMessageInput] = useState('');
   const [showNewMessage, setShowNewMessage] = useState(false);
+  const [showContactsSidebar, setShowContactsSidebar] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [searchParams] = useSearchParams();
+  const currentUserId = useMemo(() => String(resolveUserId(currentUser) ?? ""), [currentUser]);
 
   // ─── Feature 1: Persisted tab (per-user, survives refresh + multi-tab) ──
-  const tabKey = currentUser?.id ? getTabKey(currentUser.id) : null;
+  const tabKey = currentUserId ? getTabKey(currentUserId) : null;
   const [activeTab, setActiveTab] = useState(() => {
     if (!tabKey) return 'all';
     try { const s = localStorage.getItem(tabKey); return VALID_TABS.includes(s) ? s : 'all'; }
@@ -224,13 +229,13 @@ const ChatPage = () => {
     // BroadcastChannel: sync to other browser tabs
     try {
       const bc = new BroadcastChannel('sfcollab:chat_tab');
-      if (currentUser?.id && bc) {
-        bc.postMessage({ userId: currentUser?.id, tab });
+      if (currentUserId && bc) {
+        bc.postMessage({ userId: currentUserId, tab });
         bc.close();
       }
       
     } catch {}
-  }, [tabKey, currentUser?.id]);
+  }, [tabKey, currentUserId]);
 
   // Listen for tab changes from other browser tabs
   useEffect(() => {
@@ -238,11 +243,11 @@ const ChatPage = () => {
     try {
       bc = new BroadcastChannel('sfcollab:chat_tab');
       bc.onmessage = (e) => {
-        if (e.data?.userId === currentUser?.id && VALID_TABS.includes(e.data?.tab)) setActiveTab(e.data.tab);
+        if (e.data?.userId === currentUserId && VALID_TABS.includes(e.data?.tab)) setActiveTab(e.data.tab);
       };
     } catch {}
     return () => { try { bc?.close(); } catch {} };
-  }, [currentUser?.id]);
+  }, [currentUserId]);
 
   // storage event fallback (older browsers)
   useEffect(() => {
@@ -275,16 +280,19 @@ const ChatPage = () => {
     if (!token) return;
     
     try {
-      const response = await chatAPI.getAllChats();
-      const data = response.data;
+      const data = await chatAPI.getAllChats();
       console.log("data:", data);
 
-      const convos = data.conversations || [];
-      console.log(response);
+      const convos = Array.isArray(data?.conversations)
+        ? data.conversations
+        : Array.isArray(data?.data?.conversations)
+          ? data.data.conversations
+          : [];
+      console.log(data);
       // ─── Feature 5: split active vs archived ─────────────────────────────
-      setConversations(convos.filter(c => !c.is_archived));
-      setArchivedConversations(convos.filter(c => c.is_archived));
-      setPinnedConversations(new Set(convos.filter(c => c.is_pinned).map(c => String(c.id))));
+      setConversations(convos.filter((c) => !isArchivedFlag(c?.is_archived)));
+      setArchivedConversations(convos.filter((c) => isArchivedFlag(c?.is_archived)));
+      setPinnedConversations(new Set(convos.filter((c) => !!c?.is_pinned).map((c) => String(c.id))));
 
       // Seed last-seen from backend fields so it still shows after you leave/re-enter chat
       // (works even if you didn't witness the user go offline in this session)
@@ -292,20 +300,21 @@ const ChatPage = () => {
         const next = { ...prev };
         for (const c of convos) {
           if (c?.conversation_type !== "direct") continue;
-          const other = c.participants?.find(
-            (p) => String(p.id) !== String(currentUser?.id)
-          );
-          if (!other?.id) continue;
+          const other = c.participants?.find((p) => {
+            const participantId = String(resolveUserId(p) ?? "");
+            return participantId && participantId !== currentUserId;
+          });
+          const otherId = resolveUserId(other);
+          if (!otherId) continue;
 
+          // Only seed from last_seen (real disconnect time), NOT last_login
           const ts =
             other.last_seen ??
             other.lastSeen ??
-            other.last_login ??
-            other.lastLogin ??
             null;
 
           const ms = toMs(ts);
-          if (ms) next[String(other.id)] = ms;
+          if (ms) next[String(otherId)] = ms;
         }
         return next;
       });
@@ -315,16 +324,20 @@ const ChatPage = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [token, currentUser?.id]);
+  }, [token, currentUserId]);
 
   // Fetch messages for a conversation
   const fetchMessages = useCallback(async (conversationId) => {
     if (!token) return;
     
     try {
-      const response = await chatAPI.getMessages(conversationId, 100, 0);
-      const data = response.data;
-      setMessages((data.messages || []).map(normalizeMessage));
+      const data = await chatAPI.getMessages(conversationId, 100, 0);
+      const messagesPayload = Array.isArray(data?.messages)
+        ? data.messages
+        : Array.isArray(data?.data?.messages)
+          ? data.data.messages
+          : [];
+      setMessages(messagesPayload.map(normalizeMessage));
       socket?.emit('mark_read', { conversation_id: conversationId });
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -387,13 +400,14 @@ useEffect(() => {
   // ============================================
   // FILE UPLOAD HANDLER
   // ============================================
-  const handleFileUpload = useCallback(async (file) => {
+  const handleFileUpload = useCallback(async (file, caption = '') => {
     if (!token || !file) return null;
     try {
-      const response = await chatAPI.uploadFile(activeConversation?.id, file, file.name);
-      const data = response.data;
-      
-      return data.message.file_url;
+      // REST upload - backend persists + broadcasts via socket (new_message)
+      // No additional socket.emit needed after this call
+      const response = await chatAPI.uploadFile(activeConversation?.id, file, caption || ' ');
+      const data = response?.data || response;
+      return data?.message?.file_url || data?.file_url || null;
     } catch (error) {
       console.error('File upload failed:', error);
       return null;
@@ -467,7 +481,7 @@ useEffect(() => {
     if (!userId) return;
     if (!friends?.length) return;
 
-    const friend = friends.find((f) => String(f.id) === String(userId));
+    const friend = friends.find((f) => String(resolveUserId(f) ?? "") === String(userId));
     if (!friend) return;
 
     handleOpenChatWithFriend(friend);
@@ -488,7 +502,7 @@ useEffect(() => {
 
       // ── Fix: skip own messages (avoids duplicate when socket echoes back) ──
       const senderId = String(data.message?.sender_id ?? '');
-      const myId = String(currentUser?.id ?? '');
+      const myId = currentUserId;
       const isOwn = senderId && myId && senderId === myId;
 
       if (isActive && !isOwn) {
@@ -548,7 +562,7 @@ useEffect(() => {
           // Guard: activeConversation or participants may be missing for some DMs
           const participants = activeConversation?.participants || [];
           const user =
-            participants.find((p) => String(p.id) === String(data.user_id)) ||
+            participants.find((p) => String(resolveUserId(p) ?? "") === String(data.user_id)) ||
             { id: data.user_id, firstName: "", lastName: "" }; // fallback so UI won't crash
 
           return [...prev, user];
@@ -648,7 +662,7 @@ useEffect(() => {
       socket.off("conversation_added", onConversationAdded);
       socket.off("conversation_removed", onConversationRemoved);
     };
-  }, [socket, activeConversation, fetchConversations]);
+  }, [socket, activeConversation, fetchConversations, currentUserId]);
 
   // ============================================
   // PRESENCE TRACKING (IDLE SUPPORT)
@@ -667,9 +681,8 @@ useEffect(() => {
       }
 
       if (data.status === "away") {
-        // Server confirmed this user is now Away — backdate their lastActiveAt
-        // by 3+ min so getUserStatus returns 'idle' without waiting for clock tick
-        const awayTs = now() - (3 * 60 * 1000 + 1000);
+        // Backdate by 5min+1s so idle threshold (5min) triggers immediately
+        const awayTs = now() - (5 * 60 * 1000 + 1000);
         setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
       }
 
@@ -697,13 +710,17 @@ useEffect(() => {
     // 🔹 THROTTLED ACTIVITY PING (THIS IS THE PART YOU ASKED ABOUT)
     const ping = () => socket.emit("user_activity", { ts: now() });
 
-    // only keypress + interval (NO mousemove spam)
+    // Track keydown, click, scroll to reset Away timer
     window.addEventListener("keydown", ping);
-    const interval = setInterval(ping, 20000); // every 20s
+    window.addEventListener("click", ping);
+    window.addEventListener("scroll", ping, { passive: true });
+    const interval = setInterval(ping, 20000); // heartbeat every 20s
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("keydown", ping);
+      window.removeEventListener("click", ping);
+      window.removeEventListener("scroll", ping);
       socket.off("user_status", onUserStatus);
       socket.off("user_activity", onUserActivity);
     };
@@ -793,6 +810,8 @@ useEffect(() => {
   // Open chat with a friend (from sidebar)
   const handleOpenChatWithFriend = async (friend) => {
     console.log('handleOpenChatWithFriend called with friend:', friend);
+    const friendId = resolveUserId(friend);
+    if (!friendId) return;
     
     // Check if conversation already exists
     const existing = conversations.find(c => {
@@ -800,8 +819,9 @@ useEffect(() => {
       const isDirectType = c.conversation_type === 'direct';
       console.log('  - Is direct type:', isDirectType);
       const hasParticipant = c.participants?.some(p => {
-        const matches = String(p.id) === String(friend.id);
-        console.log(`    - Participant ${p.id} matches friend ${friend.id}:`, matches);
+        const participantId = resolveUserId(p);
+        const matches = String(participantId ?? "") === String(friendId);
+        console.log(`    - Participant ${participantId} matches friend ${friendId}:`, matches);
         return matches;
       });
       console.log('  - Has friend participant:', hasParticipant);
@@ -817,11 +837,9 @@ useEffect(() => {
       console.log('No existing conversation, creating new one...');
       // Create new conversation
       try {
-        console.log('Creating direct conversation for friend ID:', friend.id);
-        const response = await chatAPI.createDirectConversation(friend.id);
-        console.log('API response:', response);
-        
-        const data = response.data;
+        console.log('Creating direct conversation for friend ID:', friendId);
+        const data = await chatAPI.createDirectConversation(friendId);
+        console.log('API response:', data);
         console.log('Response data:', data);
         
         console.log('Conversation created successfully');
@@ -858,12 +876,11 @@ useEffect(() => {
   // Create a group conversation
   const handleCreateGroup = async (userIds, name) => {
     try {
-      const response = await chatAPI.createGroupConversation(name, userIds);
-      const data = response.data;
-      if (!response.ok || !data?.success) {
+      const data = await chatAPI.createGroupConversation(name, userIds);
+      if (data?.success === false) {
         return {
           success: false,
-          message: data?.error || data?.message || `Failed to create group chat (HTTP ${response.status})`,
+          message: data?.error || data?.message || 'Failed to create group chat.',
         };
       }
 
@@ -905,16 +922,17 @@ useEffect(() => {
   };
 
   // Send a message - FIX #1: Optimistic update so message appears instantly
-  const handleSendMessage = (content) => {
-    if (!content || !activeConversation || !socket) return;
+  const handleSendMessage = async (content) => {
+    if (!content || !activeConversation) return;
 
     // Build an optimistic message shown immediately, before socket echo
+    const optimisticId = `optimistic-${Date.now()}`;
     const optimisticMsg = normalizeMessage({
-      id: `optimistic-${Date.now()}`,
+      id: optimisticId,
       content,
-      sender_id: currentUser?.id,
+      sender_id: currentUserId,
       sender: {
-        id: currentUser?.id,
+        id: currentUserId,
         firstName: currentUser?.first_name || currentUser?.firstName || '',
         lastName: currentUser?.last_name || currentUser?.lastName || '',
         profilePicture: currentUser?.profile_picture || currentUser?.profilePicture || null,
@@ -927,11 +945,43 @@ useEffect(() => {
     // Show it immediately
     setMessages((prev) => [...prev, optimisticMsg]);
 
-    socket.emit('typing_stop', { conversation_id: activeConversation.id });
-    socket.emit('send_message', {
-      conversation_id: activeConversation.id,
-      content,
-    });
+    try {
+      // Persist first through REST so the message survives refresh.
+      const response = await chatAPI.sendMessage(activeConversation.id, content);
+      const serverMessage = response?.data?.message || response?.message || null;
+
+      if (serverMessage) {
+        const normalizedServerMessage = normalizeMessage(serverMessage);
+        setMessages((prev) => {
+          let replaced = false;
+          const next = prev.map((m) => {
+            if (!replaced && String(m.id) === String(optimisticId)) {
+              replaced = true;
+              return normalizedServerMessage;
+            }
+            return m;
+          });
+          return replaced ? next : [...next, normalizedServerMessage];
+        });
+
+        // Trigger server-side real-time fanout to user rooms without re-persisting.
+        if (socket && serverMessage?.id) {
+          socket.emit('send_message', {
+            conversation_id: activeConversation.id,
+            skip_persist: true,
+            persisted_message_id: serverMessage.id,
+          });
+        }
+      }
+
+      if (socket) {
+        socket.emit('typing_stop', { conversation_id: activeConversation.id });
+      }
+    } catch (error) {
+      // Roll back optimistic message when persistence fails.
+      setMessages((prev) => prev.filter((m) => String(m.id) !== String(optimisticId)));
+      console.error('Failed to persist message:', error);
+    }
     
     setMessageInput('');
     // ─── Feature 3: clear draft on send ──────────────────────────────────
@@ -972,7 +1022,7 @@ useEffect(() => {
     return source.filter(c => {
       // Filter by search
       if (searchTerm) {
-        const name = c.name || c.participants?.find(p => String(p.id) !== String(currentUser?.id))?.firstName || '';
+        const name = c.name || c.participants?.find((p) => String(resolveUserId(p) ?? "") !== currentUserId)?.firstName || '';
         if (!name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
       }
       
@@ -994,7 +1044,7 @@ useEffect(() => {
         return bLast - aLast;
       }
     );
-  }, [conversations, archivedConversations, searchTerm, activeTab, currentUser?.id, pinnedConversations]);
+  }, [conversations, archivedConversations, searchTerm, activeTab, currentUserId, pinnedConversations]);
 
   
 
@@ -1008,12 +1058,15 @@ useEffect(() => {
   // ============================================
   const otherParticipant =
     activeConversation?.conversation_type === "direct"
-      ? activeConversation?.participants?.find(
-          (p) => String(p.id) !== String(currentUser?.id)
-        )
+      ? activeConversation?.participants?.find((p) => {
+          const participantId = String(resolveUserId(p) ?? "");
+          return participantId && participantId !== currentUserId;
+        })
       : null;
 
-  const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
+  const otherId = resolveUserId(otherParticipant)
+    ? String(resolveUserId(otherParticipant))
+    : null;
   const buildProfileUrl = (userId) =>
   userId ? `/user-profile?userId=${userId}` : "/user-profile";
   
@@ -1029,44 +1082,58 @@ useEffect(() => {
     : false;
 
   const lastActiveTs = otherId ? toMs(lastActiveAt?.[otherId]) : null;
-  const lastSeenTs =
-    otherId
-      ? toMs(
-          lastSeenAt?.[otherId] ??
-            otherParticipant?.last_seen ??
-            otherParticipant?.lastSeen ??
-            otherParticipant?.last_login ??
-            otherParticipant?.lastLogin
-        )
-      : null;
+  // lastSeenTs: ONLY trust the real-time socket event value (lastSeenAt map).
+  // DB fields (last_seen/last_login) are stale login times, not disconnect times.
+  // Exception: on first page load before any socket event, seed from DB as fallback.
+  const lastSeenTs = otherId
+    ? toMs(lastSeenAt?.[otherId]) ??
+      // Seed fallback - only used until first socket offline event arrives
+      toMs(otherParticipant?.last_seen ?? otherParticipant?.lastSeen)
+    : null;
 
   const diffMs = (ts) => (ts ? Math.max(0, nowTs - ts) : null);
 
-  let presenceStatus = "offline"; // "online" | "idle" | "offline"
-  let statusText = "";
+  // ============================================================
+  // PRESENCE LOGIC (WhatsApp / Firebase model):
+  //   connected + active < 5min  => "online"   => "Online"
+  //   connected + inactive 5min+ => "idle"     => "Away"
+  //   disconnected               => "offline"  => "Last seen X" or "Offline"
+  // NEVER show "last seen" while the socket says user is connected.
+  // ============================================================
+  let presenceStatus = "offline";
+  let statusText = "Offline";
 
   if (activeConversation?.conversation_type === "direct" && otherId) {
     if (connected) {
+      // User is connected right now - show online or away only
       const d = diffMs(lastActiveTs);
-
-      // If we haven't received activity yet, assume online while connected
       if (d == null || d < 5 * 60 * 1000) {
         presenceStatus = "online";
-        statusText = "online";
-      } else if (d < 6 * 60 * 1000) {
-        presenceStatus = "idle";
-        statusText = "idle";
+        statusText = "Online";
       } else {
-        presenceStatus = "offline";
-        statusText = formatLastSeen(lastActiveTs, nowTs);
+        presenceStatus = "idle";
+        statusText = "Away";
       }
     } else {
+      // User is offline - show last seen from disconnect timestamp
       presenceStatus = "offline";
-      statusText = formatLastSeen(lastSeenTs || lastActiveTs, nowTs);
+      const seenTs = lastSeenTs || lastActiveTs;
+      statusText = seenTs ? formatLastSeen(seenTs, nowTs) : "Offline";
     }
   }
 
   const isOnline = presenceStatus === "online";
+
+  // Typing overrides status text in header
+  const typingNames = (typingUsers || [])
+    .filter((u) => String(resolveUserId(u) ?? "") !== currentUserId)
+    .map((u) => u.firstName || u.first_name || "Someone");
+  const typingStatusText = typingNames.length
+    ? `${typingNames[0]} is typing...`
+    : null;
+  const headerStatusText = typingStatusText || statusText;
+  const headerPresenceStatus = typingStatusText ? "typing" : presenceStatus;
+
   const isMobile = window.matchMedia("(max-width: 768px)").matches;
 // ============================================
   // RENDER: Not logged in
@@ -1188,7 +1255,7 @@ useEffect(() => {
                 setSidebarOpen(false);
               }}
               onlineUsers={onlineUsers}
-              currentUserId={currentUser.id}
+              currentUserId={currentUserId}
               lastActiveAt={lastActiveAt}
               lastSeenAt={lastSeenAt}
               nowTs={nowTs}
@@ -1251,9 +1318,9 @@ useEffect(() => {
             <div className="hidden md:block">
               <ChatHeader
                 conversation={activeConversation}
-                currentUserId={currentUser.id}
-                presenceStatus={presenceStatus}
-                statusText={statusText}
+                currentUserId={currentUserId}
+                presenceStatus={headerPresenceStatus}
+                statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
@@ -1264,9 +1331,9 @@ useEffect(() => {
             <div className="md:hidden border-b border-zinc-800">
               <ChatHeader
                 conversation={activeConversation}
-                currentUserId={currentUser.id}
-                presenceStatus={presenceStatus}
-                statusText={statusText}
+                currentUserId={currentUserId}
+                presenceStatus={headerPresenceStatus}
+                statusText={headerStatusText}
                 onAvatarClick={activeConversation?.conversation_type === "direct" ? handleOpenProfile : undefined}
                 setSidebarOpen={() => setSidebarOpen(true)}
                 isMobile={isMobile}
@@ -1296,7 +1363,7 @@ useEffect(() => {
                 messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   // Use String() comparison to avoid type mismatch
-                  const isOwn = String(message.sender_id) === String(currentUser.id);
+                  const isOwn = String(message.sender_id) === String(currentUserId);
                   
                   return (
                     <React.Fragment key={index}>
@@ -1310,7 +1377,7 @@ useEffect(() => {
                         message={message}
                         isOwn={isOwn}
                         showAvatar={shouldShowAvatar(message, index)}
-                        currentUserId={currentUser?.id}
+                        currentUserId={currentUserId}
                         conversationId={activeConversation?.id}
                         conversationType={activeConversation?.conversation_type}
                         setMessages={setMessages}
@@ -1366,18 +1433,62 @@ useEffect(() => {
       {/* ============================================ */}
       {/* RIGHT SIDEBAR: Online Contacts */}
       {/* ============================================ */}
+      {/* RIGHT SIDEBAR: Online Contacts — always visible lg+, drawer on mobile */}
       <div className="hidden lg:block w-60 bg-zinc-900 border-l border-zinc-800 shrink-0">
         <OnlineContactsSidebar
           friends={friends}
           onlineUsers={onlineUsers}
           lastActiveAt={lastActiveAt}
+          lastSeenAt={lastSeenAt}
           nowTs={nowTs}
           onOpenChat={handleOpenChatWithFriend}
           onNewMessage={() => setShowNewMessage(true)}
           token={token}
-          currentUserId={currentUser?.id}
+          currentUserId={currentUserId}
+          isOpen={showContactsSidebar}
+          onClose={() => setShowContactsSidebar(false)}
         />
       </div>
+
+      {/* Mobile-only: drawer rendered outside desktop block so it overlays properly */}
+      <div className="lg:hidden">
+        <OnlineContactsSidebar
+          friends={friends}
+          onlineUsers={onlineUsers}
+          lastActiveAt={lastActiveAt}
+          lastSeenAt={lastSeenAt}
+          nowTs={nowTs}
+          onOpenChat={handleOpenChatWithFriend}
+          onNewMessage={() => setShowNewMessage(true)}
+          token={token}
+          currentUserId={currentUserId}
+          isOpen={showContactsSidebar}
+          onClose={() => setShowContactsSidebar(false)}
+        />
+      </div>
+
+      {/* Mobile floating button to open contacts sidebar */}
+      <button
+        type="button"
+        onClick={() => setShowContactsSidebar(true)}
+        className="lg:hidden fixed bottom-20 right-4 z-[9980] w-11 h-11 rounded-2xl bg-zinc-800 border border-zinc-700 text-zinc-300 shadow-lg flex items-center justify-center hover:bg-zinc-700 transition-colors"
+        title="Online contacts"
+      >
+        <span className="relative">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+          {/* Online count badge */}
+          {onlineUsers && onlineUsers.length > 0 && (
+            <span className="absolute -top-2 -right-2 min-w-[16px] h-[16px] px-0.5 rounded-full bg-emerald-500 text-zinc-900 text-[9px] font-bold flex items-center justify-center">
+              {onlineUsers.length > 9 ? '9+' : onlineUsers.length}
+            </span>
+          )}
+        </span>
+      </button>
 
       {/* ============================================ */}
       {/* NEW MESSAGE MODAL */}
@@ -1391,7 +1502,7 @@ useEffect(() => {
         onSelectUser={handleOpenChatWithFriend}
         onCreateGroup={handleCreateGroup}
         token={token}
-        currentUserId={currentUser?.id}
+        currentUserId={currentUserId}
       />
     </div>
   );

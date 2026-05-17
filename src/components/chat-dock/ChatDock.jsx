@@ -12,6 +12,7 @@ import { plotCount } from "@/utils/plotCount";
 import { formatFriendlyDate } from "@/utils/formatFriendlyDate";
 
 
+
 // show name only on first message in a run (group/general/startup)
 function shouldShowSenderName(messages, index) {
   if (index === 0) return true;
@@ -115,23 +116,19 @@ const getPresenceForDirect = ({ conv, currentUserId, onlineUsers, lastActiveAt, 
 
   const connected = (onlineUsers || []).map(String).includes(otherId);
   const lastActiveTs = toMs(lastActiveAt?.[otherId]);
-  const lastSeenTs = toMs(
-    lastSeenAt?.[otherId] ??
-      other?.last_seen ??
-      other?.lastSeen ??
-      other?.last_login ??
-      other?.lastLogin
-  );
-
-  const diff = lastActiveTs ? Math.max(0, nowTs - lastActiveTs) : null;
+  // Only use real socket-derived last_seen, never stale last_login from DB
+  const lastSeenTs = toMs(lastSeenAt?.[otherId] ?? other?.last_seen ?? other?.lastSeen);
 
   if (connected) {
-    if (diff == null || diff < 5 * 60 * 1000) return { presenceStatus: "online", statusText: "online" };
-    if (diff < 6 * 60 * 1000) return { presenceStatus: "idle", statusText: "idle" };
-    return { presenceStatus: "offline", statusText: formatLastSeen(lastActiveTs, nowTs) };
+    // Connected = NEVER offline. Only Online or Away.
+    const diff = lastActiveTs ? Math.max(0, nowTs - lastActiveTs) : null;
+    if (diff == null || diff < 5 * 60 * 1000) return { presenceStatus: "online", statusText: "Online" };
+    return { presenceStatus: "idle", statusText: "Away" };
   }
 
-  return { presenceStatus: "offline", statusText: formatLastSeen(lastSeenTs || lastActiveTs, nowTs) };
+  // Disconnected - show last seen
+  const seenTs = lastSeenTs || lastActiveTs;
+  return { presenceStatus: "offline", statusText: seenTs ? formatLastSeen(seenTs, nowTs) : "Offline" };
 };
 
 function safeJsonParse(value, fallback) {
@@ -142,19 +139,21 @@ function safeJsonParse(value, fallback) {
   }
 }
 
-const handleFileUpload = async ({ file, conversationId, token }) => {
+const handleFileUpload = async ({ file, conversationId, token, caption = "" }) => {
   if (!token || !file || !conversationId) return null;
-
   try {
-    // Pass " " (a space) or "Sent a file" as the third argument 
-    // to satisfy the "content" requirement of the API
-    const response = await chatAPI.uploadFile(conversationId, file, " "); 
+    // ✅ USING CENTRALIZED API
+    const data = await chatAPI.uploadFile(conversationId, file, file.name);
     
-    if (response?.success && response?.data?.message) {
-      // Once uploaded, the backend should broadcast this via Socket
-      // so the image appears for everyone.
-      return response.data.message.file_url;
+    if (data?.success && data?.data?.message) {
+      return data.data.message.file_url;
     }
+    if (data?.message?.file_url) {
+      return data.message.file_url;
+    }
+    // Some backends return differently shaped response
+    if (response?.data?.file_url) return response.data.file_url;
+    if (response?.file_url) return response.file_url;
     return null;
   } catch (e) {
     console.error("ChatDock: file upload failed:", e);
@@ -255,7 +254,9 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
 
   const [isLoadingConvos, setIsLoadingConvos] = useState(false);
 
-  const [lastActiveAt, setLastActiveAt] = useState({});
+  const [lastActiveAt, setLastActiveAt] = useState(() =>
+    safeJsonParse(localStorage.getItem("presence:lastActiveAt"), {})
+  );
   const [lastSeenAt, setLastSeenAt] = useState(() => safeJsonParse(localStorage.getItem(LS_PRESENCE_KEY), {}));
   const [nowTs, setNowTs] = useState(Date.now());
 
@@ -297,10 +298,26 @@ export default function ChatDock({ maxWindows = 2, isMobile = false, callback = 
   const isWindowsOpen = useMemo(() => windows.length > 0, [windows]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {}));
-    } catch {}
+    try { localStorage.setItem(LS_PRESENCE_KEY, JSON.stringify(lastSeenAt || {})); } catch {}
   }, [lastSeenAt]);
+
+  useEffect(() => {
+    try { localStorage.setItem("presence:lastActiveAt", JSON.stringify(lastActiveAt || {})); } catch {}
+  }, [lastActiveAt]);
+
+  // Sync presence maps from other tabs (ChatPage <-> ChatDock)
+  useEffect(() => {
+    const onStorage = (e) => {
+      if (e.key === "presence:lastSeenAt") {
+        setLastSeenAt(safeJsonParse(e.newValue, {}));
+      }
+      if (e.key === "presence:lastActiveAt") {
+        setLastActiveAt(safeJsonParse(e.newValue, {}));
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setNowTs(Date.now()), 30000);
@@ -752,7 +769,7 @@ useEffect(() => {
       }
       if (data.status === "away") {
         // Server confirms user is Away — backdate lastActiveAt so idle shows immediately
-        const awayTs = now() - (3 * 60 * 1000 + 1000);
+        const awayTs = now() - (5 * 60 * 1000 + 1000);
         setLastActiveAt((prev) => ({ ...prev, [id]: awayTs }));
       }
       if (data.status === "offline") {
@@ -780,11 +797,15 @@ useEffect(() => {
 
     const ping = () => socket.emit("user_activity", { ts: now() });
     window.addEventListener("keydown", ping);
+    window.addEventListener("click", ping);
+    window.addEventListener("scroll", ping, { passive: true });
     const interval = setInterval(ping, 20000);
 
     return () => {
       clearInterval(interval);
       window.removeEventListener("keydown", ping);
+      window.removeEventListener("click", ping);
+      window.removeEventListener("scroll", ping);
       socket.off("user_status", onUserStatus);
       socket.off("user_activity", onUserActivity);
     };
@@ -1289,7 +1310,7 @@ useEffect(() => {
                 </div>
 
                 {/* Conversations List */}
-                <div className="overflow-y-auto p-2 flex-1">
+                <div className="overflow-y-auto p-2 flex-1" style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
                   {isLoadingConvos ? (
                     <div className="p-4 text-zinc-500 text-sm">Loading…</div>
                   ) : filteredConversations.length === 0 ? (
@@ -1574,7 +1595,7 @@ useEffect(() => {
                   {!w.minimized && (
                     <>
                       {/* Messages */}
-                      <div className={`${isMobile ? "flex-1" : "h-[60vh]"} overflow-y-auto p-3 bg-zinc-950 space-y-0`}>
+                      <div className={`${isMobile ? "flex-1" : "h-[440px]"} overflow-y-auto p-3 bg-zinc-950 space-y-0 scrollbar-none`} style={{scrollbarWidth:"none",msOverflowStyle:"none"}}>
                         {w.loading ? (
                           <div className="text-sm text-zinc-500">Loading…</div>
                         ) : (
@@ -1587,6 +1608,8 @@ useEffect(() => {
                                 message={m}
                                 isOwn={isOwn}
                                 showAvatar={showAvatar}
+                                currentUserId={currentUser?.id}
+                                variant="dock"
                                 showSenderName={
                                   conv?.conversation_type !== "direct" &&
                                   shouldShowSenderName(w.messages, i)
@@ -1608,7 +1631,6 @@ useEffect(() => {
                                     })
                                   );
                                 }}
-                                variant="dock"
                               />
 
                             );
@@ -1657,7 +1679,7 @@ useEffect(() => {
                           }}
                           socket={socket}
                           conversationId={cid}
-                          onFileUpload={(file) => handleFileUpload({ file, conversationId: cid, token })}
+                          onFileUpload={(file, caption) => handleFileUpload({ file, conversationId: cid, token, caption })}
                         />
                       </div>
                     </>

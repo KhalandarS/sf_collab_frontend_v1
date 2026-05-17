@@ -1,16 +1,45 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import DashboardSelectorModal from "./DashboardSelectorModal";
+
+const AVAILABLE_ROLES = ["builder", "founder", "influencer", "investor"];
 
 export default function DashboardChangeSection({
   sections = [],
   onSectionChange,
   activeRole,
+  setActiveRole,
+  userRoles,
+  setUserRoles
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const activeSection = sections.find(s => s.id === activeRole);
+
+  const handleRoleSelect = (role) => {
+    if (!AVAILABLE_ROLES.includes(role)) {
+      toast.error("Invalid role selected");
+      return;
+    }
+
+    if (role === "influencer" && !userRoles?.includes("influencer")) {
+      toast.info("Please complete the Influencer Application Form first.", { autoClose: 6000 });
+      navigate("/apply-influencer");
+      setIsOpen(false);
+      return;
+    }
+    setUserRoles(prevRoles => {
+      const updatedRoles = [...prevRoles, role];
+      localStorage.setItem('userRoles', JSON.stringify(updatedRoles));
+      return updatedRoles;
+    });
+    onSectionChange(role);
+    setIsOpen(false);
+  };
 
   return (
     <>
@@ -66,13 +95,12 @@ export default function DashboardChangeSection({
       <AnimatePresence>
         {isOpen && (
           <DashboardSelectorModal
-            sections={sections}
+            sections={sections.filter(s => AVAILABLE_ROLES.includes(s.id))}
             activeRole={activeRole}
             onClose={() => setIsOpen(false)}
-            onSelect={(role) => {
-              onSectionChange(role);
-              setIsOpen(false);
-            }}
+            onSelect={handleRoleSelect}
+            setActiveRole={setActiveRole}
+            userRoles={userRoles}
           />
         )}
       </AnimatePresence>

@@ -1,18 +1,18 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
-api.interceptors.request.use(
-  requestInterceptor,
-  requestErrorInterceptor
-);
+api.interceptors.request.use((config) => {
+  // Let axios set Content-Type automatically for FormData (multipart/form-data + boundary).
+  // For plain objects, default to application/json.
+  if (config.data instanceof FormData) {
+    delete config.headers['Content-Type'];
+  } else if (!config.headers['Content-Type']) {
+    config.headers['Content-Type'] = 'application/json';
+  }
+  return requestInterceptor(config);
+}, requestErrorInterceptor);
 
 api.interceptors.response.use(
   responseInterceptor,
@@ -118,7 +118,7 @@ export const postAPI = {
 
   // Stories API (backend uses /api/stories)
   getStories: async (params) => {
-    const response = await api.get('/profile/stories', {
+    const response = await api.get('/stories', {
       params: {
         page: params?.page || 1,
         per_page: params?.per_page || 20,
@@ -135,29 +135,33 @@ export const postAPI = {
   createStory: async (storyData) => {
     // storyData should be FormData with a "media" file and related fields.
     // Let axios set the correct multipart headers automatically.
-    const response = await api.post('/stories', storyData)
+    const response = await api.post('/stories', storyData, {
+      headers: {
+        "Content-Type": undefined
+      }
+    })
     return response.data
   },
 
   updateStory: async (storyId, storyData) => {
-    const response = await api.put(`/profile/stories/${storyId}`, storyData)
+    const response = await api.put(`/stories/${storyId}`, storyData)
     return response.data
   },
 
   viewStory: async (storyId, userId) => {
-    const response = await api.post(`/profile/stories/${storyId}/view`, { user_id: userId })
+    const response = await api.post(`/stories/${storyId}/view`, { user_id: userId })
     return response.data
   },
 
   getActiveStories: async (userIds, currentUserId) => {
-    const response = await api.get('/profile/stories', {
+    const response = await api.get('/stories', {
       params: { page: 1, limit: 50 },
     })
     return response.data
   },
 
   deleteStory: async (storyId) => {
-    const response = await api.delete(`/profile/stories/${storyId}`)
+    const response = await api.delete(`/stories/${storyId}`)
     return response.data
   },
 }

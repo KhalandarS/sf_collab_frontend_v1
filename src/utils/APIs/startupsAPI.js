@@ -1,13 +1,7 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -42,8 +36,12 @@ export const startupsAPI = {
     return response.data
   },
   // Get single startup
-  getById: async (startupId) => {
-    const response = await api.get(`/startups/${startupId}`)
+  getById: async (startupId, userId = null) => {
+    const response = await api.get(`/startups/${startupId}`, {
+      params: {
+        user_id: userId,
+      },
+    })
     return response.data
   },
 
@@ -232,6 +230,14 @@ inviteMember: async (startupId, payload) => {
   return response.data
 },
 
+getMyInvitation: async (startupId) => {
+  // Fetches only the current user's own pending invitation — no manager role needed
+  const response = await api.get(
+    `/startups/${startupId}/invitations/mine`
+  )
+  return response.data
+},
+
 getInvitations: async (startupId, params = {}) => {
   const response = await api.get(
     `/startups/${startupId}/invitations`,
@@ -253,8 +259,9 @@ acceptInvitation: async (startupId, invitationId) => {
 },
 
 declineInvitation: async (startupId, invitationId) => {
+  // Backend route is /reject, not /decline
   const response = await api.post(
-    `/startups/${startupId}/invitations/${invitationId}/decline`
+    `/startups/${startupId}/invitations/${invitationId}/reject`
   )
   return response.data
 },
@@ -321,20 +328,21 @@ declineInvitation: async (startupId, invitationId) => {
   changeMemberRole: async (startupId, memberId, newRole) => {
     const response = await api.post(`/startups/${startupId}/members/${memberId}/change-role`, { role: newRole })
     return response.data
+  },
+  getIdeaLaunchData: async (ideaId) => {
+    const response = await api.get(`/startups/${ideaId}/launch-data`)
+    return response.data
   }
 }
 // Project Goals API
 export const projectGoalsAPI = {
   // Get all project goals with filters
-  getAll: async (params = {}, accessToken) => {
+  getAll: async (params = {}) => {
     const response = await api.get('/project-goals', {
       params: {
         page: params.page || 1,
         per_page: params.per_page || 10,
         ...params,
-      },
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
       },
     })
     return response.data

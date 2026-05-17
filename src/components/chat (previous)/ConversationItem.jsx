@@ -4,6 +4,7 @@ import Avatar from "./Avatar";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import { chatAPI } from "@/utils/APIs/chatApi";
 import { plotCount } from "@/utils/plotCount";
+import { resolveUserId } from "@/utils/resolveUserId";
 
 const toMs = (ts) => {
   if (!ts) return null;
@@ -36,10 +37,16 @@ const ConversationItem = ({
   const isDirect = conversation.conversation_type === "direct";
 
   const otherParticipant = isDirect
-    ? conversation.participants?.find((p) => String(p.id) !== String(currentUserId))
+    ? conversation.participants?.find((p) => {
+        const participantId = String(resolveUserId(p) ?? "");
+        const meId = String(currentUserId ?? "");
+        return participantId && participantId !== meId;
+      })
     : null;
 
-  const otherId = otherParticipant?.id ? String(otherParticipant.id) : null;
+  const otherId = resolveUserId(otherParticipant)
+    ? String(resolveUserId(otherParticipant))
+    : null;
 
   const connected = otherId 
     ? (onlineUsers || []).map(String).includes(otherId) 
@@ -64,10 +71,12 @@ const ConversationItem = ({
   const presenceStatus = useMemo(() => {
     if (isDirect && otherId) {
       if (connected) {
+        // Connected = NEVER offline. Only Online or Away.
         const d = diffMs(lastActiveTs);
         if (d == null || d < 5 * 60 * 1000) return "online";
-        else if (d < 6 * 60 * 1000) return "idle";
+        return "idle"; // connected but inactive 5+ min = Away
       }
+      // Disconnected = offline
     }
     return "offline";
   }, [isDirect, otherId, connected, lastActiveTs, nowTs]);

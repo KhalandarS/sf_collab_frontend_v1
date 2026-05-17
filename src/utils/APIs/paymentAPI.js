@@ -1,13 +1,7 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -68,25 +62,76 @@ export const paymentAPI = {
   },
 
   // Get total donations
-  getTotalDonations: async (params) => {
+  getTotalDonations: async () => {
+    const response = await api.get('/payments/total-donations')
+    return response.data
+  },
+
+  // Get donations list
+  getDonations: async (params) => {
     const response = await api.get('/payments/donations', { params })
     return response.data
   },
 
   // Get total crowdfunding
-  getTotalCrowdfunding: async (params) => {
-    const response = await api.get('/payments/crowdfunding', { ...params })
+  getTotalCrowdfunding: async () => {
+    const response = await api.get('/payments/total-crowdfunding')
     return response.data
   },
 
-  getCredits: async () => {
-    const response = await api.get('/payments/credits');
-    return response.data;
+  // Get crowdfunding transactions
+  getCrowdfundingTransactions: async (params) => {
+    const response = await api.get('/payments/crowdfunding', { params })
+    return response.data
   },
+
+  // Register crowdfunding interest
+  registerCrowdfundingInterest: async () => {
+    const response = await api.post('/payments/crowdfunding-interest')
+    return response.data
+  },
+
+  // Get credits
+  getCredits: async () => {
+    const response = await api.get('/payments/credits')
+    return {
+      data: {
+        credits: 100
+      },
+      success: true,
+    }
+    return response.data
+  },
+
+  // Get AI tools
   getAITools: async () => {
-    const response = await api.get('/payments/ai-tools');
-    return response.data;
-  }
+    const response = await api.get('/payments/ai-tools')
+    return response.data
+  },
+
+  // Deposit funds
+  depositFunds: async (amount) => {
+    const response = await api.post('/payments/deposit', { amount })
+    return response.data
+  },
+
+  // Get wallet balance
+  getWalletBalance: async () => {
+    const response = await api.get('/payments/wallet-balance')
+    return response.data
+  },
+
+  // Withdraw funds
+  withdrawFunds: async (amount) => {
+    const response = await api.post('/payments/withdraw', { amount })
+    return response.data
+  },
+
+  // Get wallet transactions
+  getWalletTransactions: async (params) => {
+    const response = await api.get('/payments/wallet-transactions', { params })
+    return response.data
+  },
 }
 
 export default api

@@ -1,4 +1,4 @@
-import { BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
+import { Activity, BarChart3, Bookmark, BookOpen, Bot, BrainCircuit, BriefcaseBusiness, Calculator, CaptionsIcon, ClipboardList, Cpu, Database, Earth, FileSignature, FileTerminal, FileText, Images, Lightbulb, LightbulbIcon, MessageSquare, MessageSquareHeart, Rss, StickyNote, TrendingUp, UserPlus, Users, VideoIcon, Wallet, Wand2 } from "lucide-react";
 import { BsGear, BsPeople } from "react-icons/bs";
 import { IoChatbubbles } from "react-icons/io5";
 import { LuLayoutDashboard } from "react-icons/lu";
@@ -76,6 +76,20 @@ export function socialSection(id) {
     }
 }
 
+export function erpSection(id) {
+  return {
+    id,
+    icon: <BriefcaseBusiness size={22} />,
+    href: "/erp/execution",
+    label: "ERP",
+    subItems: [
+      { id: "erp-execution", href: "/erp/execution", label: "Execution Dashboard", icon: <Activity size={18} /> },
+      { id: "erp-tasks", href: "/erp/tasks", label: "Task Board", icon: <ClipboardList size={18} /> },
+      { id: "erp-admin-settings", href: "/erp/admin-settings", label: "Admin Settings", icon: <BsGear size={18} /> },
+    ]
+  }
+}
+
 export function wallet(id) {
   return {
     id,
@@ -95,10 +109,10 @@ export function ideation(id) {
       id,
       icon: <LightbulbIcon size={22} />,
       href: "/ideation",
-      label: "Ideation",
+      label: "Vision",
       subItems: [
-        { id: "Ideation-Board", href: "/ideation", label: "Ideation Board", icon: <LightbulbIcon size={18} /> },
-        { id: "saved-ideas", href: "/saved-ideas", label: "Saved Ideas", icon: <Bookmark size={18} /> },
+        { id: "vision-board", href: "/ideation", label: "Vision Board", icon: <LightbulbIcon size={18} /> },
+        { id: "saved-visions", href: "/saved-ideas", label: "Saved Visions", icon: <Bookmark size={18} /> },
         { id: "knowledge-resources", href: "/knowledge", label: "Knowledge Resources", icon: <BookOpen size={18} /> },
       ]
     }

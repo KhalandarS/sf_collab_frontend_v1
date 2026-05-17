@@ -5,7 +5,7 @@ import Joyride from "react-joyride";
 import { useSelector } from "react-redux";
 
 export default function IdeationTutorial({ activeRole }) {
-  const [isTutorialCompleted, setIsTutorialCompleted] = useState(localStorage.getItem("ideationTutorialCompleted") === "true" || false);
+  const [isTutorialCompleted, setIsTutorialCompleted] = useState(localStorage.getItem("visionTutorialCompleted") === "true" || false);
   const { user } = useSelector((state) => state.auth);
   const steps = [
     {
@@ -14,10 +14,10 @@ export default function IdeationTutorial({ activeRole }) {
       content: (
         <div>
           <h2 className="text-lg font-semibold mb-2">
-            Welcome to SF Idea Incubator!
+            Welcome to SF Vision Incubator!
           </h2>
           <p>
-            The Ideation Hub is where startup ideas are shared, explored, and built. Founders, builders, and investors can collaborate, validate concepts, and turn ideas into real projects.
+            The Vision Hub is where startup ideas are shared, explored, and built. Founders, builders, and investors can collaborate, validate concepts, and turn ideas into real projects.
           </p>
         </div>
       ),
@@ -25,11 +25,11 @@ export default function IdeationTutorial({ activeRole }) {
     },
     {
       target: ".create-idea",
-      content: "Here you can create a new idea. Click this button to start sharing your innovative concepts with the community.",
+      content: "Here you can create a new vision. Click this button to start sharing your innovative concepts with the community.",
     },
     {
       target: ".idea",
-      content: "Each card represents an idea shared by the community. Click on a card to view details, provide feedback, or join as a collaborator. You can filter and search for ideas that match your interests and expertise.",
+      content: "Each card represents a vision shared by the community. Click on a card to view details, provide feedback, or join as a collaborator. You can filter and search for visions that match your interests and expertise.",
       placement: "right"
     },
     {
@@ -41,7 +41,7 @@ export default function IdeationTutorial({ activeRole }) {
             Ready to Innovate? 🚀
           </h2>
           <p>
-            The Ideation Hub is your launchpad for creativity and collaboration. Dive in, explore ideas, connect with like-minded innovators, and let's build the future together!
+            The Vision Hub is your launchpad for creativity and collaboration. Dive in, explore visions, connect with like-minded innovators, and let's build the future together!
           </p>
         </div>
       ),
@@ -52,7 +52,7 @@ export default function IdeationTutorial({ activeRole }) {
   const handleJoyrideCallback = (data) => {
     const { status } = data;
     if (status === "finished" || status === "skipped") {
-      localStorage.setItem("ideationTutorialCompleted", "true");
+      localStorage.setItem("visionTutorialCompleted", "true");
       setIsTutorialCompleted(true);
     }
   }
@@ -94,9 +94,7 @@ export default function IdeationTutorial({ activeRole }) {
             color: "#64748b",
           },
         }}
-      // callback={handleJoyrideCallback}
       />
-
     </>
   );
 }

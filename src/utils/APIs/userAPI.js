@@ -1,15 +1,9 @@
-import { API_BASE_URL } from '@/utils/config'
 import axios from 'axios'
 import { userSocialAPI } from './socialAPI'
 
-import { requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
+import { API_CONFIG, requestErrorInterceptor, requestInterceptor, responseErrorInterceptor, responseInterceptor } from './interceptors';
 
-const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+const api = axios.create(API_CONFIG)
 
 api.interceptors.request.use(
   requestInterceptor,
@@ -48,11 +42,12 @@ export const usersAPI = {
   },
 
   updateProfile: async (userId, profileData, accessToken, dType = 'multipart/form-data') => {
+    const headers = {
+      'Content-Type': dType,
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+    };
     const response = await api.put(`/users/${userId}`, profileData, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': dType,
-      },
+      headers,
     });
     return response.data;
   },
@@ -83,13 +78,9 @@ export const usersAPI = {
     return response.data.data;
   },
 
-  addRole: async (userId, roles, accessToken) => {
-    const response = await api.put(`/user-roles/${userId}`, { roles }, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    return response.data.data;
+  addRole: async (roles) => {
+    const response = await api.post(`/user-roles`, { roles });
+    return response.data;
   },
 
   getFollowersCount: async (userId, accessToken) => {
@@ -158,6 +149,15 @@ export const usersAPI = {
 
   delete: async (userId, accessToken) => {
     const response = await api.delete(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  },
+
+  completeProfile: async (profileData, accessToken) => {
+    const response = await api.post('/users/complete-profile', profileData, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

@@ -24,7 +24,7 @@ import Avatar from "@/components/chat (previous)/Avatar";
 // ============================================
 // CONFIGURATION
 // ============================================
-const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || 'http://localhost:5000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_API_URL || '';
 const NOTIFICATION_DURATION = 60000; 
 const MAX_NOTIFICATIONS = 2;
 const AUTO_POPUP_ENABLED = true; // Set to false to disable auto-popup
@@ -33,9 +33,9 @@ const FLASH_DURATION = 60000;
 // NEW: Mute notification sounds for these conversation types
 const MUTED_CONVERSATION_TYPES = ['general'];
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
-// turn "/uploads/..." into "http://localhost:5001/uploads/..."
+// turn "/uploads/..." into "/uploads/..."
 const resolveAvatarUrl = (src) => {
   if (!src) return null;
   if (typeof src !== "string") return null;
@@ -367,6 +367,11 @@ export const ChatNotificationProvider = ({ children }) => {
   // Track if user is on chat page
   useEffect(() => {
     isOnChatPageRef.current = location.pathname.startsWith('/chat');
+    // Reset badge when user opens chat
+    if (location.pathname.startsWith('/chat')) {
+      setUnreadCount(0);
+      setChatUnreadCount(0);
+    }
   }, [location.pathname]);
 
   // NEW: Start flashing a conversation tab
@@ -510,20 +515,12 @@ export const ChatNotificationProvider = ({ children }) => {
 
       // Only show toast when not on chat page
       if (!isOnChatPageRef.current) {
-        // Add toast notification
-        addNotification({
-          id: `notif-${message.id}-${Date.now()}`,
-          message,
-          conversation: data.conversation || { id: conversation_id },
-          sender: message.sender,
-          timestamp: new Date(),
-        });
-
-        playNotificationSound();
-        
+        // Badge count only — no popup toast
         setUnreadCount((prev) => prev + 1);
         // ─── Feature 4: also increment bell chat badge ─────────────────
         setChatUnreadCount((prev) => prev + 1);
+
+        playNotificationSound();
 
         // Auto-popup ChatDock (like Facebook Messenger)
         autoPopupChatDock(data);
@@ -611,12 +608,7 @@ export const ChatNotificationProvider = ({ children }) => {
   return (
     <ChatNotificationContext.Provider value={value}>
       {children}
-      {/* Render notification toasts */}
-      <NotificationContainer
-        notifications={notifications}
-        onClose={removeNotification}
-        onNavigate={navigateToConversation}
-      />
+      {/* Popup toasts removed — unread badge on chat icon is used instead */}
     </ChatNotificationContext.Provider>
   );
 };

@@ -182,7 +182,7 @@ const Profile = () => {
                   !isOtherUser &&
                 
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-400">Credits</span>
+                    <span className="text-sm text-gray-400">SF Coins</span>
                     <span className="text-yellow-400 font-semibold">{profileData?.credits || 0}</span>
                   </div>
                 }

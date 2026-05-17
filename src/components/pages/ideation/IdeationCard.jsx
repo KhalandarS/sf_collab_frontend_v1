@@ -23,19 +23,29 @@ import { toast } from "react-toastify";
 import { getProfilePicture } from "@/utils/getProfilePicture";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 // ── Co-Developer Request Modal ────────────────────────────────────────────
 function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
   const [message, setMessage] = useState("");
+  const [role, setRole] = useState("co-developer");
   const [loading, setLoading] = useState(false);
+
+  const roles = [
+    "co-developer",
+    "designer",
+    "marketer",
+    "business analyst",
+    "advisor",
+    "other",
+  ];
 
   const handleSubmit = async () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        `${API_URL}/api/ideas/${idea.id}/collab-requests`,
-        { message, role: "co-developer" },
+        `${API_URL}/ideas/${idea.id}/collab-requests`,
+        { message, role },
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
       toast.success("Request sent! The creator will review it.");
@@ -59,19 +69,42 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-gray-900 border border-emerald-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
+        className="w-full max-w-md bg-gray-900 border border-blue-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
       >
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-bold text-white">Interested in Co-Developing?</h2>
+            <h2 className="text-lg font-bold text-white">Join as Contributor</h2>
             <p className="text-sm text-gray-400 mt-1 line-clamp-1">
               "{idea?.title}"
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors p-1">
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-white transition-colors p-1"
+          >
             <X className="h-5 w-5" />
           </button>
+        </div>
+
+        {/* Role selector */}
+        <div>
+          <label className="text-sm text-gray-400 mb-2 block">Your role</label>
+          <div className="flex flex-wrap gap-2">
+            {roles.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRole(r)}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize ${
+                  role === r
+                    ? "bg-blue-500/20 border-blue-500 text-blue-300"
+                    : "bg-white/5 border-gray-700 text-gray-400 hover:border-blue-500/50"
+                }`}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Message */}
@@ -84,7 +117,7 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Tell them why you'd be a great fit..."
             rows={4}
-            className="w-full bg-white/5 border border-gray-700 focus:border-emerald-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
+            className="w-full bg-white/5 border border-gray-700 focus:border-blue-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
           />
         </div>
 
@@ -99,14 +132,14 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
           >
             {loading ? (
-              <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
+              <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                Express Interest
+                Send Request
               </>
             )}
           </button>
@@ -117,18 +150,20 @@ function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
   );
 }
 
-// ── Collab Button ─────────────────────────────────────────────────────────
+// ── Join Button (shows status-aware UI) ──────────────────────────────────
 function CollabButton({ content, accessToken, isOwnIdea }) {
   const [status, setStatus] = useState(null);
   const [requestId, setRequestId] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [interestedCount, setInterestedCount] = useState(content?.pending_collab_count ?? 0);
+  const [interestedCount, setInterestedCount] = useState(
+    content?.pending_collab_count ?? 0
+  );
 
   useEffect(() => {
     if (isOwnIdea || !content?.id) return;
     axios
-      .get(`${API_URL}/api/ideas/${content.id}/collab-requests/my-status`, {
+      .get(`${API_URL}/ideas/${content.id}/collab-requests/my-status`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       })
       .then((res) => {
@@ -144,11 +179,14 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
   const handleCancel = async (e) => {
     e?.preventDefault?.();
     e?.stopPropagation?.();
-    if (!requestId) { toast.error("Request ID missing — try refreshing"); return; }
+    if (!requestId) {
+      toast.error("Request ID missing — try refreshing");
+      return;
+    }
     setLoading(true);
     try {
       await axios.post(
-        `${API_URL}/api/ideas/collab-requests/${requestId}/cancel`,
+        `${API_URL}/ideas/collab-requests/${requestId}/cancel`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -169,7 +207,7 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
     setLoading(true);
     try {
       await axios.post(
-        `${API_URL}/api/ideas/${content.id}/leave`,
+        `${API_URL}/ideas/${content.id}/leave`,
         {},
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
@@ -188,9 +226,9 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
   if (status === "approved") {
     return (
       <div className="w-full space-y-1.5">
-        <div className="w-full py-2 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center justify-center gap-2">
+        <div className="w-full py-2 px-3 rounded-lg bg-blue-500/10 border border-blue-500/30 text-blue-400 text-sm flex items-center justify-center gap-2">
           <CheckCircle className="h-4 w-4" />
-          Co-Developer ✓
+          Contributor ✓
         </div>
         <motion.button
           whileTap={{ scale: 0.97 }}
@@ -198,7 +236,11 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
           disabled={loading}
           className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
         >
-          {loading ? <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" /> : <X className="h-3 w-3" />}
+          {loading ? (
+            <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+          ) : (
+            <X className="h-3 w-3" />
+          )}
           {loading ? "Leaving..." : "Leave Project"}
         </motion.button>
       </div>
@@ -210,7 +252,7 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
       <div className="w-full space-y-1.5">
         <div className="w-full py-2 px-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm flex items-center justify-center gap-2">
           <Clock3 className="h-4 w-4" />
-          Interest Sent — Awaiting Review
+          Request Sent — Awaiting Review
         </div>
         <motion.button
           whileTap={{ scale: 0.97 }}
@@ -218,7 +260,11 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
           disabled={loading}
           className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
         >
-          {loading ? <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" /> : <X className="h-3 w-3" />}
+          {loading ? (
+            <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+          ) : (
+            <X className="h-3 w-3" />
+          )}
           {loading ? "Cancelling..." : "Cancel Request"}
         </motion.button>
       </div>
@@ -247,12 +293,14 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
           e?.stopPropagation?.();
           setShowModal(true);
         }}
-        className="w-full py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-400 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
+        className="w-full py-2.5 px-3 rounded-lg bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/60 text-blue-400 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
       >
         <UserPlus className="h-4 w-4" />
-        {status === "rejected" ? "Express Interest Again" : "Interested in Co-Developing"}
+        {status === "rejected"
+          ? "Express Interest Again"
+          : "Interested in Contributing"}
         {interestedCount > 0 && (
-          <span className="ml-1 px-1.5 py-0.5 bg-emerald-500/20 border border-emerald-500/40 rounded-full text-xs font-bold text-emerald-300">
+          <span className="ml-1 px-1.5 py-0.5 bg-blue-500/20 border border-blue-500/40 rounded-full text-xs font-bold text-blue-300">
             {interestedCount}
           </span>
         )}
@@ -261,285 +309,8 @@ function CollabButton({ content, accessToken, isOwnIdea }) {
   );
 }
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5001";
-
-// ── Co-Developer Request Modal ────────────────────────────────────────────
-// Rendered via Portal so it sits outside the <Link> and won't trigger navigation
-function CollabRequestModal({ idea, onClose, onSuccess, accessToken }) {
-  const [message, setMessage] = useState("");
-  const [role, setRole] = useState("co-developer");
-  const [loading, setLoading] = useState(false);
-
-  const roles = [
-    "co-developer",
-    "designer",
-    "marketer",
-    "business analyst",
-    "advisor",
-    "other",
-  ];
-
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.post(
-        `${API_URL}/api/ideas/${idea.id}/collab-requests`,
-        { message, role },
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      toast.success("Request sent! The creator will review it.");
-      onSuccess(res?.data?.data?.collab_request?.id); // pass request ID back
-      onClose();
-    } catch (err) {
-      const msg = err?.response?.data?.error || "Failed to send request";
-      toast.error(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-gray-900 border border-emerald-500/30 rounded-2xl p-6 space-y-5 shadow-2xl"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-white">Join as Co-Developer</h2>
-            <p className="text-sm text-gray-400 mt-1 line-clamp-1">
-              "{idea?.title}"
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-white transition-colors p-1"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-
-        {/* Role selector */}
-        <div>
-          <label className="text-sm text-gray-400 mb-2 block">Your role</label>
-          <div className="flex flex-wrap gap-2">
-            {roles.map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all capitalize ${
-                  role === r
-                    ? "bg-emerald-500/20 border-emerald-500 text-emerald-300"
-                    : "bg-white/5 border-gray-700 text-gray-400 hover:border-emerald-500/50"
-                }`}
-              >
-                {r}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Message */}
-        <div>
-          <label className="text-sm text-gray-400 mb-2 block">
-            Message to creator{" "}
-            <span className="text-gray-600">(optional)</span>
-          </label>
-          <textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Tell them why you'd be a great fit..."
-            rows={4}
-            className="w-full bg-white/5 border border-gray-700 focus:border-emerald-500/50 rounded-xl p-3 text-sm text-white placeholder-gray-600 outline-none resize-none transition-colors"
-          />
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl border border-gray-700 text-gray-400 hover:text-white text-sm font-medium transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold text-sm flex items-center justify-center gap-2 transition-colors"
-          >
-            {loading ? (
-              <span className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full" />
-            ) : (
-              <>
-                <Send className="h-4 w-4" />
-                Send Request
-              </>
-            )}
-          </button>
-        </div>
-      </motion.div>
-    </div>,
-    document.body
-  );
-}
-
-// ── Join Button (shows status-aware UI) ──────────────────────────────────
-function CollabButton({ content, accessToken, isOwnIdea }) {
-  const [status, setStatus] = useState(null); // null | 'pending' | 'approved' | 'rejected' | 'cancelled'
-  const [requestId, setRequestId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Fetch current user's request status on mount
-  useEffect(() => {
-    if (isOwnIdea || !content?.id) return;
-    axios
-      .get(`${API_URL}/api/ideas/${content.id}/collab-requests/my-status`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
-      .then((res) => {
-        const cr = res?.data?.data?.collab_request;
-        if (cr) {
-          setStatus(cr.status);
-          setRequestId(cr.id);
-        }
-      })
-      .catch(() => {}); // silently ignore
-  }, [content?.id, accessToken, isOwnIdea]);
-
-  const handleCancel = async (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    if (!requestId) { toast.error("Request ID missing — try refreshing"); return; }
-    setLoading(true);
-    try {
-      await axios.post(
-        `${API_URL}/api/ideas/collab-requests/${requestId}/cancel`,
-        {},
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      setStatus(null);
-      setRequestId(null);
-      toast.info("Request cancelled");
-    } catch (err) {
-      toast.error(err?.response?.data?.error || "Failed to cancel request");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLeave = async (e) => {
-    e?.preventDefault?.();
-    e?.stopPropagation?.();
-    setLoading(true);
-    try {
-      await axios.post(
-        `${API_URL}/api/ideas/${content.id}/leave`,
-        {},
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
-      setStatus(null);
-      setRequestId(null);
-      toast.info("You have left the project");
-    } catch (err) {
-      toast.error(err?.response?.data?.error || "Failed to leave project");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (isOwnIdea) return null;
-
-  // Approved — show "Leave Project" button
-  if (status === "approved") {
-    return (
-      <div className="w-full space-y-1.5">
-        <div className="w-full py-2 px-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm flex items-center justify-center gap-2">
-          <CheckCircle className="h-4 w-4" />
-          Co-Developer ✓
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleLeave}
-          disabled={loading}
-          className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
-        >
-          {loading ? (
-            <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
-          ) : (
-            <X className="h-3 w-3" />
-          )}
-          {loading ? "Leaving..." : "Leave Project"}
-        </motion.button>
-      </div>
-    );
-  }
-
-  // Pending — show status + cancel button
-  if (status === "pending") {
-    return (
-      <div className="w-full space-y-1.5">
-        <div className="w-full py-2 px-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-sm flex items-center justify-center gap-2">
-          <Clock3 className="h-4 w-4" />
-          Request Sent — Awaiting Review
-        </div>
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          onClick={handleCancel}
-          disabled={loading}
-          className="w-full py-1.5 px-3 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 text-red-400 text-xs font-medium transition-all flex items-center justify-center gap-1.5"
-        >
-          {loading ? (
-            <span className="animate-spin h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
-          ) : (
-            <X className="h-3 w-3" />
-          )}
-          {loading ? "Cancelling..." : "Cancel Request"}
-        </motion.button>
-      </div>
-    );
-  }
-
-  // Rejected or no request — show join button
-  return (
-    <>
-      {showModal && (
-        <CollabRequestModal
-          idea={content}
-          accessToken={accessToken}
-          onClose={() => setShowModal(false)}
-          onSuccess={(newRequestId) => {
-            setStatus("pending");
-            setRequestId(newRequestId); // ← fix: store the new request ID
-          }}
-        />
-      )}
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.97 }}
-        onClick={(e) => {
-          e?.preventDefault?.();
-          e?.stopPropagation?.();
-          setShowModal(true);
-        }}
-        className="w-full py-2.5 px-3 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 hover:border-emerald-500/60 text-emerald-400 font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2"
-      >
-        <UserPlus className="h-4 w-4" />
-        {status === "rejected" ? "Request Again" : "Join as Co-Developer"}
-      </motion.button>
-    </>
-  );
-}
-
 // ── Main Card ─────────────────────────────────────────────────────────────
-export default function IdeationCard({ content, shouldBlur }) {
+export default function VisionCard({ content, shouldBlur }) {
   const [likes, setLikes] = useState(content?.likes || 0);
   const [liked, setLiked] = useState(content?.hasLiked || false);
   const [bookmarked, setBookmarked] = useState(content?.hasBookmarked || false);
@@ -595,28 +366,25 @@ export default function IdeationCard({ content, shouldBlur }) {
     }
   };
 
-  // Don't show connection button for own ideas
-  const isOwnIdea = user?.id === (content?.author?.id || content?.creator?.id);
-  const author = useMemo(() => content?.author || content?.creator || {}, [content]);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: "easeOut" }}
       whileHover={{ y: -4 }}
-      className="h-full group idea"
+      className="h-full group vision"
     >
       <Link
         to={`/ideation-details?id=${content?.id}`}
-        className="relative block h-full rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-emerald-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden"
+        className="relative block h-full rounded-2xl border border-blue-500/20 bg-gradient-to-br from-gray-800/50 to-gray-900/50 hover:border-blue-500/50 hover:from-gray-800/80 hover:to-gray-900/80 transition-all duration-300 backdrop-blur-sm overflow-hidden"
       >
-        {/* Blur overlay for private ideas */}
+        {/* Blur overlay for private visions */}
         {shouldBlur && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 backdrop-blur-md rounded-2xl">
             <div className="text-center">
               <div className="text-5xl mb-3">🔒</div>
               <div className="text-gray-300 text-sm font-medium">
-                Private Idea
+                Private Vision
               </div>
               <div className="text-gray-500 text-xs mt-1">
                 Only the creator can view this
@@ -635,7 +403,7 @@ export default function IdeationCard({ content, shouldBlur }) {
             <motion.div
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.3 }}
-              className="overflow-hidden rounded-xl border border-emerald-500/10"
+              className="overflow-hidden rounded-xl border border-blue-500/10"
             >
               <img
                 src={content?.imageUrl}
@@ -648,11 +416,12 @@ export default function IdeationCard({ content, shouldBlur }) {
           {/* Author + Stage */}
           <Link
             to={`/user-profile?userId=${author?.id}`}
-            className="flex items-start justify-between">
+            className="flex items-start justify-between"
+          >
             <div className="flex items-center gap-3">
               <img
                 src={getProfilePicture(author)}
-                className="h-10 w-10 rounded-full border-2 border-emerald-500/30 object-cover"
+                className="h-10 w-10 rounded-full border-2 border-blue-500/30 object-cover"
                 alt={author?.name}
               />
               <div>
@@ -688,7 +457,7 @@ export default function IdeationCard({ content, shouldBlur }) {
                 <motion.span
                   key={i}
                   whileHover={{ scale: 1.05 }}
-                  className="text-xs text-emerald-300 bg-emerald-500/15 border border-emerald-500/30 px-3 py-1 rounded-full font-medium"
+                  className="text-xs text-blue-300 bg-blue-500/15 border border-blue-500/30 px-3 py-1 rounded-full font-medium"
                 >
                   #{tag}
                 </motion.span>
@@ -740,8 +509,8 @@ export default function IdeationCard({ content, shouldBlur }) {
                 onClick={handleBookmark}
                 className={`flex-1 py-2.5 px-3 rounded-lg font-medium text-sm transition-all duration-200 flex items-center justify-center gap-2 ${
                   bookmarked
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/50"
-                    : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-emerald-500/30 hover:text-white"
+                    ? "bg-blue-500/20 text-blue-400 border border-blue-500/50"
+                    : "bg-white/5 text-gray-400 border border-gray-700/50 hover:border-blue-500/30 hover:text-white"
                 }`}
                 aria-pressed={bookmarked}
               >
@@ -774,7 +543,7 @@ export default function IdeationCard({ content, shouldBlur }) {
               </motion.button>
             </div>
 
-            {/* Join as Co-Developer */}
+            {/* Join as Contributor */}
             <div
               onClick={(e) => {
                 e?.preventDefault?.();
@@ -796,26 +565,11 @@ export default function IdeationCard({ content, shouldBlur }) {
               }}
             >
               <ConnectionButton
-                userId={content?.author?.id}
+                userId={content?.author?.id || content?.creator?.id}
                 size="sm"
                 className="w-full"
               />
             </div>
-
-            {/* Interested in Co-Developing */}
-            <div
-              onClick={(e) => {
-                e?.preventDefault?.();
-                e?.stopPropagation?.();
-              }}
-            >
-              <CollabButton
-                content={content}
-                accessToken={access_token}
-                isOwnIdea={isOwnIdea}
-              />
-            </div>
-            
           </div>
         </div>
       </Link>

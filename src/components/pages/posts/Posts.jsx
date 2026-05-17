@@ -153,7 +153,7 @@ const SettingsModal = ({ isOpen, onClose }) => {
 };
 
 const Posts = () => {
-    const { user: currentUser, access_token } = useSelector((state) => state.auth);
+  const { user: currentUser, access_token } = useSelector((state) => state.auth);
   const { socket, isConnected } = useSocket();
   const [socialProfile, setSocialProfile] = useState(null);
   const [activeTab, setActiveTab] = useState("feed");
@@ -282,17 +282,24 @@ const Posts = () => {
         await postAPI.createStory(formData);
         setStoriesRefreshKey((k) => k + 1);
       } else {
+        // Build FormData so media files are included as multipart/form-data
         const postType = postData.type === "text" ? "professional" : (postData.type || "professional");
-        const payload = {
-          user_id: currentUser.id,
-          author_id: currentUser.id,
-          author_first_name: currentUser.firstName || currentUser.first_name,
-          author_last_name: currentUser.lastName || currentUser.last_name,
-          content: postData.caption,
-          type: postType,
-          tags: postData.tags || [],
-        };
-        const response = await postAPI.create(payload);
+        const formData = new FormData();
+        formData.append("user_id", currentUser.id);
+        formData.append("author_id", currentUser.id);
+        formData.append("author_first_name", currentUser.firstName || currentUser.first_name);
+        formData.append("author_last_name", currentUser.lastName || currentUser.last_name);
+        formData.append("content", postData.caption);
+        formData.append("type", postType);
+        if (postData.tags?.length) {
+          formData.append("tags", JSON.stringify(postData.tags));
+        }
+        // Append each selected media file
+        postData.files?.forEach(({ file }) => {
+          formData.append("media", file);
+        });
+
+        const response = await postAPI.create(formData);
         const created = response?.data?.post;
         if (created) {
           const normalized = { ...created, id: created._id || created.id };
@@ -303,6 +310,7 @@ const Posts = () => {
       console.error("Failed to create post:", error);
     }
   };
+
 
   return (
     <div className="min-h-screen text-white w-full">
@@ -340,21 +348,19 @@ const Posts = () => {
               <div className="feed flex gap-4 border-b border-zinc-800">
                 <button
                   onClick={() => setActiveTab("feed")}
-                  className={`py-2 px-4 font-semibold transition-all ${
-                    activeTab === "feed"
+                  className={`py-2 px-4 font-semibold transition-all ${activeTab === "feed"
                       ? "text-blue-400 border-b-2 border-blue-400"
                       : "text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   Feed
                 </button>
                 <button
                   onClick={() => setActiveTab("explore")}
-                  className={`py-2 px-4 font-semibold transition-all ${
-                    activeTab === "explore"
+                  className={`py-2 px-4 font-semibold transition-all ${activeTab === "explore"
                       ? "text-blue-400 border-b-2 border-blue-400"
                       : "text-zinc-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   Explore
                 </button>

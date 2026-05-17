@@ -28,7 +28,7 @@ import Loader from "@/components/loader/loader";
 import DashboardChangeSection from "../dashboardChangeSection";
 import AnnouncementsSection from "./AnnouncementsSection";
 const Dashboard = ({
-  activeRole, setActiveRole, userRoles
+  activeRole, setActiveRole, userRoles, setUserRoles
 }) => {
   const [query, setQuery] = useState("");
   const [userData, setUserData] = useState(null);
@@ -105,13 +105,18 @@ const Dashboard = ({
 
       <div className="relative w-full mx-auto p-4 overflow-x-hidden">
         <OverviewWebsite />
-        <DashboardChangeSection sections={userRoles.map(role => ({
-          id: role,
-          label: role.charAt(0).toUpperCase() + role.slice(1)
-        }))} onSectionChange={(sectionId) => {
-          setActiveRole(sectionId);
-          localStorage.setItem('activeRole', sectionId);
-        }}
+        <DashboardChangeSection
+          sections={userRoles.map(role => ({
+            id: role,
+            label: role.charAt(0).toUpperCase() + role.slice(1)
+            }))}
+          onSectionChange={(sectionId) => {
+            setActiveRole(sectionId);
+            localStorage.setItem('activeRole', sectionId);
+          }}
+          setUserRoles={setUserRoles}
+          setActiveRole={setActiveRole}
+          userRoles={userRoles}
           activeRole={activeRole}
         />
         <AnnouncementsSection userRoles={userRoles} />
