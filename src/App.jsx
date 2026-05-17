@@ -154,6 +154,8 @@ export default function App() {
     localStorage.setItem("activeRole", activeRole);
   }, [activeRole]);
   if (import.meta.env.PROD) {
+    console.log = () => { }
+    console.warn = () => { }
     console.log = () => {};
     console.warn = () => {};
   }
@@ -163,6 +165,7 @@ export default function App() {
       try {
         // console.log(access_token);
         const response = await usersAPI.getMyRoles();
+        setUserRoles([...response.data.map(role => role.role)]);
         setUserRoles([...response.data.map((role) => role.role)]);
         // setUserRoles(['admin', 'influencer', 'builder', 'founder', 'investor', 'general']); // Temporarily hardcoding roles for testing
         // setActiveRole('member');
@@ -171,6 +174,10 @@ export default function App() {
       }
     }
     const location = window.location;
+    if (!['/login', '/signup', '/verify-email'].includes(location.pathname) || location.pathname !== '/' && access_token)
+      fetchUserRoles();
+  }, [access_token]);
+
     if (
       !["/login", "/signup", "/verify-email"].includes(location.pathname) ||
       (location.pathname !== "/" && access_token)
@@ -224,6 +231,9 @@ export default function App() {
                 <Route path="/verify-email" element={<VerifyEmail />} />
                 {/* Refer and Waitlist */}
 
+                <Route path='membership-benefits' element={<MembershipBenefits />} />
+                <Route path='implementation-plans' element={<ImplementationPlans />} />
+                <Route path='featured-projects' element={<FeaturedProjects />} />
                 <Route
                   path="membership-benefits"
                   element={<MembershipBenefits />}
@@ -316,6 +326,11 @@ export default function App() {
                     element={<FounderManageTasks />}
                   />
 
+
+                  <Route
+                    path="ai-dashboard"
+                    element={
+                      <AIDashboard />
                   <Route
                     path="ai-dashboard"
                     element={
@@ -353,6 +368,11 @@ export default function App() {
                     element={<Ideation activeRole={activeRole} />}
                   />
                   <Route path="saved-ideas" element={<SavedIdeas />} />
+                  <Route path="ideation-details" element={<Ideationdetails />} />
+
+                  {/* Knowledge */}
+                  <Route path="knowledge" element={<Knowledge />} />
+                  <Route path="knowledge-details" element={<Knowledgedetails />} />
                   <Route
                     path="ideation-details"
                     element={<Ideationdetails />}
@@ -375,6 +395,11 @@ export default function App() {
                   {/* Posts */}
                   <Route path="posts" element={<Posts />} />
 
+
+                  {/* Contribution */}
+                  <Route path="contribution" element={<ContributionPage />} />
+                  <Route path="contribution-ideas" element={<ContributionIdeasPage />} />
+                  <Route path="contribution-polls" element={<ContributionPollsPage />} />
                   {/* Contribution */}
                   <Route path="contribution" element={<ContributionPage />} />
                   <Route
@@ -393,6 +418,7 @@ export default function App() {
                   <Route path="donate" element={<Donate />} />
                   {/* Quick Guides */}
                   <Route path="getting-started" element={<GettingStarted />} />
+                  <Route path="team-collaboration" element={<TeamCollaboration />} />
                   <Route
                     path="team-collaboration"
                     element={<TeamCollaboration />}
@@ -583,6 +609,7 @@ export default function App() {
                 </Route>
                 <Route path="*" element={<NotFound />} />
                 {/* Catch all route */}
+
               </Routes>
               <ToastContainer
                 position="bottom-center"

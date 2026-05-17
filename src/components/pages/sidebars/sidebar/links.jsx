@@ -38,6 +38,18 @@ export function createLinks(unreadMessagesCount, userRoles = [], setActiveRole) 
       ],
     },
     ideation(4),
+
+    // {
+    //   id: 4,
+    //   icon: <IoChatbubbles size={23} />,
+    //   href: "/chat",
+    //   label: "Chat",
+    //   unreadCount: (
+    //     <Badge className="absolute top-1 right-0 h-4.5 min-w-4.5 rounded-full px-1 font-mono tabular-nums bg-blue-800 text-blue-300">
+    //       {unreadMessagesCount > 0 ? unreadMessagesCount : "0"}
+    //     </Badge>
+    //   ),
+    // },
     erpSection(5),
     socialSection(6),
     // Learning & Mentors — combined under one section
@@ -84,6 +96,10 @@ export function getAllRoutes(element) {
 }
 
 export function getCurrentContext(pathname) {
+  // Check wallet/store routes first (custom handling)
+  if (["/wallet", "/store", "/leaderboard"].some((p) => pathname.startsWith(p))) return 10;
+
+  const links = createLinks(0); // Create links without unreadMessagesCount
   if (["/wallet", "/store", "/leaderboard", "/marketplace"].some((p) => pathname.startsWith(p))) return 10;
   const links = createLinks(0);
   for (const link of links) {
